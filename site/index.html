@@ -16,26 +16,27 @@
     header {
       background: white;
       border-bottom: 2px solid #eee;
-      padding: 0 16px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
-      height: 56px;
+      height: 60px;
       position: sticky;
       top: 0;
       z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
     header a.logo-link { display: flex; align-items: center; }
-    header img.logo { height: 38px; }
+    header img.logo { height: 40px; }
     header nav { margin-left: auto; display: flex; gap: 4px; }
     header nav a {
       color: #555;
       text-decoration: none;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      padding: 6px 10px;
+      padding: 7px 14px;
       border-radius: 8px;
       white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
     }
     header nav a:hover { background: #f0f0ff; color: #667eea; }
     header nav a.active { background: #667eea; color: white; }
@@ -44,86 +45,98 @@
     .hero {
       background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
       color: white;
-      text-align: center;
-      padding: 40px 20px 52px;
+      padding: 48px 24px 56px;
     }
-    .hero-chars {
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
       display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      margin-bottom: 12px;
+      align-items: center;
+      gap: 48px;
     }
-    .hero-chars img { width: 80px; }
-    .hero-chars img:nth-child(2) { width: 100px; margin: 0 -6px; z-index: 1; }
+    .hero-text { flex: 1; }
+    .hero-chars-wrap {
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .hero-chars-wrap img { width: 100px; }
+    .hero-chars-wrap img:nth-child(2) { width: 124px; margin: 0 -10px; z-index: 1; }
+
     .hero h1 {
-      font-size: 1.7rem;
+      font-size: 2.2rem;
       font-weight: 900;
-      line-height: 1.45;
-      margin-bottom: 10px;
+      line-height: 1.4;
+      margin-bottom: 14px;
     }
     .hero h1 em { color: #f6c90e; font-style: normal; display: block; }
     .hero .sub {
-      font-size: 0.95rem;
-      opacity: 0.8;
-      margin-bottom: 28px;
-      line-height: 1.7;
+      font-size: 1rem;
+      opacity: 0.82;
+      margin-bottom: 32px;
+      line-height: 1.8;
     }
+    .hero-btns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
     .btn-dl {
-      display: block;
+      display: inline-block;
       background: #f6c90e;
       color: #1a1a2e;
       font-weight: 900;
-      font-size: 1.15rem;
-      padding: 16px 0;
+      font-size: 1.1rem;
+      padding: 15px 36px;
       border-radius: 50px;
       text-decoration: none;
-      max-width: 300px;
-      margin: 0 auto 12px;
       box-shadow: 0 4px 20px rgba(246,201,14,0.45);
+      transition: transform 0.15s;
     }
+    .btn-dl:hover { transform: translateY(-2px); }
     .btn-gh {
-      display: block;
+      display: inline-block;
       color: rgba(255,255,255,0.7);
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       text-decoration: none;
-      margin-bottom: 20px;
+      padding: 6px 0;
     }
     .btn-gh:hover { color: white; }
-    .hero-note {
-      font-size: 0.82rem;
-      opacity: 0.6;
+    .hero-note { font-size: 0.82rem; opacity: 0.55; }
+
+    /* ── メインコンテンツ ── */
+    .main-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px;
     }
 
     /* ── ステップ ── */
-    .steps {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 36px 16px 0;
-    }
     .steps-head {
       text-align: center;
-      font-size: 1.2rem;
+      font-size: 1.35rem;
       font-weight: 900;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       color: #1a1a2e;
     }
-
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
     .step {
       background: white;
       border-radius: 20px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .step-top {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px 20px;
+      gap: 14px;
+      padding: 20px 20px 0;
     }
     .step-circle {
-      width: 52px;
-      height: 52px;
+      width: 52px; height: 52px;
       border-radius: 50%;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
@@ -135,33 +148,132 @@
       flex-shrink: 0;
     }
     .step-main { flex: 1; }
-    .step-main h3 {
-      font-size: 1.05rem;
-      font-weight: 900;
-      color: #1a1a2e;
-      margin-bottom: 2px;
+    .step-main h3 { font-size: 1rem; font-weight: 900; color: #1a1a2e; margin-bottom: 2px; }
+    .step-main .one-line { font-size: 0.85rem; color: #777; }
+    .step-char { text-align: center; flex-shrink: 0; }
+    .step-char img { width: 42px; }
+    .step-char span { display: block; font-size: 0.62rem; color: #bbb; margin-top: 2px; }
+
+    /* 図解 */
+    .illust {
+      margin: 14px 16px;
+      border-radius: 12px;
+      background: #f0f0ff;
+      padding: 14px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-    .step-main .one-line {
-      font-size: 0.88rem;
-      color: #666;
-    }
-    .step-char {
-      width: 52px;
+    .ill-box {
+      background: white;
+      border-radius: 10px;
+      padding: 8px 12px;
       text-align: center;
-      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: #333;
+      min-width: 64px;
     }
-    .step-char img { width: 44px; }
-    .step-char span { display: block; font-size: 0.65rem; color: #bbb; margin-top: 2px; }
+    .ill-box .ill-icon { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+    .ill-box.yellow { background: #f6c90e; color: #1a1a2e; }
+    .ill-arr { font-size: 1rem; color: #aaa; flex-shrink: 0; }
+
+    .ill-file {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 0.76rem;
+      min-width: 150px;
+    }
+    .ill-fname {
+      background: #1a1a2e;
+      color: #a8d8a8;
+      font-family: monospace;
+      border-radius: 5px;
+      padding: 3px 7px;
+      margin-bottom: 7px;
+      font-size: 0.72rem;
+    }
+    .ill-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 0;
+      border-bottom: 1px solid #f0f0f0;
+      color: #444;
+    }
+    .ill-row:last-child { border-bottom: none; }
+    .ill-row .key { color: #667eea; font-weight: 700; flex-shrink: 0; font-size: 0.72rem; }
+    .ill-row .val { color: #e65100; font-size: 0.72rem; }
+
+    .ill-chat {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 0.76rem;
+      min-width: 170px;
+      max-width: 220px;
+    }
+    .chat-title { font-size: 0.68rem; color: #888; margin-bottom: 7px; font-weight: 700; }
+    .ill-msg {
+      border-radius: 8px;
+      padding: 5px 9px;
+      margin-bottom: 5px;
+      font-size: 0.74rem;
+      line-height: 1.4;
+    }
+    .ill-msg.user { background: #667eea; color: white; margin-left: 16px; }
+    .ill-msg.ai   { background: #f0f0f0; color: #333; margin-right: 16px; }
+
+    .ill-flow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .fbox {
+      background: white;
+      border-radius: 8px;
+      padding: 7px 9px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .fbox .fi { font-size: 1.2rem; display: block; }
+    .fbox.hi { background: #f6c90e; color: #1a1a2e; }
+    .fbox.ok { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
+    .farr { color: #aaa; font-size: 0.9rem; }
 
     /* くわしく見る */
+    .toggle-btn {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      color: #aaa;
+      font-size: 0.76rem;
+      padding: 8px;
+      cursor: pointer;
+      text-align: center;
+      margin-top: auto;
+    }
+    .toggle-btn:hover { background: #fafafa; color: #667eea; }
     .step-detail {
       display: none;
-      padding: 0 20px 20px 88px;
-      font-size: 0.88rem;
+      padding: 14px 20px 18px;
+      font-size: 0.86rem;
       color: #444;
       line-height: 1.8;
       border-top: 1px dashed #eee;
-      padding-top: 14px;
     }
     .step-detail.open { display: block; }
     .step-detail .tip {
@@ -170,257 +282,126 @@
       padding: 8px 12px;
       border-radius: 0 8px 8px 0;
       margin-top: 10px;
-      font-size: 0.83rem;
-      color: #555;
-    }
-
-    /* ── 図解 ── */
-    .illust {
-      margin: 0 20px 16px;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #f0f0ff;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      font-size: 0.8rem;
-      color: #555;
-    }
-    .ill-box {
-      background: white;
-      border-radius: 10px;
-      padding: 10px 14px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-weight: 700;
       font-size: 0.82rem;
-      color: #333;
-      min-width: 70px;
+      color: #555;
     }
-    .ill-box .ill-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
-    .ill-box.accent { background: #667eea; color: white; }
-    .ill-box.yellow { background: #f6c90e; color: #1a1a2e; }
-    .ill-box.green  { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
-    .ill-arr { font-size: 1.2rem; color: #aaa; flex-shrink: 0; }
 
-    /* ② ファイル図解 */
-    .ill-file {
-      background: white;
-      border-radius: 10px;
-      padding: 10px 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 0.78rem;
-      min-width: 140px;
-    }
-    .ill-file .ill-fname {
-      background: #1a1a2e;
-      color: #a8d8a8;
-      font-family: monospace;
-      border-radius: 6px;
-      padding: 4px 8px;
-      margin-bottom: 8px;
-      font-size: 0.75rem;
-    }
-    .ill-file .ill-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 0;
-      border-bottom: 1px solid #f0f0f0;
-      color: #444;
-    }
-    .ill-file .ill-row:last-child { border-bottom: none; }
-    .ill-file .ill-row .key { color: #667eea; font-weight: 700; flex-shrink: 0; }
-    .ill-file .ill-row .val { color: #e65100; }
-    .ill-pencil { font-size: 1rem; }
-
-    /* ③ チャット図解 */
-    .ill-chat {
-      background: white;
-      border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 0.78rem;
-      min-width: 160px;
-      max-width: 200px;
-    }
-    .ill-chat .chat-title {
-      font-size: 0.7rem;
-      color: #888;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-    .ill-msg {
-      border-radius: 10px;
-      padding: 6px 10px;
-      margin-bottom: 6px;
-      font-size: 0.76rem;
-      line-height: 1.4;
-    }
-    .ill-msg.user { background: #667eea; color: white; margin-left: 20px; }
-    .ill-msg.ai   { background: #f0f0f0; color: #333; margin-right: 20px; }
-
-    /* ④ フロー図解 */
-    .ill-flow {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .ill-flow .fbox {
-      background: white;
-      border-radius: 8px;
-      padding: 8px 10px;
-      text-align: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: #333;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    }
-    .ill-flow .fbox .fi { font-size: 1.3rem; display: block; }
-    .ill-flow .fbox.hi { background: #f6c90e; color: #1a1a2e; }
-    .ill-flow .fbox.ok { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
-    .ill-flow .farr { color: #aaa; font-size: 1rem; }
-
-    .toggle-btn {
-      display: block;
-      width: 100%;
-      background: none;
-      border: none;
-      border-top: 1px solid #f0f0f0;
-      color: #999;
-      font-size: 0.78rem;
-      padding: 8px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .toggle-btn:hover { background: #fafafa; color: #667eea; }
-
-    /* ── もっと知りたい ── */
-    .more-section {
-      max-width: 600px;
-      margin: 28px auto 0;
-      padding: 0 16px 48px;
+    /* ── 下段2カラム ── */
+    .bottom-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 48px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 24px;
+      align-items: start;
     }
+
+    /* もっと知りたい */
+    .more-cards { display: flex; flex-direction: column; gap: 12px; }
     .more-card {
       background: white;
       border-radius: 16px;
-      padding: 20px;
+      padding: 20px 24px;
       text-decoration: none;
       color: #1a1a2e;
       box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 16px;
       border: 2px solid transparent;
       transition: border-color 0.15s, transform 0.15s;
-      display: block;
     }
     .more-card:hover { border-color: #667eea; transform: translateY(-2px); }
-    .more-card .mc-icon { font-size: 2rem; margin-bottom: 8px; }
-    .more-card h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 4px; }
-    .more-card p  { font-size: 0.78rem; color: #777; line-height: 1.5; }
+    .more-card .mc-icon { font-size: 2rem; flex-shrink: 0; }
+    .more-card h4 { font-size: 0.92rem; font-weight: 800; margin-bottom: 3px; }
+    .more-card p  { font-size: 0.8rem; color: #777; line-height: 1.5; }
 
-    /* ── 自動リスト ── */
-    .auto-section {
+    /* 自動リスト */
+    .auto-box {
       background: white;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
-    .auto-inner {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 36px 16px;
-    }
-    .auto-title {
-      font-size: 1.1rem;
-      font-weight: 900;
-      text-align: center;
-      margin-bottom: 6px;
-    }
-    .auto-sub {
-      font-size: 0.82rem;
-      color: #888;
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .auto-title { font-size: 1rem; font-weight: 900; margin-bottom: 4px; }
+    .auto-sub   { font-size: 0.78rem; color: #888; margin-bottom: 14px; }
     .auto-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      margin-bottom: 6px;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      margin-bottom: 5px;
       background: #fafafa;
     }
     .badge {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 800;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 999px;
       flex-shrink: 0;
+      white-space: nowrap;
     }
     .badge-auto { background: #e8f5e9; color: #2e7d32; }
     .badge-once { background: #fff3e0; color: #e65100; }
     .badge-wait { background: #e3f2fd; color: #1565c0; }
-    .auto-label { font-size: 0.88rem; color: #333; }
+    .auto-label { font-size: 0.83rem; color: #333; }
 
-    /* ── ショーケース ── */
-    .showcase {
-      max-width: 600px;
+    /* ショーケース */
+    .showcase-wrap {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 36px 16px;
+      padding: 0 24px 48px;
     }
-    .showcase-title {
-      font-size: 1.1rem;
-      font-weight: 900;
-      text-align: center;
-      margin-bottom: 16px;
+    .showcase-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
     .sc-card {
       background: white;
       border-radius: 16px;
-      padding: 16px;
+      padding: 18px;
       display: flex;
       gap: 14px;
       align-items: flex-start;
       box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      margin-bottom: 12px;
     }
-    .sc-card img { width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0; object-fit: cover; }
-    .sc-card h3 { font-size: 0.92rem; font-weight: 800; margin-bottom: 3px; }
-    .sc-card p  { font-size: 0.8rem; color: #666; margin-bottom: 8px; line-height: 1.6; }
+    .sc-card img { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; object-fit: cover; }
+    .sc-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; }
+    .sc-card p  { font-size: 0.82rem; color: #666; margin-bottom: 9px; line-height: 1.6; }
     .sc-links { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sc-links a {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 999px;
-      text-decoration: none;
-    }
-    .lk-web { background: #667eea; color: white; }
-    .lk-ios { background: #1a1a2e; color: white; }
+    .sc-links a { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
+    .lk-web  { background: #667eea; color: white; }
+    .lk-ios  { background: #1a1a2e; color: white; }
     .lk-pend { background: #eee; color: #aaa; }
 
-    /* ── フッター ── */
+    /* フッター */
     footer {
       background: #1a1a2e;
       color: #888;
       text-align: center;
-      padding: 28px 16px;
-      font-size: 0.8rem;
+      padding: 28px 24px;
+      font-size: 0.82rem;
     }
-    footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; }
+    footer a { color: #f6c90e; text-decoration: none; margin: 0 10px; }
 
-    @media (max-width: 420px) {
-      .hero h1 { font-size: 1.4rem; }
-      .more-section { grid-template-columns: 1fr; }
-      header nav a { font-size: 0.72rem; padding: 5px 7px; }
-      .step-detail { padding-left: 20px; }
+    /* ── レスポンシブ（タブレット以下） ── */
+    @media (max-width: 900px) {
+      .hero-inner { flex-direction: column; text-align: center; gap: 24px; }
+      .hero-btns  { justify-content: center; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .bottom-wrap { grid-template-columns: 1fr; }
+      .showcase-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.5rem; }
+      header nav a { font-size: 0.75rem; padding: 5px 8px; }
+      .main-wrap { padding: 32px 14px; }
+      .bottom-wrap { padding: 0 14px 32px; }
+      .showcase-wrap { padding: 0 14px 32px; }
     }
   </style>
 </head>
@@ -438,180 +419,191 @@
 
 <!-- ヒーロー -->
 <div class="hero">
-  <div class="hero-chars">
-    <img src="images/konta-smile.png" alt="こん太">
-    <img src="images/link-smile.png" alt="りんく">
-    <img src="images/tanunee-smile.png" alt="たぬ姉">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>
+        アプリを作りたい？
+        <em>むずかしいことは全部おまかせ！</em>
+      </h1>
+      <p class="sub">
+        iPhone・Android・Webアプリが<br>
+        ぜんぶ同時に完成します
+      </p>
+      <div class="hero-btns">
+        <a href="download/web-ios-android-template.zip" class="btn-dl">⬇ 無料でダウンロード</a>
+        <a href="https://github.com/kimito-link/web-ios-android" class="btn-gh">🐙 GitHubで使う →</a>
+      </div>
+      <p class="hero-note">ダウンロードして解凍するだけ。インストール不要。</p>
+    </div>
+    <div class="hero-chars-wrap">
+      <img src="images/konta-smile.png" alt="こん太">
+      <img src="images/link-smile.png" alt="りんく">
+      <img src="images/tanunee-smile.png" alt="たぬ姉">
+    </div>
   </div>
-  <h1>
-    アプリを作りたい？
-    <em>むずかしいことは全部おまかせ！</em>
-  </h1>
-  <p class="sub">
-    iPhone・Android・Webアプリが<br>ぜんぶ同時に完成します
-  </p>
-  <a href="download/web-ios-android-template.zip" class="btn-dl">⬇ 無料でダウンロード</a>
-  <a href="https://github.com/kimito-link/web-ios-android" class="btn-gh">🐙 GitHubを使っている方はこちら →</a>
-  <p class="hero-note">ダウンロードして解凍するだけ。インストール不要。</p>
 </div>
 
-<!-- 4ステップ -->
-<div class="steps">
+<!-- ステップ -->
+<div class="main-wrap">
   <div class="steps-head">やることは ① ② ③ ④ だけ！</div>
+  <div class="steps-grid">
 
-  <!-- ① -->
-  <div class="step">
-    <div class="step-top">
-      <div class="step-circle">①</div>
-      <div class="step-main">
-        <h3>ダウンロードして開く</h3>
-        <p class="one-line">ボタンを押してファイルを受け取る</p>
+    <!-- ① -->
+    <div class="step">
+      <div class="step-top">
+        <div class="step-circle">①</div>
+        <div class="step-main">
+          <h3>ダウンロードして開く</h3>
+          <p class="one-line">ボタンを押してファイルを受け取る</p>
+        </div>
+        <div class="step-char">
+          <img src="images/link-smile.png" alt="りんく">
+          <span>りんく</span>
+        </div>
       </div>
-      <div class="step-char">
-        <img src="images/link-smile.png" alt="りんく">
-        <span>りんく</span>
+      <div class="illust">
+        <div class="ill-box yellow"><span class="ill-icon">⬇</span>ダウンロード</div>
+        <div class="ill-arr">→</div>
+        <div class="ill-box"><span class="ill-icon">📦</span>ZIPファイル</div>
+        <div class="ill-arr">→</div>
+        <div class="ill-box"><span class="ill-icon">📂</span>フォルダを開く</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        上の「無料でダウンロード」ボタンを押してください。<br>
+        ファイルが届いたら、ダブルクリックして解凍（開く）するだけ。<br>
+        フォルダの中にアプリの土台が全部入っています。
+        <div class="tip">💡 Windowsは右クリック→「すべて展開」、Macはダブルクリックで開けます。</div>
       </div>
     </div>
-    <!-- ① 図解 -->
-    <div class="illust">
-      <div class="ill-box yellow"><span class="ill-icon">⬇</span>ダウンロード</div>
-      <div class="ill-arr">→</div>
-      <div class="ill-box"><span class="ill-icon">📦</span>ZIPファイル</div>
-      <div class="ill-arr">→</div>
-      <div class="ill-box"><span class="ill-icon">📂</span>フォルダを開く</div>
+
+    <!-- ② -->
+    <div class="step">
+      <div class="step-top">
+        <div class="step-circle">②</div>
+        <div class="step-main">
+          <h3>アプリの名前を書く</h3>
+          <p class="one-line">メモ帳で3か所だけ書き換える</p>
+        </div>
+        <div class="step-char">
+          <img src="images/konta-smile.png" alt="こん太">
+          <span>こん太</span>
+        </div>
+      </div>
+      <div class="illust" style="background:#fff8e1;">
+        <div class="ill-file">
+          <div class="ill-fname">app.config.json</div>
+          <div class="ill-row"><span class="key">"name"</span><span class="ill-arr" style="font-size:0.7rem; color:#ccc;">:</span><span class="val">"私のアプリ" ✏️</span></div>
+          <div class="ill-row"><span class="key">"url"</span><span class="ill-arr" style="font-size:0.7rem; color:#ccc;">:</span><span class="val">"example.com" ✏️</span></div>
+          <div class="ill-row"><span class="key">"email"</span><span class="ill-arr" style="font-size:0.7rem; color:#ccc;">:</span><span class="val">"you@xx.com" ✏️</span></div>
+        </div>
+        <div style="font-size:0.75rem; color:#888; text-align:center;">← この3か所だけ！</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        フォルダの中の <strong>app.config.json</strong> をメモ帳で開きます。<br>
+        書き換えるのは <strong>3か所だけ</strong>：
+        <div class="tip">
+          📝 アプリの名前<br>
+          📝 ホームページのアドレス（まだない場合は仮でOK）<br>
+          📝 連絡用のメールアドレス
+        </div>
+      </div>
     </div>
-    <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
-    <div class="step-detail">
-      上の「無料でダウンロード」ボタンを押してください。<br>
-      ファイルが届いたら、ダブルクリックして解凍（開く）するだけ。<br>
-      フォルダの中にアプリの土台が入っています。
-      <div class="tip">💡 ZIP形式のファイルです。Windowsは右クリック→「すべて展開」、Macはダブルクリックで開けます。</div>
+
+    <!-- ③ -->
+    <div class="step">
+      <div class="step-top">
+        <div class="step-circle">③</div>
+        <div class="step-main">
+          <h3>AIに「セットアップして」と頼む</h3>
+          <p class="one-line">あとはAIが全部やってくれる</p>
+        </div>
+        <div class="step-char">
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
+        </div>
+      </div>
+      <div class="illust" style="background:#e8f5e9;">
+        <div class="ill-chat">
+          <div class="chat-title">🤖 AIとのやりとり</div>
+          <div class="ill-msg user">このフォルダをセットアップして！</div>
+          <div class="ill-msg ai">わかりました！アイコン・説明文・設定をぜんぶやります✨</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        Claude や ChatGPT などのAIに、このフォルダを渡して<br>
+        「セットアップして」と言うだけ。<br>
+        アイコン・説明文・細かい設定をぜんぶやってくれます。
+        <div class="tip">🤖 エラーが出ても大丈夫！ 画面をスクショしてAIに貼れば解決してくれます。</div>
+      </div>
+    </div>
+
+    <!-- ④ -->
+    <div class="step">
+      <div class="step-top">
+        <div class="step-circle">④</div>
+        <div class="step-main">
+          <h3>送信したらあとは待つだけ</h3>
+          <p class="one-line">自動でお店に申請される</p>
+        </div>
+        <div class="step-char">
+          <img src="images/link-smile.png" alt="りんく">
+          <span>りんく</span>
+        </div>
+      </div>
+      <div class="illust" style="background:#e3f2fd;">
+        <div class="ill-flow">
+          <div class="fbox hi"><span class="fi">📤</span>送信</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🤖</span>自動<br>ビルド</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🍎</span>App<br>Store</div>
+          <div class="farr">+</div>
+          <div class="fbox"><span class="fi">▶</span>Google<br>Play</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">✅</span>公開！</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        ファイルをGitHub（保管場所）にアップロードすると、<br>
+        iPhone用・Android用のアプリが裏で自動でつくられ、<br>
+        App Store と Google Play に自動で申請されます。
+        <div class="tip">⏳ お店の審査に数日かかります。通ったらそのまま公開されます。</div>
+      </div>
+    </div>
+
+  </div><!-- /steps-grid -->
+</div><!-- /main-wrap -->
+
+<!-- 下段：もっと知りたい ＋ 自動リスト -->
+<div class="bottom-wrap">
+
+  <div>
+    <div style="font-size:1rem; font-weight:900; margin-bottom:14px;">📚 もっと知りたい方へ</div>
+    <div class="more-cards">
+      <a href="howto/" class="more-card">
+        <div class="mc-icon">🖼️</div>
+        <div>
+          <h4>ゆっくり解説</h4>
+          <p>GitHub・Vercel・ドメインって何？<br>画面つきでわかりやすく説明します</p>
+        </div>
+      </a>
+      <a href="guide/" class="more-card">
+        <div class="mc-icon">📋</div>
+        <div>
+          <h4>はじめる前の準備</h4>
+          <p>Apple・Googleへの開発者登録のしかた</p>
+        </div>
+      </a>
     </div>
   </div>
 
-  <!-- ② -->
-  <div class="step">
-    <div class="step-top">
-      <div class="step-circle">②</div>
-      <div class="step-main">
-        <h3>アプリの名前を書く</h3>
-        <p class="one-line">メモ帳で3か所だけ書き換える</p>
-      </div>
-      <div class="step-char">
-        <img src="images/konta-smile.png" alt="こん太">
-        <span>こん太</span>
-      </div>
-    </div>
-    <!-- ② 図解 -->
-    <div class="illust" style="background:#fff8e1;">
-      <div class="ill-file">
-        <div class="ill-fname">app.config.json</div>
-        <div class="ill-row"><span class="key">"name"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"私のアプリ" ✏️</span></div>
-        <div class="ill-row"><span class="key">"url"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"example.com" ✏️</span></div>
-        <div class="ill-row"><span class="key">"email"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"xxx@xx.com" ✏️</span></div>
-      </div>
-      <div style="text-align:center; font-size:0.78rem; color:#888;">← メモ帳で<br>この3か所だけ！</div>
-    </div>
-    <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
-    <div class="step-detail">
-      フォルダの中の <strong>app.config.json</strong> というファイルをメモ帳で開きます。<br>
-      書き換えるのは <strong>3か所だけ</strong>：
-      <div class="tip">
-        📝 アプリの名前<br>
-        📝 ホームページのアドレス（まだない場合は仮でOK）<br>
-        📝 連絡用のメールアドレス
-      </div>
-    </div>
-  </div>
-
-  <!-- ③ -->
-  <div class="step">
-    <div class="step-top">
-      <div class="step-circle">③</div>
-      <div class="step-main">
-        <h3>AIに「セットアップして」と頼む</h3>
-        <p class="one-line">あとはAIが全部やってくれる</p>
-      </div>
-      <div class="step-char">
-        <img src="images/tanunee-smile.png" alt="たぬ姉">
-        <span>たぬ姉</span>
-      </div>
-    </div>
-    <!-- ③ 図解 -->
-    <div class="illust" style="background:#e8f5e9;">
-      <div class="ill-chat">
-        <div class="chat-title">🤖 AIとのやりとり</div>
-        <div class="ill-msg user">このフォルダをセットアップして！</div>
-        <div class="ill-msg ai">わかりました！アイコン・説明文・設定をぜんぶやります✨</div>
-      </div>
-    </div>
-    <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
-    <div class="step-detail">
-      Claude や ChatGPT などのAIに、このフォルダを渡して<br>
-      「セットアップして」と言うだけ。<br>
-      アイコン・説明文・細かい設定をぜんぶやってくれます。
-      <div class="tip">🤖 エラーが出ても大丈夫！ 画面をスクショしてAIに貼れば解決してくれます。</div>
-    </div>
-  </div>
-
-  <!-- ④ -->
-  <div class="step">
-    <div class="step-top">
-      <div class="step-circle">④</div>
-      <div class="step-main">
-        <h3>送信したらあとは待つだけ</h3>
-        <p class="one-line">自動でお店に申請される</p>
-      </div>
-      <div class="step-char">
-        <img src="images/link-smile.png" alt="りんく">
-        <span>りんく</span>
-      </div>
-    </div>
-    <!-- ④ 図解 -->
-    <div class="illust" style="background:#e3f2fd;">
-      <div class="ill-flow">
-        <div class="fbox hi"><span class="fi">📤</span>送信</div>
-        <div class="farr">→</div>
-        <div class="fbox"><span class="fi">🤖</span>自動で<br>ビルド</div>
-        <div class="farr">→</div>
-        <div class="fbox"><span class="fi">🍎</span>App<br>Store</div>
-        <div class="farr">+</div>
-        <div class="fbox"><span class="fi">▶</span>Google<br>Play</div>
-        <div class="farr">→</div>
-        <div class="fbox ok"><span class="fi">✅</span>公開！</div>
-      </div>
-    </div>
-    <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
-    <div class="step-detail">
-      ファイルをGitHub（保管場所）にアップロードすると、<br>
-      iPhone用・Android用のアプリが裏で自動でつくられ、<br>
-      App Store と Google Play に自動で申請されます。
-      <div class="tip">⏳ お店の審査に数日かかります。通ったらそのまま公開されます。</div>
-    </div>
-  </div>
-
-</div><!-- /steps -->
-
-<!-- もっと知りたい人へ -->
-<div class="more-section">
-  <a href="howto/" class="more-card">
-    <div class="mc-icon">🖼️</div>
-    <h4>ゆっくり解説</h4>
-    <p>GitHub・Vercel・ドメインって何？<br>画面つきで説明します</p>
-  </a>
-  <a href="guide/" class="more-card">
-    <div class="mc-icon">📋</div>
-    <h4>はじめる前の準備</h4>
-    <p>Apple・Googleへの<br>登録のしかた</p>
-  </a>
-</div>
-
-<!-- 自動でやってくれること -->
-<div class="auto-section">
-  <div class="auto-inner">
+  <div class="auto-box">
     <div class="auto-title">🤖 自動でやってくれること一覧</div>
     <div class="auto-sub">✋ は初回だけ15分ほど自分でやる作業です</div>
-
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">Webサイトの公開・更新</span></div>
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">iPhoneアプリのビルド・App Store申請</span></div>
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">Androidアプリのビルド・Google Play申請</span></div>
@@ -622,36 +614,40 @@
     <div class="auto-row"><span class="badge badge-once">✋ 初回のみ</span><span class="auto-label">コンテンツのレーティング設定</span></div>
     <div class="auto-row"><span class="badge badge-wait">⏳ 待つだけ</span><span class="auto-label">Apple・Googleの審査（iPhone: 1〜3日、Android: 数日）</span></div>
   </div>
-</div>
+
+</div><!-- /bottom-wrap -->
 
 <!-- ショーケース -->
-<div class="showcase">
+<div class="showcase-wrap">
   <div class="showcase-title">📱 このテンプレートで作ったアプリ</div>
+  <div class="showcase-grid">
 
-  <div class="sc-card">
-    <img src="images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
-    <div>
-      <h3>ゆっくりエクソソーム</h3>
-      <p>エクソソームをわかりやすく解説するアプリ。Web・iPhone・Android を同時リリース。</p>
-      <div class="sc-links">
-        <a href="https://yukkuri-exosome.link/" class="lk-web" target="_blank">🌐 Web</a>
-        <a class="lk-pend">🍎 審査中</a>
-        <a class="lk-pend">▶ 審査中</a>
+    <div class="sc-card">
+      <img src="images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
+      <div>
+        <h3>ゆっくりエクソソーム</h3>
+        <p>エクソソームをわかりやすく解説するアプリ。Web・iPhone・Android を同時リリース。</p>
+        <div class="sc-links">
+          <a href="https://yukkuri-exosome.link/" class="lk-web" target="_blank">🌐 Web</a>
+          <a class="lk-pend">🍎 審査中</a>
+          <a class="lk-pend">▶ 審査中</a>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="sc-card">
-    <img src="images/fujisan-icon.png" alt="富士山コンパス">
-    <div>
-      <h3>富士山コンパス</h3>
-      <p>今いる場所から富士山の方角をリアルタイムで表示するコンパスアプリ。</p>
-      <div class="sc-links">
-        <a href="https://fujisan01.com/" class="lk-web" target="_blank">🌐 Web</a>
-        <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="lk-ios" target="_blank">🍎 App Store</a>
-        <a class="lk-pend">▶ 準備中</a>
+    <div class="sc-card">
+      <img src="images/fujisan-icon.png" alt="富士山コンパス">
+      <div>
+        <h3>富士山コンパス</h3>
+        <p>今いる場所から富士山の方角をリアルタイムで表示するコンパスアプリ。</p>
+        <div class="sc-links">
+          <a href="https://fujisan01.com/" class="lk-web" target="_blank">🌐 Web</a>
+          <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="lk-ios" target="_blank">🍎 App Store</a>
+          <a class="lk-pend">▶ 準備中</a>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
