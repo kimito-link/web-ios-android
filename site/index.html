@@ -139,7 +139,17 @@
     .time-sep   { font-size: 1.2rem; color: #ccc; font-weight: 700; padding-top: 4px; }
     .time-total .time-min { color: #667eea; font-size: 1.15rem; }
     .time-total { background: #f0f0ff; border-radius: 10px; padding: 8px 14px; }
-    .time-note  { text-align: center; font-size: 0.74rem; color: #aaa; margin-top: 10px; }
+    .time-note  { text-align: center; font-size: 0.76rem; color: #667eea; font-weight: 700; margin-top: 10px; }
+    .time-bar-top { text-align: center; margin-bottom: 14px; }
+    .time-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 999px;
+    }
 
     /* ── メインコンテンツ ── */
     .main-wrap {
@@ -489,6 +499,9 @@
 
   <!-- 所要時間バー -->
   <div class="time-bar">
+    <div class="time-bar-top">
+      <span class="time-badge">⏱ 細かい設定はぜんぶ入り済み</span>
+    </div>
     <div class="time-bar-inner">
       <div class="time-item">
         <span class="time-circle">①</span>
@@ -515,12 +528,11 @@
       </div>
       <div class="time-sep">=</div>
       <div class="time-item time-total">
-        <span class="time-label">合計</span>
+        <span class="time-label">人間の作業</span>
         <span class="time-min">約20分！</span>
-        <span style="font-size:0.7rem; color:#888; margin-top:2px;">あとは待つだけ</span>
       </div>
     </div>
-    <p class="time-note">※ 審査待ち（数日）は自動なので何もしなくてOK</p>
+    <p class="time-note">残りの時間は「どんなアプリにしよう？」を考えるだけ 💭</p>
   </div>
   <div class="steps-grid">
 
