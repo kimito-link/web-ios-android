@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>はじめる前の準備 | web-ios-android</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #fafafa;
+      color: #1a1a1a;
+      line-height: 1.8;
+    }
+
+    /* ヘッダー */
+    header {
+      background: white;
+      border-bottom: 2px solid #eee;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img.logo { height: 44px; }
+    header nav { margin-left: auto; font-size: 0.88rem; }
+    header nav a { color: #667eea; text-decoration: none; margin-left: 20px; }
+
+    /* ヒーロー */
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.7rem; font-weight: 900; margin-bottom: 10px; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.95rem; max-width: 520px; margin: 0 auto; }
+
+    /* メイン */
+    .main { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* 吹き出し */
+    .bubble-intro {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      margin-bottom: 48px;
+    }
+    .bubble-intro img { width: 70px; flex-shrink: 0; }
+    .bubble-intro p { font-size: 0.95rem; color: #333; }
+    .bubble-intro strong { color: #667eea; }
+
+    /* セクション */
+    .guide-section { margin-bottom: 56px; }
+    .guide-section h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      padding: 12px 20px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .h2-apple { background: #f5f5f7; color: #1d1d1f; border-left: 5px solid #555; }
+    .h2-google { background: #e8f5e9; color: #1b5e20; border-left: 5px solid #34a853; }
+    .h2-both { background: #fff8e1; color: #5d4037; border-left: 5px solid #f6c90e; }
+
+    /* タブ（個人/法人） */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+      background: white;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #888;
+      transition: all 0.15s;
+    }
+    .tab.active { border-color: #667eea; background: #667eea; color: white; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ステップカード */
+    .steps { list-style: none; }
+    .steps li {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+    .step-icon {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-weight: 800;
+      font-size: 0.9rem;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-body { flex: 1; }
+    .step-body h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
+    .step-body p  { font-size: 0.88rem; color: #555; }
+    .step-body .note {
+      display: inline-block;
+      background: #fff3e0;
+      color: #e65100;
+      font-size: 0.8rem;
+      padding: 2px 10px;
+      border-radius: 6px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+    .step-body .tip {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-size: 0.8rem;
+      padding: 2px 10px;
+      border-radius: 6px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* コスト表 */
+    .cost-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 24px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .cost-item { flex: 1; min-width: 160px; }
+    .cost-item .label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+    .cost-item .amount { font-size: 1.4rem; font-weight: 900; color: #1a1a2e; }
+    .cost-item .sub { font-size: 0.8rem; color: #888; }
+
+    /* 注意ボックス */
+    .alert {
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      margin: 16px 0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .alert-warn { background: #fff8e1; border-left: 4px solid #f6c90e; color: #5d4037; }
+    .alert-info { background: #e3f2fd; border-left: 4px solid #1976d2; color: #0d47a1; }
+    .alert-ok   { background: #e8f5e9; border-left: 4px solid #34a853; color: #1b5e20; }
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* まとめ表 */
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .summary-table th { background: #1a1a2e; color: white; padding: 10px 14px; text-align: left; }
+    .summary-table td { padding: 10px 14px; border-bottom: 1px solid #eee; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* フッター */
+    footer {
+      background: #1a1a2e;
+      color: #aaa;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.85rem;
+    }
+    footer a { color: #f6c90e; text-decoration: none; }
+    footer img { height: 32px; filter: brightness(0) invert(1); opacity: 0.6; margin-bottom: 10px; display: block; margin: 0 auto 10px; }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header>
+  <img class="logo" src="../images/logo.png" alt="Kimito-Link">
+  <nav>
+    <a href="../">← トップに戻る</a>
+  </nav>
+</header>
+
+<!-- ヒーロー -->
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../images/konta-smile.png" alt="こん太">
+    <img src="../images/link-smile.png" alt="りんく">
+    <img src="../images/tanunee-smile.png" alt="たぬ姉">
+  </div>
+  <h1>アプリを出す前に<br><span>必要な準備</span>をしよう</h1>
+  <p>App Store と Google Play に出すには、事前に開発者登録が必要です。<br>難しくないので一緒にやってみましょう！</p>
+</div>
+
+<!-- メイン -->
+<div class="main">
+
+  <!-- 吹き出しイントロ -->
+  <div class="bubble-intro">
+    <img src="../images/link-smile.png" alt="りんく">
+    <p>このページでは、アプリをお店に出す前に必要な<strong>「開発者登録」</strong>を説明します。<br>
+    App Store（iPhone用）と Google Play（Android用）、<strong>2つの登録</strong>が必要です。<br>
+    それぞれ費用がかかりますが、一度やれば何個アプリを出してもOKです！</p>
+  </div>
+
+  <!-- まとめ（最初に全体像） -->
+  <div class="guide-section">
+    <h2 class="h2-both">📋 まず全体像を確認しよう</h2>
+    <table class="summary-table">
+      <thead>
+        <tr><th>登録先</th><th>費用</th><th>個人</th><th>法人</th><th>難しさ</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🍎 Apple Developer</td>
+          <td>年間 $99（約1.5万円）</td>
+          <td>✅ できる</td>
+          <td>✅ できる（D-U-N-S番号が必要）</td>
+          <td>★★☆</td>
+        </tr>
+        <tr>
+          <td>🤖 Google Play</td>
+          <td>$25（約4,000円・一回のみ）</td>
+          <td>✅ できる</td>
+          <td>✅ できる</td>
+          <td>★☆☆</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info" style="margin-top:16px;">
+      <span class="alert-icon">💡</span>
+      <span>法人の場合、Apple登録に <strong>D-U-N-S番号</strong>（会社の識別番号）が必要です。取得に1〜2週間かかるので先に申請しておきましょう。</span>
+    </div>
+  </div>
+
+  <!-- Apple Developer -->
+  <div class="guide-section">
+    <h2 class="h2-apple">🍎 Apple Developer Program への登録</h2>
+
+    <div class="cost-box">
+      <div class="cost-item">
+        <div class="label">年間費用</div>
+        <div class="amount">$99</div>
+        <div class="sub">約15,000円（毎年更新）</div>
+      </div>
+      <div class="cost-item">
+        <div class="label">個人 / 法人</div>
+        <div class="amount">両方OK</div>
+        <div class="sub">法人はD-U-N-S番号が必要</div>
+      </div>
+      <div class="cost-item">
+        <div class="label">登録にかかる時間</div>
+        <div class="amount">個人: 即日</div>
+        <div class="sub">法人: 1〜2週間</div>
+      </div>
+    </div>
+
+    <!-- タブ -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('apple', 'kojin', this)">👤 個人の場合</div>
+      <div class="tab" onclick="switchTab('apple', 'hojin', this)">🏢 法人の場合</div>
+    </div>
+
+    <!-- 個人 -->
+    <div id="apple-kojin" class="tab-content active">
+      <ul class="steps">
+        <li>
+          <div class="step-icon">1</div>
+          <div class="step-body">
+            <h3>Apple IDを作る（持っていれば不要）</h3>
+            <p>appleid.apple.com でApple IDを作ります。本名・住所・クレジットカードが必要です。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">2</div>
+          <div class="step-body">
+            <h3>developer.apple.com にアクセスする</h3>
+            <p>右上の「Account」からApple IDでサインイン。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">3</div>
+          <div class="step-body">
+            <h3>「Enroll」（登録）ボタンを押す</h3>
+            <p>Entity Type（個人か法人か）を選ぶ画面が出ます。「Individual / Sole Proprietor / Single Person Business」を選びます。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">4</div>
+          <div class="step-body">
+            <h3>$99 を支払う</h3>
+            <p>クレジットカードで支払います。即日有効になります。</p>
+            <span class="tip">✅ 当日から App Store Connect を使えます</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 法人 -->
+    <div id="apple-hojin" class="tab-content">
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <span><strong>法人の場合は先にD-U-N-S番号を取得してください。</strong><br>
+        取得に1〜2週間かかります。アプリ開発を始める前に申請しておくのがおすすめです。</span>
+      </div>
+
+      <ul class="steps">
+        <li>
+          <div class="step-icon">1</div>
+          <div class="step-body">
+            <h3>D-U-N-S番号を取得する（先にやる！）</h3>
+            <p>D-U-N-Sとは、会社を識別する9桁の番号です。Appleが認証に使います。</p>
+            <p style="margin-top:8px;">Dun &amp; Bradstreet（ダン＆ブラッドストリート）社のサイトで無料申請できます。<br>
+            Appleのページ経由で申請すると無料・優先処理されます。</p>
+            <span class="note">⏱ 取得まで1〜2週間かかります</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">2</div>
+          <div class="step-body">
+            <h3>法人のApple IDを用意する</h3>
+            <p>代表者個人のApple IDではなく、会社用のApple IDを作ることを推奨します。<br>
+            （例: developer@会社ドメイン）</p>
+            <span class="note">⚠️ 個人のApple IDで法人登録すると後から変更できません</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">3</div>
+          <div class="step-body">
+            <h3>developer.apple.com でEnrollする</h3>
+            <p>Entity Typeは「Company / Organization」を選びます。<br>
+            D-U-N-S番号・会社名（英語）・住所・電話番号・代表者名が必要です。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">4</div>
+          <div class="step-body">
+            <h3>Appleからの確認電話に対応する</h3>
+            <p>登録した電話番号にAppleから英語で電話がかかってくることがあります。<br>
+            「Yes, I am the account holder」と答えればOKです。</p>
+            <span class="note">📞 英語の電話です。出られない場合は折り返し案内が来ます</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">5</div>
+          <div class="step-body">
+            <h3>$99 を支払って完了</h3>
+            <p>審査完了後にメールが届きます。その後支払いページに進みます。</p>
+            <span class="tip">✅ 完了後すぐにApp Store Connectを使えます</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Google Play -->
+  <div class="guide-section">
+    <h2 class="h2-google">🤖 Google Play Developer への登録</h2>
+
+    <div class="cost-box">
+      <div class="cost-item">
+        <div class="label">登録料</div>
+        <div class="amount">$25</div>
+        <div class="sub">約4,000円・一回のみ（更新不要）</div>
+      </div>
+      <div class="cost-item">
+        <div class="label">個人 / 法人</div>
+        <div class="amount">両方OK</div>
+        <div class="sub">手続きはほぼ同じ</div>
+      </div>
+      <div class="cost-item">
+        <div class="label">登録にかかる時間</div>
+        <div class="amount">即日〜2日</div>
+        <div class="sub">Appleより簡単</div>
+      </div>
+    </div>
+
+    <div class="alert alert-ok">
+      <span class="alert-icon">✅</span>
+      <span>Google Playは個人でも法人でも手続きがほぼ同じです。Appleより簡単です。</span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('google', 'kojin', this)">👤 個人の場合</div>
+      <div class="tab" onclick="switchTab('google', 'hojin', this)">🏢 法人の場合</div>
+    </div>
+
+    <!-- 個人 -->
+    <div id="google-kojin" class="tab-content active">
+      <ul class="steps">
+        <li>
+          <div class="step-icon">1</div>
+          <div class="step-body">
+            <h3>Googleアカウントを用意する</h3>
+            <p>個人のGmailアカウントでOKです。ただし後から変更できないので、アプリ専用アカウントを作ることを推奨します。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">2</div>
+          <div class="step-body">
+            <h3>play.google.com/console にアクセスする</h3>
+            <p>「デベロッパーアカウントを作成」ボタンを押します。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">3</div>
+          <div class="step-body">
+            <h3>アカウントの種類を選ぶ</h3>
+            <p>「個人」を選びます。氏名・住所・電話番号を入力します。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">4</div>
+          <div class="step-body">
+            <h3>$25 を支払って完了</h3>
+            <p>クレジットカードで支払います。即日有効になります。</p>
+            <span class="tip">✅ 一度払えば更新料なし・何個アプリを出してもOK</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 法人 -->
+    <div id="google-hojin" class="tab-content">
+      <ul class="steps">
+        <li>
+          <div class="step-icon">1</div>
+          <div class="step-body">
+            <h3>会社用Googleアカウントを用意する</h3>
+            <p>Google Workspaceのアカウントが理想ですが、会社名のGmailでも可能です。<br>
+            （例: developer@会社名.com）</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">2</div>
+          <div class="step-body">
+            <h3>play.google.com/console にアクセスする</h3>
+            <p>「デベロッパーアカウントを作成」ボタンを押します。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">3</div>
+          <div class="step-body">
+            <h3>「組織」を選ぶ</h3>
+            <p>アカウントの種類で「組織」を選びます。会社名（日本語OK）・住所・電話番号・ウェブサイトを入力します。</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">4</div>
+          <div class="step-body">
+            <h3>$25 を支払って完了</h3>
+            <p>クレジットカードで支払います。法人でも追加手続きは基本的にありません。</p>
+            <span class="tip">✅ Appleと違って審査の電話などはありません</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-icon">5</div>
+          <div class="step-body">
+            <h3>サービスアカウント（SA）を作成する</h3>
+            <p>自動でアプリを提出するために、Google Cloud ConsoleでサービスアカウントのJSONキーを発行します。<br>
+            このキーを GitHub Secrets に登録すると、git push だけで自動提出できるようになります。</p>
+            <span class="note">🔑 このテンプレートを使う場合は必須の作業です</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 次のステップ -->
+  <div class="guide-section">
+    <h2 class="h2-both">🚀 登録が終わったら</h2>
+    <div class="bubble-intro">
+      <img src="../images/tanunee-smile.png" alt="たぬ姉">
+      <p>登録が終わったら、テンプレートを使ってアプリを作り始めましょう！<br>
+      GitHub Secretsに認証情報を登録するだけで、あとは<strong>git pushするだけで自動提出</strong>されます。</p>
+    </div>
+    <div style="text-align:center; margin-top: 24px;">
+      <a href="https://github.com/kimito-link/web-ios-android" style="
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: 800;
+        font-size: 1rem;
+        padding: 14px 36px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+      ">GitHubでテンプレートを使う →</a>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- フッター -->
+<footer>
+  <img src="../images/logo.png" alt="Kimito-Link">
+  <div>
+    <a href="https://github.com/kimito-link/web-ios-android">GitHub</a> ·
+    <a href="../">トップページ</a>
+  </div>
+</footer>
+
+<script>
+function switchTab(section, tab, el) {
+  // タブボタンの切り替え
+  el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // コンテンツの切り替え
+  document.getElementById(section + '-kojin').classList.remove('active');
+  document.getElementById(section + '-hojin').classList.remove('active');
+  document.getElementById(section + '-' + tab).classList.add('active');
+}
+</script>
+</body>
+</html>
