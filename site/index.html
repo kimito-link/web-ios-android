@@ -273,6 +273,56 @@
       .showcase-links { justify-content: center; }
     }
 
+    /* ── AI活用法 ── */
+    .ai-section { background: #fafafa; }
+    .ai-tools-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .ai-tool-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 2px solid #eee;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .ai-tool-badge .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .ai-tips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .ai-tip {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border-top: 4px solid #667eea;
+    }
+    .ai-tip .tip-icon { font-size: 2rem; margin-bottom: 10px; }
+    .ai-tip h4 { font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; }
+    .ai-tip p { color: #555; font-size: 0.85rem; line-height: 1.7; }
+    .ai-tip code {
+      display: block;
+      background: #1a1a2e;
+      color: #a8d8a8;
+      font-family: monospace;
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      word-break: break-all;
+    }
+
     /* ── Kimito Link 理念 ── */
     .philosophy-section { background: white; }
     .philosophy-inner {
@@ -579,6 +629,52 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- AI活用法 -->
+<div class="ai-section">
+  <div class="section">
+    <p class="section-title">🤝 <span>AIと一緒に開発する</span></p>
+    <p style="text-align:center; color:#666; font-size:0.92rem; margin-bottom:28px;">
+      このテンプレートは、AIアシスタントと組み合わせることで真価を発揮します。<br>
+      Claude・Cursor・Codex など、好きなAIで開発できます。
+    </p>
+
+    <div class="ai-tools-row">
+      <div class="ai-tool-badge"><span class="dot" style="background:#c9784e;"></span>Claude Code</div>
+      <div class="ai-tool-badge"><span class="dot" style="background:#333;"></span>Cursor</div>
+      <div class="ai-tool-badge"><span class="dot" style="background:#10a37f;"></span>ChatGPT / Codex</div>
+      <div class="ai-tool-badge"><span class="dot" style="background:#4285f4;"></span>Gemini</div>
+      <div class="ai-tool-badge"><span class="dot" style="background:#999;"></span>その他のAIでも OK</div>
+    </div>
+
+    <div class="ai-tips">
+      <div class="ai-tip">
+        <div class="tip-icon">🖼️</div>
+        <h4>画面をスクショして貼る</h4>
+        <p>「この画面、こう直して」とスクショを貼るだけ。AIがデザインやレイアウトの問題をすぐに把握して修正案を出してくれます。</p>
+      </div>
+
+      <div class="ai-tip">
+        <div class="tip-icon">📂</div>
+        <h4>フォルダのパスを伝える</h4>
+        <p>ローカルのプロジェクトフォルダのパスをそのままAIに渡すと、コードを直接読んで修正してくれます。</p>
+        <code>"C:\Users\yourname\github\my-app"</code>
+      </div>
+
+      <div class="ai-tip">
+        <div class="tip-icon">📋</div>
+        <h4>引継ぎファイルで記憶を続ける</h4>
+        <p>セッションをまたいで作業するときは、<code>_drafts/HANDOFF.md</code> に状況をまとめておいて、次のセッションの最初に渡すと会話が続きます。</p>
+      </div>
+
+      <div class="ai-tip">
+        <div class="tip-icon">⚙️</div>
+        <h4>エラーはそのままコピペ</h4>
+        <p>ビルドエラーやストアの審査却下メッセージをそのままAIに貼ると、原因と対処法を教えてくれます。英語でも大丈夫。</p>
+      </div>
     </div>
   </div>
 </div>
