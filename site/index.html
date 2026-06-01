@@ -303,6 +303,22 @@
     .fbox.ok { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
     .farr { color: #aaa; font-size: 0.9rem; }
 
+    /* ステップ内ダウンロードボタン */
+    .step-dl-btn {
+      display: block;
+      background: #f6c90e;
+      color: #1a1a2e;
+      font-weight: 900;
+      font-size: 1rem;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 3px 10px rgba(246,201,14,0.4);
+      transition: transform 0.15s;
+    }
+    .step-dl-btn:hover { transform: translateY(-2px); }
+
     /* くわしく見る */
     .toggle-btn {
       display: block;
@@ -550,12 +566,13 @@
           <span>りんく</span>
         </div>
       </div>
-      <div class="illust">
-        <div class="ill-box yellow"><span class="ill-icon">⬇</span>ボタンを押す</div>
-        <div class="ill-arr">→</div>
-        <div class="ill-box"><span class="ill-icon">📦</span>届く</div>
-        <div class="ill-arr">→</div>
-        <div class="ill-box"><span class="ill-icon">📂</span>開く</div>
+      <div class="illust" style="flex-direction:column; gap:12px;">
+        <a href="download/web-ios-android-template.zip" class="step-dl-btn">⬇ ZIPをダウンロード</a>
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+          <div class="ill-box"><span class="ill-icon">📦</span>届く</div>
+          <div class="ill-arr">→</div>
+          <div class="ill-box"><span class="ill-icon">📂</span>開く</div>
+        </div>
       </div>
       <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
       <div class="step-detail">
