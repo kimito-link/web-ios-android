@@ -101,6 +101,61 @@
     .btn-gh:hover { color: white; }
     .hero-note { font-size: 0.82rem; opacity: 0.55; }
 
+    /* ── 相談ボタン ── */
+    .btn-consult {
+      display: inline-block;
+      margin-top: 14px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      padding: 9px 20px;
+      border-radius: 50px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-consult:hover { background: rgba(255,255,255,0.12); color: white; }
+
+    /* ── 所要時間バー ── */
+    .time-bar {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 18px 20px 12px;
+      margin-bottom: 20px;
+    }
+    .time-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .time-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 64px;
+    }
+    .time-circle {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .time-label { font-size: 0.72rem; color: #777; }
+    .time-min   { font-size: 1rem; font-weight: 900; color: #1a1a2e; }
+    .time-sep   { font-size: 1.2rem; color: #ccc; font-weight: 700; padding-top: 4px; }
+    .time-total .time-min { color: #667eea; font-size: 1.15rem; }
+    .time-total { background: #f0f0ff; border-radius: 10px; padding: 8px 14px; }
+    .time-note  { text-align: center; font-size: 0.74rem; color: #aaa; margin-top: 10px; }
+
     /* ── メインコンテンツ ── */
     .main-wrap {
       max-width: 1100px;
@@ -434,6 +489,7 @@
         <a href="https://github.com/kimito-link/web-ios-android" class="btn-gh">🐙 GitHubでも使える →</a>
       </div>
       <p class="hero-note">ボタンを押してダブルクリックするだけ。インストール不要。</p>
+      <a href="mailto:info@best-trust.biz?subject=アプリ相談&body=作りたいアプリのアイデアを教えてください" class="btn-consult">💬 アイデアがある？まず相談する →</a>
     </div>
     <div class="hero-chars-wrap">
       <img src="images/konta-smile.png" alt="こん太">
@@ -446,6 +502,42 @@
 <!-- ステップ -->
 <div class="main-wrap">
   <div class="steps-head">やることは ① ② ③ ④ だけ！</div>
+
+  <!-- 所要時間バー -->
+  <div class="time-bar">
+    <div class="time-bar-inner">
+      <div class="time-item">
+        <span class="time-circle">①</span>
+        <span class="time-label">ダウンロード</span>
+        <span class="time-min">1分</span>
+      </div>
+      <div class="time-sep">＋</div>
+      <div class="time-item">
+        <span class="time-circle">②</span>
+        <span class="time-label">名前を書く</span>
+        <span class="time-min">3分</span>
+      </div>
+      <div class="time-sep">＋</div>
+      <div class="time-item">
+        <span class="time-circle">③</span>
+        <span class="time-label">AIに頼む</span>
+        <span class="time-min">10分</span>
+      </div>
+      <div class="time-sep">＋</div>
+      <div class="time-item">
+        <span class="time-circle">④</span>
+        <span class="time-label">送信</span>
+        <span class="time-min">5分</span>
+      </div>
+      <div class="time-sep">=</div>
+      <div class="time-item time-total">
+        <span class="time-label">合計</span>
+        <span class="time-min">約20分！</span>
+        <span style="font-size:0.7rem; color:#888; margin-top:2px;">あとは待つだけ</span>
+      </div>
+    </div>
+    <p class="time-note">※ 審査待ち（数日）は自動なので何もしなくてOK</p>
+  </div>
   <div class="steps-grid">
 
     <!-- ① -->
