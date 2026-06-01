@@ -186,6 +186,124 @@
     .log li:last-child { border-bottom: none; }
     .log .date { color: #999; white-space: nowrap; font-size: 0.82rem; min-width: 88px; }
 
+    /* ── フロー図解 ── */
+    .flow-section {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 64px 24px;
+    }
+    .flow-section .section-title { color: white; }
+    .flow-section .section-title span { color: #f6c90e; }
+    .flow-wrap { max-width: 800px; margin: 0 auto; }
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .flow-box {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      padding: 18px 22px;
+      text-align: center;
+      min-width: 140px;
+    }
+    .flow-box.highlight {
+      background: #f6c90e;
+      border-color: #f6c90e;
+      color: #1a1a2e;
+    }
+    .flow-box .flow-icon { font-size: 2rem; margin-bottom: 6px; }
+    .flow-box .flow-label { font-size: 0.82rem; font-weight: 700; line-height: 1.4; }
+    .flow-arrow { font-size: 1.6rem; color: rgba(255,255,255,0.5); }
+    .flow-detail {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .flow-detail-card {
+      background: rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .flow-detail-card h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 8px; color: #f6c90e; }
+    .flow-detail-card ul { list-style: none; font-size: 0.83rem; color: rgba(255,255,255,0.8); }
+    .flow-detail-card ul li { padding: 3px 0; }
+    .flow-detail-card ul li::before { content: "→ "; opacity: 0.5; }
+
+    /* ── 事例ショーケース ── */
+    .showcase-section { background: #f0f0ff; border-top: 1px solid #e0e0f0; border-bottom: 1px solid #e0e0f0; }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .showcase-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 4px 24px rgba(102,126,234,0.12);
+    }
+    .showcase-card img { width: 80px; height: 80px; border-radius: 18px; flex-shrink: 0; object-fit: cover; }
+    .showcase-card .showcase-info h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+    .showcase-card .showcase-info p { color: #555; font-size: 0.85rem; margin-bottom: 14px; line-height: 1.7; }
+    .showcase-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .showcase-links a {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.15s;
+    }
+    .showcase-links a:hover { transform: translateY(-2px); }
+    .showcase-links .link-web { background: #667eea; color: white; }
+    .showcase-links .link-ios { background: #1a1a2e; color: white; }
+    .showcase-links .link-android { background: #3ddc84; color: #1a1a2e; }
+    .showcase-links .link-pending { background: #eee; color: #999; cursor: default; }
+    @media (max-width: 480px) {
+      .showcase-card { flex-direction: column; align-items: center; text-align: center; }
+      .showcase-links { justify-content: center; }
+    }
+
+    /* ── Kimito Link 理念 ── */
+    .philosophy-section { background: white; }
+    .philosophy-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .philosophy-char { flex-shrink: 0; text-align: center; width: 100px; }
+    .philosophy-char img { width: 90px; }
+    .philosophy-char .char-name { font-size: 0.72rem; color: #888; margin-top: 4px; }
+    .philosophy-text h2 { font-size: 1.4rem; font-weight: 900; margin-bottom: 16px; color: #1a1a2e; }
+    .philosophy-text h2 span { color: #667eea; }
+    .philosophy-text p { color: #444; font-size: 0.95rem; margin-bottom: 14px; line-height: 1.85; }
+    .philosophy-text .kimito-link-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 6px 18px;
+      border-radius: 999px;
+      margin-top: 8px;
+      text-decoration: none;
+    }
+    @media (max-width: 560px) {
+      .philosophy-inner { flex-direction: column; align-items: center; }
+      .philosophy-text { text-align: center; }
+    }
+
     /* ── フッター ── */
     footer {
       background: #1a1a2e;
@@ -363,6 +481,135 @@
       <span>🏁 テンプレート初回リリース（iOS + Android 自動ビルド・提出）</span>
     </li>
   </ul>
+</div>
+
+<!-- フロー図解 -->
+<div class="flow-section">
+  <div class="flow-wrap">
+    <p class="section-title">⚙️ <span>git push したら何が起きるの？</span></p>
+    <div class="flow">
+      <div class="flow-box highlight">
+        <div class="flow-icon">💻</div>
+        <div class="flow-label">あなたが<br>git push</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">🤖</div>
+        <div class="flow-label">GitHub Actions<br>が起動</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">🏗️</div>
+        <div class="flow-label">iOS / Android<br>自動ビルド</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">📦</div>
+        <div class="flow-label">App Store &amp;<br>Play へ自動提出</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">✅</div>
+        <div class="flow-label">審査待ち<br>（あとは待つだけ）</div>
+      </div>
+    </div>
+
+    <div class="flow-detail">
+      <div class="flow-detail-card">
+        <h4>💻 あなたがやること</h4>
+        <ul>
+          <li>app.config.json を書く</li>
+          <li>npm run setup を実行</li>
+          <li>GitHub Secrets を設定</li>
+          <li>git push する</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card">
+        <h4>🤖 自動でやってくれること</h4>
+        <ul>
+          <li>iOSアプリのビルド・署名</li>
+          <li>Androidアプリのビルド・署名</li>
+          <li>App Store Connect に提出</li>
+          <li>Google Play に提出</li>
+          <li>Webアプリを Vercel にデプロイ</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card">
+        <h4>✋ 初回だけ手動（約15分）</h4>
+        <ul>
+          <li>Play Console: 広告申告</li>
+          <li>Play Console: コンテンツレーティング</li>
+          <li>Play Console: データセーフティ</li>
+          <li>Play Console: ターゲットユーザー設定</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 事例ショーケース -->
+<div class="showcase-section">
+  <div class="section">
+    <p class="section-title">📱 <span>このテンプレートで作られたアプリ</span></p>
+    <div class="showcase-grid">
+
+      <div class="showcase-card">
+        <img src="images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
+        <div class="showcase-info">
+          <h3>ゆっくりエクソソーム</h3>
+          <p>エクソソームについて日本語でわかりやすく解説するアプリ。Web・iOS・Android を同時リリース。セットアップから審査提出まで、ほぼ自動で完了。</p>
+          <div class="showcase-links">
+            <a href="https://yukkuri-exosome.link/" class="link-web" target="_blank">🌐 Web</a>
+            <a class="link-pending">🍎 審査中</a>
+            <a class="link-pending">▶ 審査中</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-card">
+        <img src="images/fujisan-icon.png" alt="富士山コンパス">
+        <div class="showcase-info">
+          <h3>富士山コンパス</h3>
+          <p>今いる場所から富士山の方角をリアルタイムで表示するコンパスアプリ。GPS・磁気センサーを使い、どこにいても富士山の方向がわかる。</p>
+          <div class="showcase-links">
+            <a href="https://fujisan01.com/" class="link-web" target="_blank">🌐 Web</a>
+            <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="link-ios" target="_blank">🍎 App Store</a>
+            <a class="link-pending">▶ 準備中</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Kimito Link 理念 -->
+<div class="philosophy-section">
+  <div class="section" style="padding-bottom: 72px;">
+    <p class="section-title">💡 <span>なぜ作ったのか</span></p>
+    <div class="philosophy-inner">
+      <div class="philosophy-char">
+        <img src="images/tanunee-normal.png" alt="たぬ姉">
+        <div class="char-name">たぬ姉</div>
+      </div>
+      <div class="philosophy-text">
+        <h2>クリエイターが<span>アイデアに集中</span>できるように</h2>
+        <p>
+          アプリを作るとき、本当に大変なのはビルド設定や証明書の管理、ストアへの提出手続きです。
+          せっかくいいアイデアがあっても、技術的なハードルで諦めてしまうクリエイターをたくさん見てきました。
+        </p>
+        <p>
+          このテンプレートは、<strong>Kimito Link のクリエイター支援活動の一環</strong>として作りました。
+          「アプリを出したい」と思ったとき、面倒な部分はぜんぶ自動化して、
+          クリエイターがコンテンツやデザインに集中できる環境を届けたいのです。
+        </p>
+        <p>
+          無料でオープンソースで公開しています。使ってみて、良ければ SNS でシェアしてもらえると嬉しいです。
+        </p>
+        <a href="https://github.com/kimito-link" class="kimito-link-badge" target="_blank">Kimito Link について →</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- フッター -->
