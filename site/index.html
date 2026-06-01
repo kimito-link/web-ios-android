@@ -174,6 +174,117 @@
       color: #555;
     }
 
+    /* ── 図解 ── */
+    .illust {
+      margin: 0 20px 16px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #f0f0ff;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    .ill-box {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #333;
+      min-width: 70px;
+    }
+    .ill-box .ill-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .ill-box.accent { background: #667eea; color: white; }
+    .ill-box.yellow { background: #f6c90e; color: #1a1a2e; }
+    .ill-box.green  { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
+    .ill-arr { font-size: 1.2rem; color: #aaa; flex-shrink: 0; }
+
+    /* ② ファイル図解 */
+    .ill-file {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 0.78rem;
+      min-width: 140px;
+    }
+    .ill-file .ill-fname {
+      background: #1a1a2e;
+      color: #a8d8a8;
+      font-family: monospace;
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+    }
+    .ill-file .ill-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid #f0f0f0;
+      color: #444;
+    }
+    .ill-file .ill-row:last-child { border-bottom: none; }
+    .ill-file .ill-row .key { color: #667eea; font-weight: 700; flex-shrink: 0; }
+    .ill-file .ill-row .val { color: #e65100; }
+    .ill-pencil { font-size: 1rem; }
+
+    /* ③ チャット図解 */
+    .ill-chat {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 0.78rem;
+      min-width: 160px;
+      max-width: 200px;
+    }
+    .ill-chat .chat-title {
+      font-size: 0.7rem;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .ill-msg {
+      border-radius: 10px;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+    .ill-msg.user { background: #667eea; color: white; margin-left: 20px; }
+    .ill-msg.ai   { background: #f0f0f0; color: #333; margin-right: 20px; }
+
+    /* ④ フロー図解 */
+    .ill-flow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .ill-flow .fbox {
+      background: white;
+      border-radius: 8px;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .ill-flow .fbox .fi { font-size: 1.3rem; display: block; }
+    .ill-flow .fbox.hi { background: #f6c90e; color: #1a1a2e; }
+    .ill-flow .fbox.ok { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
+    .ill-flow .farr { color: #aaa; font-size: 1rem; }
+
     .toggle-btn {
       display: block;
       width: 100%;
@@ -361,6 +472,14 @@
         <span>りんく</span>
       </div>
     </div>
+    <!-- ① 図解 -->
+    <div class="illust">
+      <div class="ill-box yellow"><span class="ill-icon">⬇</span>ダウンロード</div>
+      <div class="ill-arr">→</div>
+      <div class="ill-box"><span class="ill-icon">📦</span>ZIPファイル</div>
+      <div class="ill-arr">→</div>
+      <div class="ill-box"><span class="ill-icon">📂</span>フォルダを開く</div>
+    </div>
     <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
     <div class="step-detail">
       上の「無料でダウンロード」ボタンを押してください。<br>
@@ -382,6 +501,16 @@
         <img src="images/konta-smile.png" alt="こん太">
         <span>こん太</span>
       </div>
+    </div>
+    <!-- ② 図解 -->
+    <div class="illust" style="background:#fff8e1;">
+      <div class="ill-file">
+        <div class="ill-fname">app.config.json</div>
+        <div class="ill-row"><span class="key">"name"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"私のアプリ" ✏️</span></div>
+        <div class="ill-row"><span class="key">"url"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"example.com" ✏️</span></div>
+        <div class="ill-row"><span class="key">"email"</span><span class="ill-arr" style="font-size:0.8rem;">:</span><span class="val">"xxx@xx.com" ✏️</span></div>
+      </div>
+      <div style="text-align:center; font-size:0.78rem; color:#888;">← メモ帳で<br>この3か所だけ！</div>
     </div>
     <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
     <div class="step-detail">
@@ -408,6 +537,14 @@
         <span>たぬ姉</span>
       </div>
     </div>
+    <!-- ③ 図解 -->
+    <div class="illust" style="background:#e8f5e9;">
+      <div class="ill-chat">
+        <div class="chat-title">🤖 AIとのやりとり</div>
+        <div class="ill-msg user">このフォルダをセットアップして！</div>
+        <div class="ill-msg ai">わかりました！アイコン・説明文・設定をぜんぶやります✨</div>
+      </div>
+    </div>
     <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
     <div class="step-detail">
       Claude や ChatGPT などのAIに、このフォルダを渡して<br>
@@ -428,6 +565,20 @@
       <div class="step-char">
         <img src="images/link-smile.png" alt="りんく">
         <span>りんく</span>
+      </div>
+    </div>
+    <!-- ④ 図解 -->
+    <div class="illust" style="background:#e3f2fd;">
+      <div class="ill-flow">
+        <div class="fbox hi"><span class="fi">📤</span>送信</div>
+        <div class="farr">→</div>
+        <div class="fbox"><span class="fi">🤖</span>自動で<br>ビルド</div>
+        <div class="farr">→</div>
+        <div class="fbox"><span class="fi">🍎</span>App<br>Store</div>
+        <div class="farr">+</div>
+        <div class="fbox"><span class="fi">▶</span>Google<br>Play</div>
+        <div class="farr">→</div>
+        <div class="fbox ok"><span class="fi">✅</span>公開！</div>
       </div>
     </div>
     <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
