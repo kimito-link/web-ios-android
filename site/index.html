@@ -102,6 +102,38 @@
     .btn-gh:hover { color: white; }
     .hero-note { font-size: 0.82rem; opacity: 0.55; }
 
+    /* 実績バッジ */
+    .hero-proof {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .hero-proof-label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 700;
+    }
+    .proof-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 5px 13px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .proof-pill:hover { background: rgba(255,255,255,0.2); }
+    .proof-pill .pp-live { color: #6ee7a8; }
+
     /* ── 所要時間バー ── */
     .time-bar {
       background: white;
@@ -481,6 +513,7 @@
     <a href="/" class="active">🏠 トップ</a>
     <a href="howto/">🖼️ ゆっくり解説</a>
     <a href="guide/">📋 準備ガイド</a>
+    <a href="troubleshooting/">🩹 つまずいたら</a>
   </nav>
 </header>
 
@@ -501,6 +534,15 @@
         <a href="https://github.com/kimito-link/web-ios-android" class="btn-gh">🐙 GitHubでも使える →</a>
       </div>
       <p class="hero-note">ボタンを押してダブルクリックするだけ。インストール不要。</p>
+      <div class="hero-proof">
+        <span class="hero-proof-label">✨ 実際に公開できました：</span>
+        <a href="https://apps.apple.com/jp/app/id6775201794" class="proof-pill" target="_blank">
+          🍎 <span class="pp-live">App Store 公開中</span>
+        </a>
+        <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="proof-pill" target="_blank">
+          🧭 <span class="pp-live">富士山コンパス</span>
+        </a>
+      </div>
     </div>
     <div class="hero-chars-wrap">
       <img src="images/konta-smile.png" alt="こん太">
@@ -707,6 +749,13 @@
           <p>Apple・Googleへの開発者登録のしかた</p>
         </div>
       </a>
+      <a href="troubleshooting/" class="more-card">
+        <div class="mc-icon">🩹</div>
+        <div>
+          <h4>公開でつまずいたら</h4>
+          <p>「承認されたのにDLできない」など、よくある罠と直し方</p>
+        </div>
+      </a>
     </div>
   </div>
 
@@ -735,10 +784,10 @@
       <img src="images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
       <div>
         <h3>ゆっくりエクソソーム</h3>
-        <p>エクソソームをわかりやすく解説するアプリ。Web・iPhone・Android を同時リリース。</p>
+        <p>毎日のセルフケアを習慣化するアプリ。Web・iPhone・Android を同時リリース。</p>
         <div class="sc-links">
           <a href="https://yukkuri-exosome.link/" class="lk-web" target="_blank">🌐 Web</a>
-          <a class="lk-pend">🍎 審査中</a>
+          <a href="https://apps.apple.com/jp/app/id6775201794" class="lk-ios" target="_blank">🍎 App Store</a>
           <a class="lk-pend">▶ 審査中</a>
         </div>
       </div>
@@ -766,6 +815,7 @@
     <a href="/">トップ</a>
     <a href="howto/">ゆっくり解説</a>
     <a href="guide/">準備ガイド</a>
+    <a href="troubleshooting/">つまずいたら</a>
     <a href="https://github.com/kimito-link/web-ios-android">GitHub</a>
   </div>
   Kimito Link — クリエイター支援テンプレート
