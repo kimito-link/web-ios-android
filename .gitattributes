@@ -1,0 +1,5 @@
+# テンプレート配布ZIP（git archive）から除外するもの
+site/download/web-ios-android-template.zip export-ignore
+_drafts/ export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
