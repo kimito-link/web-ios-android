@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アプリ課金の税務手続き — W-8BEN / 米国源泉徴収 | web-ios-android</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #f5f5f7;
+      color: #1a1a1a;
+      line-height: 1.8;
+    }
+    header {
+      background: white; border-bottom: 3px solid #eee; padding: 0 20px;
+      display: flex; align-items: center; gap: 12px; height: 60px;
+      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    header img.logo { height: 40px; }
+    header nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+    header nav a {
+      color: #555; text-decoration: none; font-size: 0.82rem; font-weight: 700;
+      padding: 6px 12px; border-radius: 8px; transition: background 0.15s, color 0.15s; white-space: nowrap;
+    }
+    header nav a:hover { background: #f0f0ff; color: #667eea; }
+    header nav a.active { background: #667eea; color: white; }
+
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white; padding: 44px 24px 50px; text-align: center;
+    }
+    .hero .emoji { font-size: 2.6rem; display: block; margin-bottom: 12px; }
+    .hero h1 { font-size: 1.55rem; font-weight: 900; margin-bottom: 10px; line-height: 1.4; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; max-width: 640px; margin: 0 auto; }
+
+    .wrap { max-width: 820px; margin: 0 auto; padding: 40px 20px 60px; }
+
+    .lead {
+      background: #fff8e1; border-left: 4px solid #f6c90e; border-radius: 0 12px 12px 0;
+      padding: 16px 20px; font-size: 0.92rem; color: #5d4a00; margin-bottom: 36px;
+    }
+
+    .card {
+      background: white; border-radius: 18px; box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 24px 26px; margin-bottom: 22px;
+    }
+    .card h2 { font-size: 1.12rem; font-weight: 900; color: #1a1a2e; margin-bottom: 14px; }
+    .card h3 { font-size: 0.98rem; font-weight: 800; color: #334; margin: 16px 0 8px; }
+    .card p { font-size: 0.9rem; color: #333; margin-bottom: 8px; }
+
+    .pill { display: inline-block; font-size: 0.74rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; margin-right: 6px; }
+    .pill-ios { background: #1a1a2e; color: #fff; }
+    .pill-android { background: #e8f5e9; color: #1b5e20; }
+
+    table.tbl { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.86rem; }
+    table.tbl th, table.tbl td { border: 1px solid #eee; padding: 8px 10px; text-align: left; }
+    table.tbl th { background: #f5f5ff; font-weight: 800; color: #334; }
+
+    ol.steps { list-style: none; counter-reset: s; margin: 8px 0; }
+    ol.steps li { counter-increment: s; position: relative; padding: 6px 0 6px 34px; font-size: 0.9rem; color: #333; }
+    ol.steps li::before {
+      content: counter(s); position: absolute; left: 0; top: 6px;
+      width: 24px; height: 24px; background: linear-gradient(135deg,#667eea,#764ba2);
+      color: #fff; border-radius: 50%; font-size: 0.8rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .key { background: #f1f8f2; border-left: 3px solid #4caf50; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 10px 0; font-size: 0.88rem; }
+    .warn { background: #fff3e0; border-left: 3px solid #e65100; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 10px 0; font-size: 0.88rem; color: #5d3000; }
+
+    code { font-family: Consolas, monospace; background: #1a1a2e; color: #a8d8a8; border-radius: 5px; padding: 2px 7px; font-size: 0.82rem; }
+    pre.code { display: block; background: #1a1a2e; color: #a8d8a8; border-radius: 8px; padding: 12px 14px; margin: 8px 0; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; font-family: Consolas, monospace; white-space: pre; }
+
+    .checklist { background: linear-gradient(135deg,#667eea,#764ba2); color: white; border-radius: 18px; padding: 26px 28px; margin-top: 8px; }
+    .checklist h2 { font-size: 1.15rem; font-weight: 900; margin-bottom: 16px; }
+    .checklist ul { list-style: none; }
+    .checklist li { padding: 7px 0 7px 30px; position: relative; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☑"; position: absolute; left: 0; top: 6px; color: #6ee7a8; font-size: 1rem; }
+
+    footer { background: #1a1a2e; color: #888; text-align: center; padding: 28px 24px; font-size: 0.82rem; }
+    footer a { color: #f6c90e; text-decoration: none; margin: 0 10px; }
+
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.25rem; }
+      header nav a { font-size: 0.72rem; padding: 5px 7px; }
+      .wrap { padding: 28px 14px 40px; }
+      .card { padding: 20px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../">🏠 トップ</a>
+    <a href="../howto/">🖼️ ゆっくり解説</a>
+    <a href="../guide/">📋 準備ガイド</a>
+    <a href="../troubleshooting/">🩹 つまずいたら</a>
+    <a href="./" class="active">💴 課金の税務</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <span class="emoji">💴</span>
+  <h1>アプリ課金の<span>税務・銀行手続き</span></h1>
+  <p>アプリ内課金で売上を得るなら避けて通れない「米国の源泉徴収（W-8BEN）」と「銀行での受取」。実際にApple・Google両方やってみた手順をまとめました。</p>
+</div>
+
+<div class="wrap">
+
+  <div class="lead">
+    ⚠️ これは手続きの理解を助ける資料です。最終的な税務判断は<strong>税理士に確認</strong>してください。<br>
+    ※2026年6月時点。最新は各公式ヘルプ（App Store Connect / Google Play Console / IRS）をご確認ください。
+  </div>
+
+  <!-- 3つは別物 -->
+  <div class="card">
+    <h2>① まず：3つは別物（混同しない）</h2>
+    <table class="tbl">
+      <tr><th>項目</th><th>内容</th><th>誰に</th></tr>
+      <tr><td>米国の源泉徴収</td><td>W-8BEN / W-8BEN-E の話</td><td>米国(IRS)</td></tr>
+      <tr><td>日本の税金</td><td>所得税・法人税・消費税など</td><td>日本</td></tr>
+      <tr><td>ストア手数料</td><td>15〜30%</td><td>Apple / Google</td></tr>
+    </table>
+    <p>源泉徴収をやっても日本の税金は別途必要。ストア手数料は税金ではなく手数料です。</p>
+  </div>
+
+  <!-- 30→0 -->
+  <div class="card">
+    <h2>②「30%→0%」の本当のところ</h2>
+    <p>SNSでよく「W-8BENで30%→0%」と言われますが、<strong>AppleとGoogleで仕組みが違います</strong>。</p>
+    <p><span class="pill pill-ios">🍎 Apple</span> App Store売上は「手数料契約」扱いで、非米国の開発者には そもそも米国源泉徴収がかからない（<strong>元々0%</strong>）。出さなくても0%だが、支払いを受けるため登録は必要。</p>
+    <p><span class="pill pill-android">🤖 Google</span> ロイヤリティ扱いになり得るため、書類なしだと米国売上に<strong>30%</strong>。W-8BEN-Eで<strong>0%</strong>にできる。</p>
+    <div class="key">→「30→0」の節税が実際に効くのは主に <strong>Google側</strong> です。</div>
+  </div>
+
+  <!-- 個人と法人 -->
+  <div class="card">
+    <h2>③ 個人と法人で書類が違う</h2>
+    <p>・個人開発者 → <strong>W-8BEN</strong><br>・法人（株式会社など）→ <strong>W-8BEN-E</strong></p>
+    <p>どちらも<strong>米国EINは不要</strong>。最初の質問で「個人／非個人(事業体)」を選ぶと適切なフォームに振り分けられます。</p>
+  </div>
+
+  <!-- Apple -->
+  <div class="card">
+    <h2><span class="pill pill-ios">🍎</span> Apple の手順</h2>
+    <p>App Store Connect →「ビジネス（契約/税金/口座情報）」</p>
+    <ol class="steps">
+      <li><strong>「有料アプリ契約」に同意</strong>（これをしないと税務・銀行欄が出ない＝最初の関門）</li>
+      <li>銀行口座を登録</li>
+      <li>米国の納税フォーム（W-8BEN / W-8BEN-E）を入力</li>
+    </ol>
+  </div>
+
+  <!-- Google -->
+  <div class="card">
+    <h2><span class="pill pill-android">🤖</span> Google の手順</h2>
+    <p>場所が分かりにくい。アプリ単位ではなく「お支払いプロファイル」の中。</p>
+    <pre class="code">Play Console → 設定 → お支払いプロファイル
+→ 設定を管理する → 税務情報の管理
+→「アメリカ合衆国」→ 税務情報の追加</pre>
+    <p>質問に答える形式：口座の種類（個人/非個人）→ 米国の組織か（いいえ）→ フォーム（W-8BEN/-E）</p>
+  </div>
+
+  <!-- フォーム要点 -->
+  <div class="card">
+    <h2>④ 税務フォームの記入ポイント（共通）</h2>
+    <p>・米国EIN → <strong>不要（空欄）</strong><br>
+    ・外国TIN → 法人なら<strong>法人番号(13桁)</strong>。これが0%の鍵。空欄だと効かない<br>
+    ・名前は<strong>英字・記号NG</strong>（法人名「K.K.」は弾かれる→<code>KK</code>に）<br>
+    ・法人区分 → Corporation（企業）</p>
+
+    <h3>租税条約セクション（ここが核心）</h3>
+    <p>・「軽減税率を請求しますか？」→ <strong>必ず「はい」</strong>（いいえだと30%のまま）<br>
+    ・日本の居住者 にチェック<br>
+    ・所得タイプ → アプリ販売 / その他の著作権のロイヤリティ<br>
+    ・条項 → <strong>日米租税条約 第12条第1項</strong>、源泉徴収率 → <strong>0%</strong><br>
+    ・米国にPE（拠点）なし のチェック<br>
+    ・【法人のみ】LOB → 「所有/税源浸食テストを満たす会社」（一般的な非上場の株式会社）</p>
+    <p>最後に偽証罪宣誓にチェック＋署名（法人は代表者／Title: <code>Representative Director</code>）</p>
+  </div>
+
+  <!-- 銀行 -->
+  <div class="card">
+    <h2>⑤ 銀行で詰まらないコツ</h2>
+    <p>・Appleは「登録口座の通貨」で支払う → <strong>円口座なら円で受取</strong><br>
+    ・Googleの日本宛も<strong>円建ての国内振込</strong><br>
+    ・<strong>SWIFTコードは不要</strong>。日本の銀行コード・支店コード・口座番号でOK</p>
+    <div class="warn">名義は銀行登録どおり正確に（カナ可）。<br>
+    ・Apple：括弧は<strong>半角「)」</strong>／・Google：<strong>半角カタカナ・大文字</strong>（小文字カナ不可）<br>
+    名義不一致は<strong>送金拒否の主因</strong>。通帳どおりに。</div>
+  </div>
+
+  <!-- 確認書類 -->
+  <div class="card">
+    <h2>⑥ 確認書類を求められることがある</h2>
+    <p>フォームの名前(KK)と登録名(株式会社〜)の表記差などで、追加書類を求められる場合あり。</p>
+    <p>・法人 → 納税証明書・登記簿（履歴事項全部証明書）など<br>・個人 → 本人確認書類など</p>
+    <p>アップロードすればOK（PDF/PNG/JPEG、50MB以内）。</p>
+  </div>
+
+  <!-- 提出後 -->
+  <div class="card">
+    <h2>⑦ 提出後・注意</h2>
+    <p>・<strong>送信後は変更不可</strong>。落ち着いて確認を<br>
+    ・承認まで一時的に30%表示。承認で0%適用、メールで通知<br>
+    ・反映に時間（Appleは最大24h、Googleは数日のことも）<br>
+    ・W-8の有効期限は<strong>約3年</strong><br>
+    ・最終的には<strong>税理士に確認</strong>を（特に法人の租税条約適用・所得区分）</p>
+  </div>
+
+  <!-- チェックリスト -->
+  <div class="checklist">
+    <h2>✅ チェックリスト</h2>
+    <ul>
+      <li>Apple：有料アプリ契約に同意した</li>
+      <li>Apple：銀行口座を登録した（円口座・名義は通帳どおり）</li>
+      <li>Apple：W-8BEN(-E) を提出した</li>
+      <li>Google：お支払いプロファイル → 米国の税務情報を提出した</li>
+      <li>Google：租税条約「はい」・税率0%・第12条1項になっている</li>
+      <li>外国TINに法人番号を入れた（法人の場合）</li>
+      <li>確認書類を求められたらアップロードした</li>
+      <li>（任意）税理士に内容を確認してもらった</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  <div style="margin-bottom:10px;">
+    <a href="../">トップ</a>
+    <a href="../howto/">ゆっくり解説</a>
+    <a href="../guide/">準備ガイド</a>
+    <a href="../troubleshooting/">つまずいたら</a>
+    <a href="./">課金の税務</a>
+    <a href="https://github.com/kimito-link/web-ios-android">GitHub</a>
+  </div>
+  Kimito Link — クリエイター支援テンプレート
+</footer>
+
+</body>
+</html>
