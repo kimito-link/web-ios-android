@@ -1,89 +1,91 @@
-# このプロジェクトについて
+# AIへの指示書（このテンプレの使い方）
 
-Web + iOS + Android + Chrome拡張 アプリを自動でリリースするためのテンプレートです。
+> 👤 人間が最初に読むのは [`START-HERE.md`](START-HERE.md)（小学生〜90歳でもわかる超やさしい版）。
+> 🤖 AI（あなた）はこの CLAUDE.md を読んでから作業する。
 
-各プラットフォームとも「提出までを自動化、合否は審査側」という同じ構図:
-- **iOS** = 配信地域の設定 / **Android** = 審査送信 / **Chrome** = 審査提出
-- いずれも `docs/` に手順と「実際に踏んだ罠」をまとめてある。
+---
 
-## 新しいアプリを作るとき
+## このテンプレは何をするものか
 
-1. `app.config.json` を開いてアプリ名・Bundle ID・ドメインを入力する
-2. `npm run setup` を実行する（あとは自動）
-3. GitHub Secrets を設定する（ウィザードが一覧を出してくれる）
-4. `git push` → App Store / Google Play に自動提出
+**1つのテンプレで Chrome拡張・Web・iOS・Android の4つにアプリを自動展開する。**
+ユーザーは [`app.config.json`](app.config.json) に「アプリの情報（＝〇〇）」を書くだけ。
+あとは自動化（GitHub Actions / 各種CLI）が、ビルド〜ストア提出までやる。
 
-## このテンプレートの使い方（おすすめの渡し方）
+各プラットフォームとも「**提出までを自動化、合否は審査側**」という同じ構図：
+- **Web** = Vercel 自動デプロイ
+- **iOS** = App Store 自動リリース（配信地域の設定だけ手動）
+- **Android** = Google Play 自動リリース（審査送信が最後の手動）
+- **Chrome** = Chromeウェブストア API で審査提出
 
-このテンプレートは「**AIに丸ごと渡して設計してもらう**」前提で作られています。
-いつもの進め方：
+---
 
-1. **このフォルダ（テンプレート）** と **作りたいアプリのイメージ** をAIに渡す
-2. 「このルール（CLAUDE.md）に沿って、〇〇というアプリを作って」と伝える
-3. AIが `app.config.json` の設定・アイコン生成・ストア提出までやってくれる
+## AIへの依頼の受け方
 
-→ 設計の指針はこの CLAUDE.md に集約。AIはまずここを読んでから作業します。
+ユーザーが「このフォルダで 〇〇 というアプリを作って」と言ったら：
 
-## Claudeへのお願い
+1. **まず [`app.config.json`](app.config.json) を一緒に埋める。**
+   `<...>` のプレースホルダを、ユーザーに必要な情報を聞きながら埋める。
+   わからない項目（ストアID等）は、まだ無ければ空のまま進めてよい。
+2. **どのプラットフォームに出すか確認する。** 4つ全部か、一部か。
+   - Chrome拡張を出さないなら `app.config.json` の `chrome.enabled` を false に。
+3. **不足している実体を、参照元プロジェクトから持ってくる（後述の対応表）。**
+4. **品質ルールは「AI汎用ルール」に従う**（後述）。
 
-- アプリ固有の設定は必ず `app.config.json` から読むこと
-- ハードコードしない。新しい値が必要なら `app.config.json` に追加する
-- スクリプトは `scripts/` にある既存のものを優先して使う
-- iOS/Android のビルドは GitHub Actions で自動化済み。ワークフローファイルを壊さない
-- Play Console / App Store Connect でGUI操作が必要なときは、自動化できないことを明示してユーザーに手順を伝える
-- **Chrome 拡張機能の申請を自動化するときは `docs/CHROME-WEBSTORE.md` を参照**
-  （Chrome Web Store API で zip作成→アップロード→審査提出を自動化。スクリプトは `scripts/chrome/`。
-  OAuthクライアントは「デスクトップアプリ」型・認証コードは短命など、実際に踏んだ罠も記載）
-- **公開後・提出後にトラブルが出たら `docs/TROUBLESHOOTING.md` を参照**
-  （iOS配信地域・Purpose Strings・Android審査送信・AAB署名など、実際に踏んだ罠と解決策）
-- **アプリ課金の税務・銀行手続きは `docs/TAX-SETUP.md` を参照**
-  （米国源泉徴収 W-8BEN/W-8BEN-E、30%→0%の正しいやり方、銀行受取の注意点。
-  税務フォームの入力・提出は代行せず、ユーザーにガイドする。最終判断は税理士へ）
+---
+
+## ⚠️ 重要：このテンプレの「実体」はまだ集約中
+
+このフォルダには現在、**設計図（このファイル）・解説（START-HERE）・手順書（docs/）・
+紹介サイト（site/）・キャラ画像・Chrome申請スクリプト（scripts/chrome/）** がある。
+
+**iOS/Android/Web の自動化スクリプト本体は、以下の実プロジェクトに既にある。**
+新しいアプリを作るときは、ここから必要なものをコピーして使う：
+
+| 欲しい自動化 | コピー元プロジェクト | 主なファイル |
+|---|---|---|
+| **iOS/Android 自動リリース（フル）** | `partnership_program_website` | `.github/workflows/`（20本）, `scripts/*.mjs`, `app.config.schema.json`, `capacitor.config.json` |
+| **iOS/Android 自動リリース（軽量）** | `Exosome` | `.github/workflows/`（3本）+ `app.config` |
+| **Web 自動デプロイ** | `tsuioku-no-kirameki.com` / `web-health-check-app` | `vercel.json`, `scripts/` |
+| **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
+
+> ※ コピーするときは、アプリ固有の値（displayName / bundleId / ascAppId / ドメイン等）を
+> 必ず `app.config.json` の値に置き換える。ハードコードしない。
+
+---
+
+## AIへのお願い（守ること）
+
+- アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
+- **品質ルールは「AI汎用ルール」に従う**（`../AI汎用ルール/` または同梱の `docs/ai-rules/`）。
+  特に: URLはディレクトリ形式 / index.html を出さない / www統一 / http→https 301 / canonical明示。
+- Chrome申請は [`docs/CHROME-WEBSTORE.md`](docs/CHROME-WEBSTORE.md) を参照（OAuthは「デスクトップアプリ」型・認証コードは短命）。
+- iOS/Android/Chrome のGUI操作が必要なときは、**自動化できないことを明示**してユーザーに手順を伝える。
+- トラブルは [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)、課金税務は [`docs/TAX-SETUP.md`](docs/TAX-SETUP.md)。
+- **キャラ（りんく/こん太/たぬ姉）で親しみやすく。** ユーザー向けの説明は、専門用語を避け、
+  小学生〜90歳でもわかる言葉で。りんく=案内役、こん太=背中を押す、たぬ姉=注意点を教える。
+
+---
 
 ## ⚠️ 公開でハマりやすいポイント（実体験ベース）
 
-`docs/TROUBLESHOOTING.md` に詳細。要点だけ：
+`docs/TROUBLESHOOTING.md` に詳細。要点：
 
 - **iOS「承認 ≠ 公開」**：審査が通っても「配信地域」が未設定だとDLできない（最大24h反映）
-- **Android「リリース作成 ≠ 審査送信」**：製品版を作っても最後の「審査用に送信」を忘れがち
+- **Android「リリース作成 ≠ 審査送信」**：最後の「審査用に送信」を忘れがち
+- **Chrome OAuth**：クライアントは「デスクトップアプリ」型／認証コードは数分で失効
 - **反映には時差**：緑チェックが付いても実機DLまで数時間〜24時間
-- **iOSのpurpose string**：写真・カメラの説明は「具体例」まで書かないとリジェクト
 
-## 自動化できること・できないこと
+---
 
-### ✅ 自動（git push するだけ）
-- Webアプリのデプロイ（Vercel）
-- iOSアプリのビルド・App Store提出
-- Androidアプリのビルド・Google Play提出
-- アイコン・スクリーンショット生成
-- ストア掲載情報の設定（テキスト・画像）
-- プライバシーポリシーページの生成
-
-### ✋ 手動（初回のみ・約15分）
-- Play Console: 広告ID申告
-- Play Console: 広告申告
-- Play Console: ターゲットユーザー設定
-- Play Console: データセーフティ
-- Play Console: コンテンツレーティング（IARCアンケート）
-- Play Console: 健康アプリ申告（該当する場合）
-
-## フォルダ構成
+## フォルダ構成（現状）
 
 ```
-app.config.json      ← ここだけ変えればOK（アプリ固有の設定）
-scripts/             ← 自動化スクリプト
-  setup-new-app.mjs  ← セットアップウィザード
-  lib/               ← API共通ライブラリ
-src/                 ← Webアプリ本体
-store-assets/        ← アイコン・スクリーンショット
-.github/workflows/   ← iOS/Android 自動ビルド
+START-HERE.md        ← 👤 人間はまずここ（キャラ解説・超やさしい）
+CLAUDE.md            ← 🤖 AIはここ（この指示書）
+app.config.json      ← ⭐ アプリ情報を書く紙（〇〇を入れる）
+docs/                ← 手順書・トラブル対処・税務・Chrome申請
+scripts/chrome/      ← Chrome申請の自動化スクリプト
+site/                ← 紹介サイト＋キャラ画像
 ```
 
-## よく使うコマンド
-
-```bash
-npm run setup              # 新規アプリのセットアップ
-npm run play:set-listing   # Play Storeの掲載情報を更新
-npm run release:bump       # バージョンを上げる
-git push origin main       # → iOS/Android 自動ビルド開始
-```
+> iOS/Android/Web の自動化スクリプトは、上の「対応表」の実プロジェクトから持ってくる。

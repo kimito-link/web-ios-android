@@ -1,0 +1,70 @@
+{
+  "_README": "★ここがスタート地点★ このファイルに『あなたのアプリの情報』を書くだけ。あとはAIと自動化が、Chrome拡張・Web・iOS・Androidの4つに展開してくれます。<...> の部分を、あなたの値に書き換えてください。わからない項目は空のままでOK（あとでAIが埋めます）。",
+
+  "identity": {
+    "displayName": "<アプリ名（日本語）例: ねこ日記>",
+    "displayNameEn": "<アプリ名（英語）例: Neko Diary>",
+    "shortName": "<短い名前（英数字）例: NekoDiary>",
+    "bundleId": "<アプリの住所 例: com.あなたの会社.アプリ名>",
+    "iosScheme": "<iOS用の合言葉（英小文字）例: nekodiary>",
+    "productionDomain": "<本番サイトのドメイン 例: nekodiary.com>",
+    "stagingDomain": null
+  },
+
+  "stores": {
+    "ascAppId": "<App Storeで作ったアプリのID（数字）。まだなら空でOK>",
+    "playAppId": "<Google Playのアプリ番号。まだなら空でOK>",
+    "playPackageName": "<Android用の住所（bundleIdと同じでOK）>",
+    "appleTeamId": null,
+    "playDeveloperId": "<Google Playの開発者ID。まだなら空でOK>",
+    "primaryCategory": "<カテゴリ 例: LIFESTYLE / BUSINESS / EDUCATION>",
+    "ageRating": "FOUR_PLUS",
+    "contentRights": "DOES_NOT_USE_THIRD_PARTY_CONTENT",
+    "marketingVersion": "1.0.0",
+    "buildNumberOffset": 0
+  },
+
+  "chrome": {
+    "_note": "Chrome拡張も作る場合だけ書く。作らないなら enabled を false に。",
+    "enabled": false,
+    "itemId": "<Chromeウェブストアの拡張ID（32文字）。初回だけ手動で作って控える>",
+    "manifestPath": "manifest.json"
+  },
+
+  "brand": {
+    "primaryColor": "<メインの色 例: #43c251>",
+    "accentColor": "<アクセントの色 例: #06c755>",
+    "iconSource": "store-assets/source/icon-source-1024.png",
+    "featureGraphicSource": "store-assets/source/feature-graphic-source.png"
+  },
+
+  "contact": {
+    "email": "<連絡先メール 例: info@example.com>",
+    "phoneE164": "<電話番号 例: +81 90 1234 5678>",
+    "firstName": "<名 例: Taro>",
+    "lastName": "<姓 例: Yamada>",
+    "supportUrl": "<サポートページURL>",
+    "privacyUrl": "<プライバシーポリシーURL>",
+    "termsUrl": "<利用規約URL>",
+    "marketingUrl": "<トップページURL>",
+    "dataDeletionUrl": "<アカウント削除依頼ページURL>"
+  },
+
+  "businessModel": {
+    "_note": "審査でよく聞かれる「お金の流れ」。正直に書く。",
+    "hasInAppPurchase": false,
+    "hasSubscription": false,
+    "hasPaidContent": false,
+    "summaryJa": "<このアプリは何で、どうやってお金が動くか（または動かないか）を1〜2文で>",
+    "summaryEn": "<上の英語版>"
+  },
+
+  "ownership": {
+    "organization": "<運営者・会社名>",
+    "country": "JP",
+    "githubOrg": "<GitHubのユーザー名/組織名>",
+    "githubRepo": "<このアプリのリポジトリ名>",
+    "vercelTeamSlug": "<Vercelのチーム名>",
+    "vercelProjectName": "<Vercelのプロジェクト名>"
+  }
+}
