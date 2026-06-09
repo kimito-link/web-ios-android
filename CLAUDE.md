@@ -1,6 +1,10 @@
 # このプロジェクトについて
 
-Web + iOS + Android アプリを自動でリリースするためのテンプレートです。
+Web + iOS + Android + Chrome拡張 アプリを自動でリリースするためのテンプレートです。
+
+各プラットフォームとも「提出までを自動化、合否は審査側」という同じ構図:
+- **iOS** = 配信地域の設定 / **Android** = 審査送信 / **Chrome** = 審査提出
+- いずれも `docs/` に手順と「実際に踏んだ罠」をまとめてある。
 
 ## 新しいアプリを作るとき
 
@@ -27,6 +31,9 @@ Web + iOS + Android アプリを自動でリリースするためのテンプレ
 - スクリプトは `scripts/` にある既存のものを優先して使う
 - iOS/Android のビルドは GitHub Actions で自動化済み。ワークフローファイルを壊さない
 - Play Console / App Store Connect でGUI操作が必要なときは、自動化できないことを明示してユーザーに手順を伝える
+- **Chrome 拡張機能の申請を自動化するときは `docs/CHROME-WEBSTORE.md` を参照**
+  （Chrome Web Store API で zip作成→アップロード→審査提出を自動化。スクリプトは `scripts/chrome/`。
+  OAuthクライアントは「デスクトップアプリ」型・認証コードは短命など、実際に踏んだ罠も記載）
 - **公開後・提出後にトラブルが出たら `docs/TROUBLESHOOTING.md` を参照**
   （iOS配信地域・Purpose Strings・Android審査送信・AAB署名など、実際に踏んだ罠と解決策）
 - **アプリ課金の税務・銀行手続きは `docs/TAX-SETUP.md` を参照**

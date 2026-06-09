@@ -80,12 +80,25 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256
 
 ---
 
+## 🧩 Chrome：申請の自動化で詰まる（OAuthまわり）
+
+詳細は `docs/CHROME-WEBSTORE.md` に。よく詰まる2点だけ：
+
+- **OAuthクライアントの種類**：「Chrome 拡張機能」ではなく **「デスクトップ アプリ」** を選ぶ。
+  間違えるとスクリプトが認証できない。
+- **`invalid_grant: Bad Request`**：認証コードの**貼り間違い／不完全コピー**か**期限切れ**（数分で失効）。
+  認可URLを開き直して新しいコードを取り直せばOK。
+- **却下回避**：名前/説明/画像に「無料/Free/Premium」を入れない。外部CDNを実行時に読まない（vendor/ に同梱）。
+
+---
+
 ## ✅ 公開後チェックリスト（承認メールが来たら）
 
 - [ ] **iOS**：配信地域が設定済みか（未設定だとDL不可）
 - [ ] **iOS**：実機の App Store 検索／直リンク `apps.apple.com/jp/app/idXXXXXXXX` でDL確認
 - [ ] **Android**：製品版が「審査に送信済み」か（リリース作成だけで止まっていないか）
-- [ ] 反映には時差あり（iOS配信網：〜数時間、検索ヒット：〜24時間）
+- [ ] **Chrome**：`publish-cws.ps1` で `status=OK` を確認（審査提出済みか）
+- [ ] 反映には時差あり（iOS配信網：〜数時間、検索ヒット：〜24時間、Chrome審査：〜数日）
 - [ ] 公開できたら、関係者にストアURLを共有 🎉
 
 ---

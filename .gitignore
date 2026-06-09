@@ -4,3 +4,4 @@ _drafts/
 *.log
 .env
 .env.*
+.env.cws
