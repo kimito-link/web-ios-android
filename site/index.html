@@ -65,6 +65,19 @@
     .hero-chars-wrap img { width: 100px; }
     .hero-chars-wrap img:nth-child(2) { width: 124px; margin: 0 -10px; z-index: 1; }
 
+    /* 悩みの名指し(自分ごと化)。h1 の手前で読者の心境を先に言い当てる。 */
+    .hero-pain {
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(246,201,14,0.55);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .hero-pain b { color: #f6c90e; }
     .hero h1 {
       font-size: 2.2rem;
       font-weight: 900;
@@ -522,9 +535,13 @@
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-text">
+      <div class="hero-pain">
+        💭 アプリのアイデアはある。作れなくはない。<br>
+        …でも <b>ストア申請って、なんか面倒くさそう</b>。
+      </div>
       <h1>
-        アプリを出すときの<br>
-        <em>「めんどくさい手続き」を自動化。</em>
+        その「めんどくさい」、<br>
+        <em>まるごと肩代わりします。</em>
       </h1>
       <p class="sub">
         ストア申請・証明書・スクショ・審査…
