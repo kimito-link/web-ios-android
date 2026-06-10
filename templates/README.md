@@ -27,7 +27,40 @@
 3. `scripts/patch-ios-launch-dark.mjs` と `workflows/ios-shell-guardrail.yml` をリポにコピー。
 4. `@capacitor/{cli,core,ios,android}` を devDependencies に追加。
 5. `npm install` → `npx cap add ios` / `npx cap add android`(Xcode / Android SDK が要る)。
-6. 配信前に輝度ゲート(`ios-blackscreen-check.yml`)を通す → リリース CI で配信。
+6. **リリースCI/スクリプト本体を partnership からコピー**(下記マッピング表)。
+   配信前に輝度ゲートを通す → リリース CI で配信。
+
+## リリースCI/スクリプトのコピー元マッピング(会議推奨=キットに二重保守しない)
+
+リリースの「実体」(ストアへ送るCI・スクリプト)は**このキットに置かない**。Apple/Google が
+審査要件を頻繁に変えるため、テンプレ版を抱えると古びて新規アプリだけ審査落ちする
+(発明会議で「製造機化」は reject)。代わりに**動く現物 `partnership_program_website` から
+コピー**する。コピー後、`app.config.json` の値で数か所書き換え + GitHub Secrets を登録。
+
+コピー元はファイルごとに partnership / fujisan に分かれる(実物で確認済み 2026-06-10)。
+P=`partnership_program_website`、F=`fujisan-clean`。
+
+| コピー元 | 自リポの置き場所 | 書き換える値 |
+| --- | --- | --- |
+| **P** `.github/workflows/ios-appstore-release.yml` | `.github/workflows/` | `env: APP_BUNDLE_ID` / `APP_NAME` |
+| **P** `.github/workflows/android-play-release.yml` | `.github/workflows/` | `env: PLAY_PACKAGE_NAME` |
+| **F** `.github/workflows/ios-blackscreen-check.yml`(輝度ゲート本体・Pには無い) | `.github/workflows/` | `APP_BUNDLE_ID` + 発明B3点(下記) |
+| **F** `.github/workflows/ios-shell-guardrail.yml`(or 本キットの汎用版) | `.github/workflows/` | 無改変 |
+| **P** `scripts/lib/asc-api.mjs` / `scripts/lib/play-api.mjs` | `scripts/lib/` | 無改変(env で制御) |
+| **P** `scripts/appstore-submit.mjs` / `scripts/play-publish.mjs` | `scripts/` | 冒頭の `BUNDLE_ID`/`PACKAGE` 既定値 |
+| **F** `scripts/release-bump.mjs`(版+SWキャッシュ bump・Pは別命名) | `scripts/` | SWキャッシュ regex の prefix |
+| 本キット `templates/scripts/ios-sim-logscan.mjs`(発明B) | `scripts/` | 無改変 |
+
+> ⚠️ コピー元が P と F で分かれるのは、P=認証込みのリリースCI完成形 / F=黒画面ゲート+版bumpの
+> 汎用版(プレイブックは F ベース)という分担のため。**コピー前に実物の存在を確認**してから cp すること
+> (ファイル名は時期で変わりうる。例: P の版bumpは `appstore-release-now.mjs` で命名が違う)。
+
+> ⚠️ **輝度ゲート(`ios-blackscreen-check.yml`)をコピーしたら、必ず発明B(`ios-sim-logscan.mjs`)を
+> 組み込む**。手順は [`../_docs/INVENTION-B-blackscreen-evidence.md`](../_docs/INVENTION-B-blackscreen-evidence.md)。
+> Secrets 一覧・初回セットアップ・落とし穴は [`../_docs/release-pipeline-playbook.md`](../_docs/release-pipeline-playbook.md) §5〜§8。
+
+> 📌 **コピーしたCIは定期的に partnership と diff せよ**。partnership 側が Xcode/SDK 追従で
+> 更新されたら取り込む(これがテンプレ陳腐化を防ぐ「コピー手順だけ方式」の運用条件)。
 
 ## 実証済みの参照アプリ(金型の出どころ)
 
