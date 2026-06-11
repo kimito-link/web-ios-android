@@ -52,6 +52,25 @@ iPhone の App Store で **「このアプリは現在、この国または地�
 
 ---
 
+## 🍎 iOS：「このバージョンの新機能」が絵文字で409エラー
+
+### こんな症状
+審査提出の自動化が `409 ENTITY_ERROR.ATTRIBUTE.INVALID.INVALID_CHARACTERS` で失敗。
+`What's New in This Version can't contain the following character(s): 🐢, 🌱` のようなメッセージ。
+
+### 原因
+**App Store Connect は「このバージョンの新機能（whatsNew）」に絵文字を許可しません。**
+一方、Google Play のリリースノートは絵文字OK。同じリリースノートを両ストアで
+使い回すと、iOS側だけ提出に失敗します。
+
+### 直し方
+リリースノートのファイルからは絵文字を消さず（Play側はそのまま使える）、
+**iOS提出スクリプト側で絵文字を自動除去**します。
+実装例：Exosome の `scripts/appstore-submit.mjs` の `stripDisallowedEmoji()`
+（`\p{Extended_Pictographic}` ＋ ZWJ/異体字セレクタ/肌色修飾子を除去）。
+
+---
+
 ## 🍎 iOS：写真・カメラの説明文（Purpose Strings）でリジェクト
 
 ### こんな症状
