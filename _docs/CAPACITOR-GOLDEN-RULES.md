@@ -45,6 +45,8 @@
 
 6. **Verify は「ファイル存在」でなく「壊したい挙動が無いこと」を見る**。過去の事故は「`test -f <独自VC>.swift` で存在確認する Verify が、配線が壊れていても緑を返した」。**`! test -f` で独自実装の不在を強制**し、CI ガードレール(`ios-shell-guardrail.yml`)で独自 VC/UIWindow の再混入を機械的に赤にする。
 
+7. **アイコン/スプラッシュは store-assets のマスターから CI が毎回生成し、「差し替わったこと」をハッシュで確認する**。原則4(`ios/` 非コミット)の帰結として、`cap add ios` が置く **Capacitor デフォルトの青い×ロゴが毎ビルド復活する**。`@capacitor/assets generate` は `icon-only.png` だけでは**アイコンしか生成せず、スプラッシュは生成しない**(silent skip)。→ ①スプラッシュマスター(2732×2732)を `store-assets/` にコミット ②CI で `assets/splash.png` として渡す ③生成後に `Splash.imageset` の sha256 が生成前から変化したことを確認し、無変化ならビルドを赤にする(直接証拠ゲート)。実装例: Exosome `.github/workflows/ios-appstore-release.yml` の「Generate icons + splash」(2026-06、デフォルトスプラッシュ出荷事故の再発防止)。
+
 ---
 
 ## 真因にたどり着いた手法(再現用)
