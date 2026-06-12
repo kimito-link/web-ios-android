@@ -70,9 +70,11 @@
 - 「全自動の魔法の箱」誇大表現を実態(提出まで自動・GUI最終操作あり)に統一。
   site/index.html のヒーロー「まるごと肩代わり」「送信して待つだけ」「ほぼナシ」等を是正。
   START-HERE / guide / howto は元から実態ベースなので整合確認のみ。
-- ⚠️残課題: `setup-new-app.mjs`(検証→Secrets/Console手順誘導ウィザード)はまだ未取り込み。
-  現状は `templates/README.md` のコピー手順 + 各スクリプトの app.config 自動読みで代替できるが、
-  ワンコマンド化したい場合は partnership/Exosome の setup-new-app.mjs を追って移植する。
+- ✅ `setup-new-app.mjs` 取り込み完了(2026-06-13): `templates/scripts/setup-new-app.mjs`。
+  Exosome版をキットの実体に合わせ汎用化(Python依存を除き node の generate-store-assets.mjs を呼ぶ)。
+  app.config.json 検証→資産生成→TWA初期化案内→GitHub Secrets 一覧→最後の手動GUI(ASCアプリ枠作成/
+  Play権限付与/配信地域/審査送信)を表示。固有値ゼロ・lib/app-config.mjs 依存一致・構文OK・dry-run確認済。
+  → **残課題なし。キット単体で他アプリ立ち上げ可能。**
 
 ## 守る原則(fujisan の血の教訓)
 
