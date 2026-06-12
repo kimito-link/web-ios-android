@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キット完成化ものがたり ― ゆっくり追体験 | Kimito-Link</title>
+  <meta name="description" content="アプリ自動化キットを「5年後に楽できるレベル」へ作り直した記録を、りんく・こん太・たぬ姉のゆっくり解説で追体験できます。">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    .hero { text-align: center; padding: 28px 16px 8px; }
+    .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
+    .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
+    .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
+    .progress span { font-size: .72em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
+    .chapter { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
+    .ch-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .ch-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #1565c0; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
+    .ch-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
+    .ch-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
+    .talk { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef1f6; }
+    .talk img { width: 52px; height: 52px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); background:#fff; }
+    .talk.link { border-left: 4px solid #1976d2; }
+    .talk.kon { border-left: 4px solid #e8772e; }
+    .talk.tanu { border-left: 4px solid #7e57c2; }
+    .char-name { font-weight: 800; font-size: .86em; margin-bottom: 2px; }
+    .talk.link .char-name { color: #0d47a1; }
+    .talk.kon .char-name { color: #b85c1a; }
+    .talk.tanu .char-name { color: #5e3aa6; }
+    .talk p { font-size: .95em; }
+    .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
+    .note b { color: #0d47a1; }
+    .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
+    .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+    .ba { border-radius: 12px; padding: 12px 14px; font-size: .86em; }
+    .ba.before { background: #fbeaea; border: 1px solid #f0c9c9; }
+    .ba.after { background: #e6f4ec; border: 1px solid #bfe3cd; }
+    .ba .ba-h { font-weight: 800; margin-bottom: 6px; font-size: .92em; }
+    .ba.before .ba-h { color: #b71c1c; }
+    .ba.after .ba-h { color: #1b5e20; }
+    ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
+    ul.tidy li { margin: 4px 0; font-size: .92em; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
+    .done-banner h2 { font-size: 1.3em; }
+    .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
+    @media (max-width: 520px) { .before-after { grid-template-columns: 1fr; } .hero h1 { font-size: 1.35em; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-link" href="../">← トップにもどる</a>
+
+    <div class="hero">
+      <h1>キット完成化ものがたり<br>― 「5年後に楽できる」まで ―</h1>
+      <p class="sub">アプリ自動化キットを作り直した記録を、3人のゆっくりが順番に解説するよ。<br>むずかしい言葉は使わないから、最後まで追体験できるよ。</p>
+      <div class="progress">
+        <span>① 困りごと</span><span>② たからの地図</span><span>③ 作り直し</span><span>④ 確かめ</span><span>⑤ 完成</span>
+      </div>
+    </div>
+
+    <!-- 1 -->
+    <div class="chapter">
+      <div class="ch-head"><div class="ch-num">1</div><div><div class="ch-title">困りごと ― 毎回コピーがしんどい</div><div class="ch-sub">なぜ作り直すことにしたの?</div></div></div>
+      <div class="talk link"><img src="../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>このキットね、いままでは「設計図と手順書」はあったんだけど、肝心の<b>“動く道具”（スクリプト）は別のアプリから毎回コピーしてくる</b>仕組みだったんだ。</p></div></div>
+      <div class="talk kon"><img src="../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>毎回コピー？ それって、引っ越すたびに隣の家から道具を借りてくるみたいなもんだろ。借り元が引っ越したら、もう使えなくなるじゃねえか。</p></div></div>
+      <div class="talk tanu"><img src="../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>そうなのよ。コピー忘れ・名前の置き換え忘れ・パソコンによっては動かない…って事故が起きやすい。<b>「5年後の自分」が困る</b>形だったの。</p></div></div>
+      <div class="note">💡 ゴールは「<b>キットだけで完結</b>」。借りてこなくても、このフォルダをコピーして名前を入れるだけでアプリが出せる状態にすること。</div>
+    </div>
+
+    <!-- 2 -->
+    <div class="chapter">
+      <div class="ch-head"><div class="ch-num">2</div><div><div class="ch-title">たからの地図 ― 3つのお手本</div><div class="ch-sub">すでに動いているアプリから学ぶ</div></div></div>
+      <div class="talk link"><img src="../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>ありがたいことに、もう<b>ストアで動いているアプリが3つ</b>あったんだ。これがお手本（たからの地図）になったよ。</p></div></div>
+      <ul class="tidy">
+        <li><b>リバースハック</b> … いちばん完成形。Appleの審査に何度も落ちて、乗り越えた歴戦のアプリ。</li>
+        <li><b>エクソソーム</b> … それを最小限に整えた「金型」。いちばんマネしやすい。</li>
+        <li><b>富士山コンパス</b> … 起動して真っ黒になる事故を10回以上やって直した「失敗の教科書」。</li>
+      </ul>
+      <div class="talk kon"><img src="../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>失敗の教科書まであるのか。むしろそれが一番ありがたいぜ。「これをやると黒くなる」が分かってるんだからな。</p></div></div>
+      <div class="talk tanu"><img src="../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>大事なのはね、富士山の教訓＝<b>「作り変えない・特別なことを足さない」</b>。動いてるお手本にそっくり寄せるのが、いちばん安全で速いの。</p></div></div>
+    </div>
+
+    <!-- 3 -->
+    <div class="chapter">
+      <div class="ch-head"><div class="ch-num">3</div><div><div class="ch-title">作り直し ― 道具をキットの中へ</div><div class="ch-sub">借り物をやめて、自分のものにする</div></div></div>
+      <div class="talk link"><img src="../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>お手本から「動く道具」をキットの中に<b>引っ越し（移植）</b>させたよ。全部で40個くらい！</p></div></div>
+      <ul class="tidy">
+        <li>📤 ストアに出す道具（App Store / Google Play に自動で提出する仕組み）</li>
+        <li>🤖 自動の流れ（GitHubに置くと、ビルド→提出まで走る設定 7本）</li>
+        <li>🤖 Androidアプリの作り方（パソコンがWindowsでもMac無しで作れるTWA方式）</li>
+        <li>📚 審査に落ちたときの<b>「実際に送って通った返事の見本帳」</b></li>
+        <li>📸 ストア用のスクショを自動で撮って、きれいに飾る道具</li>
+      </ul>
+      <div class="talk tanu"><img src="../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>引っ越すとき大事なのは、<b>アプリ固有の名前（IDやドメイン）を全部「あとで入れる空欄」に置き換える</b>こと。これをサボると次のアプリで事故るからね。今回は1個残らず空欄化したわ。</p></div></div>
+      <div class="warn">⚠️ 富士山の教訓を守って、「設定を勝手に作り直す自動化」はあえて入れていないよ。便利そうでも、それが黒画面の再発スイッチになるからね。</div>
+    </div>
+
+    <!-- 4 -->
+    <div class="chapter">
+      <div class="ch-head"><div class="ch-num">4</div><div><div class="ch-title">確かめ ― 思い込みで終わらせない</div><div class="ch-sub">「できたつもり」をなくす</div></div></div>
+      <div class="talk kon"><img src="../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>移植したって言うだけじゃダメだ。ちゃんと動くのか、目で確かめたのか？</p></div></div>
+      <div class="talk link"><img src="../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>うん、ぜんぶ確かめたよ！ ① 道具が壊れてないか（文法チェック全部OK）② アプリ固有の名前が残ってないか（探したけどゼロ）③ 空欄がちゃんと空欄になってるか。</p></div></div>
+      <div class="talk tanu"><img src="../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>あと、Windowsで動かない道具が1個あったのも直したわ（Mac専用の命令を使ってたの）。これで<b>どのパソコンでも動く</b>ようになった。</p></div></div>
+      <div class="note">🔎 「報告を鵜呑みにせず、実物で確かめる」。これも今回の大事なルール。<code>--dry-run</code> で空運転して、立ち上げウィザードがちゃんと案内を出すところまで見たよ。</div>
+    </div>
+
+    <!-- 5 -->
+    <div class="chapter">
+      <div class="ch-head"><div class="ch-num">5</div><div><div class="ch-title">完成 ― これからは楽ができる</div><div class="ch-sub">何が変わったの?</div></div></div>
+      <div class="before-after">
+        <div class="ba before"><div class="ba-h">まえ</div>毎回ほかのアプリから道具をコピー。借り元が変わると壊れる。Windowsで動かない道具もあった。</div>
+        <div class="ba after"><div class="ba-h">いま</div>キットだけで完結。<code>名前を入れる → ウィザードを動かす</code>だけ。Windows / Mac どちらでもOK。</div>
+      </div>
+      <div class="talk link"><img src="../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>次に新しいアプリを作るときは、このフォルダをコピーして<code>app.config.json</code>に名前を書いて、<code>setup-new-app</code>を動かすだけ。あとは「最初の登録」と「最後の送信ボタン」だけ人がやればいいんだ。</p></div></div>
+      <div class="talk tanu"><img src="../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>「全部まるごと自動」じゃないのは正直に言っておくわね。お店（ストア）の最後のOKは審査員の人間がやるし、初回の開発者登録も人がやる。でも<b>面倒な準備はほとんど肩代わり</b>できるようになったわ。</p></div></div>
+      <div class="talk kon"><img src="../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>つまり…5年後のオレたちが、また同じ苦労をしなくて済むってことだな。よし、合格だ！</p></div></div>
+      <div class="done-banner">
+        <h2>🎉 キット完成化、おわり</h2>
+        <p>借り物ゼロ・空欄を埋めるだけ・どのパソコンでもOK。<br>これが「5年後に楽できるレベル」のキットだよ。</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
