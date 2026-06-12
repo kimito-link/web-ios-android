@@ -11,6 +11,7 @@ kimito さんは撮ったスクショをこのフォルダに放り込むだけ�
 | `02-dashboard.png` | 作成直後のダッシュボード（アプリのセットアップ手順） | 待ち |
 | `03-internal-test-upload.png` | 内部テスト → リリース作成 → AAB ドロップ（アップロード済み表示） | 待ち |
 | `04-release-preview.png` | プレビューして確認する（1件の警告＋保存して公開ボタン） | 待ち |
+| `04b-publish-confirm.png` | 「Google Play で変更を公開しますか？」確認ダイアログ | 待ち |
 | `05-app-signing-sha256.png` | 設定 → アプリの署名（SHA-256 の場所） | 待ち |
 | `06-app-content.png` | アプリのコンテンツ（申告一覧） | 待ち |
 | `07-submit-review.png` | 審査用に送信ボタン | 待ち |
