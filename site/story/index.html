@@ -47,6 +47,21 @@
     .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
     .done-banner h2 { font-size: 1.3em; }
     .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
+    .human { background: #fff; border: 2px solid #1565c0; border-radius: 16px; padding: 24px 20px; margin: 26px 0; }
+    .human h2 { font-size: 1.3em; color: #0d47a1; text-align: center; }
+    .human .lead { text-align: center; color: #5a6573; font-size: .9em; margin: 8px 0 18px; }
+    .hgroup { margin: 16px 0; }
+    .hgroup-h { font-weight: 800; font-size: .95em; color: #15222c; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .hgroup-h .badge { font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; }
+    .hgroup.once .badge { background: #e8772e; }
+    .hgroup.every .badge { background: #1976d2; }
+    .hgroup.wait .badge { background: #7e57c2; }
+    .htask { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border: 1px solid #e7eaf0; border-radius: 10px; margin-bottom: 7px; font-size: .92em; }
+    .htask .chk { flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid #b8c1cf; border-radius: 5px; margin-top: 2px; }
+    .htask .ht-main b { color: #0d47a1; }
+    .htask .ht-sub { color: #7a8494; font-size: .85em; }
+    .auto-strip { background: #e6f4ec; border: 1px solid #bfe3cd; border-radius: 12px; padding: 12px 14px; margin-top: 18px; font-size: .88em; color: #1b5e20; }
+    .auto-strip b { color: #1b5e20; }
     @media (max-width: 520px) { .before-after { grid-template-columns: 1fr; } .hero h1 { font-size: 1.35em; } }
   </style>
 </head>
@@ -122,6 +137,34 @@
         <h2>🎉 キット完成化、おわり</h2>
         <p>借り物ゼロ・空欄を埋めるだけ・どのパソコンでもOK。<br>これが「5年後に楽できるレベル」のキットだよ。</p>
       </div>
+    </div>
+
+    <!-- 人間がやる部分はこれだけ -->
+    <div class="human">
+      <h2>👤 人間がやる部分は、これだけ</h2>
+      <p class="lead">これ以外は自動。チェックを埋めれば、アプリがストアに出せるよ。</p>
+
+      <div class="hgroup once">
+        <div class="hgroup-h"><span class="badge">最初の1回だけ</span>アカウントと枠の用意</div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main"><b>開発者登録</b>をする</div><div class="ht-sub">Apple Developer / Google Play / Chrome の開発者アカウント（有料・各ストア1回きり）</div></div></div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main">App Store で<b>アプリの枠を作る</b></div><div class="ht-sub">Appleは自動で作れない仕様。作ったら ID を <code>app.config.json</code> に書くだけ</div></div></div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main">Google Play で<b>アプリを作り、権限を渡す</b></div><div class="ht-sub">新アプリ作成＋自動化用アカウント（Service Account）に権限付与</div></div></div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main">GitHub に<b>カギを登録</b>する（Secrets）</div><div class="ht-sub">証明書やカギをコピペで登録。一覧は <code>setup-new-app</code> が表示してくれる</div></div></div>
+      </div>
+
+      <div class="hgroup every">
+        <div class="hgroup-h"><span class="badge">アプリごと</span>名前を入れて、最後にボタンを押す</div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main"><code>app.config.json</code> に<b>アプリの名前・色・連絡先</b>を書く</div><div class="ht-sub">空欄（&lt;...&gt;）を埋めるだけ。わからない所はAIが聞いて埋めてくれる</div></div></div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main">iOS：<b>「配信する国・地域」を選ぶ</b></div><div class="ht-sub">審査が通っても、地域未設定だとダウンロードできない（最大24時間で反映）</div></div></div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main">Android：最後に<b>「審査用に送信」ボタンを押す</b></div><div class="ht-sub">リリースを作っただけでは審査に入らない。最後の一押しは人間</div></div></div>
+      </div>
+
+      <div class="hgroup wait">
+        <div class="hgroup-h"><span class="badge">待つだけ</span>あとは審査員におまかせ</div>
+        <div class="htask"><span class="chk"></span><div><div class="ht-main"><b>審査の合否を待つ</b></div><div class="ht-sub">Apple 1〜3日／Google・Chrome 数日。落ちても返信の見本帳があるよ</div></div></div>
+      </div>
+
+      <div class="auto-strip">🤖 <b>ここまで以外は全部自動：</b>ホームページ公開・アプリのビルド・アイコン/スクショ作成・ストアへの提出・審査状況の見張り。人間は「枠の用意」と「名前を入れる」と「最後のボタン」だけ。</div>
     </div>
 
   </div>
