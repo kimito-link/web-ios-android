@@ -28,28 +28,32 @@
    わからない項目（ストアID等）は、まだ無ければ空のまま進めてよい。
 2. **どのプラットフォームに出すか確認する。** 4つ全部か、一部か。
    - Chrome拡張を出さないなら `app.config.json` の `chrome.enabled` を false に。
-3. **不足している実体を、参照元プロジェクトから持ってくる（後述の対応表）。**
+3. **自動化スクリプト/CI/TWA は `templates/` に同梱済み。** そこからコピーして使う（後述）。
 4. **品質ルールは「AI汎用ルール」に従う**（後述）。
 
 ---
 
-## ⚠️ 重要：このテンプレの「実体」はまだ集約中
+## 自動化の実体はキット同梱（`templates/` から使う）
 
-このフォルダには現在、**設計図（このファイル）・解説（START-HERE）・手順書（docs/）・
-紹介サイト（site/）・キャラ画像・Chrome申請スクリプト（scripts/chrome/）** がある。
+iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/` に同梱済み**。
+参照元プロジェクトへの手コピーは不要になった。新しいアプリを作るときは、`templates/` から
+コピーして `app.config.json` の値に置換するだけ。詳しい手順とコピー先は
+[`templates/README.md`](templates/README.md) を読む。
 
-**iOS/Android/Web の自動化スクリプト本体は、以下の実プロジェクトに既にある。**
-新しいアプリを作るときは、ここから必要なものをコピーして使う：
-
-| 欲しい自動化 | コピー元プロジェクト | 主なファイル |
+| 欲しい自動化 | キット内の場所 | 出典（金型の元） |
 |---|---|---|
-| **iOS/Android 自動リリース（フル）** | `partnership_program_website` | `.github/workflows/`（20本）, `scripts/*.mjs`, `app.config.schema.json`, `capacitor.config.json` |
-| **iOS/Android 自動リリース（軽量）** | `Exosome` | `.github/workflows/`（3本）+ `app.config` |
-| **Web 自動デプロイ** | `tsuioku-no-kirameki.com` / `web-health-check-app` | `vercel.json`, `scripts/` |
+| **iOS/Android リリースCI** | `templates/workflows/`（ios/android release・poll・lint・cert-expiry） | `partnership_program_website` / `fujisan-clean` |
+| **iOS/Android リリーススクリプト** | `templates/scripts/*.mjs`（appstore-submit / play-publish / asc-* / lint-pre-submission / generate-store-assets 等）＋ `templates/scripts/lib/` | `partnership_program_website`（一部 `Exosome` と同一） |
+| **Android TWA（mac 不要）** | `templates/android-twa/`（twa-manifest・署名注入・Windows用 ps1） | `Exosome` / `partnership_program_website` |
+| **Capacitor 設定の金型** | `templates/capacitor/capacitor.config.template.ts` | `partnership` / 富士山 / `Exosome`（server.url 連動型） |
+| **却下対応KB（Fable学習素材）** | `_docs/apple-reject-knowledge-base.md` | `partnership_program_website/_docs/` |
 | **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
 
-> ※ コピーするときは、アプリ固有の値（displayName / bundleId / ascAppId / ドメイン等）を
-> 必ず `app.config.json` の値に置き換える。ハードコードしない。
+> ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。
+> キットを使うときは出典を見に行く必要はない。`templates/` のファイルをコピーして使う。
+> ※ コピーするときは、アプリ固有の値（displayName / bundleId / ascAppId / ドメイン /
+> playPackageName / Team ID 等）を必ず `app.config.json` の値に置き換える。ハードコードしない。
+> 多くのスクリプトは `app.config.json` を SSOT として自動で読むので、CI の `<...>` を埋めれば足りる。
 
 ---
 
@@ -84,8 +88,15 @@ START-HERE.md        ← 👤 人間はまずここ（キャラ解説・超や�
 CLAUDE.md            ← 🤖 AIはここ（この指示書）
 app.config.json      ← ⭐ アプリ情報を書く紙（〇〇を入れる）
 docs/                ← 手順書・トラブル対処・税務・Chrome申請
+templates/           ← ⭐ 自動化の金型（scripts / workflows / android-twa / capacitor）
+  scripts/           ←   iOS/Android リリーススクリプト＋lib/
+  workflows/         ←   GitHub Actions（release / poll / lint / cert-expiry）
+  android-twa/       ←   mac 不要 Android（TWA）一式
+  README.md          ←   コピー手順とコピー先マッピング
+_docs/               ← キット内部資産（却下KB・設計メモ。サイトには出ない）
 scripts/chrome/      ← Chrome申請の自動化スクリプト
 site/                ← 紹介サイト＋キャラ画像
 ```
 
-> iOS/Android/Web の自動化スクリプトは、上の「対応表」の実プロジェクトから持ってくる。
+> iOS/Android/Web の自動化はすべて `templates/` に同梱済み。`templates/README.md` の
+> マッピングに従ってコピーし、`app.config.json` の値で置換する。

@@ -1,0 +1,53 @@
+{
+  "_README": "Android TWA (Bubblewrap) の金型 manifest。出どころ: Exosome/android-twa/twa-manifest.json。\n  通常は `bubblewrap init --manifest=https://<productionDomain>/manifest.webmanifest` で\n  自動生成されるので、このファイルは『どんな値が入るかの見本 + 上書き用』。<...> を app.config.json の値に置換。\n  fingerprints[].value は keystore 生成後に `android:fingerprint` (print-android-fingerprint.ps1) で得た SHA256 を入れる。\n  ★署名鍵 (android-upload-key.jks) はコピーしない。各アプリで create-android-keystore.ps1 を実行して生成する。",
+  "packageId": "<stores.playPackageName 例: com.example.myapp>",
+  "host": "<identity.productionDomain 例: myapp.example.com>",
+  "name": "<identity.displayName 例: マイアプリ>",
+  "launcherName": "<短いランチャー名 (12文字程度) 例: マイアプリ>",
+  "display": "standalone",
+  "themeColor": "<brand.primaryColor 例: #43c251>",
+  "themeColorDark": "<ダークテーマ用ステータスバー色 例: #2a7a33>",
+  "navigationColor": "<brand.primaryColor 例: #43c251>",
+  "navigationColorDark": "<ダークナビバー色 例: #2a7a33>",
+  "navigationDividerColor": "<brand.primaryColor 例: #43c251>",
+  "navigationDividerColorDark": "<ダークナビ区切り色 例: #2a7a33>",
+  "backgroundColor": "<スプラッシュ背景色 例: #FFFFFF>",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://<identity.productionDomain>/icons/icon-512.png",
+  "maskableIconUrl": "https://<identity.productionDomain>/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "<このリポの絶対パス>\\android-twa\\android-upload-key.jks",
+    "alias": "upload"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://<identity.productionDomain>/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://<identity.productionDomain>/",
+  "minSdkVersion": 23,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "upload",
+      "value": "<keystore 生成後に android:fingerprint で取得した SHA256 例: E0:C1:...:B3>"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

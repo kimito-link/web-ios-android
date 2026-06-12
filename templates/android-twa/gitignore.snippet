@@ -1,0 +1,17 @@
+# Android TWA — リポジトリの .gitignore に追記する金型スニペット。
+# 署名鍵とパスワードは絶対に commit しない（漏洩 = 第三者が偽アプリに署名できる / 紛失 = 更新不能）。
+
+# 署名鍵・パスワード（各アプリ固有・バックアップは別管理）
+android-twa/android-upload-key.jks
+android-twa/keystore.properties
+*.jks
+*.keystore
+
+# Gradle / bubblewrap ビルド成果物
+android-twa/.gradle/
+android-twa/build/
+android-twa/app/build/
+android-twa/*.log
+
+# bubblewrap のローカルマシン設定（パスはマシン依存）
+.bubblewrap-config.json

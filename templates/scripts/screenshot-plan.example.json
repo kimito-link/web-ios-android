@@ -1,0 +1,26 @@
+{
+  "_README": "アプリごとの撮影計画。リポジトリの store-assets/screenshot-plan.json に置く(または env SCREENSHOT_PLAN でパス指定)。capture-appstore-screenshots.mjs / capture-play-screenshots.mjs / frame-appstore-screenshots.mjs が共有する。コードは触らずこの JSON だけ編集する。",
+
+  "signInPath": "/sign-in",
+  "dashboardUrlRegex": "/dashboard",
+
+  "_publicPages": "ログイン不要で撮るページ。slot は出力ファイル名の番号(iOS=数値, Play=ゼロ詰め文字列でも可)。title/subtitle はキャプション帯(空なら帯なし)。scrollToSelector はそのセクションへスクロールしてから撮る(text=/正規表現/ も可、null で先頭)。",
+  "publicPages": [
+    { "slot": 1, "path": "/", "label": "value", "title": "ここに価値の一言", "subtitle": "補足の一行", "scrollToSelector": null },
+    { "slot": 2, "path": "/", "label": "trust", "title": "信頼の根拠", "subtitle": "実績・保証など", "scrollToSelector": "text=/特長/" },
+    { "slot": 3, "path": "/services", "label": "usage", "title": "使い方", "subtitle": "相談の導線", "scrollToSelector": null }
+  ],
+
+  "_authTabs": "ログイン後に撮るタブ(任意)。IOS_REVIEW_DEMO_USERNAME/_PASSWORD が必須になる。selector を直接指定するか、value(role=tab の id 末尾一致)で指定。authTabs を空配列にすればログイン不要アプリとして扱われ creds 不要。",
+  "authTabs": [
+    { "slot": 4, "value": "overview", "selector": null, "label": "dashboard", "title": "アプリで管理", "subtitle": "ひと目で把握" }
+  ],
+
+  "_framedCaptions": "frame-appstore-screenshots.mjs 用の仕上げキャプション。slot 番号キー。headline 内の {波括弧} はアクセント色(brand.primaryColor)。\\n で改行。",
+  "framedCaptions": {
+    "1": { "headline": "ここに{価値}の一言", "sub": "補足の一行" },
+    "2": { "headline": "信頼の{根拠}", "sub": "実績・保証など" },
+    "3": { "headline": "かんたんな{使い方}", "sub": "相談はワンタップ" },
+    "4": { "headline": "アプリで{一元管理}", "sub": "ひと目で把握" }
+  }
+}

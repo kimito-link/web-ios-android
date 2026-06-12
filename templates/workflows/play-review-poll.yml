@@ -1,0 +1,145 @@
+# 【金型テンプレート】Google Play production readiness 監視
+#
+# 移植元: partnership_program_website/.github/workflows/play-review-poll.yml
+#
+# Play メタデータ / リリース前提条件の欠落を 30 分おきにチェックし、
+# blocker があれば 1 件の Issue を作成/更新、解消したら自動クローズする。
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/play-review-poll.yml` にコピー。
+# 2. 下の <PLAY_PACKAGE_NAME> を app.config.json stores.playPackageName で置換。
+# 3. `PLAY_TRACK` を監視したいトラックに合わせる（android-play-release と同じ値）。
+# 4. scripts/play-review-check.mjs を partnership からコピー。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   GOOGLE_PLAY_SA_JSON_BASE64          Service Account JSON を base64 化
+#   GOOGLE_PLAY_DATA_SAFETY_CSV         Data Safety CSV（生・任意）
+#   GOOGLE_PLAY_DATA_SAFETY_CSV_BASE64  同 CSV を base64 化（任意）
+#   （android-play-release と同じ secrets を再利用。追加 secret 不要）
+name: play-review-poll
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+  workflow_run:
+    workflows:
+      - android-play-release
+    types: [completed]
+    branches: [main]
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: play-review-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      # ↓ app.config.json の値で置換（android-play-release と一致させる）
+      PLAY_PACKAGE_NAME: <PLAY_PACKAGE_NAME>   # stores.playPackageName / 無ければ identity.bundleId
+      PLAY_TRACK: production                   # android-play-release の PLAY_TRACK と一致させる
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Poll Google Play readiness
+        run: node scripts/play-review-check.mjs > play-review-report.json
+        env:
+          GOOGLE_PLAY_SA_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SA_JSON_BASE64 }}
+          GOOGLE_PLAY_DATA_SAFETY_CSV: ${{ secrets.GOOGLE_PLAY_DATA_SAFETY_CSV }}
+          GOOGLE_PLAY_DATA_SAFETY_CSV_BASE64: ${{ secrets.GOOGLE_PLAY_DATA_SAFETY_CSV_BASE64 }}
+
+      - name: Create/update Play readiness issue
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('play-review-report.json', 'utf8'));
+            core.info(`Play review report: ${JSON.stringify(report)}`);
+
+            const title = `[Play review] production readiness blockers (${report.packageName})`;
+            const labels = ['ci-failure', 'play-review'];
+            const body = [
+              `**Package:** \`${report.packageName}\``,
+              `**Track:** \`${report.track}\``,
+              `**Locale:** \`${report.locale}\``,
+              `**Detected at:** ${report.timestamp}`,
+              '',
+              '### Release',
+              report.release ? `- status: \`${report.release.status}\`\n- versionCodes: \`${(report.release.versionCodes || []).join(', ') || '(none)'}\`` : '- no release found',
+              '',
+              '### Listing',
+              report.listing ? `- title: ${report.listing.title || '(missing)'}\n- shortDescription length: ${report.listing.shortDescriptionLength}\n- fullDescription length: ${report.listing.fullDescriptionLength}` : '- listing not readable',
+              '',
+              '### Images',
+              `- icon: ${report.imageCounts?.icon || 0}`,
+              `- featureGraphic: ${report.imageCounts?.featureGraphic || 0}`,
+              `- phoneScreenshots: ${report.imageCounts?.phoneScreenshots || 0}`,
+              '',
+              '### Data Safety CSV input',
+              `- configured: ${report.dataSafetyInputConfigured ? 'yes' : 'no'}`,
+              '',
+              '### Blockers',
+              ...(report.blockers && report.blockers.length ? report.blockers.map((b) => `- ${b}`) : ['- none']),
+              '',
+              '### Warnings',
+              ...(report.warnings && report.warnings.length ? report.warnings.map((w) => `- ${w}`) : ['- none']),
+              '',
+              '_Auto-created/updated by `.github/workflows/play-review-poll.yml`._',
+            ].join('\n');
+
+            const search = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue in:title "${title}"`,
+            });
+            const existing = search.data.items[0];
+
+            if (!report.blockers || report.blockers.length === 0) {
+              if (existing && existing.state === 'open') {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  body: `✅ Google Play readiness blockers cleared at ${report.timestamp}.`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  state: 'closed',
+                  state_reason: 'completed',
+                });
+              }
+              core.info('No Play readiness blockers.');
+              return;
+            }
+
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                title,
+                body,
+                state: 'open',
+                labels,
+              });
+              core.info(`Updated issue #${existing.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels,
+              });
+              core.info(`Created issue #${created.data.number}: ${created.data.html_url}`);
+            }

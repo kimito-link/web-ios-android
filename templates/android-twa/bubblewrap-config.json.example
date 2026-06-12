@@ -1,0 +1,5 @@
+{
+  "_README": "金型。出どころ: Exosome/.bubblewrap-config.json。 リポジトリ直下に .bubblewrap-config.json として置く（先頭の _README は削除）。 ps1 スクリプト群（create-android-keystore / print-android-fingerprint / build-android-aab）が JAVA_HOME 未設定時に jdkPath を、bubblewrap が androidSdkPath を参照する。 値はマシンごとに異なるので各自の環境に合わせる。bubblewrap doctor が JDK/SDK を自動取得した場合はそのパスを写す。",
+  "jdkPath": "<JDK 17 のパス 例: C:\\Users\\<you>\\.bubblewrap\\portable-jdk17\\jdk-17.0.18+8>",
+  "androidSdkPath": "<Android SDK のパス 例: C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk>"
+}

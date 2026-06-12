@@ -1,0 +1,15 @@
+[
+  {
+    "_README": "Digital Asset Links（金型）。出どころ: Exosome/src/.well-known/assetlinks.json。 これを本番サイトの /.well-known/assetlinks.json として配信すると、TWA がアドレスバー無しのフルスクリーンで起動する（リンクが検証される）。 _README キーは配信前に必ず削除すること（assetlinks は純粋な配列でなければならない）。 package_name = app.config.json の stores.playPackageName。 sha256_cert_fingerprints は Play App Signing 有効時は『Play Console → アプリの署名 → アプリ署名鍵証明書』の SHA256 を使う（ローカル upload key の指紋ではない）。",
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "<stores.playPackageName 例: com.example.myapp>",
+      "sha256_cert_fingerprints": [
+        "<Play App Signing の SHA256 例: E0:C1:...:B3>"
+      ]
+    }
+  }
+]

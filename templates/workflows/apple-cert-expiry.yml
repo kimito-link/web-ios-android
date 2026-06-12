@@ -1,0 +1,137 @@
+# 【金型テンプレート】Apple 証明書 / プロビジョニングプロファイル 期限監視
+#
+# 移植元: partnership_program_website/.github/workflows/apple-cert-expiry.yml
+#
+# Apple Distribution 証明書 + App Store プロビジョニングプロファイルの
+# expiry を週 1 回 (月曜午前 9 時 JST) チェックし、30 日以内に期限切れ
+# になるものを自動 GitHub Issue 化する。
+#
+# 目的:
+#   1 年でひっそり expire する Apple 証明書を「ビルドが失敗した」と
+#   気づいてから慌てて再発行するパターンを撲滅。30 日前に Issue が立つので
+#   余裕を持って rotate + secrets 更新できる。
+#
+# 設計:
+#   - 既存 ASC API secrets を再利用 (追加 secret 0 個)
+#   - certificate も provisioning profile も 1 つの workflow でカバー
+#   - 重複 Issue は cert/profile ID + 警告窓を含む title で de-dupe
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/apple-cert-expiry.yml` にコピー。
+# 2. アプリ固有値の置換は不要（ASC API 秘密鍵から自動列挙）。無改変で使える。
+# 3. scripts/apple-cert-expiry-check.mjs を partnership からコピー。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   APPSTORE_CONNECT_KEY_ID             ASC API Key ID
+#   APPSTORE_CONNECT_ISSUER_ID          ASC API Issuer ID
+#   APPSTORE_CONNECT_API_KEY_P8_BASE64  ASC API 秘密鍵 .p8 を base64 化
+#   （ios-appstore-release と同じ3点を再利用。追加 secret 不要）
+name: apple-cert-expiry
+
+on:
+  schedule:
+    # 月曜 0:00 UTC = 月曜 9:00 JST
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      warning_days:
+        description: "Threshold (days) for opening an issue"
+        required: false
+        default: "30"
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: apple-cert-expiry
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Check cert + profile expiry
+        run: node scripts/apple-cert-expiry-check.mjs > expiry-report.json
+        env:
+          APPSTORE_CONNECT_KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          APPSTORE_CONNECT_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+          APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
+          WARNING_DAYS: ${{ inputs.warning_days || '30' }}
+
+      - name: Create or update issues for expiring items
+        if: ${{ success() }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('expiry-report.json', 'utf8'));
+            core.info(`Expiry check: ${JSON.stringify(report)}`);
+
+            if (!report.warnings || report.warnings.length === 0) {
+              core.info(`No certs/profiles within ${report.warningDays} days of expiry. OK.`);
+              return;
+            }
+
+            for (const w of report.warnings) {
+              const title = `[Cert expiry] ${w.kind}: ${w.name} expires in ${w.daysRemaining}d (${w.expirationDate.slice(0,10)})`;
+              const search = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "[Cert expiry] ${w.kind}: ${w.name}"`,
+              });
+              if (search.data.total_count > 0) {
+                core.info(`Issue already exists for ${w.kind} ${w.id}. Skipping.`);
+                continue;
+              }
+
+              const portal = w.kind === 'certificate'
+                ? 'https://developer.apple.com/account/resources/certificates'
+                : 'https://developer.apple.com/account/resources/profiles';
+
+              const rotateSteps = w.kind === 'certificate' ? [
+                '1. https://developer.apple.com/account/resources/certificates で expired 前に新規 Apple Distribution 証明書を発行',
+                '2. CSR + 秘密鍵を openssl で生成（手順は _docs/release-pipeline-playbook.md 参照）',
+                '3. 新 cert + private key を `gh secret set IOS_DIST_CERT_CER_BASE64` / `IOS_DIST_PRIVATE_KEY_PEM_BASE64` で再投入',
+                '4. ASC API で新 cert ID を取得して provisioning profile を再生成',
+                '5. `gh secret set IOS_APPSTORE_PROFILE_BASE64` で更新',
+                '6. `gh workflow run ios-appstore-release` で動作確認',
+              ] : [
+                '1. https://developer.apple.com/account/resources/profiles で expired 前に同 App ID の AppStore profile を更新',
+                '2. ダウンロード → `base64 -w0 < new.mobileprovision`',
+                '3. `gh secret set IOS_APPSTORE_PROFILE_BASE64` で更新',
+                '4. `gh workflow run ios-appstore-release` で動作確認',
+              ];
+
+              const body = [
+                `**Kind:** \`${w.kind}\``,
+                `**Name:** ${w.name}`,
+                `**ID:** \`${w.id}\``,
+                `**Expires:** ${w.expirationDate}`,
+                `**Days remaining:** ${w.daysRemaining}`,
+                ``,
+                `⚠️ 期限切れまで **${w.daysRemaining} 日**。期限内に rotate しないと iOS workflow が "No signing certificate found" 等で fail します。`,
+                ``,
+                `**Apple Developer Portal:** ${portal}`,
+                ``,
+                `### Rotation steps`,
+                ...rotateSteps,
+                ``,
+                `_Auto-created by \`.github/workflows/apple-cert-expiry.yml\`._`,
+                `_Detected at: ${report.timestamp}._`,
+              ].join('\n');
+
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['ci-failure', 'cert-expiry'],
+              });
+              core.info(`Created issue #${created.data.number}: ${created.data.html_url}`);
+            }

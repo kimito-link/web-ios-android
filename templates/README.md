@@ -14,6 +14,21 @@
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
 | `workflows/ios-shell-guardrail.yml` | 独自ネイティブ注入の再混入を CI で赤にするガード | 無改変(禁止パターンはアプリ非依存に一般化済み) |
+| `scripts/lint-pre-submission.mjs` | 審査前 lint(実証済み Apple 却下ベクタを CI で検出) | **無改変**(app.config.json + env 駆動。無いファイルは skip) |
+| `scripts/capture-appstore-screenshots.mjs` | App Store スクショ自動撮影(ログイン後・fail-closed) | **無改変**(撮影計画は `store-assets/screenshot-plan.json`) |
+| `scripts/capture-play-screenshots.mjs` | Google Play スクショ自動撮影(Android FHD) | **無改変**(iOS と同じ screenshot-plan.json を共有) |
+| `scripts/frame-appstore-screenshots.mjs` | 生スクショを仕上げ加工(キャプション帯・角丸・影) | **無改変**(キャプションは screenshot-plan.json の framedCaptions) |
+| `scripts/screenshot-plan.example.json` | 撮影計画のひな形 | リポの `store-assets/screenshot-plan.json` にコピーして編集 |
+| `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
+
+> 📚 **Apple 却下が来たら** [`../_docs/apple-reject-knowledge-base.md`](../_docs/apple-reject-knowledge-base.md) を見る。
+> 「却下パターン → 原因 → **実際に通った返信文**」を集約(リバースハック partner v1.0.0〜v1.0.9 の実例、固有名は一般化)。
+> `lint-pre-submission.mjs` の各チェックはこの KB のガイドライン番号に対応する。
+
+> 🖼 **スクショ自動化の使い方**: (1) `screenshot-plan.example.json` をリポの `store-assets/screenshot-plan.json`
+> にコピーして撮るページ/キャプション/ログイン手順を書く → (2) capture で生スクショ → (3) frame で仕上げ →
+> (4) `lib/asc-screenshot-upload.mjs`(release CI)で **delete-then-reupload**。ログイン認証アプリは
+> `IOS_REVIEW_DEMO_USERNAME`/`_PASSWORD` を CI Secret に。`authTabs` を空にすればログイン不要アプリ扱い(creds 不要)。
 
 ## 使い方(連動型アプリを新規に作る)
 

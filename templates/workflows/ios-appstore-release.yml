@@ -1,0 +1,688 @@
+# 【金型テンプレート】iOS App Store 申請用ワークフロー（GitHub Actions 版）
+#
+# 移植元: partnership_program_website/.github/workflows/ios-appstore-release.yml
+#         (fujisan-clean からさらに移植された完成形・認証込みリリースCI)
+#
+# - macOS-latest ランナー上で Capacitor + Xcode で IPA を作成し、App Store Connect API で
+#   ビルドを TestFlight にアップロード + メタデータを書き込んで審査提出まで自動化する。
+# - Mac 不要（GitHub Actions の macos-latest が代行）。プライベート repo は ~$2-3/release。
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/ios-appstore-release.yml` にコピー。
+# 2. 下の <...> プレースホルダを app.config.json の値で置換する:
+#      <APP_BUNDLE_ID>   = identity.bundleId          例: com.example.app
+#      <APP_NAME>        = identity.shortName         例: NekoDiary (Xcode scheme/archive 名)
+#      <PRODUCTION_URL>  = "https://" + identity.productionDomain  (審査スクショ取得元)
+# 3. 下の「必要な Secrets」を Repo Settings → Secrets and variables → Actions に登録。
+# 4. リリース実体スクリプト (scripts/appstore-submit.mjs 等) は partnership からコピー。
+#    詳細マッピングは templates/README.md / _docs/release-pipeline-playbook.md。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   APPLE_TEAM_ID                       Apple Developer Team ID (10桁)
+#   APPSTORE_CONNECT_KEY_ID             ASC API Key ID
+#   APPSTORE_CONNECT_ISSUER_ID          ASC API Issuer ID (UUID)
+#   APPSTORE_CONNECT_API_KEY_P8_BASE64  ASC API 秘密鍵 .p8 を base64 化
+#   IOS_DIST_CERT_PASSWORD              配布証明書 p12 のパスワード
+#   IOS_DIST_CERT_P12_BASE64            配布証明書 p12 を base64 化
+#     (または IOS_DIST_CERT_CER_BASE64 + IOS_DIST_PRIVATE_KEY_PEM_BASE64 の2点)
+#   IOS_APPSTORE_PROFILE_BASE64         App Store provisioning profile を base64 化
+#   ── 審査用デモアカウント / 連絡先 (ログイン必須アプリのみ) ──
+#   IOS_REVIEW_DEMO_USERNAME            審査員用デモアカウント (任意・ログイン必須なら必須)
+#   IOS_REVIEW_DEMO_PASSWORD            同上パスワード
+#   IOS_REVIEW_CONTACT_PHONE            審査員連絡先電話 (E.164)
+#   IOS_REVIEW_NOTES                    審査員向けメモ (任意)
+#   CLERK_SECRET_KEY                    デモアカウント疎通検証用 (Clerk 認証アプリのみ・任意)
+name: ios-appstore-release
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      # 方針: Web は唯一の真実。client/server/vite などの Web 変更は
+      # WebView で自動反映されるため、ネイティブ(iOS)の再申請は原則しない。
+      # 本当に申請したいときは workflow_dispatch(手動)、または
+      # バージョンを上げる package.json 変更で起動する。
+      - ".github/workflows/ios-appstore-release.yml"
+      - "capacitor.config.json"
+      - "package.json"
+      - "scripts/appstore-submit.mjs"
+      # Submit-time helpers that change runtime behaviour of the
+      # workflow's most fragile steps (capture/verify/screenshot-upload).
+      # Without these in the path filter, fixes to these scripts won't
+      # actually re-build & re-submit.
+      - "scripts/capture-appstore-screenshots.mjs"
+      - "scripts/verify-reviewer-account.mjs"
+      - "scripts/lib/asc-api.mjs"
+      - "scripts/lib/asc-screenshot-upload.mjs"
+      - "store-assets/appstore/app-icon-1024.png"
+      - "release-notes/CURRENT-ja.txt"
+
+concurrency:
+  group: ios-appstore-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit-ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      # ↓↓↓ app.config.json の値で置換 ↓↓↓
+      APP_BUNDLE_ID: <APP_BUNDLE_ID>   # identity.bundleId   例: com.example.app
+      APP_NAME: <APP_NAME>             # identity.shortName  例: NekoDiary
+      # ↑↑↑ ここまで ↑↑↑
+      IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+      IOS_DIST_CERT_CER_BASE64: ${{ secrets.IOS_DIST_CERT_CER_BASE64 }}
+      IOS_DIST_PRIVATE_KEY_PEM_BASE64: ${{ secrets.IOS_DIST_PRIVATE_KEY_PEM_BASE64 }}
+      IOS_APPSTORE_PROFILE_BASE64: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+      IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPSTORE_CONNECT_KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+      APPSTORE_CONNECT_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+      APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Select Xcode (iOS 26 SDK or later)
+        run: |
+          set -euo pipefail
+          echo "--- installed Xcode versions ---"
+          ls -1d /Applications/Xcode*.app 2>/dev/null || true
+
+          chosen=""
+          for app in /Applications/Xcode_26*.app /Applications/Xcode_27*.app /Applications/Xcode_28*.app; do
+            [ -d "$app" ] || continue
+            chosen="$app"
+          done
+          if [ -z "$chosen" ]; then
+            for app in $(ls -1d /Applications/Xcode*.app 2>/dev/null | sort -V); do
+              v="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist" 2>/dev/null || echo 0)"
+              major="${v%%.*}"
+              if [ -n "$major" ] && [ "$major" -ge 26 ] 2>/dev/null; then
+                chosen="$app"
+              fi
+            done
+          fi
+          if [ -z "$chosen" ]; then
+            echo "::error::No Xcode 26+ found on this runner."
+            ls -1d /Applications/Xcode*.app 2>/dev/null
+            exit 1
+          fi
+          echo "Selecting $chosen"
+          sudo xcode-select -s "$chosen/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          required=(
+            IOS_DIST_CERT_PASSWORD
+            IOS_APPSTORE_PROFILE_BASE64
+            APPLE_TEAM_ID
+            APPSTORE_CONNECT_KEY_ID
+            APPSTORE_CONNECT_ISSUER_ID
+            APPSTORE_CONNECT_API_KEY_P8_BASE64
+          )
+          missing=()
+          for key in "${required[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              missing+=("$key")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+
+          if [ -z "${IOS_DIST_CERT_P12_BASE64:-}" ]; then
+            if [ -z "${IOS_DIST_CERT_CER_BASE64:-}" ] || [ -z "${IOS_DIST_PRIVATE_KEY_PEM_BASE64:-}" ]; then
+              echo "Provide either IOS_DIST_CERT_P12_BASE64, or both IOS_DIST_CERT_CER_BASE64 and IOS_DIST_PRIVATE_KEY_PEM_BASE64"
+              exit 1
+            fi
+          fi
+
+      - name: Normalize App Store Connect IDs
+        run: |
+          set -euo pipefail
+          ASC_KEY_ID="$(printf '%s' "${APPSTORE_CONNECT_KEY_ID:-}" | tr -d '\r\n\t ')"
+          ASC_ISSUER_ID="$(printf '%s' "${APPSTORE_CONNECT_ISSUER_ID:-}" | tr -d '\r\n\t ')"
+
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ]; then
+            echo "App Store Connect key id / issuer id is empty after normalization."
+            exit 1
+          fi
+
+          echo "ASC_KEY_ID=$ASC_KEY_ID" >> "$GITHUB_ENV"
+          echo "ASC_ISSUER_ID=$ASC_ISSUER_ID" >> "$GITHUB_ENV"
+          echo "Normalized App Store Connect IDs: key=$ASC_KEY_ID issuer=$ASC_ISSUER_ID"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        # Version inferred from package.json `packageManager`. Do not set
+        # `version:` here — pnpm/action-setup@v6 errors out when both are set.
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Capacitor iOS toolchain + assets
+        run: pnpm add --save-dev @capacitor/ios@8 @capacitor/assets@3 @capacitor/splash-screen@8
+
+      - name: Prepare webDir (Capacitor uses dist/public; server.url overrides at runtime)
+        run: |
+          mkdir -p dist/public
+          if [ ! -f dist/public/index.html ]; then
+            echo "<!doctype html><html><head><meta charset=\"utf-8\"><title>${APP_NAME}</title></head><body>loading...</body></html>" > dist/public/index.html
+          fi
+
+      - name: Add/copy iOS platform
+        run: |
+          if [ ! -d ios/App ]; then
+            npx cap add ios
+          fi
+          npx cap copy ios
+
+      # 標準 HTTPS / OS 提供の TLS のみなら非免除暗号を使わない宣言（審査・輸出コンプライアンスの手戻り軽減）
+      - name: Info.plist export compliance (ITSAppUsesNonExemptEncryption)
+        run: |
+          set -euo pipefail
+          PLIST="ios/App/App/Info.plist"
+          test -f "$PLIST"
+          if /usr/libexec/PlistBuddy -c "Print :ITSAppUsesNonExemptEncryption" "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
+          else
+            /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+          fi
+          /usr/libexec/PlistBuddy -c "Print :ITSAppUsesNonExemptEncryption" "$PLIST"
+
+      - name: Generate or reuse 1024 app icon
+        run: |
+          set -euo pipefail
+          MASTER="store-assets/appstore/app-icon-1024.png"
+          mkdir -p assets store-assets/appstore
+          if [ -f "$MASTER" ]; then
+            echo "Using committed $MASTER"
+            cp "$MASTER" assets/icon-only.png
+          else
+            echo "MASTER not committed — generating via icons:generate"
+            pnpm icons:generate
+            if [ ! -f "$MASTER" ]; then
+              echo "::error::icons:generate did not produce $MASTER. Check scripts/generate-app-icons.mjs."
+              exit 1
+            fi
+            cp "$MASTER" assets/icon-only.png
+          fi
+          # 起動時の「黒い間」にロゴを出すスプラッシュ（暗色背景）を生成。
+          # launchAutoHide:true（capacitor.config.json）の安全方式。assets/splash*.png を
+          # @capacitor/assets が各サイズへ展開し LaunchScreen に焼き込む。
+          node scripts/generate-capacitor-splash.mjs
+          npx @capacitor/assets generate --ios --iosProject ios/App --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
+
+      # 起動時の白フラッシュ対策: LaunchScreen 暗色化 + UIUserInterfaceStyle=Dark。
+      # @capacitor/assets generate の「後」に当てる（assets が
+      # storyboard/カタログを再生成した後に暗色 patch を最終適用するため）。
+      # ※ patch-ios-launch-dark.mjs は本キット templates/scripts からコピーした
+      #   「作り分けない」金型版を使うこと（独自VC注入は ios-shell-guardrail が赤にする）。
+      - name: Patch iOS launch screen to dark (#0A0A0F)
+        run: node scripts/patch-ios-launch-dark.mjs
+
+      - name: Force iOS deployment target + iPhone-only device family
+        run: |
+          PODFILE="ios/App/Podfile"
+          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
+          if [ -f "$PODFILE" ]; then
+            if grep -q "^platform :ios" "$PODFILE"; then
+              sed -i.bak "s/^platform :ios, .*/platform :ios, '15.0'/" "$PODFILE"
+            else
+              printf "platform :ios, '15.0'\n%s" "$(cat "$PODFILE")" > "$PODFILE"
+            fi
+            grep -n "^platform :ios" "$PODFILE" || true
+          fi
+          if [ -f "$PBXPROJ" ]; then
+            sed -i.bak "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" "$PBXPROJ"
+            # Restrict to iPhone (TARGETED_DEVICE_FAMILY = "1") so the App
+            # Store does not require iPad-sized screenshots. Phone-first apps
+            # only; if your app supports iPad, change this to "1,2".
+            sed -i.bak2 -E 's/TARGETED_DEVICE_FAMILY = "[^"]+";/TARGETED_DEVICE_FAMILY = "1";/g' "$PBXPROJ"
+          fi
+
+      - name: Set iOS version (MARKETING) from package.json and build number (CFBundleVersion) from CI
+        run: |
+          set -euo pipefail
+          PBX="ios/App/App.xcodeproj/project.pbxproj"
+          PLIST="ios/App/App/Info.plist"
+          MARK_VER="$(node -p "require('./package.json').version")"
+          sed -i.bak -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = $MARK_VER;/g" "$PBX"
+          if grep -q "INFOPLIST_KEY_CFBundleShortVersionString" "$PBX"; then
+            sed -i.bak2 -E "s/INFOPLIST_KEY_CFBundleShortVersionString = [^;]+;/INFOPLIST_KEY_CFBundleShortVersionString = $MARK_VER;/g" "$PBX"
+          fi
+          if [ -f "$PLIST" ] && /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARK_VER" "$PLIST"
+          fi
+          echo "MARKETING_VERSION=$MARK_VER"
+          BN="${GITHUB_RUN_NUMBER:-0}"
+          if [ "$BN" -le 1 ]; then
+            BN="$(date +%s)"
+          fi
+          sed -i.bak -E "s/CURRENT_PROJECT_VERSION = [^;]+;/CURRENT_PROJECT_VERSION = $BN;/g" "$PBX"
+          echo "CURRENT_PROJECT_VERSION=$BN"
+          echo "IOS_BUILD_NUMBER=$BN" >> "$GITHUB_ENV"
+          mkdir -p build
+          {
+            echo "MARK_VER=$MARK_VER"
+            echo "IOS_BUILD_NUMBER=$BN"
+          } > build/ci-release-versions.env
+
+      - name: Install CocoaPods dependencies (skip if SPM-only)
+        run: |
+          set -euo pipefail
+          # Capacitor 8 defaults to Swift Package Manager (no Podfile generated).
+          # Run pod install only when a Podfile exists.
+          if [ -f ios/App/Podfile ]; then
+            cd ios/App
+            pod install --repo-update
+          else
+            echo "No Podfile found at ios/App/Podfile -- Capacitor 8 SPM project, skipping pod install."
+            ls -la ios/App | head -20
+          fi
+
+      - name: Install signing certificate
+        id: signing
+        run: |
+          set -euo pipefail
+
+          decode_b64_value() {
+            value="$1"
+            out_path="$2"
+            if printf '%s' "$value" | grep -q "BEGIN .*PRIVATE KEY\|BEGIN CERTIFICATE"; then
+              printf '%b' "$(printf '%s' "$value" | sed 's/\\r//g; s/\\n/\\n/g')" > "$out_path"
+              return 0
+            fi
+            cleaned="$(printf '%s' "$value" | tr -d '\r\n\t ')"
+            cleaned="$(printf '%s' "$cleaned" | sed -e "s/^'//" -e "s/'$//" -e 's/^\"//' -e 's/\"$//')"
+            cleaned="$(printf '%s' "$cleaned" | tr '_-' '/+' | tr -cd 'A-Za-z0-9+/=')"
+            case $((${#cleaned} % 4)) in
+              2) cleaned="${cleaned}==" ;;
+              3) cleaned="${cleaned}=" ;;
+              1) cleaned="${cleaned}===" ;;
+            esac
+            [ -n "$cleaned" ] || return 1
+            if printf '%s' "$cleaned" | base64 -D > "$out_path" 2>/dev/null; then return 0; fi
+            if printf '%s' "$cleaned" | base64 --decode > "$out_path" 2>/dev/null; then return 0; fi
+            if printf '%s' "$cleaned" | openssl base64 -d -A -out "$out_path" 2>/dev/null; then return 0; fi
+            return 1
+          }
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+          CERT_PATH="$RUNNER_TEMP/dist-cert.p12"
+          CERT_DER_PATH="$RUNNER_TEMP/dist-cert.cer"
+          CERT_PEM_PATH="$RUNNER_TEMP/dist-cert.pem"
+          KEY_PEM_PATH="$RUNNER_TEMP/dist-key.pem"
+
+          echo "Secret lengths: P12=${#IOS_DIST_CERT_P12_BASE64} CER=${#IOS_DIST_CERT_CER_BASE64} KEY=${#IOS_DIST_PRIVATE_KEY_PEM_BASE64}"
+
+          use_split_material=false
+          if [ -n "${IOS_DIST_CERT_P12_BASE64:-}" ]; then
+            if ! decode_b64_value "$IOS_DIST_CERT_P12_BASE64" "$CERT_PATH"; then
+              echo "Failed to decode IOS_DIST_CERT_P12_BASE64, trying split..."
+              use_split_material=true
+            fi
+          else
+            use_split_material=true
+          fi
+          if [ "$use_split_material" = false ] && [ ! -s "$CERT_PATH" ]; then
+            use_split_material=true
+          fi
+          if [ "$use_split_material" = true ]; then
+            if [ -z "${IOS_DIST_CERT_CER_BASE64:-}" ] || [ -z "${IOS_DIST_PRIVATE_KEY_PEM_BASE64:-}" ]; then
+              echo "Split secrets IOS_DIST_CERT_CER_BASE64 + IOS_DIST_PRIVATE_KEY_PEM_BASE64 required when P12 decode fails."
+              exit 1
+            fi
+            decode_b64_value "$IOS_DIST_CERT_CER_BASE64" "$CERT_DER_PATH" || exit 1
+            decode_b64_value "$IOS_DIST_PRIVATE_KEY_PEM_BASE64" "$KEY_PEM_PATH" || exit 1
+            if grep -q "BEGIN CERTIFICATE" "$CERT_DER_PATH"; then
+              cp "$CERT_DER_PATH" "$CERT_PEM_PATH"
+            else
+              openssl x509 -inform DER -in "$CERT_DER_PATH" -out "$CERT_PEM_PATH"
+            fi
+            openssl pkcs12 -export \
+              -inkey "$KEY_PEM_PATH" \
+              -in "$CERT_PEM_PATH" \
+              -out "$CERT_PATH" \
+              -passout "pass:$IOS_DIST_CERT_PASSWORD"
+          fi
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$IOS_DIST_CERT_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          echo "keychain-path=$KEYCHAIN_PATH" >> "$GITHUB_OUTPUT"
+          echo "keychain-password=$KEYCHAIN_PASSWORD" >> "$GITHUB_OUTPUT"
+
+      - name: Install App Store provisioning profile
+        id: install_profile
+        run: |
+          set -euo pipefail
+          decode_b64_value() {
+            value="$1"
+            out_path="$2"
+            cleaned="$(printf '%s' "$value" | tr -d '\r\n\t ')"
+            cleaned="$(printf '%s' "$cleaned" | sed -e "s/^'//" -e "s/'$//" -e 's/^\"//' -e 's/\"$//')"
+            cleaned="$(printf '%s' "$cleaned" | tr '_-' '/+' | tr -cd 'A-Za-z0-9+/=')"
+            case $((${#cleaned} % 4)) in
+              2) cleaned="${cleaned}==" ;;
+              3) cleaned="${cleaned}=" ;;
+              1) cleaned="${cleaned}===" ;;
+            esac
+            [ -n "$cleaned" ] || return 1
+            if printf '%s' "$cleaned" | base64 -D > "$out_path" 2>/dev/null; then return 0; fi
+            if printf '%s' "$cleaned" | base64 --decode > "$out_path" 2>/dev/null; then return 0; fi
+            return 1
+          }
+
+          PROFILE_RAW="$RUNNER_TEMP/appstore.mobileprovision"
+          PROFILE_PLIST="$RUNNER_TEMP/appstore-profile.plist"
+          decode_b64_value "$IOS_APPSTORE_PROFILE_BASE64" "$PROFILE_RAW" || exit 1
+
+          security cms -D -i "$PROFILE_RAW" > "$PROFILE_PLIST"
+          PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST")"
+          PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' "$PROFILE_PLIST")"
+          APP_ID_FROM_PROFILE="$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$PROFILE_PLIST")"
+
+          EXPECTED_EXACT="${APPLE_TEAM_ID}.${APP_BUNDLE_ID}"
+          EXPECTED_WILDCARD="${APPLE_TEAM_ID}.*"
+          if [ "$APP_ID_FROM_PROFILE" != "$EXPECTED_EXACT" ] && [ "$APP_ID_FROM_PROFILE" != "$EXPECTED_WILDCARD" ]; then
+            echo "Provisioning profile app id mismatch: got=$APP_ID_FROM_PROFILE expected=$EXPECTED_EXACT or $EXPECTED_WILDCARD"
+            exit 1
+          fi
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_RAW" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
+          echo "profile_uuid=$PROFILE_UUID" >> "$GITHUB_OUTPUT"
+          echo "profile_name=$PROFILE_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Configure App Store Connect API key
+        run: |
+          set -euo pipefail
+          write_normalized_private_key() {
+            value="$1"
+            out_path="$2"
+            raw="$(printf '%b' "$(printf '%s' "$value" | sed 's/\\r//g; s/\\n/\\n/g')")"
+            body="$(printf '%s' "$raw" | sed -e 's/-----BEGIN PRIVATE KEY-----//g' -e 's/-----END PRIVATE KEY-----//g' | tr -d '\r\n\t ' | tr -cd 'A-Za-z0-9+/=')"
+            [ -n "$body" ] || return 1
+            {
+              printf '%s\n' '-----BEGIN PRIVATE KEY-----'
+              printf '%s' "$body" | fold -w 64
+              printf '\n%s\n' '-----END PRIVATE KEY-----'
+            } > "$out_path"
+            return 0
+          }
+          decode_b64_value() {
+            value="$1"
+            out_path="$2"
+            if printf '%s' "$value" | grep -q "BEGIN .*PRIVATE KEY"; then
+              if write_normalized_private_key "$value" "$out_path"; then return 0; fi
+            fi
+            cleaned="$(printf '%s' "$value" | tr -d '\r\n\t ')"
+            cleaned="$(printf '%s' "$cleaned" | sed -e "s/^'//" -e "s/'$//" -e 's/^\"//' -e 's/\"$//')"
+            cleaned="$(printf '%s' "$cleaned" | tr '_-' '/+' | tr -cd 'A-Za-z0-9+/=')"
+            case $((${#cleaned} % 4)) in
+              2) cleaned="${cleaned}==" ;;
+              3) cleaned="${cleaned}=" ;;
+              1) cleaned="${cleaned}===" ;;
+            esac
+            [ -n "$cleaned" ] || return 1
+            if printf '%s' "$cleaned" | base64 -D > "$out_path" 2>/dev/null; then return 0; fi
+            if printf '%s' "$cleaned" | base64 --decode > "$out_path" 2>/dev/null; then return 0; fi
+            if printf '%s' "$cleaned" | openssl base64 -d -A -out "$out_path" 2>/dev/null; then
+              if ! grep -q "BEGIN PRIVATE KEY" "$out_path"; then
+                if write_normalized_private_key "$(cat "$out_path")" "$out_path"; then return 0; fi
+              fi
+              return 0
+            fi
+            return 1
+          }
+
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          API_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          decode_b64_value "$APPSTORE_CONNECT_API_KEY_P8_BASE64" "$API_KEY_PATH" || exit 1
+          if ! grep -q "BEGIN PRIVATE KEY" "$API_KEY_PATH"; then
+            echo "Decoded API key does not look like a .p8 private key."
+            exit 1
+          fi
+          if ! openssl pkey -in "$API_KEY_PATH" -noout >/dev/null 2>&1; then
+            echo "Decoded API key is not a valid private key document."
+            exit 1
+          fi
+          chmod 600 "$API_KEY_PATH"
+
+      - name: Re-apply marketing version before xcodebuild archive
+        run: |
+          set -euo pipefail
+          PBX="ios/App/App.xcodeproj/project.pbxproj"
+          PLIST="ios/App/App/Info.plist"
+          set -a
+          # shellcheck disable=SC1091
+          source build/ci-release-versions.env
+          set +a
+          MARK_VER="$(node -p "require('./package.json').version")"
+          sed -i.bak3 -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = $MARK_VER;/g" "$PBX"
+          if grep -q "INFOPLIST_KEY_CFBundleShortVersionString" "$PBX"; then
+            sed -i.bak3 -E "s/INFOPLIST_KEY_CFBundleShortVersionString = [^;]+;/INFOPLIST_KEY_CFBundleShortVersionString = $MARK_VER;/g" "$PBX"
+          fi
+          if [ -f "$PLIST" ] && /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARK_VER" "$PLIST"
+          fi
+          sed -i.bak3 -E "s/CURRENT_PROJECT_VERSION = [^;]+;/CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER;/g" "$PBX"
+          {
+            echo "MARK_VER=$MARK_VER"
+            echo "IOS_BUILD_NUMBER=$IOS_BUILD_NUMBER"
+          } > build/ci-release-versions.env
+
+      - name: Build unsigned iOS archive
+        run: |
+          set -euo pipefail
+          set -a
+          # shellcheck disable=SC1091
+          source build/ci-release-versions.env
+          set +a
+          # Capacitor 8 SPM: no .xcworkspace generated, use .xcodeproj directly.
+          # Capacitor <=7 CocoaPods: .xcworkspace exists alongside .xcodeproj, prefer workspace.
+          if [ -d ios/App/App.xcworkspace ]; then
+            XCODE_FLAG=(-workspace ios/App/App.xcworkspace)
+            echo "Using workspace (CocoaPods project)"
+          else
+            XCODE_FLAG=(-project ios/App/App.xcodeproj)
+            echo "Using project (SPM project, no workspace)"
+          fi
+          xcodebuild \
+            "${XCODE_FLAG[@]}" \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "build/${APP_NAME}.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            "MARKETING_VERSION=$MARK_VER" \
+            "CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER" \
+            archive
+
+      - name: Export IPA
+        id: export_ipa
+        run: |
+          set -euo pipefail
+          mkdir -p build/export
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${APP_BUNDLE_ID}</key>
+              <string>${{ steps.install_profile.outputs.profile_name }}</string>
+            </dict>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "build/${APP_NAME}.xcarchive" \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist
+
+          IPA_PATH="$(find build/export -maxdepth 1 -name '*.ipa' -print -quit)"
+          if [ -z "$IPA_PATH" ]; then
+            echo "IPA was not generated."
+            exit 1
+          fi
+          echo "ipa-path=$IPA_PATH" >> "$GITHUB_OUTPUT"
+          echo "Generated IPA: $IPA_PATH"
+
+      - name: Verify IPA CFBundleShortVersionString before upload
+        run: |
+          set -euo pipefail
+          IPA_PATH="${{ steps.export_ipa.outputs.ipa-path }}"
+          set -a
+          # shellcheck disable=SC1091
+          source build/ci-release-versions.env
+          set +a
+          INFO_REL="$(zipinfo -1 "$IPA_PATH" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -1)"
+          [ -n "$INFO_REL" ] || { echo "No Info.plist in IPA"; exit 1; }
+          unzip -p "$IPA_PATH" "$INFO_REL" > /tmp/ipa-Info.plist
+          GOT="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" /tmp/ipa-Info.plist)"
+          echo "IPA CFBundleShortVersionString=$GOT (expected $MARK_VER)"
+          if [ "$GOT" != "$MARK_VER" ]; then
+            echo "::error::IPA の Version が package.json と一致しません。"
+            exit 1
+          fi
+
+      - name: Upload IPA to App Store Connect
+        run: |
+          set -euo pipefail
+          IPA_PATH="${{ steps.export_ipa.outputs.ipa-path }}"
+          if xcrun --find altool >/dev/null 2>&1; then
+            xcrun altool \
+              --upload-app \
+              --type ios \
+              --file "$IPA_PATH" \
+              --apiKey "$ASC_KEY_ID" \
+              --apiIssuer "$ASC_ISSUER_ID" \
+              --verbose
+          else
+            xcrun iTMSTransporter \
+              -m upload \
+              -assetFile "$IPA_PATH" \
+              -apiKey "$ASC_KEY_ID" \
+              -apiIssuer "$ASC_ISSUER_ID" \
+              -v informational
+          fi
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ipa-appstore
+          path: ${{ steps.export_ipa.outputs.ipa-path }}
+          if-no-files-found: error
+
+      # Regenerate release-notes/CURRENT-ja.txt from conventional-style
+      # commit messages since the last v* tag. iOS uses this as
+      # whatsNew on subsequent releases (initial release skips whatsNew).
+      - name: Regenerate ja release notes from commit messages
+        if: ${{ success() }}
+        run: |
+          git fetch --tags --depth=0 origin || git fetch --tags --depth=100 origin || true
+          node scripts/generate-release-notes.mjs --write || true
+          echo '--- current release notes ---'
+          cat release-notes/CURRENT-ja.txt
+          echo '--- end ---'
+
+      # Apple requires at least one iPhone 6.7" screenshot for review
+      # submission. We snapshot the deployed production site at the right
+      # resolution and stash to ios-screenshots/. appstore-submit.mjs picks
+      # them up and uploads via the ASC presigned-URL flow.
+      - name: Capture App Store screenshot from prod URL (authenticated as reviewer)
+        if: ${{ success() }}
+        env:
+          # ↓ "https://" + identity.productionDomain で置換
+          SCREENSHOT_URL: <PRODUCTION_URL>
+          SCREENSHOT_OUT_DIR: ios-screenshots
+          # ログイン必須アプリは審査員デモアカウントでサインインしてから撮影する。
+          # 未ログインのログイン画面スクショだけだと Apple 2.3.3 で reject される。
+          # capture スクリプトはこの env が無いと hard-fail (exit 1) する設計。
+          IOS_REVIEW_DEMO_USERNAME: ${{ secrets.IOS_REVIEW_DEMO_USERNAME }}
+          IOS_REVIEW_DEMO_PASSWORD: ${{ secrets.IOS_REVIEW_DEMO_PASSWORD }}
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/capture-appstore-screenshots.mjs
+          ls -la ios-screenshots
+
+      # Pre-submit gate: ログイン必須アプリは、デモアカウントが実際に
+      # サインインできるかを審査提出前に確認する。死んだ demo account を
+      # 出すと 2.1(a) で即 reject + 24-48h 無駄になる。definitive な
+      # bad-credential のときだけ fail closed、transient/設定不足は warn 継続。
+      # ※ Clerk 以外の認証なら verify-reviewer-account.mjs を自前実装に差し替える。
+      - name: Verify reviewer demo account can sign in (pre-submit gate)
+        if: ${{ success() }}
+        env:
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          IOS_REVIEW_DEMO_USERNAME: ${{ secrets.IOS_REVIEW_DEMO_USERNAME }}
+          IOS_REVIEW_DEMO_PASSWORD: ${{ secrets.IOS_REVIEW_DEMO_PASSWORD }}
+        run: node scripts/verify-reviewer-account.mjs
+
+      - name: Submit App Store version for review
+        if: ${{ success() }}
+        env:
+          APPSTORE_CONNECT_KEY_ID: ${{ env.ASC_KEY_ID }}
+          APPSTORE_CONNECT_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
+          APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
+          APP_BUNDLE_ID: ${{ env.APP_BUNDLE_ID }}
+          IOS_BUILD_NUMBER: ${{ env.IOS_BUILD_NUMBER }}
+          IOS_SCREENSHOTS_DIR: ios-screenshots
+          # Reviewer contact info — Apple validates phone format and
+          # rejects obviously-fake numbers. Stored as a repo secret.
+          IOS_REVIEW_CONTACT_PHONE: ${{ secrets.IOS_REVIEW_CONTACT_PHONE }}
+          # Demo account for Apple reviewers. When set, the script flips
+          # demoAccountRequired=true so the reviewer sees the credentials
+          # form. Login-required dashboards almost always need this or the
+          # first submission is METADATA_REJECTED.
+          IOS_REVIEW_DEMO_USERNAME: ${{ secrets.IOS_REVIEW_DEMO_USERNAME }}
+          IOS_REVIEW_DEMO_PASSWORD: ${{ secrets.IOS_REVIEW_DEMO_PASSWORD }}
+          IOS_REVIEW_NOTES: ${{ secrets.IOS_REVIEW_NOTES }}
+        run: node scripts/appstore-submit.mjs

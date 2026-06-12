@@ -3,13 +3,17 @@
 2026-06-12 策定。kimito「全部、5年後に楽できるレベル」。dns-osint アプリ化(web-health-check-app)で
 得た実証知見 + partnership/Exosome/fujisan の現物を、**キット単体で完結する形**に集約する。
 
-## 現状の核心問題
+## 現状の核心問題 → ✅ 大半は解消(2026-06-12)
 
-CLAUDE.md が自認: 「**iOS/Android 自動化スクリプト本体はキットに無く、毎回 partnership/Exosome から
-手コピーする**」前提。これが5年後に楽できない原因:
+旧前提: 「iOS/Android 自動化スクリプト本体はキットに無く、毎回 partnership/Exosome から手コピー」。
+これが5年後に楽できない原因だった:
 - 参照元リポが改修/移動/削除されるとキットが壊れる
 - コピー忘れ・置換忘れ(bundleId等のハードコード残り)
-- 今回判明: `templates/scripts/patch-ios-launch-dark.mjs` が **PlistBuddy(mac専用)依存でWindowsで動かない**
+- `templates/scripts/patch-ios-launch-dark.mjs` が PlistBuddy(mac専用)依存でWindowsで動かない
+
+**現状**: Step1〜5 完了で scripts/CI/TWA/却下KB/lint/スクショを `templates/` に同梱。
+参照元への手コピーは不要(出典として残すだけ)。patch も PlistBuddy 不在フォールバック済み。
+残るのは setup-new-app.mjs ワンコマンド化のみ(下記 Step6 残課題)。
 
 ## 完成の定義
 
@@ -27,35 +31,48 @@ CLAUDE.md が自認: 「**iOS/Android 自動化スクリプト本体はキット
 
 ## おすすめ実装順（各ステップ別ターン・最小トークン）
 
-### Step1: Windows対応 patch を即修正【確実・低コスト】
-- `templates/scripts/patch-ios-launch-dark.mjs` を dns-osint で実証した PlistBuddy 不在フォールバック版に差替
+### Step1: Windows対応 patch を即修正【確実・低コスト】✅完了
+- `templates/scripts/patch-ios-launch-dark.mjs` を PlistBuddy 不在フォールバック版に差替済み
   (hasPlistBuddy判定→無ければ Info.plist 文字列編集)。LaunchScreen側は既に node なのでOK。
 - 効果: キットの patch が Windows/Linux/mac 全対応に。
 
-### Step2: iOS/Android 自動化スクリプト本体をキットに取り込む【核心】
-- partnership `scripts/` から汎用性の高いものを `templates/scripts/` へ:
+### Step2: iOS/Android 自動化スクリプト本体をキットに取り込む【核心】✅完了
+- partnership `scripts/` から汎用性の高いものを `templates/scripts/` へ取り込み済み:
   appstore-submit / play-publish / asc-create-app / asc-review-check / lint-pre-submission /
-  generate-app-icons / generate-store-assets / lib/{asc-api,play-api,app-config}.mjs
-- すべて app.config.json 駆動(ハードコード排除を確認しながら)。
+  generate-store-assets / release-bump / lib/{asc-api,play-api,app-config,asc-pricing,
+  asc-screenshot-upload,asc-rejection-classify}.mjs
+- すべて app.config.json 駆動(env 優先→config フォールバック)。実物 grep で生のアプリ固有値の
+  混入なしを確認(bundleId/playPackageName/ascAppId/Team ID はプレースホルダ or config 参照)。
 - 効果: 「対応表から手コピー」を廃止。キット同梱に。
 
-### Step3: CI workflow を汎用テンプレ化して取り込む
-- partnership `.github/workflows/` の release/poll/lint/cert-expiry を `templates/workflows/` へ。
-- PLAY_PACKAGE_NAME 等のハードコードを app.config 参照 or secrets/vars 化。
-- 効果: 新アプリは workflows をコピーして Secrets 入れるだけで CI 稼働。
+### Step3: CI workflow を汎用テンプレ化して取り込む ✅完了
+- partnership `.github/workflows/` の release/poll/lint/cert-expiry を `templates/workflows/` へ:
+  ios-appstore-release / android-play-release / ios-pre-submission-lint / asc-review-poll /
+  play-review-poll / apple-cert-expiry。
+- PLAY_PACKAGE_NAME / APP_BUNDLE_ID / APPLE_TEAM_ID は `<...>` プレースホルダ or secrets 化。
+  各ファイル冒頭に「app.config.json のどの値で置換するか」を明記。
+- 効果: 新アプリは workflows をコピーして `<...>` を埋め Secrets を入れるだけで CI 稼働。
 
-### Step4: TWA(Android) テンプレを取り込む
-- Exosome `android-twa/` 構成 + bubblewrap 手順 + Windows用 create-android-keystore.ps1/print-fingerprint.ps1。
+### Step4: TWA(Android) テンプレを取り込む ✅完了
+- `templates/android-twa/` に Exosome 構成(twa-manifest / gradle.properties / 署名注入
+  android-patch-signing.mjs)+ bubblewrap 手順 + Windows用 ps1
+  (create-android-keystore / print-android-fingerprint / build-android-aab) を取り込み済み。
+- packageId / productionDomain / assetlinks 等は `<...>` プレースホルダ or app.config 参照。
 - 効果: mac 不要 Android が金型化。
 
-### Step5: 却下対応KB + 審査前lint + スクショ自動化【Fable活用】
-- partnership `_docs/apple-reject-knowledge-base.md` + `apple-resolution-center-reply-*.md` を
-  `_docs/apple-reject-knowledge-base.md` に集約(実際に通った返信文=Fableの学習素材)。
-- lint-pre-submission(絵文字混入等の事前検出) + capture/frame screenshots を templates へ。
+### Step5: 却下対応KB + 審査前lint + スクショ自動化【Fable活用】✅完了
+- `_docs/apple-reject-knowledge-base.md` を集約(実際に通った返信文=Fableの学習素材)。
+- lint-pre-submission(絵文字混入・bundleId 整合等の事前検出) + capture/frame screenshots
+  (capture-appstore-screenshots / capture-play-screenshots / frame-appstore-screenshots /
+  screenshot-plan.example.json) を `templates/scripts/` へ取り込み済み。
 
-### Step6: site/ 公開サイトの実態合わせ + setup-new-app ウィザード
-- 「全自動の魔法の箱」誇大表現を実態(提出まで自動・GUI最終操作あり)に統一(START-HERE は既に是正済み)。
-- setup-new-app.mjs(検証→Secrets/Console手順誘導)を取り込み、site/howto と整合。
+### Step6: site/ 公開サイトの実態合わせ + setup-new-app ウィザード ✅実態合わせ完了
+- 「全自動の魔法の箱」誇大表現を実態(提出まで自動・GUI最終操作あり)に統一。
+  site/index.html のヒーロー「まるごと肩代わり」「送信して待つだけ」「ほぼナシ」等を是正。
+  START-HERE / guide / howto は元から実態ベースなので整合確認のみ。
+- ⚠️残課題: `setup-new-app.mjs`(検証→Secrets/Console手順誘導ウィザード)はまだ未取り込み。
+  現状は `templates/README.md` のコピー手順 + 各スクリプトの app.config 自動読みで代替できるが、
+  ワンコマンド化したい場合は partnership/Exosome の setup-new-app.mjs を追って移植する。
 
 ## 守る原則(fujisan の血の教訓)
 

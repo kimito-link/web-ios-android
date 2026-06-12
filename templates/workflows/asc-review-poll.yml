@@ -1,0 +1,187 @@
+# 【金型テンプレート】App Store Connect 審査ステータス監視
+#
+# 移植元: partnership_program_website/.github/workflows/asc-review-poll.yml
+#
+# App Store Connect のアプリ審査状態を 30 分おきにポーリングして、
+# REJECTED / METADATA_REJECTED / DEVELOPER_REJECTED / INVALID_BINARY を
+# 検出したら自動 GitHub Issue を立てる。
+#
+# 目的:
+#   Apple からの「却下されました」メールを手で Claude に転送する作業をやめる。
+#   リジェクトの瞬間に Issue が開くので、セッション開始時に
+#     gh issue list --label ci-failure --label asc-reject --state open
+#   で自動的に拾える。
+#
+# 設計:
+#   - 既存の secrets (APPSTORE_CONNECT_KEY_ID / ISSUER_ID / P8_BASE64) を再利用
+#   - 追加 secret 0 個
+#   - ASC アプリレコードがまだ存在しない期間は no-op で exit
+#   - 重複 Issue は (bundleId, versionId, state) 単位で de-dupe
+#   - 回復可能な reject (INVALID_BINARY 等) は ios-appstore-release を自動 re-dispatch
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/asc-review-poll.yml` にコピー。
+# 2. 下の <APP_BUNDLE_ID> を app.config.json identity.bundleId で置換。
+# 3. scripts/asc-review-check.mjs を partnership からコピー。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   APPSTORE_CONNECT_KEY_ID             ASC API Key ID
+#   APPSTORE_CONNECT_ISSUER_ID          ASC API Issuer ID
+#   APPSTORE_CONNECT_API_KEY_P8_BASE64  ASC API 秘密鍵 .p8 を base64 化
+#   （ios-appstore-release と同じ3点を再利用。追加 secret 不要）
+name: asc-review-poll
+
+on:
+  schedule:
+    # 30 分おき。最低でも 5 分単位だが Apple の更新頻度を考えて 30 分。
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+  workflow_run:
+    workflows:
+      - ios-appstore-release
+    types: [completed]
+    branches: [main]
+
+permissions:
+  issues: write
+  contents: read
+  # actions: write — used to auto-dispatch ios-appstore-release.yml
+  # when the classifier detects a recoverable rejection (e.g. INVALID_BINARY)
+  actions: write
+
+# 連続実行を防ぐ
+concurrency:
+  group: asc-review-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      # ↓ app.config.json identity.bundleId で置換
+      APP_BUNDLE_ID: <APP_BUNDLE_ID>
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Poll ASC API for rejected versions
+        id: poll
+        run: node scripts/asc-review-check.mjs > rejection-report.json
+        env:
+          APPSTORE_CONNECT_KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          APPSTORE_CONNECT_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+          APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
+
+      - name: Create or update issues for rejections
+        if: ${{ success() }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('rejection-report.json', 'utf8'));
+            core.info(`ASC poll result: ${JSON.stringify(report)}`);
+
+            if (!report.appId) {
+              core.info('No ASC app record yet for this bundleId. Nothing to monitor.');
+              return;
+            }
+            if (!report.rejections || report.rejections.length === 0) {
+              core.info('No rejected versions found.');
+              return;
+            }
+
+            const repoUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}`;
+
+            for (const r of report.rejections) {
+              const title = `[ASC reject] ${r.state}: ${r.versionString} (${report.bundleId})`;
+              // De-dupe via search
+              const search = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${title}"`,
+              });
+              if (search.data.total_count > 0) {
+                core.info(`Issue already exists for ${r.versionId} (state=${r.state}). Skipping.`);
+                continue;
+              }
+
+              const cls = r.classification || { code: 'UNKNOWN', label: 'Unclassified', action: 'manual-review', hint: '' };
+              const feedbackBlock = r.feedbackText
+                ? ['### Apple feedback (raw)', '```', r.feedbackText.slice(0, 1500), '```', ''].join('\n')
+                : '_No reviewer feedback text exposed via API yet — check the ASC web UI._\n';
+
+              const body = [
+                `**Bundle ID:** \`${report.bundleId}\``,
+                `**App name:** ${report.appName || '(unknown)'}`,
+                `**Version:** \`${r.versionString}\``,
+                `**State:** \`${r.state}\``,
+                `**Version ID:** \`${r.versionId}\``,
+                ``,
+                `🛑 Apple rejected this App Store version. Check the reviewer feedback at:`,
+                ``,
+                `https://appstoreconnect.apple.com/apps/${report.appId}/distribution/ios/version/${r.versionId}`,
+                ``,
+                `### Auto-classification`,
+                `- **Pattern:** \`${cls.code}\` — ${cls.label}`,
+                `- **Suggested action:** \`${cls.action}\``,
+                `- **Hint:** ${cls.hint}`,
+                ``,
+                feedbackBlock,
+                `### Categories`,
+                `- \`REJECTED\`: 機能・コンテンツの違反 (Guideline 系)`,
+                `- \`METADATA_REJECTED\`: ストア掲載情報 (説明・スクショ・キーワード等)`,
+                `- \`DEVELOPER_REJECTED\`: 開発者本人が取り下げた`,
+                `- \`INVALID_BINARY\`: アップロード時のバイナリ検証エラー`,
+                ``,
+                `### Triage`,
+                `1. ASC で reviewer feedback を読む (上記 link)`,
+                `2. 申請事前 lint (\`ios-pre-submission-lint\`) で類似パターンが拾えないか確認`,
+                `3. 修正 → \`package.json#version\` を bump → \`git push main\` で iOS workflow が再 build + 再 submit`,
+                ``,
+                `_Auto-created by \`.github/workflows/asc-review-poll.yml\`._`,
+                `_Detected at: ${report.timestamp}._`,
+              ].join('\n');
+
+              const labels = ['ci-failure', 'asc-reject'];
+              if (cls.code && cls.code !== 'UNKNOWN') labels.push(`asc-reject:${cls.code.toLowerCase()}`);
+
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels,
+              });
+              core.info(`Created issue #${created.data.number}: ${created.data.html_url} (action=${cls.action})`);
+
+              // Auto-retry: if the classifier said the rejection can be cleared by
+              // re-uploading metadata/binary (which is exactly what the existing
+              // iOS workflow does), kick it off right now. No need to wait for
+              // a human to click "re-run".
+              const RETRY_ACTIONS = new Set([
+                'rebuild-and-resubmit',
+                'retry-after-metadata-fix',
+                'retry-with-fresh-screenshots',
+              ]);
+              if (RETRY_ACTIONS.has(cls.action) || r.state === 'INVALID_BINARY') {
+                try {
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    workflow_id: 'ios-appstore-release.yml',
+                    ref: 'main',
+                  });
+                  core.info(`-> auto-triggered ios-appstore-release.yml for ${cls.action}`);
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: created.data.number,
+                    body: `🤖 Auto-triggered \`ios-appstore-release.yml\` to retry submission (classifier action=\`${cls.action}\`).`,
+                  });
+                } catch (e) {
+                  core.warning(`Could not auto-trigger ios-appstore-release: ${e.message}`);
+                }
+              }
+            }
