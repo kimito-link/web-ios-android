@@ -14,7 +14,7 @@
  * WebView 下地は capacitor.config.json の backgroundColor:#0A0A0FFF が担当。
  */
 import { readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -30,15 +30,41 @@ const R = '0.0392156862745098';
 const G = '0.0392156862745098';
 const B = '0.058823529411764705';
 
+function hasPlistBuddy() {
+  return existsSync('/usr/libexec/PlistBuddy');
+}
+
 function plistBuddy(args) {
   execSync(`/usr/libexec/PlistBuddy ${args.map((a) => `"${a}"`).join(' ')}`, {
     stdio: 'inherit',
   });
 }
 
+// Windows / Linux 等 PlistBuddy(mac専用) が無い環境では Info.plist を文字列編集する。
+// dns-osint(web-health-check-app)で実証済み。CI(mac)でも開発機(Windows)でも黒画面回避2点が適用できる。
+function patchPlistByText() {
+  let s = readFileSync(plist, 'utf8');
+  if (s.includes('UIUserInterfaceStyle')) {
+    console.log('patch-ios-launch-dark: UIUserInterfaceStyle 既設(text)');
+    return;
+  }
+  const re = /(<key>UILaunchStoryboardName<\/key>\s*\r?\n\s*<string>LaunchScreen<\/string>)/;
+  if (re.test(s)) {
+    s = s.replace(re, '$1\n\t<key>UIUserInterfaceStyle</key>\n\t<string>Dark</string>');
+  } else {
+    s = s.replace(/<\/dict>/, '\t<key>UIUserInterfaceStyle</key>\n\t<string>Dark</string>\n</dict>');
+  }
+  writeFileSync(plist, s, 'utf8');
+  console.log('patch-ios-launch-dark: UIUserInterfaceStyle=Dark (text-insert)');
+}
+
 function patchPlist() {
   if (!existsSync(plist)) {
     console.warn('patch-ios-launch-dark: skip Info.plist (missing)');
+    return;
+  }
+  if (!hasPlistBuddy()) {
+    patchPlistByText(); // Windows / Linux
     return;
   }
   try {
