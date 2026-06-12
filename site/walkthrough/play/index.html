@@ -128,9 +128,11 @@
       <div class="shot todo" data-img="03-internal-test-upload.png">📷 ここに「内部テスト・リリース作成で AAB をドロップする画面」のキャプチャが入る予定</div>
       <ul class="tidy">
         <li>App Bundle の枠に <code>app-release.aab</code> をドラッグ&ドロップ</li>
-        <li>途中の「<b>Google Play アプリ署名</b>」の確認は<b>既定のまま続行</b>（Google に署名鍵を預ける方式が正解）</li>
-        <li>リリース名・リリースノートは自動入力のまま「次へ」→ 保存</li>
+        <li>「アプリの完全性」に「<b>リリースは Google Play で署名されています</b>」と出ていれば、署名鍵の預け入れ（Play アプリ署名）は自動で有効化済み</li>
+        <li>リリース名は自動入力（例: 1 (1.0.0)）のまま。リリースノートは <code>&lt;ja-JP&gt;</code> タグの中身だけ書き換え（例: 初回リリース（内部テスト））→「次へ」</li>
       </ul>
+      <div class="shot todo" data-img="04-release-preview.png">📷 ここに「プレビューして確認する（保存して公開ボタン）」のキャプチャが入る予定</div>
+      <div class="note">✅ プレビューで「<b>1件の警告</b>」が出るのはお決まり（難読化ファイル無し・テスター未設定など）。<b>黄色の警告は無視して「保存して公開」</b>でOK。止まるのは赤いエラーのときだけ。</div>
     </div>
 
     <!-- 4 -->
@@ -142,7 +144,7 @@
           <div class="st-sub">これで自動化が全部つながる</div>
         </div>
       </div>
-      <div class="shot todo" data-img="04-app-signing-sha256.png">📷 ここに「設定 → アプリの署名（SHA-256 の場所）」のキャプチャが入る予定</div>
+      <div class="shot todo" data-img="05-app-signing-sha256.png">📷 ここに「設定 → アプリの署名（SHA-256 の場所）」のキャプチャが入る予定</div>
       <table class="vals">
         <tr><th>① コンソールの URL</th><td><code>…/app/【数字】/…</code> の数字 = <b>playAppId</b> → AI が <code>app.config.json</code> に記入</td></tr>
         <tr><th>② アプリ署名鍵の SHA-256</th><td>「設定 → アプリの署名」の<b>アプリ署名鍵証明書</b>のフィンガープリント → AI が本番の <code>assetlinks.json</code> を差し替え（これでアプリのアドレスバーが消える）</td></tr>
@@ -159,8 +161,8 @@
           <div class="st-sub">回答内容は AI が用意、ボタンを押すのは人間</div>
         </div>
       </div>
-      <div class="shot todo" data-img="05-app-content.png">📷 ここに「アプリのコンテンツ（申告一覧）」のキャプチャが入る予定</div>
-      <div class="shot todo" data-img="06-submit-review.png">📷 ここに「審査用に送信」ボタンのキャプチャが入る予定</div>
+      <div class="shot todo" data-img="06-app-content.png">📷 ここに「アプリのコンテンツ（申告一覧）」のキャプチャが入る予定</div>
+      <div class="shot todo" data-img="07-submit-review.png">📷 ここに「審査用に送信」ボタンのキャプチャが入る予定</div>
       <div class="note">📨 リリースを作っただけでは審査は始まらない。<b>「審査用に送信」を押すまでが人間の仕事</b>。あとは待つだけ（数日）。</div>
     </div>
 
