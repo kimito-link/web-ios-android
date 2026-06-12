@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Play Console 追体験（実画面つき） | Kimito-Link</title>
+  <meta name="description" content="Google Play Console でアプリの枠を作って AAB を上げるまでを、実際の画面キャプチャで追体験できる伴走ガイド。人間がやるのはこの画面だけ。">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    .hero { text-align: center; padding: 28px 16px 8px; }
+    .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
+    .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
+    .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
+    .progress span { font-size: .72em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
+    .step { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
+    .st-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .st-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #1565c0; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
+    .st-num.ai { background: #2e7d32; }
+    .st-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
+    .st-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
+    .who { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; vertical-align: middle; margin-left: 8px; }
+    .who.human { background: #e8772e; }
+    .who.ai { background: #2e7d32; }
+    .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
+    .shot img { display: block; width: 100%; height: auto; }
+    .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
+    .shot.todo { border: 2px dashed #b8c1cf; padding: 26px 16px; text-align: center; color: #8a94a3; font-size: .9em; border-radius: 12px; background: #fbfcfe; }
+    .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
+    .note b { color: #0d47a1; }
+    .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
+    ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
+    ul.tidy li { margin: 4px 0; font-size: .92em; }
+    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .9em; }
+    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; }
+    table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
+    .done-banner h2 { font-size: 1.3em; }
+    .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
+    @media (max-width: 520px) { .hero h1 { font-size: 1.35em; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-link" href="../../">← トップにもどる</a>
+
+    <div class="hero">
+      <h1>Google Play Console 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
+      <p class="sub">実際にアプリを1本出したときの本物の画面で、同じ手順をなぞれるよ。<br>AAB づくりや assetlinks の配信は AI（キット）側が先に済ませてある前提。</p>
+      <div class="progress">
+        <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span><span>④ IDと指紋を渡す</span><span>⑤ 申告と送信</span>
+      </div>
+    </div>
+
+    <div class="note">
+      🧭 <b>例として出てくる値は全部「そのアプリ専用」。</b>自分のアプリでは <code>app.config.json</code> に書いた
+      <b>displayName</b>（アプリ名）と <b>playPackageName</b>（パッケージ名）に読み替えてね。
+    </div>
+
+    <!-- 0 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num ai">0</div>
+        <div>
+          <div class="st-title">先に AI が用意しておくもの <span class="who ai">AI（自動）</span></div>
+          <div class="st-sub">人間がコンソールを開く前に終わっている部分</div>
+        </div>
+      </div>
+      <ul class="tidy">
+        <li>署名済み <b>AAB</b>（<code>android-twa/app/build/outputs/bundle/release/app-release.aab</code>）</li>
+        <li>本番サイトへの <b>assetlinks.json</b> 配信（<code>/.well-known/assetlinks.json</code> が 200 で返る状態）</li>
+        <li>署名鍵 <code>android-upload-key.jks</code> の生成（<b>バックアップは人間の仕事！</b>）</li>
+      </ul>
+    </div>
+
+    <!-- 1 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">1</div>
+        <div>
+          <div class="st-title">「アプリを作成」フォームを埋める <span class="who human">人間（5分）</span></div>
+          <div class="st-sub">play.google.com/console →「アプリを作成」</div>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/01-create-app.png" alt="Google Play Console アプリを作成フォーム" loading="lazy">
+        <div class="cap">📷 実画面: アプリの詳細フォーム。下の表のとおり入れて、申告2つにチェック →「アプリを作成」</div>
+      </div>
+      <table class="vals">
+        <tr><th>アプリ名</th><td>app.config.json の displayName（例: 君斗りんくのWEBサイト健康診断）</td></tr>
+        <tr><th>パッケージ名</th><td>app.config.json の playPackageName（例: <code>com.kimito.link.webhealthcheck</code>）<br>⚠️ AAB に焼き込まれた値と<b>完全一致</b>必須。あとから変更できない</td></tr>
+        <tr><th>デフォルトの言語</th><td>日本語 – ja-JP</td></tr>
+        <tr><th>アプリ / ゲーム</th><td>アプリ</td></tr>
+        <tr><th>無料 / 有料</th><td>無料（公開後に無料→有料へは変更不可）</td></tr>
+        <tr><th>申告</th><td>「デベロッパー プログラム ポリシー」「米国輸出法」両方チェック</td></tr>
+      </table>
+    </div>
+
+    <!-- 2 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">2</div>
+        <div>
+          <div class="st-title">作成すると、この画面（ダッシュボード）になる <span class="who human">人間</span></div>
+          <div class="st-sub">「アプリのセットアップ手順」が出たら枠づくり成功</div>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/02-dashboard.png" alt="作成直後のダッシュボード画面" loading="lazy">
+        <div class="cap">📷 実画面: 作成直後のダッシュボード。ここで迷子になりがちだけど、見るのは「今すぐテストを開始」だけでOK</div>
+      </div>
+      <div class="note">💡 「まず初期設定タスクを完了してください」がいっぱい並ぶけど、<b>先に AAB を上げてOK</b>。申告系はあとから AI が回答案を用意してくれる。</div>
+    </div>
+
+    <!-- 3 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">3</div>
+        <div>
+          <div class="st-title">内部テストに AAB をドロップ <span class="who human">人間（3分）</span></div>
+          <div class="st-sub">テストとリリース → 内部テスト → リリースを作成</div>
+        </div>
+      </div>
+      <div class="shot todo" data-img="03-internal-test-upload.png">📷 ここに「内部テスト・リリース作成で AAB をドロップする画面」のキャプチャが入る予定</div>
+      <ul class="tidy">
+        <li>App Bundle の枠に <code>app-release.aab</code> をドラッグ&ドロップ</li>
+        <li>途中の「<b>Google Play アプリ署名</b>」の確認は<b>既定のまま続行</b>（Google に署名鍵を預ける方式が正解）</li>
+        <li>リリース名・リリースノートは自動入力のまま「次へ」→ 保存</li>
+      </ul>
+    </div>
+
+    <!-- 4 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">4</div>
+        <div>
+          <div class="st-title">2つの値を AI に渡す <span class="who human">人間（コピペ2回）</span></div>
+          <div class="st-sub">これで自動化が全部つながる</div>
+        </div>
+      </div>
+      <div class="shot todo" data-img="04-app-signing-sha256.png">📷 ここに「設定 → アプリの署名（SHA-256 の場所）」のキャプチャが入る予定</div>
+      <table class="vals">
+        <tr><th>① コンソールの URL</th><td><code>…/app/【数字】/…</code> の数字 = <b>playAppId</b> → AI が <code>app.config.json</code> に記入</td></tr>
+        <tr><th>② アプリ署名鍵の SHA-256</th><td>「設定 → アプリの署名」の<b>アプリ署名鍵証明書</b>のフィンガープリント → AI が本番の <code>assetlinks.json</code> を差し替え（これでアプリのアドレスバーが消える）</td></tr>
+      </table>
+      <div class="warn">⚠️ assetlinks に入れるのは<b>アップロード鍵ではなく「アプリ署名鍵」の方</b>。間違えるとアプリ上部にアドレスバーが出っぱなしになる（キットの金型 README にも同じ注意があるよ）。</div>
+    </div>
+
+    <!-- 5 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">5</div>
+        <div>
+          <div class="st-title">アプリのコンテンツ申告 → 審査用に送信 <span class="who human">人間（最後のボタン）</span></div>
+          <div class="st-sub">回答内容は AI が用意、ボタンを押すのは人間</div>
+        </div>
+      </div>
+      <div class="shot todo" data-img="05-app-content.png">📷 ここに「アプリのコンテンツ（申告一覧）」のキャプチャが入る予定</div>
+      <div class="shot todo" data-img="06-submit-review.png">📷 ここに「審査用に送信」ボタンのキャプチャが入る予定</div>
+      <div class="note">📨 リリースを作っただけでは審査は始まらない。<b>「審査用に送信」を押すまでが人間の仕事</b>。あとは待つだけ（数日）。</div>
+    </div>
+
+    <div class="done-banner">
+      <h2>🎉 人間の Play Console 作業、これで全部</h2>
+      <p>枠を作る → AAB をドロップ → 値を2つコピペ → 最後のボタン。<br>残り（掲載情報・スクショ・審査見張り・更新）はキットの自動化が引き受けるよ。</p>
+    </div>
+
+  </div>
+</body>
+</html>
