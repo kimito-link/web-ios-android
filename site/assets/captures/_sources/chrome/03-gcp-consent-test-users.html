@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Google Sans", Roboto, Arial, sans-serif; background: #f8f9fa; color: #202124; }
+  #capture-root { width: 1180px; background: #f8f9fa; }
+  .top { background: #fff; border-bottom: 1px solid #dadce0; padding: 12px 20px; font-size: 14px; color: #5f6368; }
+  .main { padding: 24px 28px; max-width: 900px; }
+  h1 { font-size: 22px; font-weight: 400; margin-bottom: 16px; }
+  .card { background: #fff; border: 1px solid #dadce0; border-radius: 8px; padding: 20px; }
+  .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e8eaed; font-size: 14px; }
+  .pill { background: #e8f0fe; color: #1a73e8; border-radius: 16px; padding: 4px 12px; font-size: 13px; font-weight: 500; }
+  .users { margin-top: 16px; }
+  .users h3 { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+  .email { border: 1px solid #1a73e8; background: #e8f0fe; border-radius: 4px; padding: 8px 12px; display: inline-block; font-size: 14px; }
+  .note { font-size: 13px; color: #5f6368; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="top">Google Cloud Console › OAuth 同意画面</div>
+  <div class="main">
+    <h1>OAuth 同意画面</h1>
+    <div class="card">
+      <div class="row"><span>User Type</span><span class="pill hl">外部</span></div>
+      <div class="row"><span>公開ステータス</span><span>テスト</span></div>
+      <div class="users">
+        <h3>テストユーザー</h3>
+        <div class="email">your-email@example.com</div>
+        <p class="note">テストユーザーに自分のメールを追加しないと refresh_token が取れない（よくある罠）。</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

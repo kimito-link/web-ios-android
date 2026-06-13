@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #f5f5f7; color: #1d1d1f; }
+  #capture-root { width: 1180px; background: #f5f5f7; }
+  .top { background: #fff; border-bottom: 1px solid #d2d2d7; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .top b { font-size: 17px; }
+  .btn { background: #0071e3; color: #fff; border-radius: 980px; padding: 8px 16px; font-size: 14px; font-weight: 600; }
+  .main { padding: 28px 32px; }
+  h1 { font-size: 28px; margin-bottom: 20px; }
+  .modal { background: #fff; border: 1px solid #d2d2d7; border-radius: 14px; padding: 28px; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+  .modal h2 { font-size: 22px; margin-bottom: 20px; }
+  .field { margin-bottom: 16px; font-size: 14px; }
+  .field label { display: block; color: #6e6e73; margin-bottom: 6px; font-size: 12px; }
+  .field input, .field select { width: 100%; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 12px; font-size: 14px; background: #fafafa; }
+  .field .hl { border-color: #ff9500; background: #fff8e6; }
+  .actions { display: flex; gap: 12px; margin-top: 20px; }
+  .actions .primary { background: #0071e3; color: #fff; border: none; border-radius: 980px; padding: 10px 20px; font-weight: 600; }
+  .actions .ghost { background: #e8e8ed; border: none; border-radius: 980px; padding: 10px 20px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="top"><b>App Store Connect › Apps</b><span class="btn">＋</span></div>
+  <div class="main">
+    <h1>新規 App</h1>
+    <div class="modal">
+      <h2>新規 App</h2>
+      <div class="field"><label>プラットフォーム</label><input value="iOS" readonly></div>
+      <div class="field"><label>名前</label><input class="hl" value="君斗りんくのWEBサイト健康診断" readonly></div>
+      <div class="field"><label>プライマリ言語</label><input value="日本語" readonly></div>
+      <div class="field"><label>バンドル ID</label><input class="hl" value="com.kimito.link.webhealthcheck" readonly></div>
+      <div class="field"><label>SKU</label><input value="webhealthcheck2026" readonly></div>
+      <div class="field"><label>ユーザーアクセス</label><select><option>フルアクセス</option></select></div>
+      <div class="actions"><button class="primary">作成</button><button class="ghost">キャンセル</button></div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:#6e6e73;">作成後 → Apple ID <code>6779860644</code> を app.config.json の ascAppId に</p>
+  </div>
+</div>
+</body>
+</html>

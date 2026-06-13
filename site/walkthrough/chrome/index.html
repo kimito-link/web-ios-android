@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chrome Web Store 追体験（やることこれだけ） | Kimito-Link</title>
+  <title>Chrome Web Store 追体験（実画面つき） | Kimito-Link</title>
   <meta name="description" content="Chrome 拡張の Web Store 申請で人間が触る画面だけ。build-zip + publish-cws の2コマンド自動化。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
@@ -39,6 +39,10 @@
     .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
     .cmd-box { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 16px 0; }
     .cmd { background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px; padding: 14px 20px; font-family: monospace; font-weight: 700; font-size: .95em; color: #e65100; }
+    .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
+    .shot img { display: block; width: 100%; height: auto; }
+    .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
+    @media (max-width: 520px) { .hero h1 { font-size: 1.35em; } }
   </style>
 </head>
 <body>
@@ -46,8 +50,8 @@
     <a class="top-link" href="../">← 追体験トップ</a>
 
     <div class="hero">
-      <h1>Chrome Web Store 追体験<br>― 人間がさわるのは、これだけ ―</h1>
-      <p class="sub">初回 OAuth セットアップ（約15分）のあとは、<b>コマンド2つ</b>で審査提出まで自動。<br>実証: 君斗りんくのWEBサイト健康診断 拡張 v8.6.71 申請成功</p>
+      <h1>Chrome Web Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
+      <p class="sub">実際に拡張 v8.6.71 を申請したときの画面で、同じ手順をなぞれるよ。<br>初回 OAuth セットアップ（約15分）のあとは、<b>コマンド2つ</b>で審査提出まで自動。</p>
       <div class="progress">
         <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span>
       </div>
@@ -80,6 +84,10 @@
         <li>ストア URL 末尾の <b>32文字</b> = <code>CWS_ITEM_ID</code>（以降ずっと同じ）</li>
         <li>拡張リポは <code>app.config.json</code> の <code>chrome.enabled: false</code> なら別リポ（dns-osint 側）で管理するパターンもあり</li>
       </ul>
+      <div class="shot">
+        <img src="../../assets/captures/chrome/01-cws-dashboard.png" alt="Chrome Web Store デベロッパーダッシュボード" loading="lazy">
+        <div class="cap">📷 実画面: デベロッパーダッシュボード。アイテム ID（32文字）を <code>CWS_ITEM_ID</code> に控える</div>
+      </div>
     </div>
 
     <div class="step">
@@ -96,6 +104,14 @@
       </ul>
       <div class="warn">
         ⚠️ <b>罠①</b>: 「Chrome 拡張機能」タイプを選ぶとスクリプトが動かない。CLI 用は必ず<b>デスクトップ アプリ</b>。
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/chrome/02-gcp-oauth-client.png" alt="OAuth クライアント デスクトップアプリ" loading="lazy">
+        <div class="cap">📷 実画面: Google Cloud › 認証情報 › OAuth クライアント。種類は「デスクトップ アプリ」</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/chrome/03-gcp-consent-test-users.png" alt="OAuth 同意画面 テストユーザー" loading="lazy">
+        <div class="cap">📷 実画面: OAuth 同意画面。User Type「外部」＋テストユーザーに自分のメールを追加</div>
       </div>
     </div>
 
@@ -115,6 +131,10 @@
         <li>出てきた <code>refresh_token</code>（<code>1//...</code>）を控える</li>
       </ul>
       <div class="warn">⚠️ <b>罠②</b>: コードは<b>使い捨て＆短命</b>。途中切れや例文コピーで <code>invalid_grant</code> → 取り直せば OK。</div>
+      <div class="shot">
+        <img src="../../assets/captures/chrome/04-oauth-auth-code.png" alt="Google OAuth 認証コード表示" loading="lazy">
+        <div class="cap">📷 実画面: 認可後に表示される <code>4/0A...</code> コード。全文コピーして数分以内に refresh_token に交換</div>
+      </div>
     </div>
 
     <div class="step">
@@ -134,6 +154,10 @@ CWS_ITEM_ID=...</pre>
         <tr><th>人間</th><td>初回アイテム作成・OAuth 4値・manifest bump</td></tr>
         <tr><th>審査</th><td>Google 側（数時間〜数日）。合否は自動化外</td></tr>
       </table>
+      <div class="shot">
+        <img src="../../assets/captures/chrome/05-publish-success.png" alt="publish-cws.ps1 成功 status=OK" loading="lazy">
+        <div class="cap">📷 実画面: <code>build-zip.ps1</code> → <code>publish-cws.ps1</code> 成功時の <code>status=OK</code></div>
+      </div>
     </div>
 
     <div class="step">

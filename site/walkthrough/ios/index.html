@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Store Connect 追体験（やることこれだけ） | Kimito-Link</title>
+  <title>App Store Connect 追体験（実画面つき） | Kimito-Link</title>
   <meta name="description" content="iOS アプリの App Store 申請で人間が触る画面だけ。健康診断アプリ実証ベース。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
@@ -41,6 +41,10 @@
     .checklist { list-style: none; padding: 0; }
     .checklist li { padding: 8px 0; border-bottom: 1px solid #eef1f6; font-size: .92em; }
     .checklist li::before { content: '☐ '; color: #1565c0; font-weight: 800; }
+    .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
+    .shot img { display: block; width: 100%; height: auto; }
+    .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
+    @media (max-width: 520px) { .hero h1 { font-size: 1.35em; } }
   </style>
 </head>
 <body>
@@ -48,8 +52,8 @@
     <a class="top-link" href="../">← 追体験トップ</a>
 
     <div class="hero">
-      <h1>App Store 追体験<br>― 人間がさわるのは、これだけ ―</h1>
-      <p class="sub">Mac 不要。Windows + GitHub Actions でビルド〜審査提出まで自動。<br>実証: 君斗りんくのWEBサイト健康診断（build 10・審査待ち）</p>
+      <h1>App Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
+      <p class="sub">実際に健康診断アプリを1本出したときの画面で、同じ手順をなぞれるよ。<br>Mac 不要。Windows + GitHub Actions でビルド〜審査提出まで自動。</p>
       <div class="progress">
         <span>① 証明書</span><span>② アプリ枠</span><span>③ Secrets</span><span>④ App Privacy</span><span>⑤ push</span>
       </div>
@@ -98,6 +102,14 @@
           <code>APPSTORE_CONNECT_API_KEY_P8_BASE64</code>
         </td></tr>
       </table>
+      <div class="shot">
+        <img src="../../assets/captures/ios/01-developer-cert.png" alt="Apple Developer で Distribution 証明書を CSR アップロード" loading="lazy">
+        <div class="cap">📷 実画面: Apple Developer › Certificates。種類は Apple Distribution、ファイルは <code>ios_dist.csr.pem</code>（.csr だけだと Invalid CSR）</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/ios/02-asc-api-keys.png" alt="App Store Connect API キー発行画面" loading="lazy">
+        <div class="cap">📷 実画面: Users and Access › Integrations › Team Keys。App Manager 権限の .p8 を1回だけダウンロード</div>
+      </div>
     </div>
 
     <div class="step">
@@ -114,6 +126,10 @@
         <li>SKU は任意（例: <code>webhealthcheck2026</code>）</li>
         <li>作成後、URL の数字 or アプリ情報 → <b>Apple ID</b> を <code>stores.ascAppId</code> に記入</li>
       </ul>
+      <div class="shot">
+        <img src="../../assets/captures/ios/03-apps-new-app.png" alt="App Store Connect 新規 App 作成フォーム" loading="lazy">
+        <div class="cap">📷 実画面: Apps › ＋ › 新規 App。名前・Bundle ID は app.config.json と完全一致。SKU は任意</div>
+      </div>
     </div>
 
     <div class="step">
@@ -132,6 +148,10 @@
         <li>「<b>いいえ、このAppではデータを収集しません</b>」→ <b>公開</b></li>
         <li>プライバシーポリシー URL = <code>contact.privacyUrl</code>（例: <code>https://web-health-check.link/privacy-policy.html</code>）</li>
       </ul>
+      <div class="shot">
+        <img src="../../assets/captures/ios/04-app-privacy.png" alt="App のプライバシー データを収集しない" loading="lazy">
+        <div class="cap">📷 実画面: 配信 › App のプライバシー。「いいえ、収集しません」→ <b>公開</b>。未公開だと CI submit が 409 で止まる</div>
+      </div>
       <div class="note">✅ 1回設定すれば以降の CI submit は全部通る。API の <code>/v1/appDataUsages</code> は PATH_ERROR 404（2026-06 時点）。</div>
     </div>
 
@@ -148,6 +168,10 @@
         <li>審査中にアイコン差し替え: 旧提出を <code>canceled: true</code> で取下げ → 新 build を link → 再 submit</li>
         <li>成功ログ: <code>final state=WAITING_FOR_REVIEW</code> / <code>DONE.</code></li>
       </ul>
+      <div class="shot">
+        <img src="../../assets/captures/ios/05-waiting-review.png" alt="App Store Connect 審査待ち build 10" loading="lazy">
+        <div class="cap">📷 実画面: 1.0.0 build 10 · Waiting for Review。push 後に ASC で目視確認すると安心</div>
+      </div>
       <div class="note">🍎 審査<b>通過後</b>だけ: App Store Connect → 価格と配信可能状況 → <b>配信地域</b> をオン（未設定だと DL できない・最大24h）</div>
     </div>
 

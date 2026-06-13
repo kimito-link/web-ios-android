@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Google Sans", Roboto, Arial, sans-serif; background: #fff; color: #202124; }
+  #capture-root { width: 1180px; }
+  .wrap { max-width: 480px; margin: 48px auto; text-align: center; padding: 0 24px; }
+  .logo { width: 40px; height: 40px; margin: 0 auto 24px; background: linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335); border-radius: 50%; }
+  h1 { font-size: 24px; font-weight: 400; margin-bottom: 8px; }
+  p { font-size: 14px; color: #5f6368; margin-bottom: 24px; line-height: 1.6; }
+  .warn { background: #fef7e0; border: 1px solid #f9ab00; border-radius: 8px; padding: 12px; font-size: 13px; text-align: left; margin-bottom: 20px; }
+  .codebox { background: #f8f9fa; border: 1px solid #dadce0; border-radius: 8px; padding: 16px; font-family: ui-monospace, monospace; font-size: 13px; text-align: left; word-break: break-all; }
+  .hl { background: #e8f0fe; border-color: #1a73e8; }
+  .btn { background: #1a73e8; color: #fff; border: none; border-radius: 4px; padding: 10px 24px; font-size: 14px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="wrap">
+    <div class="logo"></div>
+    <h1>ログイン完了</h1>
+    <p>以下の認証コードをアプリケーションにコピーしてください:</p>
+    <div class="warn">「このアプリは確認されていません」→ 詳細 → 移動 → 許可。コードは<b>使い捨て＆短命</b>。</div>
+    <div class="codebox hl">4/0AeanS8qX_example_auth_code_copy_full_string_here</div>
+    <button class="btn">コピー</button>
+    <p style="margin-top:20px;font-size:12px;">→ 数分以内に refresh_token（1//...）に交換</p>
+  </div>
+</div>
+</body>
+</html>

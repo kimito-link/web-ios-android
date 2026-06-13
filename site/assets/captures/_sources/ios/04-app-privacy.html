@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #f5f5f7; color: #1d1d1f; }
+  #capture-root { width: 1180px; background: #f5f5f7; }
+  .top { background: #fff; border-bottom: 1px solid #d2d2d7; padding: 14px 24px; font-size: 14px; }
+  .wrap { display: flex; min-height: 620px; }
+  .side { width: 220px; background: #fafafa; border-right: 1px solid #d2d2d7; padding: 16px 0; font-size: 13px; }
+  .side div { padding: 8px 18px; color: #6e6e73; }
+  .side .on { background: #e8e8ed; font-weight: 600; color: #1d1d1f; }
+  .main { flex: 1; padding: 24px 28px; }
+  h1 { font-size: 24px; margin-bottom: 16px; }
+  .card { background: #fff; border: 1px solid #d2d2d7; border-radius: 12px; padding: 22px; max-width: 760px; }
+  .q { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+  .opt { border: 1px solid #d2d2d7; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .opt.hl { border-color: #0071e3; background: #f0f7ff; }
+  .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #0071e3; margin-top: 2px; position: relative; flex-shrink: 0; }
+  .opt.hl .radio::after { content: ''; width: 10px; height: 10px; background: #0071e3; border-radius: 50%; position: absolute; top: 2px; left: 2px; }
+  .pub { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; }
+  .btn { background: #0071e3; color: #fff; border: none; border-radius: 980px; padding: 10px 22px; font-weight: 600; font-size: 14px; }
+  .status { color: #6e6e73; font-size: 13px; }
+  .url { font-size: 13px; color: #6e6e73; margin-top: 12px; }
+  code { font-family: ui-monospace, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="top">君斗りんくのWEBサイト健康診断 › 配信 › App のプライバシー</div>
+  <div class="wrap">
+    <div class="side">
+      <div>App 情報</div>
+      <div class="on">App のプライバシー</div>
+      <div>価格と配信可能状況</div>
+    </div>
+    <div class="main">
+      <h1>App のプライバシー</h1>
+      <div class="card">
+        <div class="q">あなたまたはサードパーティは、このAppからデータを収集しますか？</div>
+        <div class="opt hl"><div class="radio"></div><div><b>いいえ、このAppではデータを収集しません</b></div></div>
+        <div class="opt"><div class="radio" style="border-color:#d2d2d7"></div><div>はい、データ収集の種類を選択します</div></div>
+        <div class="url">プライバシーポリシー URL: <code>https://web-health-check.link/privacy-policy.html</code></div>
+        <div class="pub"><span class="status">未公開 → 公開すると CI submit が通る</span><button class="btn hl">公開</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

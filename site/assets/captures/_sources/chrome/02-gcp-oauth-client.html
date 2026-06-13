@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Google Sans", Roboto, Arial, sans-serif; background: #f8f9fa; color: #202124; }
+  #capture-root { width: 1180px; background: #f8f9fa; }
+  .top { background: #fff; border-bottom: 1px solid #dadce0; padding: 12px 20px; font-size: 14px; color: #5f6368; }
+  .main { padding: 24px 28px; max-width: 900px; }
+  h1 { font-size: 22px; font-weight: 400; margin-bottom: 16px; }
+  .card { background: #fff; border: 1px solid #dadce0; border-radius: 8px; padding: 20px; }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; color: #5f6368; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; border: 1px solid #dadce0; border-radius: 4px; padding: 10px 12px; font-size: 14px; }
+  .field .hl { border-color: #1a73e8; background: #e8f0fe; }
+  .warn { background: #fef7e0; border: 1px solid #f9ab00; border-radius: 8px; padding: 12px 14px; font-size: 13px; margin-top: 14px; color: #5f6368; }
+  .btn { background: #1a73e8; color: #fff; border: none; border-radius: 4px; padding: 10px 24px; font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="top">Google Cloud Console › API とサービス › 認証情報 › OAuth 2.0 クライアント ID を作成</div>
+  <div class="main">
+    <h1>OAuth クライアント ID の作成</h1>
+    <div class="card">
+      <div class="field"><label>アプリケーションの種類</label><select class="hl"><option>デスクトップ アプリ</option></select></div>
+      <div class="field"><label>名前</label><input value="CWS Publish CLI" readonly></div>
+      <div class="warn">⚠️ 「Chrome 拡張機能」タイプを選ぶと publish スクリプトが動かない。CLI 用は必ず<b>デスクトップ アプリ</b>。</div>
+      <button class="btn">作成</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

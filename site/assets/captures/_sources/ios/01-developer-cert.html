@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: #f5f5f7; color: #1d1d1f; }
+  #capture-root { width: 1180px; background: #f5f5f7; }
+  .top { background: #fff; border-bottom: 1px solid #d2d2d7; padding: 12px 24px; display: flex; align-items: center; gap: 16px; font-size: 14px; }
+  .top b { font-size: 17px; }
+  .top span { color: #6e6e73; }
+  .wrap { display: flex; min-height: 640px; }
+  .side { width: 240px; background: #fafafa; border-right: 1px solid #d2d2d7; padding: 20px 0; font-size: 13px; }
+  .side div { padding: 8px 20px; color: #6e6e73; }
+  .side .active { background: #e8e8ed; color: #1d1d1f; font-weight: 600; border-left: 3px solid #0071e3; }
+  .main { flex: 1; padding: 28px 32px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .sub { color: #6e6e73; font-size: 14px; margin-bottom: 24px; }
+  .card { background: #fff; border: 1px solid #d2d2d7; border-radius: 12px; padding: 24px; max-width: 720px; }
+  .row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #e8e8ed; font-size: 14px; }
+  .row:last-child { border-bottom: none; }
+  .label { color: #6e6e73; width: 180px; }
+  .btn { display: inline-block; background: #0071e3; color: #fff; border-radius: 980px; padding: 8px 18px; font-size: 14px; font-weight: 600; margin-top: 16px; }
+  .pill { background: #f5f5f7; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 14px; font-family: monospace; font-size: 13px; margin-top: 8px; }
+  .warn { background: #fff8e6; border: 1px solid #f5d76e; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #6b5200; margin-top: 16px; }
+  .hl { outline: 3px solid #ff9500; outline-offset: 2px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="top"><b>Certificates, Identifiers &amp; Profiles</b><span>›</span><span>Certificates</span></div>
+  <div class="wrap">
+    <div class="side">
+      <div class="active">Certificates</div>
+      <div>Identifiers</div>
+      <div>Devices</div>
+      <div>Profiles</div>
+    </div>
+    <div class="main">
+      <h1>Create a New Certificate</h1>
+      <p class="sub">Software</p>
+      <div class="card">
+        <div class="row"><span class="label">Type</span><span><b>Apple Distribution</b></span></div>
+        <div class="row"><span class="label">Upload CSR</span><span class="hl">ios_dist.csr<b>.pem</b> を選択</span></div>
+        <div class="pill">⚠️ .csr（DER）では Invalid CSR になる → 必ず .csr.pem</div>
+        <div class="btn">Continue</div>
+        <div class="warn">Distribution 証明書はアカウントあたり2個まで。Revoke 前に他アプリへの影響を確認。</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

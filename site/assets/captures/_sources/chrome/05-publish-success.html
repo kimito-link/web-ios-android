@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Cascadia Code", Consolas, monospace; background: #0c0c0c; color: #cccccc; }
+  #capture-root { width: 1180px; background: #0c0c0c; padding: 20px 24px; min-height: 420px; }
+  .title { color: #cccccc; font-family: "Segoe UI", sans-serif; font-size: 13px; margin-bottom: 12px; }
+  .line { font-size: 14px; line-height: 1.7; }
+  .prompt { color: #16c60c; }
+  .cmd { color: #cccccc; }
+  .ok { color: #16c60c; }
+  .info { color: #3a96dd; }
+  .hl { background: rgba(22,198,12,.15); display: inline-block; padding: 0 4px; }
+</style>
+</head>
+<body>
+<div id="capture-root">
+  <div class="title">Windows PowerShell</div>
+  <div class="line"><span class="prompt">PS C:\dns-osint-pro&gt;</span> <span class="cmd">.\build-zip.ps1</span></div>
+  <div class="line ok">  → manifest v8.6.71 · vendor/ included · zip OK</div>
+  <div class="line">&nbsp;</div>
+  <div class="line"><span class="prompt">PS C:\dns-osint-pro&gt;</span> <span class="cmd">.\publish-cws.ps1</span></div>
+  <div class="line info">  Uploading to Chrome Web Store...</div>
+  <div class="line info">  Publishing item jnfpngacnacjfhpphpnlgbpjmklbhdlf...</div>
+  <div class="line"><span class="ok hl">  status=OK</span></div>
+  <div class="line">&nbsp;</div>
+  <div class="line" style="color:#888;font-family:'Segoe UI',sans-serif;font-size:13px;">2回目以降はこの2コマンドだけ。審査メールを待つ。</div>
+</div>
+</body>
+</html>
