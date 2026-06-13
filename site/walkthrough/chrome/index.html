@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Web Store 追体験（やることこれだけ） | Kimito-Link</title>
+  <meta name="description" content="Chrome 拡張の Web Store 申請で人間が触る画面だけ。build-zip + publish-cws の2コマンド自動化。">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    .hero { text-align: center; padding: 28px 16px 8px; }
+    .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
+    .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
+    .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
+    .progress span { font-size: .72em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
+    .step { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
+    .st-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .st-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #e65100; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
+    .st-num.ai { background: #2e7d32; }
+    .st-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
+    .st-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
+    .who { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; vertical-align: middle; margin-left: 8px; }
+    .who.human { background: #e8772e; }
+    .who.ai { background: #2e7d32; }
+    .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
+    .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
+    ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
+    ul.tidy li { margin: 4px 0; font-size: .92em; }
+    pre { background: #1e1e2e; color: #e0e0e0; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: .82em; margin: 12px 0; line-height: 1.5; }
+    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .9em; }
+    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; vertical-align: top; }
+    table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .done-banner { text-align: center; background: linear-gradient(135deg,#e65100,#bf360c); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
+    .done-banner h2 { font-size: 1.3em; }
+    .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
+    .cmd-box { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 16px 0; }
+    .cmd { background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px; padding: 14px 20px; font-family: monospace; font-weight: 700; font-size: .95em; color: #e65100; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-link" href="../">← 追体験トップ</a>
+
+    <div class="hero">
+      <h1>Chrome Web Store 追体験<br>― 人間がさわるのは、これだけ ―</h1>
+      <p class="sub">初回 OAuth セットアップ（約15分）のあとは、<b>コマンド2つ</b>で審査提出まで自動。<br>実証: 君斗りんくのWEBサイト健康診断 拡張 v8.6.71 申請成功</p>
+      <div class="progress">
+        <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num ai">0</div>
+        <div>
+          <div class="st-title">2回目以降、人間が毎回やること <span class="who ai">2コマンドだけ</span></div>
+        </div>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd">.\build-zip.ps1</div>
+        <div class="cmd">.\publish-cws.ps1</div>
+      </div>
+      <p style="font-size:.92em; text-align:center; color:#5a6573;">manifest の version bump → zip → アップロード → 審査提出。成功すると <code>status=OK</code></p>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">1</div>
+        <div>
+          <div class="st-title">ストアに「アイテム」を1本作る（初回だけ） <span class="who human">人間（10分）</span></div>
+          <div class="st-sub"><a href="https://chrome.google.com/webstore/devconsole">デベロッパーダッシュボード</a></div>
+        </div>
+      </div>
+      <ul class="tidy">
+        <li>初回だけ手動で zip をアップロードしてアイテム枠を作成（API では新規作成不可）</li>
+        <li>ストア URL 末尾の <b>32文字</b> = <code>CWS_ITEM_ID</code>（以降ずっと同じ）</li>
+        <li>拡張リポは <code>app.config.json</code> の <code>chrome.enabled: false</code> なら別リポ（dns-osint 側）で管理するパターンもあり</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">2</div>
+        <div>
+          <div class="st-title">Google Cloud で OAuth 準備（初回だけ） <span class="who human">人間（15分）</span></div>
+        </div>
+      </div>
+      <ul class="tidy">
+        <li><a href="https://console.cloud.google.com/">Google Cloud Console</a> → Chrome Web Store API を有効化</li>
+        <li>OAuth 同意画面 → User Type「<b>外部</b>」→ <b>テストユーザーに自分のメール</b>を追加（忘れるとトークン取れない）</li>
+        <li>認証情報 → OAuth クライアント → 種類は「<b>デスクトップ アプリ</b>」</li>
+      </ul>
+      <div class="warn">
+        ⚠️ <b>罠①</b>: 「Chrome 拡張機能」タイプを選ぶとスクリプトが動かない。CLI 用は必ず<b>デスクトップ アプリ</b>。
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">3</div>
+        <div>
+          <div class="st-title">リフレッシュトークンを取得 <span class="who human">人間（5分）</span></div>
+          <div class="st-sub">一番ハマりやすい。でも何度でも取り直せる</div>
+        </div>
+      </div>
+      <p style="font-size:.9em;">ブラウザで認可 URL を開く（<code>CLIENT_ID</code> を自分のものに置換）:</p>
+      <pre>https://accounts.google.com/o/oauth2/auth?response_type=code&amp;scope=https://www.googleapis.com/auth/chromewebstore&amp;access_type=offline&amp;prompt=consent&amp;redirect_uri=urn:ietf:wg:oauth:2.0:oob&amp;client_id=CLIENT_ID</pre>
+      <ul class="tidy">
+        <li>「このアプリは確認されていません」→ 詳細 → 移動 → 許可</li>
+        <li>表示された認証コード（<code>4/0A...</code>）を<b>全文</b>コピー → 数分以内にトークン交換</li>
+        <li>出てきた <code>refresh_token</code>（<code>1//...</code>）を控える</li>
+      </ul>
+      <div class="warn">⚠️ <b>罠②</b>: コードは<b>使い捨て＆短命</b>。途中切れや例文コピーで <code>invalid_grant</code> → 取り直せば OK。</div>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">4</div>
+        <div>
+          <div class="st-title"><code>.env.cws</code> を作る（初回だけ） <span class="who human">人間（2分）</span></div>
+        </div>
+      </div>
+      <pre>CWS_CLIENT_ID=...
+CWS_CLIENT_SECRET=...
+CWS_REFRESH_TOKEN=1//...
+CWS_ITEM_ID=...</pre>
+      <div class="warn">🔒 <code>.env.cws</code> は <b>.gitignore 必須</b>。絶対にコミットしない。</div>
+      <table class="vals">
+        <tr><th>自動</th><td>zip 作成・アップロード・審査提出</td></tr>
+        <tr><th>人間</th><td>初回アイテム作成・OAuth 4値・manifest bump</td></tr>
+        <tr><th>審査</th><td>Google 側（数時間〜数日）。合否は自動化外</td></tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">5</div>
+        <div>
+          <div class="st-title">却下されやすいポイント <span class="who human">確認</span></div>
+        </div>
+      </div>
+      <ul class="tidy">
+        <li>名前/説明/画像に「無料」「Free」「Premium」等 → 却下（事実表現「アカウント不要」は OK）</li>
+        <li>zip に <code>vendor/</code>（同梱ライブラリ）が入っているか毎回確認</li>
+        <li>実行時に外部 CDN を読む → リモートコード違反（MV3）。ライブラリは同梱</li>
+      </ul>
+    </div>
+
+    <div class="done-banner">
+      <h2>🎉 Chrome 人間の仕事、これで全部</h2>
+      <p>初回: アイテム + OAuth + .env.cws。<br>更新のたび: version bump → build-zip → publish-cws → 審査メールを待つ。</p>
+    </div>
+
+    <div class="note" style="margin-top:22px;">
+      🔗 詳細手順: キット内 <code>docs/CHROME-WEBSTORE.md</code> ／
+      <a href="../ios/" style="color:#1565c0;font-weight:700;">iOS 追体験</a> ／
+      <a href="../play/" style="color:#1565c0;font-weight:700;">Android 追体験</a> ／
+      <a href="../../learnings/" style="color:#1565c0;font-weight:700;">実証知見</a>
+    </div>
+  </div>
+</body>
+</html>

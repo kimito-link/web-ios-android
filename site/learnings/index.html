@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ストア申請 実証知見まとめ | Kimito-Link</title>
+  <meta name="description" content="君斗りんくのWEBサイト健康診断で iOS/Android/Chrome 申請まで通した知見。キット運用の教科書。">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.85; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    h1 { font-size: 1.55em; color: #15222c; margin-bottom: 8px; }
+    .sub { color: #5a6573; font-size: .95em; margin-bottom: 24px; }
+    h2 { font-size: 1.15em; color: #15222c; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e7eaf0; }
+    h3 { font-size: 1em; color: #1565c0; margin: 18px 0 8px; }
+    p, li { font-size: .93em; }
+    ul { margin: 8px 0 8px 1.2em; }
+    li { margin: 5px 0; }
+    .card { background: #fff; border: 1px solid #e7eaf0; border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+    .tag { display: inline-block; font-size: .7em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-right: 6px; }
+    .tag.ios { background: #eef5ff; color: #1565c0; }
+    .tag.android { background: #e8f5e9; color: #2e7d32; }
+    .tag.chrome { background: #fff3e0; color: #e65100; }
+    .tag.all { background: #f3e5f5; color: #6a1b9a; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .warn { background: #fcf4dd; border-left: 4px solid #f0a500; padding: 12px 14px; margin: 12px 0; font-size: .9em; border-radius: 0 10px 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .88em; margin: 12px 0; }
+    th, td { border: 1px solid #e7eaf0; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f3f6fa; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-link" href="../">← トップにもどる</a>
+    <h1>ストア申請 実証知見まとめ</h1>
+    <p class="sub">実証アプリ: <b>君斗りんくのWEBサイト健康診断</b>（2026-06）<br>
+    キット: web-ios-android テンプレ / リポ: web-health-check-app</p>
+
+    <h2>北極星（ブレない原則）</h2>
+    <div class="card">
+      <ul>
+        <li><span class="tag all">共通</span>提出まで自動・合否は審査側（iOS / Android / Chrome 同型）</li>
+        <li><span class="tag all">共通</span>設定 SSOT = <code>app.config.json</code>（Bundle ID / パッケージ名 / ascAppId / 連絡先）</li>
+        <li><span class="tag all">共通</span>「無料/Free/Premium」は書かない → 事実表現「アカウント不要・アプリ内課金なし」</li>
+        <li><span class="tag all">共通</span>Capacitor = server.url 連動型（Web 更新がアプリに反映）</li>
+      </ul>
+    </div>
+
+    <h2>🍎 iOS（App Store）</h2>
+    <div class="card">
+      <h3>人間が1回だけ必要</h3>
+      <ul>
+        <li><b>App のプライバシー</b>: ASC UI で「データを収集しない」→ 公開（API <code>appDataUsages</code> は 404）</li>
+        <li><b>アプリ枠</b>: ASC で新規 App 作成 → <code>ascAppId</code> を config に</li>
+        <li><b>GitHub Secrets 7個</b>: 署名 + ASC API キー</li>
+      </ul>
+      <h3>CI で自動</h3>
+      <ul>
+        <li><code>ios-appstore-release.yml</code> → ビルド → IPA → スクショ30枚 → <code>appstore-submit.mjs</code></li>
+        <li>成功: <code>WAITING_FOR_REVIEW</code></li>
+      </ul>
+      <div class="warn">
+        <b>審査通過後</b>だけ: 配信地域をオン（未設定だと DL 不可・最大24h）。<br>
+        <b>アイコン差し替え</b>: 審査中は旧 build が紐付く → 提出取下げ → 新 build link → 再 submit。
+      </div>
+      <h3>アイコン方針（実証）</h3>
+      <p>会社ロゴ文字は小サイズで潰れる → <b>紺地 + 白抜きルーペ+チェック</b>（<code>generate-app-icon.mjs</code>）</p>
+    </div>
+
+    <h2>▶ Android（Google Play）</h2>
+    <div class="card">
+      <h3>人間が触る画面</h3>
+      <ul>
+        <li>Play Console でアプリ枠作成 → <code>playAppId</code> + assetlinks 用 SHA-256 を AI に渡す</li>
+        <li>内部テスト or 製品版で AAB ドロップ → <b>審査に送信</b>ボタン（押すまで審査始まらない）</li>
+        <li>GitHub Secrets 3個: keystore + SA JSON</li>
+      </ul>
+      <h3>CI で自動</h3>
+      <ul>
+        <li>TWA <code>bundleRelease</code> → <code>play-publish.mjs</code></li>
+        <li>製品版: <code>workflow_dispatch -f track=production</code></li>
+        <li>再提出時は <code>versionCode</code> を必ず increment（例: 1→2）</li>
+      </ul>
+      <p>📷 画面付き手順 → <a href="walkthrough/play/">Play 追体験</a></p>
+    </div>
+
+    <h2>🧩 Chrome（Web Store）</h2>
+    <div class="card">
+      <ul>
+        <li>初回: デベロッパーダッシュボードでアイテム作成 + OAuth（<b>デスクトップアプリ</b>型）</li>
+        <li>以降: <code>build-zip.ps1</code> + <code>publish-cws.ps1</code> の2コマンド</li>
+        <li>拡張は dns-osint リポ側で別管理（<code>chrome.enabled: false</code> パターン）</li>
+      </ul>
+      <p>📷 手順 → <a href="walkthrough/chrome/">Chrome 追体験</a></p>
+    </div>
+
+    <h2>⚠️ 並行作業で起きたこと（Codex × Cursor）</h2>
+    <div class="card">
+      <ul>
+        <li>両方が同時に ASC へスクショ再アップロード → <code>SCREENSHOT_UPLOADS_IN_PROGRESS</code></li>
+        <li>提出リトライループが重複 → 1本に統合（<code>retry-ios-submit.mjs</code>）</li>
+        <li>教訓: <b>1プラットフォーム1エージェント</b>、CI 監視は <code>gh run watch</code></li>
+      </ul>
+    </div>
+
+    <h2>Secrets 一覧（コピペ用）</h2>
+    <table>
+      <tr><th>用途</th><th>Secret 名</th></tr>
+      <tr><td>iOS 署名</td><td><code>IOS_DIST_CERT_*</code> / <code>IOS_APPSTORE_PROFILE_BASE64</code> / <code>APPLE_TEAM_ID</code></td></tr>
+      <tr><td>ASC API</td><td><code>APPSTORE_CONNECT_KEY_ID</code> / <code>ISSUER_ID</code> / <code>API_KEY_P8_BASE64</code></td></tr>
+      <tr><td>Android</td><td><code>ANDROID_KEYSTORE_*</code> / <code>GOOGLE_PLAY_SA_JSON_BASE64</code></td></tr>
+      <tr><td>Chrome</td><td><code>.env.cws</code>（リポジトリ外・gitignore）</td></tr>
+    </table>
+
+    <h2>追体験ガイド</h2>
+    <ul>
+      <li><a href="walkthrough/">追体験トップ（3プラットフォーム）</a></li>
+      <li><a href="walkthrough/ios/">iOS — やることこれだけ</a></li>
+      <li><a href="walkthrough/play/">Android — 実画面キャプチャ付き</a></li>
+      <li><a href="walkthrough/chrome/">Chrome — やることこれだけ</a></li>
+    </ul>
+  </div>
+</body>
+</html>
