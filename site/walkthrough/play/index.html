@@ -156,13 +156,15 @@
           → AI が <code>app.config.json</code> の <code>stores.playAppId</code> に記入する
         </td></tr>
         <tr><th>② アプリ署名鍵の SHA-256</th><td>
-          左メニュー「<b>Google Play による保護</b>」→「<b>アプリの完全性</b>」→ Play アプリ署名の「<b>アプリ署名鍵の証明書</b>」の <b>SHA-256 証明書フィンガープリント</b>をコピー → AI に貼り付け。<br>
-          → AI が本番の <code>assetlinks.json</code> を差し替える（これでアプリ上部のアドレスバーが消える）
+          左メニュー「<b>Google Play による保護</b>」→「<b>アプリの署名</b>」ページへ（URL 直行なら <code>…/app/【数字】/keymanagement</code>）。<br>
+          一番下の「<b>Digital Asset Links JSON</b>」ボックス右上の <b>📋 コピーボタン</b>を押して、そのまま AI に貼り付けるのが最速・確実。<br>
+          → AI が本番の <code>assetlinks.json</code> を差し替える（これでアプリ上部のアドレスバーが消える）。<b>Play 署名鍵＋アップロード鍵の両方</b>を入れておくと、開発時の直インストールでも検証が通る
         </td></tr>
       </table>
       <div class="shot todo" data-img="05-app-signing-sha256.png">📷 ここに「アプリの完全性（アプリ署名鍵の SHA-256 の場所）」のキャプチャが入る予定</div>
       <div class="warn">⚠️ 同じページに「<b>アップロード鍵の証明書</b>」も並んでいるけど、assetlinks に入れるのは<b>「アプリ署名鍵の証明書」の方</b>。間違えるとアプリ上部にアドレスバーが出っぱなしになる（キットの金型 README にも同じ注意があるよ）。</div>
       <div class="note">🧭 <b>迷子あるある</b>: 左上の「すべてのアプリ」に戻ってしまったら、一覧から自分のアプリの行をクリックすれば中に入り直せる。URL に <code>/app/【数字】/</code> が入っていれば「アプリの中」にいる証拠。</div>
+      <div class="warn">📋 <b>フィンガープリントは必ずコピーボタンで渡す</b>（実話）。コンソールの入力欄は横スクロール式なので、スクショでも「印刷→PDF保存」でも<b>画面で切れている後半は写らない</b>。1文字でも欠けると assetlinks は無効。📋 ボタンなら見えていない部分まで全文コピーされる。</div>
     </div>
 
     <!-- 5 -->
