@@ -86,10 +86,7 @@
           <div class="st-sub">play.google.com/console →「アプリを作成」</div>
         </div>
       </div>
-      <div class="shot">
-        <img src="../../assets/captures/play/01-create-app.png" alt="Google Play Console アプリを作成フォーム" loading="lazy">
-        <div class="cap">📷 実画面: アプリの詳細フォーム。下の表のとおり入れて、申告2つにチェック →「アプリを作成」</div>
-      </div>
+      <div class="note">📷 <b>この画面のキャプチャは無し</b>（ここが Play Console を触る一番最初。アプリ枠を作るまでは中に入れないので、今回は撮りそびれ）。やることは下の表のとおり入れて、申告2つにチェック →「アプリを作成」を押すだけ。</div>
       <table class="vals">
         <tr><th>アプリ名</th><td>app.config.json の displayName（例: 君斗りんくのWEBサイト健康診断）</td></tr>
         <tr><th>パッケージ名</th><td>app.config.json の playPackageName（例: <code>com.kimito.link.webhealthcheck</code>）<br>⚠️ AAB に焼き込まれた値と<b>完全一致</b>必須。あとから変更できない</td></tr>
@@ -125,18 +122,34 @@
           <div class="st-sub">テストとリリース → 内部テスト → リリースを作成</div>
         </div>
       </div>
-      <div class="shot todo" data-img="03-internal-test-upload.png">📷 ここに「内部テスト・リリース作成で AAB をドロップする画面」のキャプチャが入る予定</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/03-internal-test-upload.png" alt="ライブラリから App Bundle を追加する画面" loading="lazy">
+        <div class="cap">📷 実画面: 「ライブラリからの App Bundle の追加」。AI が上げておいた AAB（バージョン 1.0.0・6月13日アップロード済）にチェック →「リリースに追加」</div>
+      </div>
       <ul class="tidy">
         <li>App Bundle の枠に <code>app-release.aab</code> をドラッグ&ドロップ</li>
         <li>「アプリの完全性」に「<b>リリースは Google Play で署名されています</b>」と出ていれば、署名鍵の預け入れ（Play アプリ署名）は自動で有効化済み</li>
         <li>リリース名は自動入力（例: 1 (1.0.0)）のまま。リリースノートは <code>&lt;ja-JP&gt;</code> タグの中身だけ書き換え（例: 初回リリース（内部テスト））→「次へ」</li>
       </ul>
-      <div class="shot todo" data-img="04-release-preview.png">📷 ここに「プレビューして確認する（保存して公開ボタン）」のキャプチャが入る予定</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/03b-release-detail.png" alt="リリースの詳細（リリース名とリリースノート）" loading="lazy">
+        <div class="cap">📷 実画面: AAB 追加後の「リリースの詳細」。リリースノートは <code>&lt;ja-JP&gt;…&lt;/ja-JP&gt;</code> の中身だけ書けばOK</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04-release-preview.png" alt="プレビューして確認する画面" loading="lazy">
+        <div class="cap">📷 実画面: 「プレビューして確認する」。新規インストールのサイズ（例 1.03MB）が出て準備完了 →「保存」</div>
+      </div>
       <div class="note">✅ プレビューで「<b>1件の警告</b>」が出るのはお決まり（難読化ファイル無し・テスター未設定など）。<b>黄色の警告は無視して「保存して公開」</b>でOK。止まるのは赤いエラーのときだけ。</div>
-      <div class="shot todo" data-img="04b-publish-confirm.png">📷 ここに「Google Play で変更を公開しますか？」確認ダイアログのキャプチャが入る予定</div>
-      <div class="warn">😱 「公開しますか？」と聞かれてビビるポイント。でもこれは<b>内部テストトラック内だけの公開</b>（テスター最大100人にしか見えない）。一般の Google Play に出るのは、ずっと後の「製品版 → 審査用に送信」のとき。安心して「保存して公開」を押してOK。</div>
-      <div class="shot todo" data-img="04c-internal-published.png">📷 ここに「内部テスターに公開 ✅（1 (1.0.0)・未審査）」の完了画面のキャプチャが入る予定</div>
-      <div class="note">🏷️ 「一時的なアプリ名 (unreviewed)」と出るのは正常。審査が通るまでテスター向け表示が仮名になるだけで、何もしなくていい。</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04b-publish-confirm.png" alt="変更を審査に送信しますか確認ダイアログ" loading="lazy">
+        <div class="cap">📷 実画面: 「○件の変更を審査に送信しますか？」確認ダイアログ。これを押すと Google の審査が始まる</div>
+      </div>
+      <div class="warn">😱 「送信しますか？」と聞かれてビビるポイント。でも<b>これを押すまでは審査は始まらない</b>。逆に言えば、ここを押さない限り何も外には出ない。準備ができたら「変更を送信」でOK（審査は通常7日以内、それより長いことも）。</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04c-internal-published.png" alt="審査中の変更（送信完了）画面" loading="lazy">
+        <div class="cap">📷 実画面: 送信後の「審査中の変更」。ここまで来たら人間の作業は完了、あとは待つだけ</div>
+      </div>
+      <div class="note">🏷️ 製品版トラックで「一時的なアプリ名 (unreviewed)」と出るのは正常。審査が通るまで表示が仮名になるだけで、何もしなくていい。</div>
     </div>
 
     <!-- 4 -->
@@ -161,7 +174,7 @@
           → AI が本番の <code>assetlinks.json</code> を差し替える（これでアプリ上部のアドレスバーが消える）。<b>Play 署名鍵＋アップロード鍵の両方</b>を入れておくと、開発時の直インストールでも検証が通る
         </td></tr>
       </table>
-      <div class="shot todo" data-img="05-app-signing-sha256.png">📷 ここに「アプリの完全性（アプリ署名鍵の SHA-256 の場所）」のキャプチャが入る予定</div>
+      <div class="note">📷 <b>この画面のキャプチャは無し</b>。理由は単純で、SHA-256 は<b>📋 コピーボタン一発で AI に渡せる</b>ので、わざわざ画面を撮る必要がなかったから（むしろスクショだと後半が切れて使えない＝下の警告参照）。場所は左メニュー「Google Play による保護 → アプリの署名」、URL 直行なら <code>…/app/【数字】/keymanagement</code>。</div>
       <div class="warn">⚠️ 同じページに「<b>アップロード鍵の証明書</b>」も並んでいるけど、assetlinks に入れるのは<b>「アプリ署名鍵の証明書」の方</b>。間違えるとアプリ上部にアドレスバーが出っぱなしになる（キットの金型 README にも同じ注意があるよ）。</div>
       <div class="note">🧭 <b>迷子あるある</b>: 左上の「すべてのアプリ」に戻ってしまったら、一覧から自分のアプリの行をクリックすれば中に入り直せる。URL に <code>/app/【数字】/</code> が入っていれば「アプリの中」にいる証拠。</div>
       <div class="warn">📋 <b>フィンガープリントは必ずコピーボタンで渡す</b>（実話）。コンソールの入力欄は横スクロール式なので、スクショでも「印刷→PDF保存」でも<b>画面で切れている後半は写らない</b>。1文字でも欠けると assetlinks は無効。📋 ボタンなら見えていない部分まで全文コピーされる。</div>
@@ -176,14 +189,29 @@
           <div class="st-sub">回答内容は AI が用意、ボタンを押すのは人間</div>
         </div>
       </div>
-      <div class="shot todo" data-img="08-store-listing.png">📷 ここに「メインのストアの掲載情報（入力フォーム）」のキャプチャが入る予定</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/08-store-listing.png" alt="ストアの掲載情報の入口画面" loading="lazy">
+        <div class="cap">📷 実画面: 「ユーザーを増やす → ストアでの表示 → ストアの掲載情報」。アプリ名・説明文・画像はキットが用意済み。コピペ＆アップロードするだけ</div>
+      </div>
       <ul class="tidy">
         <li><b>ストアの掲載情報</b>（ユーザーを増やす → ストアでの表示）: アプリ名・説明文・画像は<b>全部 AI が用意済み</b>（テキストは回答案ドキュメント、画像は <code>store-assets/play/</code>）。人間はコピペ＆アップロードするだけ</li>
         <li>スクショ要件は<b>アスペクト比 16:9 か 9:16 厳守</b>。AI 生成分は全部 1080x1920（9:16）に揃えてある。タブレット用（7インチ/10インチ）も必須なので同梱</li>
       </ul>
-      <div class="shot todo" data-img="06-app-content.png">📷 ここに「アプリのコンテンツ（申告一覧）」のキャプチャが入る予定</div>
-      <div class="shot todo" data-img="07-submit-review.png">📷 ここに「審査用に送信」ボタンのキャプチャが入る予定</div>
-      <div class="note">📨 リリースを作っただけでは審査は始まらない。<b>「審査用に送信」を押すまでが人間の仕事</b>。あとは待つだけ（数日）。</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/06-app-content.png" alt="アプリのコンテンツ申告画面（ログインの詳細）" loading="lazy">
+        <div class="cap">📷 実画面: 「アプリのコンテンツ」申告のひとつ（ログインの詳細）。プライバシー・広告・レーティング・データセーフティ・健康など各項目を埋める。回答案はキットが用意</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/07-submit-review.png" alt="変更を審査に送信ボタン（公開の概要）" loading="lazy">
+        <div class="cap">📷 実画面: 「公開の概要」。申告とリリースが揃うと「○件の変更を審査に送信」ボタンが青く押せるようになる</div>
+      </div>
+      <div class="note">📨 リリースを作っただけでは審査は始まらない。<b>「審査に送信」を押すまでが人間の仕事</b>。あとは待つだけ（数日）。</div>
+      <div class="warn">🟥 押せないときは赤エラーを先に解消。実例:「<b>広告 IDの申告が不完全です</b>」（Android 13 以降は広告 ID 使用の有無の申告が必須）。下の「申告を完了する」から埋めれば送信ボタンが復活する。
+        <div class="shot" style="margin-top:10px;">
+          <img src="../../assets/captures/play/04a-error-adid.png" alt="広告IDの申告が不完全ですエラー" loading="lazy">
+          <div class="cap">📷 実画面: 送信前に出た「1件の問題が検出されました（広告 IDの申告が不完全です）」。これは黄色の警告と違って<b>対処必須の赤エラー</b></div>
+        </div>
+      </div>
     </div>
 
     <div class="done-banner">
