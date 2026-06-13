@@ -22,6 +22,12 @@
 | `scripts/screenshot-plan.example.json` | 撮影計画のひな形 | リポの `store-assets/screenshot-plan.json` にコピーして編集 |
 | `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
 | `web/` | **Web→アプリDL導線**(公式バッジ取得・UA出し分け・Smart App Banner・CSS)。詳細は [`web/README.md`](web/README.md) | `{{ascAppId}}`/`{{playPackageName}}`/`{{productionUrl}}`/`{{primaryColor}}`/`{{accentColor}}` を置換 |
+| `scripts/generate-privacy-page.mjs` | プライバシーポリシーHTML生成(健康/Play 審査で必須の公開URL)。API非依存・静的生成のため陳腐化しない | **無改変**(app.config.json 駆動) |
+| `scripts/android-patch-signing.mjs` | bubblewrap の build.gradle に signingConfig を冪等注入 | **無改変**(構造依存のみ) |
+| `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
+| `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
+| `scripts/copy-web-to-www.mjs` | src/ → www/ ミラー(Capacitor フォールバック生成) | **無改変** |
+| `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
 
 > 📚 **Apple 却下が来たら** [`../_docs/apple-reject-knowledge-base.md`](../_docs/apple-reject-knowledge-base.md) を見る。
 > 「却下パターン → 原因 → **実際に通った返信文**」を集約(リバースハック partner v1.0.0〜v1.0.9 の実例、固有名は一般化)。
@@ -54,8 +60,8 @@
 (発明会議で「製造機化」は reject)。代わりに**動く現物 `partnership_program_website` から
 コピー**する。コピー後、`app.config.json` の値で数か所書き換え + GitHub Secrets を登録。
 
-コピー元はファイルごとに partnership / fujisan に分かれる(実物で確認済み 2026-06-10)。
-P=`partnership_program_website`、F=`fujisan-clean`。
+コピー元はファイルごとに partnership / fujisan / Exosome に分かれる(実物で確認済み 2026-06-13)。
+P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 
 | コピー元 | 自リポの置き場所 | 書き換える値 |
 | --- | --- | --- |
@@ -67,6 +73,10 @@ P=`partnership_program_website`、F=`fujisan-clean`。
 | **P** `scripts/appstore-submit.mjs` / `scripts/play-publish.mjs` | `scripts/` | 冒頭の `BUNDLE_ID`/`PACKAGE` 既定値 |
 | **F** `scripts/release-bump.mjs`(版+SWキャッシュ bump・Pは別命名) | `scripts/` | SWキャッシュ regex の prefix |
 | 本キット `templates/scripts/ios-sim-logscan.mjs`(発明B) | `scripts/` | 無改変 |
+| **E** `scripts/play-set-listing.mjs`(Play 掲載一括設定) | `scripts/` | 無改変(app.config.json 駆動) |
+| **E** `scripts/play-diagnose.mjs`(SA 403 切り分け) / `play-review-check.mjs`(本番準備チェック) | `scripts/` | 無改変 |
+| **E** `scripts/asc-rejection-handle.mjs`(ASC リジェクト分類→返信テンプレ) | `scripts/` | 無改変(テンプレは `app-review-replies/`) |
+| **E** `scripts/asc-inspect-listing.mjs`(**READ-ONLY** で ASC 掲載文 dump) | `scripts/` | 無改変 |
 
 > ⚠️ コピー元が P と F で分かれるのは、P=認証込みのリリースCI完成形 / F=黒画面ゲート+版bumpの
 > 汎用版(プレイブックは F ベース)という分担のため。**コピー前に実物の存在を確認**してから cp すること

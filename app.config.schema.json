@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AppConfig",
+  "description": "Per-app identity and store metadata. Single source of truth for spawn-new-app and store automation scripts.",
+  "type": "object",
+  "required": ["identity", "stores", "brand", "contact", "auth", "businessModel", "ownership"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "identity": {
+      "type": "object",
+      "required": ["displayName", "displayNameEn", "shortName", "bundleId", "iosScheme", "productionDomain"],
+      "additionalProperties": false,
+      "properties": {
+        "displayName": { "type": "string", "description": "Japanese / primary-locale store display name" },
+        "displayNameEn": { "type": "string", "description": "English / fallback store display name" },
+        "shortName": { "type": "string", "description": "Short ASCII identifier used in build artifacts (e.g., RHPartner)" },
+        "bundleId": { "type": "string", "pattern": "^[a-z][a-z0-9]+(\\.[a-z][a-z0-9]+)+$", "description": "iOS bundle ID + Android package name (kept identical)" },
+        "iosScheme": { "type": "string", "description": "Capacitor iOS URL scheme (e.g., rhpartner)" },
+        "appleSiwaServiceId": { "type": ["string", "null"], "description": "Apple Sign in with Apple Service ID, or null if SIWA not configured" },
+        "productionDomain": { "type": "string", "format": "hostname" },
+        "stagingDomain": { "type": ["string", "null"] }
+      }
+    },
+
+    "stores": {
+      "type": "object",
+      "required": ["primaryCategory", "ageRating", "marketingVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "ascAppId": { "type": ["string", "null"], "description": "App Store Connect app ID (populated after asc-create-app)" },
+        "playAppId": { "type": ["string", "null"], "description": "Play Console app ID (populated after play-create-app)" },
+        "playPackageName": { "type": "string" },
+        "appleTeamId": { "type": ["string", "null"] },
+        "playDeveloperId": { "type": ["string", "null"] },
+        "primaryCategory": { "type": "string", "enum": ["BUSINESS", "PRODUCTIVITY", "LIFESTYLE", "UTILITIES", "FINANCE", "EDUCATION", "HEALTH_AND_FITNESS"] },
+        "ageRating": { "type": "string", "enum": ["FOUR_PLUS", "NINE_PLUS", "TWELVE_PLUS", "SEVENTEEN_PLUS"] },
+        "contentRights": { "type": "string", "enum": ["DOES_NOT_USE_THIRD_PARTY_CONTENT", "USES_THIRD_PARTY_CONTENT"] },
+        "marketingVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "buildNumberOffset": { "type": "integer", "description": "Offset added to commit-derived build number" }
+      }
+    },
+
+    "brand": {
+      "type": "object",
+      "required": ["primaryColor", "accentColor", "iconSource"],
+      "additionalProperties": false,
+      "properties": {
+        "primaryColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "accentColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "iconSource": { "type": "string", "description": "Path to 1024x1024 source PNG used by icon generators" },
+        "featureGraphicSource": { "type": ["string", "null"] },
+        "logoTypeWeb": { "type": "string" }
+      }
+    },
+
+    "contact": {
+      "type": "object",
+      "required": ["email", "phoneE164", "firstName", "lastName", "supportUrl", "privacyUrl", "dataDeletionUrl"],
+      "additionalProperties": false,
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "phoneE164": { "type": "string", "pattern": "^\\+\\d{1,3} \\d.+$", "description": "E.164 with one space after country code, e.g. '+81 90 1234 5678'" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "supportUrl": { "type": "string", "format": "uri" },
+        "privacyUrl": { "type": "string", "format": "uri" },
+        "dataDeletionUrl": { "type": "string", "format": "uri" },
+        "termsUrl": { "type": ["string", "null"], "format": "uri" },
+        "marketingUrl": { "type": "string", "format": "uri" }
+      }
+    },
+
+    "auth": {
+      "type": "object",
+      "required": ["provider", "thirdPartyProvidersOnWeb", "thirdPartyProvidersOnIos", "thirdPartyProvidersOnAndroid"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string", "enum": ["clerk", "supabase", "custom"] },
+        "thirdPartyProvidersOnWeb": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
+        "thirdPartyProvidersOnIos": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
+        "thirdPartyProvidersOnAndroid": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
+        "siwaEnabled": { "type": "boolean", "description": "Whether Sign in with Apple is configured in the auth provider (true → SIWA button shows on all platforms)" },
+        "demoAccountUsernameSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo username" },
+        "demoAccountPasswordSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo password" }
+      }
+    },
+
+    "businessModel": {
+      "type": "object",
+      "required": ["kind", "hasInAppPurchase", "hasSubscription", "hasPaidContent", "summaryEn", "summaryJa"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "enum": ["b2b-referral", "b2c-saas", "b2c-content", "informational", "b2b-saas", "marketplace"] },
+        "hasInAppPurchase": { "type": "boolean" },
+        "hasSubscription": { "type": "boolean" },
+        "hasPaidContent": { "type": "boolean" },
+        "summaryEn": { "type": "string", "description": "1-2 sentence English business-model summary, appended to ASC reviewer notes" },
+        "summaryJa": { "type": "string", "description": "Japanese version of the summary, for store listings and Resolution Center replies" }
+      }
+    },
+
+    "ownership": {
+      "type": "object",
+      "required": ["organization", "country", "githubOrg", "githubRepo"],
+      "additionalProperties": false,
+      "properties": {
+        "organization": { "type": "string", "description": "Legal owner / publisher" },
+        "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "githubOrg": { "type": "string" },
+        "githubRepo": { "type": "string" },
+        "vercelTeamSlug": { "type": ["string", "null"] },
+        "vercelProjectName": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -134,6 +134,12 @@ jobs:
           printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > android-twa/keystore.properties
           ls -l android-twa/android-upload-key.jks android-twa/keystore.properties
 
+      # 未署名 AAB 出荷事故ゲート: bundleRelease の「前」に signingConfig を検証。
+      # bubblewrap は signingConfig を生成しないため、無いと Play がアップロードを弾く。
+      # android-patch-signing.mjs を流せば注入される（このステップはその検証）。
+      - name: Verify build.gradle has signingConfig
+        run: node scripts/verify-android-signing-config.mjs --gradle android-twa/app/build.gradle
+
       - name: Build release AAB
         working-directory: android-twa
         run: |

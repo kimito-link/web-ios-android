@@ -227,7 +227,11 @@ jobs:
           # launchAutoHide:true（capacitor.config.json）の安全方式。assets/splash*.png を
           # @capacitor/assets が各サイズへ展開し LaunchScreen に焼き込む。
           node scripts/generate-capacitor-splash.mjs
+          # 生成「前」に、Contents.json が参照する Capacitor デフォルト画像のハッシュを記録。
+          node scripts/verify-ios-splash-not-default.mjs --snapshot
           npx @capacitor/assets generate --ios --iosProject ios/App --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
+          # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
+          node scripts/verify-ios-splash-not-default.mjs --verify
 
       # 起動時の白フラッシュ対策: LaunchScreen 暗色化 + UIUserInterfaceStyle=Dark。
       # @capacitor/assets generate の「後」に当てる（assets が
