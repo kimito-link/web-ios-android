@@ -46,7 +46,9 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **iOS/Android リリーススクリプト** | `templates/scripts/*.mjs`（appstore-submit / play-publish / asc-* / lint-pre-submission / generate-store-assets 等）＋ `templates/scripts/lib/` | `partnership_program_website`（一部 `Exosome` と同一） |
 | **Android TWA（mac 不要）** | `templates/android-twa/`（twa-manifest・署名注入・Windows用 ps1） | `Exosome` / `partnership_program_website` |
 | **Capacitor 設定の金型** | `templates/capacitor/capacitor.config.template.ts` | `partnership` / 富士山 / `Exosome`（server.url 連動型） |
+| **Web→アプリDL導線の金型** | `templates/web/`（公式バッジ取得・出し分け・Smart App Banner・CSS） | `Exosome`（実装・ブラウザ検証済み） |
 | **却下対応KB（Fable学習素材）** | `_docs/apple-reject-knowledge-base.md` | `partnership_program_website/_docs/` |
+| **Web→アプリDL導線 知見KB** | `_docs/web-to-app-install-best-practices.md` | `Exosome`（ディープリサーチ確証分） |
 | **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
 
 > ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。
@@ -92,6 +94,7 @@ templates/           ← ⭐ 自動化の金型（scripts / workflows / android-
   scripts/           ←   iOS/Android リリーススクリプト＋lib/
   workflows/         ←   GitHub Actions（release / poll / lint / cert-expiry）
   android-twa/       ←   mac 不要 Android（TWA）一式
+  web/               ←   Web→アプリDL導線（公式バッジ・出し分け・Smart App Banner）
   README.md          ←   コピー手順とコピー先マッピング
 _docs/               ← キット内部資産（却下KB・設計メモ。サイトには出ない）
 scripts/chrome/      ← Chrome申請の自動化スクリプト

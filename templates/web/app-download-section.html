@@ -1,0 +1,64 @@
+<!--
+  アプリDL導線の金型（Web→ストア インストール最大化）
+  出典: Exosome (yukkuri-exosome.link) で実装・検証済み。根拠は
+        ../../_docs/web-to-app-install-best-practices.md（ディープリサーチ確証分）。
+
+  置換するプレースホルダ（app.config.json の値に置き換える / ハードコード禁止）:
+    {{ascAppId}}        = stores.ascAppId        例: 6775201794
+    {{playPackageName}} = stores.playPackageName 例: com.kimito.link.yukkuriexosome
+    {{productionUrl}}   = https://{{identity.productionDomain}} 例: https://yukkuri-exosome.link/
+
+  前提:
+    1. css/app-download.css を読み込んでおく。
+    2. <head> に下記 Smart App Banner メタを置く（iOS Safari のみ作用・他は無視・Capacitor内では無害）:
+       <meta name="apple-itunes-app" content="app-id={{ascAppId}}, app-argument={{productionUrl}}">
+    3. 公式バッジ画像を images/store-badges/ に置く（fetch-store-badges.mjs で取得）:
+       - apple-appstore-ja.svg   （Appleの「App Storeで入手」日本語・黒・改変禁止）
+       - google-play-ja.png      （Googleの「Google Playで手に入れよう」日本語）
+
+  なぜこの形か（詳細は _docs のKB参照）:
+    - 公式バッジを使う（自作ボタンは Apple/Google ガイドラインに抵触リスク）。
+    - 両バッジを同じ高さ(48px)に揃える → Google の「他ストアバッジと同寸以上」要件を満たす。
+    - UA でストアを出し分け（iOS→App Store / Android→Play / PC→両方）。
+    - Capacitor アプリ内（ネイティブ）では非表示。アプリ内から他ストアへ送らない。
+-->
+<div id="app-download-mount"></div>
+<script>
+(function () {
+  // Capacitor ネイティブ実行時は出さない（リモート読込型でも同一HTMLが端末内で動くため）
+  var isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (isNative) return;
+
+  var ASC_APP_ID = '{{ascAppId}}';
+  var PLAY_PACKAGE = '{{playPackageName}}';
+  var APPLE = 'https://apps.apple.com/jp/app/id' + ASC_APP_ID;
+  var PLAY = 'https://play.google.com/store/apps/details?id=' + PLAY_PACKAGE;
+
+  var ua = navigator.userAgent || '';
+  // iPad（iPadOS 13+ は MacIntel を名乗る）も iOS 扱いにする
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/.test(ua);
+
+  var appleBadge = '<a href="' + APPLE + '" target="_blank" rel="noopener" class="store-badge" aria-label="App Storeで入手">'
+    + '<img src="images/store-badges/apple-appstore-ja.svg" alt="App Storeで入手"></a>';
+  var playBadge = '<a href="' + PLAY + '" target="_blank" rel="noopener" class="store-badge" aria-label="Google Playで手に入れよう">'
+    + '<img src="images/store-badges/google-play-ja.png" alt="Google Playで手に入れよう"></a>';
+
+  var badges, note = '';
+  if (isIOS) { badges = appleBadge; }
+  else if (isAndroid) { badges = playBadge; }
+  else {
+    badges = appleBadge + playBadge;
+    note = '<p class="app-download__note">スマホで開くと、お使いの端末に合ったストアが表示されます</p>';
+  }
+
+  document.getElementById('app-download-mount').innerHTML =
+      '<div class="app-download">'
+    +   '<div class="app-download__chip">Download</div>'
+    +   '<h2 class="app-download__title">アプリでもっと便利に</h2>'
+    +   '<p class="app-download__lead">iPhone・Android アプリをリリースしました。完全無料・登録不要。</p>'
+    +   '<div class="app-download__badges">' + badges + '</div>'
+    +   note
+    + '</div>';
+})();
+</script>

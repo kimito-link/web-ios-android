@@ -1,0 +1,69 @@
+/* ===== アプリDL導線スタイルの金型 =====
+   出典: Exosome (yukkuri-exosome.link) で検証済み。
+   根拠: ../../_docs/web-to-app-install-best-practices.md
+   置換: {{primaryColor}} = brand.primaryColor / {{accentColor}} = brand.accentColor */
+
+.app-download {
+    text-align: center;
+    margin: 36px 0 8px;
+    padding: 28px 20px 26px;
+    background: linear-gradient(135deg, #fff, #f7f0e8);
+    border-radius: 22px;
+    box-shadow: 0 4px 20px rgba(46, 38, 34, .06);
+    border-top: 3px solid {{primaryColor}};
+}
+
+.app-download__chip {
+    display: inline-block;
+    font-size: .65rem;
+    letter-spacing: .28em;
+    color: {{accentColor}};
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.app-download__title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #2e2622;
+    margin: 0 0 8px;
+}
+
+.app-download__lead {
+    font-size: .82rem;
+    line-height: 1.7;
+    color: #6f655e;
+    margin: 0 0 18px;
+}
+
+.app-download__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* バッジは高さ48pxで統一 → Google Playバッジが App Store バッジより
+   小さくならない（Google ブランドガイドラインの「同寸以上」要件）。 */
+.store-badge {
+    display: inline-flex;
+    transition: transform .15s ease, opacity .15s ease;
+}
+
+.store-badge img {
+    height: 48px;
+    width: auto;
+    display: block;
+}
+
+.store-badge:hover {
+    transform: translateY(-1px);
+    opacity: .9;
+}
+
+.app-download__note {
+    font-size: .7rem;
+    color: #9a8f88;
+    margin: 14px 0 0;
+}
