@@ -3,48 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Store Connect 追体験（実画面つき） | Kimito-Link</title>
-  <meta name="description" content="iOS アプリの App Store 申請で人間が触る画面だけ。健康診断アプリ実証ベース。">
+  <title>App Store Connect 追体験（ゆっくり解説・実画面つき） | Kimito-Link</title>
+  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、App Store 申請を上から ①→②→③ の順で。Mac 不要・実画面キャプチャ付き。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #f7f7fb; color: #1a1a1a;
+      line-height: 1.85; font-size: 17px;
+    }
     .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
-    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
-    .hero { text-align: center; padding: 28px 16px 8px; }
-    .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
-    .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
-    .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
-    .progress span { font-size: .72em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
-    .step { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
-    .st-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .st-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #1565c0; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
-    .st-num.ai { background: #2e7d32; }
-    .st-num.once { background: #e8772e; }
-    .st-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
-    .st-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
-    .who { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; vertical-align: middle; margin-left: 8px; }
+    .top-link {
+      display: inline-block; margin-bottom: 18px; color: #1565c0;
+      text-decoration: none; font-weight: 700; font-size: 1em;
+      min-height: 44px; line-height: 44px;
+    }
+    .hero { text-align: center; padding: 28px 16px 12px; }
+    .hero h1 { font-size: 1.55em; line-height: 1.45; color: #15222c; }
+    .hero .sub { margin-top: 12px; color: #3d4a5c; font-size: 1.02em; }
+    .how-to {
+      background: #fff; border: 2px solid #7e57c2; border-radius: 16px;
+      padding: 18px 16px; margin: 20px 0 8px; text-align: left;
+    }
+    .how-to h2 { font-size: 1.05em; color: #5e3aa6; margin-bottom: 8px; }
+    .how-to ol { padding-left: 1.4em; font-size: 1em; }
+    .how-to li { margin: 6px 0; }
+    .roadmap {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin: 22px 0 10px;
+    }
+    .roadmap a {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 2px solid #dfe3ea; border-radius: 14px;
+      padding: 12px 14px; text-decoration: none; color: #15222c;
+      font-weight: 700; font-size: .95em; min-height: 56px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .roadmap a:hover, .roadmap a:focus {
+      border-color: #1565c0; box-shadow: 0 4px 12px rgba(21,101,192,.15);
+      text-decoration: none;
+    }
+    .roadmap a.prep { border-style: dashed; color: #2e7d32; border-color: #a5d6a7; }
+    .roadmap a.once { border-color: #ffb74d; }
+    .roadmap a.opt { border-color: #cfd8dc; font-weight: 600; color: #5a6573; }
+    .roadmap .r-num {
+      flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: 1em;
+    }
+    .roadmap a.prep .r-num { background: #2e7d32; font-size: .82em; }
+    .roadmap a.once .r-num { background: #e8772e; font-size: .82em; }
+    .roadmap a.opt .r-num { background: #7b8794; font-size: .82em; }
+    .step {
+      background: #fff; border: 1px solid #e7eaf0; border-radius: 16px;
+      padding: 22px 20px; margin: 28px 0;
+      box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04);
+      scroll-margin-top: 16px;
+    }
+    .st-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+    .st-num {
+      flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: 1.15em;
+    }
+    .st-num.ai { background: #2e7d32; font-size: .9em; }
+    .st-num.once { background: #e8772e; font-size: 1em; }
+    .st-num.opt { background: #7b8794; font-size: 1em; }
+    .st-title { font-size: 1.22em; font-weight: 800; color: #15222c; line-height: 1.35; }
+    .st-sub { color: #5a6573; font-size: .92em; margin-top: 4px; }
+    .who {
+      display: inline-block; font-size: .72em; font-weight: 800;
+      padding: 3px 10px; border-radius: 999px; color: #fff;
+      vertical-align: middle; margin-left: 6px;
+    }
     .who.human { background: #e8772e; }
     .who.ai { background: #2e7d32; }
+    .who.skip { background: #7b8794; }
     .who.once { background: #6a1b9a; }
-    .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
-    .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
-    ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
-    ul.tidy li { margin: 4px 0; font-size: .92em; }
-    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .9em; }
-    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; vertical-align: top; }
-    table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
-    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
-    .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
-    .done-banner h2 { font-size: 1.3em; }
-    .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
-    .checklist { list-style: none; padding: 0; }
-    .checklist li { padding: 8px 0; border-bottom: 1px solid #eef1f6; font-size: .92em; }
-    .checklist li::before { content: '☐ '; color: #1565c0; font-weight: 800; }
-    .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
+    .now-do {
+      background: #fff8e1; border: 2px solid #ffb300; border-radius: 14px;
+      padding: 16px 18px; margin: 0 0 16px; font-size: 1.05em;
+    }
+    .now-do .label {
+      display: block; font-weight: 800; color: #e65100;
+      font-size: .88em; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .now-do p { color: #3e2723; font-weight: 700; }
+    .mini-steps { list-style: none; padding: 0; margin: 0 0 16px; }
+    .mini-steps li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid #eef1f6; font-size: 1em;
+    }
+    .mini-steps li:last-child { border-bottom: none; }
+    .mini-n {
+      flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800; font-size: .85em;
+      display: flex; align-items: center; justify-content: center; margin-top: 2px;
+    }
+    .step-next {
+      background: #e3f2fd; border: 1px solid #90caf9; border-radius: 12px;
+      padding: 14px 16px; margin-top: 16px; text-align: center;
+      font-weight: 800; color: #0d47a1; font-size: 1.02em;
+    }
+    .step-next a { color: #0d47a1; }
+    .action-btn {
+      display: inline-block; background: #1565c0; color: #fff !important;
+      padding: 14px 22px; border-radius: 12px; font-weight: 800;
+      font-size: 1em; text-decoration: none; margin: 8px 8px 8px 0;
+      min-height: 48px; line-height: 1.3;
+    }
+    .action-btn:hover { background: #0d47a1; text-decoration: none; }
+    .action-btn.green { background: #2e7d32; }
+    .action-btn.green:hover { background: #1b5e20; }
+    .shot {
+      margin: 14px 0; border: 2px solid #e7eaf0; border-radius: 12px;
+      overflow: hidden; background: #fbfcfe;
+    }
     .shot img { display: block; width: 100%; height: auto; }
-    .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
-    @media (max-width: 520px) { .hero h1 { font-size: 1.35em; } }
+    .shot .cap {
+      font-size: .92em; color: #3d4a5c; padding: 10px 14px;
+      border-top: 1px solid #eef1f6; background: #fff;
+    }
+    .note {
+      background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #1a3a5c;
+    }
+    .note b { color: #0d47a1; }
+    .warn {
+      background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #5d4037;
+    }
+    .ok {
+      background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #1b5e20;
+    }
+    ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
+    ul.tidy li { margin: 6px 0; font-size: .98em; }
+    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .95em; }
+    table.vals th, table.vals td {
+      border: 1px solid #e7eaf0; padding: 10px 12px;
+      text-align: left; vertical-align: top;
+    }
+    table.vals th { background: #f3f6fa; color: #15222c; }
+    code {
+      background: #eef1f6; border-radius: 5px; padding: 2px 7px;
+      font-size: .88em; word-break: break-all;
+    }
+    a { color: #1565c0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .talk {
+      display: flex; gap: 14px; align-items: flex-start;
+      margin: 14px 0; padding: 14px 16px; border-radius: 12px;
+      background: #f8fafc; border: 1px solid #eef1f6;
+    }
+    .talk img {
+      width: 56px; height: 56px; border-radius: 50%; flex: 0 0 auto;
+      object-fit: cover; border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1); background: #fff;
+    }
+    .talk.link { border-left: 5px solid #1976d2; }
+    .talk.kon { border-left: 5px solid #e8772e; }
+    .talk.tanu { border-left: 5px solid #7e57c2; }
+    .char-name { font-weight: 800; font-size: .92em; margin-bottom: 4px; }
+    .talk.link .char-name { color: #0d47a1; }
+    .talk.kon .char-name { color: #b85c1a; }
+    .talk.tanu .char-name { color: #5e3aa6; }
+    .talk p { font-size: 1em; }
+    .talk.screen-url {
+      background: #f3eef9; border: 2px solid #b39ddb; margin-bottom: 8px;
+    }
+    .talk.screen-url a { font-weight: 700; word-break: break-all; }
+    .talk.screen-url .alt {
+      font-size: .92em; color: #5a6573; margin-top: 8px; display: block;
+    }
+    .details-toggle { margin: 12px 0; }
+    .details-toggle summary {
+      cursor: pointer; font-weight: 700; color: #1565c0;
+      padding: 10px 0; font-size: .98em; min-height: 44px;
+    }
+    .done-banner {
+      text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1);
+      color: #fff; border-radius: 16px; padding: 28px 20px; margin-top: 28px;
+    }
+    .done-banner h2 { font-size: 1.35em; }
+    .done-banner p { opacity: .95; margin-top: 10px; font-size: 1em; }
+    @media (max-width: 520px) {
+      body { font-size: 16px; }
+      .hero h1 { font-size: 1.3em; }
+      .roadmap { grid-template-columns: 1fr; }
+      table.vals th { white-space: normal; }
+      .st-num { width: 44px; height: 44px; font-size: 1.05em; }
+    }
   </style>
 </head>
 <body>
@@ -52,155 +203,264 @@
     <a class="top-link" href="../">← 追体験トップ</a>
 
     <div class="hero">
-      <h1>App Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <p class="sub">実際に健康診断アプリを1本出したときの画面で、同じ手順をなぞれるよ。<br>Mac 不要。Windows + GitHub Actions でビルド〜審査提出まで自動。</p>
-      <div class="progress">
-        <span>① 証明書</span><span>② アプリ枠</span><span>③ Secrets</span><span>④ App Privacy</span><span>⑤ push</span>
-      </div>
+      <h1>App Store 追体験<br>― ゆっくり解説・実画面つき ―</h1>
+      <p class="sub">りんく・こん太・たぬ姉が、<b>上から ① → ② → ③ …</b> の順で案内するよ。<br>Mac 不要。Windows + GitHub Actions でビルド〜審査提出までキットが肩代わり。</p>
     </div>
+
+    <div class="how-to">
+      <h2>📖 このページの使い方（3つだけ）</h2>
+      <ol>
+        <li><b>下の地図</b>の ① から順番に進める（初回だけ ① が長い）</li>
+        <li>各 Step の<b>「今やること」</b>を読んで、Apple の画面を操作する</li>
+        <li>スクショの<b>すぐ上</b>で、たぬ姉が「この画面の URL」を教えてくれる</li>
+      </ol>
+    </div>
+
+    <nav class="roadmap" aria-label="手順の地図">
+      <a class="prep" href="#step-0"><span class="r-num">準</span>準備（読むだけ）</a>
+      <a class="once" href="#step-1"><span class="r-num">①</span>署名（初回40分）</a>
+      <a href="#step-2"><span class="r-num">②</span>枠を作る</a>
+      <a class="once" href="#step-3"><span class="r-num">③</span>App Privacy</a>
+      <a class="prep" href="#step-4"><span class="r-num">④</span>push（キット）</a>
+      <a class="opt" href="#step-5"><span class="r-num">⑤</span>通過後 配信</a>
+    </nav>
+
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>iOS は Android より<b>初回だけ</b>手順が多いけど、<b>2回目以降は push するだけ</b>だよ。①〜③ を終えれば、あとはキット任せ。</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>Mac は要らねえ。GitHub Actions の mac ランナーがビルドする。人間は Apple の Web 画面だけ触ればいい。</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>アプリ名・Bundle ID は<b>config をコピペ</b>。RH なら <code>app.config.reverse-hack.json</code>、kimito なら <code>app.config.json</code> よ。</p></div></div>
 
     <div class="note">
-      🧭 例の値は <code>app.config.json</code> の <b>displayName</b> / <b>bundleId</b> / <b>ascAppId</b> に読み替えてね。
+      🧭 <b>Bundle ID 例</b><br>
+      RH: <code>com.reversehack.webhealth</code> ／ kimito: <code>com.kimito.link.webhealthcheck</code><br>
+      プライバシー URL: RH → <a href="https://partner.reverse-re-birth-hack.com/privacy" target="_blank" rel="noopener">partner…/privacy</a> ／ kimito → <a href="https://web-health-check.link/privacy-policy.html" target="_blank" rel="noopener">privacy-policy.html</a>
     </div>
 
-    <div class="step">
+    <!-- 準備 -->
+    <div class="step" id="step-0">
       <div class="st-head">
-        <div class="st-num ai">0</div>
+        <div class="st-num ai">準</div>
         <div>
-          <div class="st-title">AI が先に済ませるもの <span class="who ai">AI（自動）</span></div>
-          <div class="st-sub">push 1回でここまで走る</div>
+          <div class="st-title">準備：キットが先にやること <span class="who ai">自動</span> <span class="who skip">読むだけ</span></div>
+          <div class="st-sub">①〜③ が終わったあと、push 1回でここまで走る</div>
         </div>
       </div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>何もしなくてOK。人間は ① から始めてね。</p>
+      </div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>Capacitor iOS ビルド・スクショ30枚・説明文・Review Notes・審査提出まで、<code>ios-appstore-release.yml</code> が自動でやるよ。</p></div></div>
       <ul class="tidy">
-        <li>Capacitor iOS ビルド（GitHub Actions mac ランナー・Mac 不要）</li>
-        <li>アイコン・スクショ30枚（iPhone 6.7 / 6.5 / iPad 12.9）の生成と ASC アップロード</li>
-        <li>説明文・Review Notes・年齢レーティング・価格（無料）の API 同期</li>
-        <li><code>scripts/appstore-submit.mjs</code> による審査提出（<code>WAITING_FOR_REVIEW</code> まで）</li>
+        <li>iOS ビルド（GitHub Actions・macOS ランナー・<b>Mac 不要</b>）</li>
+        <li>アイコン・スクショ（iPhone / iPad）の生成と ASC アップロード</li>
+        <li>説明文・年齢レーティング・価格（無料）の API 同期</li>
+        <li>審査提出（<code>WAITING_FOR_REVIEW</code> まで）</li>
       </ul>
+      <div class="warn">RH ブランドで CI を動かすときは、GitHub Actions → <code>ios-appstore-release</code> → <b>brand = reverse-hack</b> を選ぶ。Secret <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> が別途必要。</div>
+      <div class="step-next">準備は読むだけ → 次は <a href="#step-1">① 署名（初回）</a></div>
     </div>
 
-    <div class="step">
+    <!-- ① -->
+    <div class="step" id="step-1">
       <div class="st-head">
-        <div class="st-num">1</div>
+        <div class="st-num once">①</div>
         <div>
-          <div class="st-title">署名まわり（初回だけ） <span class="who human">人間（30〜40分）</span></div>
-          <div class="st-sub">Apple Developer + App Store Connect API キー</div>
+          <div class="st-title">署名まわり <span class="who human">人間（初回40分）</span> <span class="who once">1回だけ</span></div>
+          <div class="st-sub">証明書 + プロファイル + API キー → GitHub Secrets 7個</div>
         </div>
       </div>
-      <ul class="tidy">
-        <li><code>pwsh scripts/create-ios-csr.ps1</code> → CSR と秘密鍵</li>
-        <li>Apple Developer で <b>Apple Distribution</b> 証明書（⚠️ <code>.csr.pem</code> をアップロード。DER は Invalid CSR）</li>
-        <li><b>App Store Connect</b> 用 Provisioning Profile を発行 → <code>ios-signing/</code> に保存</li>
-        <li>App Store Connect → ユーザーとアクセス → キー → API キー（.p8）を発行</li>
-        <li><code>pwsh scripts/prepare-openci-ios-secrets.ps1</code> → GitHub Secrets 7個を登録</li>
-      </ul>
-      <table class="vals">
-        <tr><th>Secrets（7個）</th><td>
-          <code>IOS_DIST_CERT_P12_BASE64</code> / <code>IOS_DIST_CERT_PASSWORD</code> /
-          <code>IOS_APPSTORE_PROFILE_BASE64</code> / <code>APPLE_TEAM_ID</code> /
-          <code>APPSTORE_CONNECT_KEY_ID</code> / <code>APPSTORE_CONNECT_ISSUER_ID</code> /
-          <code>APPSTORE_CONNECT_API_KEY_P8_BASE64</code>
-        </td></tr>
-      </table>
-      <div class="shot">
-        <img src="../../assets/captures/ios/01-developer-cert.png" alt="Apple Developer で Distribution 証明書を CSR アップロード" loading="lazy">
-        <div class="cap">📷 実画面: Apple Developer › Certificates。種類は Apple Distribution、ファイルは <code>ios_dist.csr.pem</code>（.csr だけだと Invalid CSR）</div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>Apple Developer で配布証明書を作り、App Store Connect の API キーを発行して、GitHub Secrets に7個登録する。</p>
       </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span><code>pwsh scripts/create-ios-csr.ps1</code> → CSR と秘密鍵（リポのルートで）</span></li>
+        <li><span class="mini-n">2</span><span>Apple Developer で <b>Apple Distribution</b> 証明書（<code>.csr.pem</code> をアップロード）</span></li>
+        <li><span class="mini-n">3</span><span><b>App Store Connect 用</b> Provisioning Profile を発行 → <code>ios-signing/</code> に保存</span></li>
+        <li><span class="mini-n">4</span><span>App Store Connect で API キー（.p8）を発行</span></li>
+        <li><span class="mini-n">5</span><span><code>pwsh scripts/prepare-openci-ios-secrets.ps1</code> → GitHub Secrets 7個を登録</span></li>
+      </ol>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p><code>.csr.pem</code> だ。<code>.csr</code> だけだと Apple が「Invalid CSR」で弾く。実際に踏んだぞ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>RH 用プロファイルは Bundle ID <code>com.reversehack.webhealth</code> で別途作って、Secret 名は <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> よ。kimito 用と混同しないで。</p></div></div>
+      <p>
+        <a class="action-btn" href="https://developer.apple.com/account/resources/certificates/list" target="_blank" rel="noopener">証明書を開く →</a>
+        <a class="action-btn green" href="https://developer.apple.com/account/resources/profiles/list" target="_blank" rel="noopener">プロファイル →</a>
+      </p>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>Apple Developer › 証明書</b>（Distribution を作成）:<br><a href="https://developer.apple.com/account/resources/certificates/list" target="_blank" rel="noopener">https://developer.apple.com/account/resources/certificates/list</a></p></div></div>
       <div class="shot">
-        <img src="../../assets/captures/ios/02-asc-api-keys.png" alt="App Store Connect API キー発行画面" loading="lazy">
-        <div class="cap">📷 実画面: Users and Access › Integrations › Team Keys。App Manager 権限の .p8 を1回だけダウンロード</div>
+        <img src="../../assets/captures/ios/01-developer-cert.png" alt="Apple Developer で Distribution 証明書" loading="lazy">
+        <div class="cap">📷 種類は Apple Distribution。ファイルは <code>ios_dist.csr.pem</code></div>
       </div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>App Store Connect API キー</b>（Team Keys）:<br><a href="https://appstoreconnect.apple.com/access/integrations/api" target="_blank" rel="noopener">https://appstoreconnect.apple.com/access/integrations/api</a></p></div></div>
+      <div class="shot">
+        <img src="../../assets/captures/ios/02-asc-api-keys.png" alt="App Store Connect API キー" loading="lazy">
+        <div class="cap">📷 権限は <b>App Manager</b>。.p8 は<b>1回しか</b>ダウンロードできない</div>
+      </div>
+      <details class="details-toggle">
+        <summary>▶ GitHub Secrets 7個（タップで開く）</summary>
+        <table class="vals">
+          <tr><th>Secret 名</th><th>内容</th></tr>
+          <tr><td><code>IOS_DIST_CERT_P12_BASE64</code></td><td>配布証明書（P12）</td></tr>
+          <tr><td><code>IOS_DIST_CERT_PASSWORD</code></td><td>P12 パスワード</td></tr>
+          <tr><td><code>IOS_APPSTORE_PROFILE_BASE64</code></td><td>kimito 用プロファイル</td></tr>
+          <tr><td><code>IOS_APPSTORE_PROFILE_RH_BASE64</code></td><td><b>RH 用</b>プロファイル（別途）</td></tr>
+          <tr><td><code>APPLE_TEAM_ID</code></td><td>例: <code>8922HQ842P</code></td></tr>
+          <tr><td><code>APPSTORE_CONNECT_KEY_ID</code></td><td>API キー ID</td></tr>
+          <tr><td><code>APPSTORE_CONNECT_ISSUER_ID</code></td><td>Issuer ID</td></tr>
+          <tr><td><code>APPSTORE_CONNECT_API_KEY_P8_BASE64</code></td><td>.p8 を base64</td></tr>
+        </table>
+      </details>
+      <div class="step-next">✅ Secrets 7個が揃ったら → 次は <a href="#step-2">② 枠を作る</a></div>
     </div>
 
-    <div class="step">
+    <!-- ② -->
+    <div class="step" id="step-2">
       <div class="st-head">
-        <div class="st-num">2</div>
+        <div class="st-num">②</div>
         <div>
-          <div class="st-title">App Store Connect で「アプリの枠」を作る <span class="who human">人間（5分）</span></div>
+          <div class="st-title">アプリの枠を作る <span class="who human">人間（5分）</span></div>
           <div class="st-sub">API では新規アプリ作成不可。ここだけ手作業</div>
         </div>
       </div>
-      <ul class="tidy">
-        <li><a href="https://appstoreconnect.apple.com/apps">appstoreconnect.apple.com/apps</a> → ＋ → 新規 App</li>
-        <li>名前 = <code>displayName</code>、言語 = 日本語、Bundle ID = <code>identity.bundleId</code>（事前に Developer で explicit 登録）</li>
-        <li>SKU は任意（例: <code>webhealthcheck2026</code>）</li>
-        <li>作成後、URL の数字 or アプリ情報 → <b>Apple ID</b> を <code>stores.ascAppId</code> に記入</li>
-      </ul>
-      <div class="shot">
-        <img src="../../assets/captures/ios/03-apps-new-app.png" alt="App Store Connect 新規 App 作成フォーム" loading="lazy">
-        <div class="cap">📷 実画面: Apps › ＋ › 新規 App。名前・Bundle ID は app.config.json と完全一致。SKU は任意</div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>Bundle ID を Developer に登録 → App Store Connect で「新規 App」→ URL の数字を <code>ascAppId</code> に書く。</p>
       </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>Developer で <b>Identifiers</b> → App ID を登録（Explicit・config の Bundle ID）</span></li>
+        <li><span class="mini-n">2</span><span>App Store Connect → ＋ → <b>新規 App</b></span></li>
+        <li><span class="mini-n">3</span><span>名前・言語・Bundle ID・SKU を入力 → 作成</span></li>
+        <li><span class="mini-n">4</span><span>URL の数字（Apple ID）を <code>stores.ascAppId</code> に記入</span></li>
+      </ol>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Bundle ID は<b>完全一致</b>が必要。RH なら <code>com.reversehack.webhealth</code>。Bootstrap コマンドで API から自動取得もできるよ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>記入後は <code>npm run mobile:bootstrap:reverse-hack</code> で config に書き込めるわ。手で書いてもOK。</p></div></div>
+      <p>
+        <a class="action-btn" href="https://developer.apple.com/account/resources/identifiers/list" target="_blank" rel="noopener">Identifiers →</a>
+        <a class="action-btn green" href="https://appstoreconnect.apple.com/apps" target="_blank" rel="noopener">マイ App →</a>
+      </p>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>App Store Connect › 新規 App</b>:<br><a href="https://appstoreconnect.apple.com/apps" target="_blank" rel="noopener">https://appstoreconnect.apple.com/apps</a> → 右上 ＋</p></div></div>
+      <div class="shot">
+        <img src="../../assets/captures/ios/03-apps-new-app.png" alt="新規 App 作成フォーム" loading="lazy">
+        <div class="cap">📷 名前 = <code>displayName</code>、Bundle ID = config と完全一致。SKU は任意</div>
+      </div>
+      <table class="vals">
+        <tr><th>項目</th><th>RH 例</th><th>kimito 例</th></tr>
+        <tr><th>名前</th><td>リバースハック WEB健康診断</td><td>君斗りんくのWEBサイト健康診断</td></tr>
+        <tr><th>Bundle ID</th><td><code>com.reversehack.webhealth</code></td><td><code>com.kimito.link.webhealthcheck</code></td></tr>
+        <tr><th>ascAppId</th><td>② で取得 → config に記入</td><td><code>6779860644</code>（済）</td></tr>
+      </table>
+      <div class="step-next">✅ 枠ができたら → 次は <a href="#step-3">③ App Privacy</a></div>
     </div>
 
-    <div class="step">
+    <!-- ③ -->
+    <div class="step" id="step-3">
       <div class="st-head">
-        <div class="st-num once">3</div>
+        <div class="st-num once">③</div>
         <div>
-          <div class="st-title">App のプライバシー（データ使用状況） <span class="who once">人間（2分・1回だけ）</span></div>
-          <div class="st-sub">API が 404 のため完全自動化不可。アプリ単位で永続</div>
+          <div class="st-title">App のプライバシー <span class="who human">人間（2分）</span> <span class="who once">1回だけ</span></div>
+          <div class="st-sub">未公開だと CI の審査提出が 409 で止まる</div>
         </div>
       </div>
-      <div class="warn">
-        ⚠️ <b>審査ブロッカー実例</b>: <code>STATE_ERROR.APP_DATA_USAGES_REQUIRED</code> — Privacy 未公開だと submit が 409 で止まる。
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>「<b>いいえ、このAppではデータを収集しません</b>」→ プライバシーポリシー URL を貼る → <b>公開</b>。</p>
       </div>
-      <ul class="tidy">
-        <li>App Store Connect → 自分のアプリ → <b>App のプライバシー</b>（配信 → プライバシー）</li>
-        <li>「<b>いいえ、このAppではデータを収集しません</b>」→ <b>公開</b></li>
-        <li>プライバシーポリシー URL = <code>contact.privacyUrl</code>（例: <code>https://web-health-check.link/privacy-policy.html</code>）</li>
-      </ul>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>自分のアプリ → <b>App のプライバシー</b>（配信 › プライバシー）</span></li>
+        <li><span class="mini-n">2</span><span>「いいえ、収集しません」を選ぶ</span></li>
+        <li><span class="mini-n">3</span><span>プライバシーポリシー URL を貼る → <b>公開</b>（保存だけだと未完了）</span></li>
+      </ol>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>ここ忘れると CI が <code>STATE_ERROR.APP_DATA_USAGES_REQUIRED</code> で<b>409 止まり</b>だ。Play の広告 ID 未申告と同じくらい厄介だぞ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>1回設定すれば以降の push は全部通るわ。RH の URL は <a href="https://partner.reverse-re-birth-hack.com/privacy" target="_blank" rel="noopener">partner…/privacy</a> よ。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>App のプライバシー</b>。kimito 実証 URL:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/privacy" target="_blank" rel="noopener">…/apps/6779860644/distribution/privacy</a><span class="alt">RH: ② で作った ascAppId に置き換え（…/apps/【数字】/distribution/privacy）</span></p></div></div>
       <div class="shot">
-        <img src="../../assets/captures/ios/04-app-privacy.png" alt="App のプライバシー データを収集しない" loading="lazy">
-        <div class="cap">📷 実画面: 配信 › App のプライバシー。「いいえ、収集しません」→ <b>公開</b>。未公開だと CI submit が 409 で止まる</div>
+        <img src="../../assets/captures/ios/04-app-privacy.png" alt="App のプライバシー" loading="lazy">
+        <div class="cap">📷 「いいえ、収集しません」→ <b>公開</b>。未公開だと submit が止まる</div>
       </div>
-      <div class="note">✅ 1回設定すれば以降の CI submit は全部通る。API の <code>/v1/appDataUsages</code> は PATH_ERROR 404（2026-06 時点）。</div>
+      <div class="warn">⚠️ API の <code>/v1/appDataUsages</code> は 404（2026-06 時点）。<b>人間が Web 画面で1回だけ</b>設定する必要がある。</div>
+      <div class="step-next">✅ 公開できたら → 次は <a href="#step-4">④ push（キット）</a></div>
     </div>
 
-    <div class="step">
+    <!-- ④ -->
+    <div class="step" id="step-4">
       <div class="st-head">
-        <div class="st-num ai">4</div>
+        <div class="st-num ai">④</div>
         <div>
-          <div class="st-title">main に push → CI が審査提出 <span class="who ai">AI（自動）</span></div>
-          <div class="st-sub">workflow: <code>ios-appstore-release.yml</code></div>
+          <div class="st-title">push → 審査待ち <span class="who ai">キット（自動）</span></div>
+          <div class="st-sub"><code>ios-appstore-release.yml</code> — RH は brand=reverse-hack</div>
         </div>
       </div>
-      <ul class="tidy">
-        <li>アイコン変更: <code>release-assets/appstore/app-icon-1024.png</code> をコミット → CI が <code>@capacitor/assets</code> で全サイズ生成</li>
-        <li>審査中にアイコン差し替え: 旧提出を <code>canceled: true</code> で取下げ → 新 build を link → 再 submit</li>
-        <li>成功ログ: <code>final state=WAITING_FOR_REVIEW</code> / <code>DONE.</code></li>
-      </ul>
-      <div class="shot">
-        <img src="../../assets/captures/ios/05-waiting-review.png" alt="App Store Connect 審査待ち build 10" loading="lazy">
-        <div class="cap">📷 実画面: 1.0.0 build 10 · Waiting for Review。push 後に ASC で目視確認すると安心</div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>main に push するか、GitHub Actions から workflow を手動実行。ASC で「審査待ち」を確認。</p>
       </div>
-      <div class="note">🍎 審査<b>通過後</b>だけ: App Store Connect → 価格と配信可能状況 → <b>配信地域</b> をオン（未設定だと DL できない・最大24h）</div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>GitHub → Actions → <code>ios-appstore-release</code></span></li>
+        <li><span class="mini-n">2</span><span>RH なら <b>brand = reverse-hack</b> を選択 → Run</span></li>
+        <li><span class="mini-n">3</span><span>成功ログ: <code>final state=WAITING_FOR_REVIEW</code></span></li>
+        <li><span class="mini-n">4</span><span>App Store Connect で「Waiting for Review」を目視確認</span></li>
+      </ol>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>アイコンを変えたいときは <code>release-assets/…/app-icon-1024.png</code> をコミットして push するだけ。CI が全サイズ生成してくれるよ。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ ④ のゴールは<b>審査待ち</b>のこの画面。kimito 実証:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/ios/version/inflight" target="_blank" rel="noopener">…/apps/6779860644/distribution/ios/version/inflight</a><span class="alt">RH: ascAppId に置き換え</span></p></div></div>
+      <div class="shot">
+        <img src="../../assets/captures/ios/05-waiting-review.png" alt="Waiting for Review" loading="lazy">
+        <div class="cap">📷 build · <b>Waiting for Review</b> ＝ 人間の作業は完了 → あとは Apple を待つ</div>
+      </div>
+      <div class="ok">✅ ここまで来たら、初回の iOS 人間作業は<b>全部完了</b>。2回目以降は push だけ。</div>
+      <div class="step-next">🎉 審査待ちになったら → 通過後は <a href="#step-5">⑤ 配信地域</a></div>
     </div>
 
-    <div class="step">
+    <!-- ⑤ -->
+    <div class="step" id="step-5">
       <div class="st-head">
-        <div class="st-num">5</div>
+        <div class="st-num opt">⑤</div>
         <div>
-          <div class="st-title">人間チェックリスト（初回）</div>
+          <div class="st-title">（審査通過後）配信地域をオン <span class="who human">人間</span></div>
+          <div class="st-sub">未設定だとダウンロードできない（最大24h）</div>
         </div>
       </div>
-      <ul class="checklist">
-        <li>Bundle ID を Developer Identifiers に explicit 登録した</li>
-        <li>ASC でアプリ枠を作り ascAppId を app.config.json に書いた</li>
-        <li>GitHub Secrets 7個を入れた</li>
-        <li>App Privacy を「収集しない」で公開した</li>
-        <li>push 後、ASC で「審査待ち」と新アイコンを目視確認した</li>
-      </ul>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>審査<b>通過後</b>に、価格と配信可能状況 → 配信地域をオンにする。</p>
+      </div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>審査中にやる必要はないわ。通ったあとでいいの。忘れると「審査は通ったのに DL できない」ってなるから気をつけて。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>価格と配信可能状況</b>。kimito 実証:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/pricing" target="_blank" rel="noopener">…/apps/6779860644/distribution/pricing</a></p></div></div>
+    </div>
+
+    <!-- つまずき -->
+    <div class="step" id="step-help">
+      <div class="st-head">
+        <div class="st-num opt">?</div>
+        <div>
+          <div class="st-title">つまずいたら</div>
+          <div class="st-sub">症状 → どの Step？</div>
+        </div>
+      </div>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>迷ったら、今の Step の<b>たぬ姉の URL</b>を開いて、同じ画面か確認しろ。</p></div></div>
+      <table class="vals">
+        <tr><th>症状</th><th>対処</th></tr>
+        <tr><td>Invalid CSR</td><td><a href="#step-1">①</a> → <code>.csr.pem</code> をアップロード（.csr だけは NG）</td></tr>
+        <tr><td>CI submit が 409</td><td><a href="#step-3">③</a> → App Privacy を<b>公開</b>まで</td></tr>
+        <tr><td>RH で profile エラー</td><td><a href="#step-1">①</a> → <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> を登録</td></tr>
+        <tr><td>ascAppId 未設定</td><td><a href="#step-2">②</a> → 枠作成 → config に数字を記入</td></tr>
+        <tr><td>審査通過なのに DL 不可</td><td><a href="#step-5">⑤</a> → 配信地域をオン</td></tr>
+      </table>
     </div>
 
     <div class="done-banner">
       <h2>🎉 iOS 人間の仕事、これで全部</h2>
-      <p>初回: 証明書 + 枠 + Secrets + App Privacy（1回）。<br>2回目以降: アイコンや文言を変えて push するだけ。</p>
+      <p>初回: ① 署名 → ② 枠 → ③ Privacy → ④ push<br>2回目以降: push するだけ</p>
     </div>
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">りんく</div><p>Android 版は <a href="../play/">Play 追体験</a> だ。RH は Android 審査中だから、iOS も同じ ①〜④ で並行できるよ！</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">こん太</div><p>詳細コマンドは <code>_docs/ios-human-tasks.md</code> と <code>_docs/reverse-hack-mobile-runbook.md</code> だ。</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">たぬ姉</div><p>上から ① → ② → … と進めなさい。それでは、ゆっくりしていってね。</p></div></div>
 
     <div class="note" style="margin-top:22px;">
-      🔗 <a href="../play/" style="color:#1565c0;font-weight:700;">Android 追体験</a> ／
-      <a href="../chrome/" style="color:#1565c0;font-weight:700;">Chrome 追体験</a> ／
-      <a href="../../learnings/" style="color:#1565c0;font-weight:700;">実証知見まとめ</a> ／
-      <a href="../../troubleshooting/" style="color:#1565c0;font-weight:700;">つまずいたら</a>
+      🔗 <b>関連</b>:
+      <a href="../" style="font-weight:700;">追体験トップ</a> ／
+      <a href="../play/" style="font-weight:700;">Android 追体験</a> ／
+      <a href="../../story/" style="font-weight:700;">ゆっくりものがたり</a> ／
+      <a href="../../learnings/" style="font-weight:700;">実証知見</a> ／
+      <a href="../../troubleshooting/" style="font-weight:700;">つまずいたら</a>
     </div>
   </div>
 </body>
