@@ -41,6 +41,20 @@
     table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; vertical-align: top; }
     table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
     code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; word-break: break-all; }
+    a { color: #1565c0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .url-index { background: #fff; border: 2px solid #1565c0; border-radius: 16px; padding: 20px 18px; margin: 18px 0 22px; }
+    .url-index h2 { font-size: 1.1em; color: #0d47a1; margin-bottom: 12px; }
+    .url-index h3 { font-size: .95em; color: #15222c; margin: 16px 0 8px; }
+    .url-index .brand-tag { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
+    .url-index .brand-tag.kimito { background: #eef5ff; color: #1565c0; }
+    .url-index .brand-tag.rh { background: #e8f5e9; color: #2e7d32; }
+    .url-index .brand-tag.common { background: #f3f6fa; color: #5a6573; }
+    .url-list { list-style: none; padding: 0; margin: 0; }
+    .url-list li { font-size: .88em; margin: 6px 0; padding: 6px 0; border-bottom: 1px solid #eef1f6; line-height: 1.5; }
+    .url-list li:last-child { border-bottom: none; }
+    .url-list .label { display: block; font-weight: 700; color: #15222c; margin-bottom: 2px; }
+    .url-list a { word-break: break-all; font-size: .92em; }
     .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
     .done-banner h2 { font-size: 1.3em; }
     .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
@@ -56,7 +70,7 @@
 
     <div class="hero">
       <h1>Google Play Console 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <p class="sub">kimito 実証（2026-06）＋ <b>リバースハック WEB健康診断</b> 本番審査送信（2026-06）の知見を反映。<br>AAB・assetlinks・ストア素材はキット（AI/CI）が先に済ませる前提。</p>
+      <p class="sub">kimito 実証（2026-06）＋ <b>リバースハック WEB健康診断</b> 本番審査送信（2026-06）の知見を反映。<br>AAB・assetlinks・ストア素材はキット（AI/CI）が先に済ませる前提。<br><a href="#urls">🔗 対応 URL 一覧はこちら</a></p>
       <div class="progress">
         <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span>
         <span>④ IDと指紋</span><span>⑤ 申告</span><span>⑥ 製品版送信</span><span>⑦ 待つ</span>
@@ -66,6 +80,105 @@
     <div class="note">
       🧭 <b>値は全部「そのアプリ専用」。</b>自分のアプリでは <code>app.config.json</code>（または <code>app.config.reverse-hack.json</code>）の
       <b>displayName</b>・<b>playPackageName</b> に読み替えてね。<b>複数ブランド</b>はパッケージ名が違えば Play 上は<b>別アプリ</b>。
+    </div>
+
+    <!-- URL index -->
+    <div class="url-index" id="urls">
+      <h2>🔗 URL 一覧（クリックで開く）</h2>
+      <p style="font-size:.88em;color:#5a6573;margin-bottom:8px;">Play Console はログイン後に開く。パッケージ名入り URL は RH 実証で動作確認済み。</p>
+
+      <h3><span class="brand-tag common">共通</span> Play Console・キット</h3>
+      <ul class="url-list">
+        <li><span class="label">Play Console トップ / アプリ一覧</span>
+          <a href="https://play.google.com/console" target="_blank" rel="noopener">https://play.google.com/console</a></li>
+        <li><span class="label">この追体験ページ</span>
+          <a href="https://web-ios-android.vercel.app/walkthrough/play/">https://web-ios-android.vercel.app/walkthrough/play/</a></li>
+        <li><span class="label">追体験トップ（iOS / Play / Chrome）</span>
+          <a href="https://web-ios-android.vercel.app/walkthrough/">https://web-ios-android.vercel.app/walkthrough/</a></li>
+        <li><span class="label">実証知見・つまずき</span>
+          <a href="https://web-ios-android.vercel.app/learnings/">learnings</a> ／
+          <a href="https://web-ios-android.vercel.app/troubleshooting/">troubleshooting</a></li>
+        <li><span class="label">アプリリポ（web-health-check-app）</span>
+          <a href="https://github.com/kimito-link/web-health-check-app" target="_blank" rel="noopener">github.com/kimito-link/web-health-check-app</a></li>
+        <li><span class="label">キットリポ（web-ios-android）</span>
+          <a href="https://github.com/kimito-link/web-ios-android" target="_blank" rel="noopener">github.com/kimito-link/web-ios-android</a></li>
+        <li><span class="label">Google 公式: 個人開発者のテスト要件（12人×14日）</span>
+          <a href="https://support.google.com/googleplay/android-developer/answer/14151465" target="_blank" rel="noopener">support.google.com/…/14151465</a></li>
+        <li><span class="label">Google 公式: 審査の準備</span>
+          <a href="https://support.google.com/googleplay/android-developer/answer/9859455" target="_blank" rel="noopener">support.google.com/…/9859455</a></li>
+      </ul>
+
+      <h3><span class="brand-tag kimito">kimito</span> 君斗りんくのWEBサイト健康診断</h3>
+      <ul class="url-list">
+        <li><span class="label">パッケージ名</span><code>com.kimito.link.webhealthcheck</code></li>
+        <li><span class="label">ダッシュボード</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-dashboard" target="_blank" rel="noopener">Play Console → ダッシュボード</a></li>
+        <li><span class="label">公開の概要（審査送信）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/publishing/overview" target="_blank" rel="noopener">publishing/overview</a></li>
+        <li><span class="label">アプリのコンテンツ（申告）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-content/overview" target="_blank" rel="noopener">app-content/overview</a></li>
+        <li><span class="label">ストアの掲載情報</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/store-presence" target="_blank" rel="noopener">store-presence</a></li>
+        <li><span class="label">内部テスト</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/internal-testing" target="_blank" rel="noopener">tracks/internal-testing</a></li>
+        <li><span class="label">クローズドテスト</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/closed-testing" target="_blank" rel="noopener">tracks/closed-testing</a></li>
+        <li><span class="label">製品版</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/production" target="_blank" rel="noopener">tracks/production</a></li>
+        <li><span class="label">アプリの署名（SHA-256 📋）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/keymanagement" target="_blank" rel="noopener">keymanagement</a></li>
+        <li><span class="label">本番 Web アプリ</span>
+          <a href="https://app.web-health-check.link/" target="_blank" rel="noopener">https://app.web-health-check.link/</a></li>
+        <li><span class="label">assetlinks.json</span>
+          <a href="https://app.web-health-check.link/.well-known/assetlinks.json" target="_blank" rel="noopener">/.well-known/assetlinks.json</a></li>
+        <li><span class="label">プライバシーポリシー（申告用 URL）</span>
+          <a href="https://web-health-check.link/privacy-policy.html" target="_blank" rel="noopener">web-health-check.link/privacy-policy.html</a></li>
+        <li><span class="label">Play ストア（公開後）</span>
+          <a href="https://play.google.com/store/apps/details?id=com.kimito.link.webhealthcheck" target="_blank" rel="noopener">store/apps/details?id=com.kimito.link.webhealthcheck</a></li>
+        <li><span class="label">申告回答集（GitHub）</span>
+          <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS.md" target="_blank" rel="noopener">docs/PLAY-APP-CONTENT-ANSWERS.md</a></li>
+      </ul>
+
+      <h3><span class="brand-tag rh">RH</span> リバースハック WEB健康診断</h3>
+      <ul class="url-list">
+        <li><span class="label">パッケージ名</span><code>com.reversehack.webhealth</code>（<code>com.reversehack.partner</code> は<b>別アプリ</b>）</li>
+        <li><span class="label">ダッシュボード（5/5 確認）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">Play Console → ダッシュボード</a></li>
+        <li><span class="label">公開の概要（審査送信・審査中確認）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">publishing/overview</a></li>
+        <li><span class="label">アプリのコンテンツ（申告）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">app-content/overview</a></li>
+        <li><span class="label">ストアの掲載情報</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/store-presence" target="_blank" rel="noopener">store-presence</a></li>
+        <li><span class="label">内部テスト</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">tracks/internal-testing</a></li>
+        <li><span class="label">クローズドテスト</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">tracks/closed-testing</a></li>
+        <li><span class="label">製品版（v7 下書き確認）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">tracks/production</a></li>
+        <li><span class="label">アプリの署名（SHA-256 📋）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">keymanagement</a></li>
+        <li><span class="label">ディープリンク（assetlinks 検証）</span>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/deeplinks" target="_blank" rel="noopener">deeplinks</a></li>
+        <li><span class="label">Console 一括オープン（PowerShell）</span>
+          <code>pwsh scripts/open-play-console-reverse-hack.ps1</code>（web-health-check-app リポ内）</li>
+        <li><span class="label">本番 Web アプリ（TWA 先）</span>
+          <a href="https://app.reverse-re-birth-hack.com/" target="_blank" rel="noopener">https://app.reverse-re-birth-hack.com/</a></li>
+        <li><span class="label">assetlinks.json</span>
+          <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">/.well-known/assetlinks.json</a></li>
+        <li><span class="label">プライバシーポリシー（申告用 URL）</span>
+          <a href="https://partner.reverse-re-birth-hack.com/privacy" target="_blank" rel="noopener">partner.reverse-re-birth-hack.com/privacy</a></li>
+        <li><span class="label">公式サイト（ストア設定・申告）</span>
+          <a href="https://partner.reverse-re-birth-hack.com/" target="_blank" rel="noopener">partner.reverse-re-birth-hack.com</a></li>
+        <li><span class="label">プロモ動画 YouTube（ストア掲載用）</span>
+          <a href="https://www.youtube.com/watch?v=jyO9VGHsw2k" target="_blank" rel="noopener">youtube.com/watch?v=jyO9VGHsw2k</a></li>
+        <li><span class="label">Play ストア（審査通過後）</span>
+          <a href="https://play.google.com/store/apps/details?id=com.reversehack.webhealth" target="_blank" rel="noopener">store/apps/details?id=com.reversehack.webhealth</a></li>
+        <li><span class="label">申告回答集（GitHub）</span>
+          <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md" target="_blank" rel="noopener">docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md</a></li>
+        <li><span class="label">モバイル runbook（GitHub）</span>
+          <a href="https://github.com/kimito-link/web-health-check-app/blob/main/_docs/reverse-hack-mobile-runbook.md" target="_blank" rel="noopener">_docs/reverse-hack-mobile-runbook.md</a></li>
+      </ul>
     </div>
 
     <!-- 0 -->
@@ -79,7 +192,7 @@
       </div>
       <ul class="tidy">
         <li>署名済み <b>AAB</b>（CI: <code>android-twa-release.yml</code> → Play に upload）</li>
-        <li>本番 <code>/.well-known/assetlinks.json</code>（Play 署名鍵 SHA-256 を SSOT に反映）</li>
+        <li>本番 <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a>（Play 署名鍵 SHA-256 を SSOT に反映）</li>
         <li>ストア素材（スクショ8枚・タブレット・フィーチャー・512アイコン）</li>
         <li>プロモ動画・Shorts 用縦型動画（任意）</li>
       </ul>
@@ -93,7 +206,10 @@
         <tr><td><code>node scripts/generate-play-promo-video.mjs [brand]</code></td><td>横型プロモ MP4（Play Console「動画」用）</td></tr>
         <tr><td><code>node scripts/generate-social-short-promo.mjs [brand]</code></td><td>縦型 9:16（Shorts / TikTok / Reels）</td></tr>
       </table>
-      <div class="note">📄 申告の回答全文 → リポ内 <code>docs/PLAY-APP-CONTENT-ANSWERS.md</code>（kimito）／<code>docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md</code>（RH）。<b>人間はコピペ＋保存/送信ボタン</b>だけ。</div>
+      <div class="note">📄 申告の回答全文:
+        <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS.md" target="_blank" rel="noopener">PLAY-APP-CONTENT-ANSWERS.md</a>（kimito）／
+        <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md" target="_blank" rel="noopener">PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md</a>（RH）。
+        <b>人間はコピペ＋保存/送信ボタン</b>だけ。→ <a href="#urls">URL 一覧</a></div>
     </div>
 
     <!-- 1 -->
@@ -102,7 +218,7 @@
         <div class="st-num">1</div>
         <div>
           <div class="st-title">「アプリを作成」フォームを埋める <span class="who human">人間（5分）</span></div>
-          <div class="st-sub">play.google.com/console →「アプリを作成」</div>
+          <div class="st-sub"><a href="https://play.google.com/console" target="_blank" rel="noopener">play.google.com/console</a> →「アプリを作成」</div>
         </div>
       </div>
       <div class="note">📷 この画面のキャプチャは無し（枠を作る前は中に入れない）。表どおり入力 → 申告2つにチェック →「アプリを作成」。</div>
@@ -120,7 +236,7 @@
         <div class="st-num">2</div>
         <div>
           <div class="st-title">ダッシュボードを確認 <span class="who human">人間</span></div>
-          <div class="st-sub">「アプリのセットアップ」が出たら枠づくり成功</div>
+          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a>で「アプリのセットアップ」を 5/5 に</div>
         </div>
       </div>
       <div class="shot">
@@ -131,7 +247,10 @@
         <img src="../../assets/captures/play/09b-dashboard-closed-test.png" alt="審査中＋クローズドテスト案内のダッシュボード" loading="lazy">
         <div class="cap">📷 RH 実証: 製品版審査<b>送信後</b>のダッシュボード。「更新ステータス: 審査中」＋「より多くのテスターでテスト」（1/5）が並ぶこともある</div>
       </div>
-      <div class="note">💡 <b>適当にぽちぽち NG。</b> 各申告は<b>保存/送信まで</b>押さないと未完了のまま。ダッシュボード <b>5/5</b> になるまで「審査に送信」はグレーのまま。</div>
+      <div class="note">💡 <b>適当にぽちぽち NG。</b> 各申告は<b>保存/送信まで</b>押さないと未完了のまま。
+        <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">RH ダッシュボード</a> /
+        <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-dashboard" target="_blank" rel="noopener">kimito ダッシュボード</a>
+        が <b>5/5</b> になるまで「審査に送信」はグレーのまま。</div>
     </div>
 
     <!-- 3 -->
@@ -140,7 +259,7 @@
         <div class="st-num">3</div>
         <div>
           <div class="st-title">内部テストに AAB を載せる <span class="who human">人間（3分）</span></div>
-          <div class="st-sub">テストとリリース → 内部テスト → リリースを作成（CI が upload 済みならライブラリから選択）</div>
+          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a> → リリースを作成</div>
         </div>
       </div>
       <div class="shot">
@@ -169,10 +288,15 @@
       </div>
       <table class="vals">
         <tr><th>① playAppId</th><td>Console URL の <code>/app/【数字】/</code> 部分 → <code>stores.playAppId</code></td></tr>
-        <tr><th>② SHA-256</th><td>Google Play による保護 → アプリの署名 → <b>Digital Asset Links JSON</b> の 📋 コピー → AI が assetlinks 更新</td></tr>
+        <tr><th>② SHA-256</th><td>
+          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">アプリの署名</a>
+          → <b>Digital Asset Links JSON</b> の 📋 コピー → AI が
+          <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a> 更新
+        </td></tr>
       </table>
       <div class="warn">⚠️ assetlinks に入れるのは<b>アプリ署名鍵</b>（アップロード鍵と取り違えない）。RH 実証: ブランドごとに fingerprint を分離（<code>app.config.reverse-hack.json</code> の <code>android.sha256CertFingerprints</code>）。<b>📋 コピーボタン必須</b>（スクショだと指紋が切れる）。</div>
-      <div class="note">RH: ディープリンク緑チェックは v7 AAB + assetlinks 修正後に Play Console → ディープリンク → <b>検証を再試行</b>。</div>
+      <div class="note">RH: ディープリンク緑チェックは v7 AAB + assetlinks 修正後に
+        <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/deeplinks" target="_blank" rel="noopener">ディープリンク</a> → <b>検証を再試行</b>。</div>
     </div>
 
     <!-- 5 -->
@@ -181,7 +305,7 @@
         <div class="st-num">5</div>
         <div>
           <div class="st-title">アプリのコンテンツ申告 <span class="who human">人間（順番固定）</span></div>
-          <div class="st-sub">ポリシー → アプリのコンテンツ。回答は docs、操作は下の順</div>
+          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> — 回答は docs、操作は下の順</div>
         </div>
       </div>
       <div class="shot">
@@ -195,14 +319,14 @@
 
       <p style="font-size:.92em;margin:10px 0;"><b>この順で埋めて、各画面で必ず「保存」または「送信」:</b></p>
       <ol class="tidy">
-        <li><b>プライバシーポリシー</b> — URL を貼る → 保存</li>
+        <li><b>プライバシーポリシー</b> — RH: <a href="https://partner.reverse-re-birth-hack.com/privacy" target="_blank" rel="noopener">partner…/privacy</a> / kimito: <a href="https://web-health-check.link/privacy-policy.html" target="_blank" rel="noopener">privacy-policy.html</a> → 保存</li>
         <li><b>アプリのアクセス権</b> — 「特別なアクセス権なし」→ 保存</li>
         <li><b>広告</b> — 「広告なし」→ 保存</li>
         <li><b>データの安全性</b> — 「収集なし」→ 最後まで → <b>送信</b>（保存だけだと未完了）</li>
         <li><b>コンテンツのレーティング</b> — IARC アンケート → 送信</li>
         <li><b>ターゲットユーザー</b> — 18歳以上 → 保存</li>
         <li><b>ニュース / 政府 / 金融 / ヘルス</b> — すべて該当なし → 保存</li>
-        <li><b>ストアの設定</b> — カテゴリ「ツール」・メール・サイト URL → 保存</li>
+        <li><b>ストアの設定</b> — カテゴリ「ツール」・メール・サイト URL → 保存（RH: <a href="https://partner.reverse-re-birth-hack.com/" target="_blank" rel="noopener">partner.reverse-re-birth-hack.com</a>）</li>
       </ol>
 
       <div class="shot">
@@ -221,13 +345,13 @@
         <div class="st-num">6</div>
         <div>
           <div class="st-title">製品版 v7 を審査に送信 <span class="who human">人間（最後のボタン）</span></div>
-          <div class="st-sub">ダッシュボード 5/5 → 公開の概要 →「○件の変更を審査に送信」</div>
+          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> →「○件の変更を審査に送信」</div>
         </div>
       </div>
       <ol class="tidy">
-        <li><b>テストとリリース → 製品版</b> — v7 draft に AAB が載っていることを確認（CI / API 済みなら触らない）</li>
+        <li><b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">製品版</a></b> — v7 draft に AAB が載っていることを確認</li>
         <li><b>国や地域を選択</b> — 日本（＋必要なら「その他すべての国」）→ 保存</li>
-        <li><b>公開の概要</b> — 未送信の変更一覧を確認</li>
+        <li><b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a></b> — 未送信の変更一覧を確認</li>
         <li><b>「○件の変更を審査に送信」</b> を押す（RH 実証: 9件）</li>
       </ol>
       <div class="shot">
@@ -255,7 +379,11 @@
         <div class="cap">📷 kimito 実証: 内部テスト送信後も同じ「審査中の変更」画面</div>
       </div>
       <div class="ok">✅ RH 実証（2026-06）: 上記9件送信 → クイックチェック → <b>審査中</b> まで到達済み。管理対象の公開オフ＝承認後自動公開。</div>
-      <div class="note">📺 プロモ動画（任意）: YouTube 限定公開 → ストア掲載に <code>https://www.youtube.com/watch?v=…</code>。Shorts/TikTok/Reels は審査通過後でも可（説明文は後から編集可能、動画本体は差し替え不可）。</div>
+      <div class="note">📺 プロモ動画（任意）:
+        <a href="https://www.youtube.com/watch?v=jyO9VGHsw2k" target="_blank" rel="noopener">YouTube 限定公開</a>
+        → <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/store-presence" target="_blank" rel="noopener">ストア掲載</a>に
+        <code>https://www.youtube.com/watch?v=jyO9VGHsw2k</code>。
+        Shorts/TikTok/Reels は審査通過後でも可。</div>
     </div>
 
     <!-- 7 optional -->
@@ -269,7 +397,7 @@
       </div>
       <div class="warn">
         ダッシュボードに<b>「より多くのテスターでアプリをテスト」</b>（1/5 等）が出ていたら:<br>
-        ① <b>クローズドテスト</b>（内部テストは<b>カウントされない</b>）<br>
+        ① <b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a></b>（<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a>は<b>カウントされない</b>）<br>
         ② テスター <b>12人以上</b> が opt-in<br>
         ③ <b>連続14日</b> 維持<br>
         ④ ダッシュボードから <b>本番環境へのアクセスを申請</b>（アカウント<b>所有者</b>のみ）<br>
@@ -289,12 +417,12 @@
       </div>
       <table class="vals">
         <tr><th>症状</th><th>原因</th><th>対処</th></tr>
-        <tr><td>送信ボタンがグレー</td><td>ダッシュボード未完了</td><td>Step 5 を順番どおり。データの安全性は<b>送信</b>まで</td></tr>
-        <tr><td>赤エラー「広告 ID」</td><td>広告 ID 未申告</td><td>「いいえ」→ 保存（広告SDKなしアプリ）</td></tr>
-        <tr><td>partner は審査中、webhealth は未送信</td><td>別アプリ</td><td>パッケージ名ごとに Step 5〜6 を実施</td></tr>
-        <tr><td>製品版が下書きのまま</td><td>審査未送信</td><td>公開の概要 → 審査に送信</td></tr>
-        <tr><td>アドレスバーが消えない</td><td>assetlinks 指紋ミス</td><td>Play 署名鍵を 📋 で再コピー、ブランド別 fingerprint 確認</td></tr>
-        <tr><td>12人テストカード</td><td>新規個人アカウント</td><td>Step 7（クローズドテスト）</td></tr>
+        <tr><td>送信ボタンがグレー</td><td>ダッシュボード未完了</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a> 5/5。Step 5 を順番どおり</td></tr>
+        <tr><td>赤エラー「広告 ID」</td><td>広告 ID 未申告</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> → いいえ → 保存</td></tr>
+        <tr><td>partner は審査中、webhealth は未送信</td><td>別アプリ</td><td><code>com.reversehack.partner</code> ≠ <code>com.reversehack.webhealth</code></td></tr>
+        <tr><td>製品版が下書きのまま</td><td>審査未送信</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> → 審査に送信</td></tr>
+        <tr><td>アドレスバーが消えない</td><td>assetlinks 指紋ミス</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">署名鍵</a> 📋 → <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks</a> 確認</td></tr>
+        <tr><td>12人テストカード</td><td>新規個人アカウント</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a>（Step 7）</td></tr>
       </table>
     </div>
 
@@ -305,10 +433,12 @@
 
     <div class="note" style="margin-top:22px;">
       🔗 <b>関連</b>:
-      <a href="../" style="color:#1565c0;font-weight:700;">追体験トップ</a> ／
-      <a href="../ios/" style="color:#1565c0;font-weight:700;">iOS 追体験</a> ／
-      <a href="../../learnings/" style="color:#1565c0;font-weight:700;">実証知見</a> ／
-      <a href="../../troubleshooting/" style="color:#1565c0;font-weight:700;">つまずいたら</a>
+      <a href="#urls" style="font-weight:700;">URL 一覧</a> ／
+      <a href="../" style="font-weight:700;">追体験トップ</a> ／
+      <a href="../ios/" style="font-weight:700;">iOS 追体験</a> ／
+      <a href="../../learnings/" style="font-weight:700;">実証知見</a> ／
+      <a href="../../troubleshooting/" style="font-weight:700;">つまずいたら</a> ／
+      <a href="../../guide/" style="font-weight:700;">準備ガイド</a>
     </div>
   </div>
 </body>
