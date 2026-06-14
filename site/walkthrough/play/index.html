@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Google Play Console 追体験（実画面つき） | Kimito-Link</title>
-  <meta name="description" content="Google Play Console でアプリの枠を作って AAB を上げるまでを、実際の画面キャプチャで追体験できる伴走ガイド。人間がやるのはこの画面だけ。">
+  <meta name="description" content="Google Play Console でアプリの枠を作って本番審査まで送る手順を、実際の画面キャプチャと自動化コマンド付きで追体験できる伴走ガイド。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,11 +15,12 @@
     .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
     .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
     .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
-    .progress span { font-size: .72em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
+    .progress span { font-size: .68em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
     .step { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
     .st-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
     .st-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #1565c0; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
     .st-num.ai { background: #2e7d32; }
+    .st-num.opt { background: #7b8794; }
     .st-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
     .st-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
     .who { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; vertical-align: middle; margin-left: 8px; }
@@ -28,20 +29,25 @@
     .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
     .shot img { display: block; width: 100%; height: auto; }
     .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
-    .shot.todo { border: 2px dashed #b8c1cf; padding: 26px 16px; text-align: center; color: #8a94a3; font-size: .9em; border-radius: 12px; background: #fbfcfe; }
     .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
     .note b { color: #0d47a1; }
     .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
+    .ok { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1b5e20; }
     ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
     ul.tidy li { margin: 4px 0; font-size: .92em; }
-    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .9em; }
-    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; }
+    ol.tidy { margin: 10px 0 4px; padding-left: 1.4em; }
+    ol.tidy li { margin: 6px 0; font-size: .92em; }
+    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .88em; }
+    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; vertical-align: top; }
     table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
-    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; word-break: break-all; }
     .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
     .done-banner h2 { font-size: 1.3em; }
     .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
-    @media (max-width: 520px) { .hero h1 { font-size: 1.35em; } }
+    @media (max-width: 520px) {
+      .hero h1 { font-size: 1.35em; }
+      table.vals th { white-space: normal; }
+    }
   </style>
 </head>
 <body>
@@ -50,15 +56,16 @@
 
     <div class="hero">
       <h1>Google Play Console 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <p class="sub">実際にアプリを1本出したときの本物の画面で、同じ手順をなぞれるよ。<br>AAB づくりや assetlinks の配信は AI（キット）側が先に済ませてある前提。</p>
+      <p class="sub">kimito 実証（2026-06）＋ <b>リバースハック WEB健康診断</b> 本番審査送信（2026-06）の知見を反映。<br>AAB・assetlinks・ストア素材はキット（AI/CI）が先に済ませる前提。</p>
       <div class="progress">
-        <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span><span>④ IDと指紋を渡す</span><span>⑤ 申告と送信</span>
+        <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span>
+        <span>④ IDと指紋</span><span>⑤ 申告</span><span>⑥ 製品版送信</span><span>⑦ 待つ</span>
       </div>
     </div>
 
     <div class="note">
-      🧭 <b>例として出てくる値は全部「そのアプリ専用」。</b>自分のアプリでは <code>app.config.json</code> に書いた
-      <b>displayName</b>（アプリ名）と <b>playPackageName</b>（パッケージ名）に読み替えてね。
+      🧭 <b>値は全部「そのアプリ専用」。</b>自分のアプリでは <code>app.config.json</code>（または <code>app.config.reverse-hack.json</code>）の
+      <b>displayName</b>・<b>playPackageName</b> に読み替えてね。<b>複数ブランド</b>はパッケージ名が違えば Play 上は<b>別アプリ</b>。
     </div>
 
     <!-- 0 -->
@@ -66,15 +73,27 @@
       <div class="st-head">
         <div class="st-num ai">0</div>
         <div>
-          <div class="st-title">先に AI が用意しておくもの <span class="who ai">AI（自動）</span></div>
-          <div class="st-sub">人間がコンソールを開く前に終わっている部分</div>
+          <div class="st-title">先に AI / CI が用意するもの <span class="who ai">自動</span></div>
+          <div class="st-sub">人間が Console を開く前に終わっている部分（web-health-check-app リポ）</div>
         </div>
       </div>
       <ul class="tidy">
-        <li>署名済み <b>AAB</b>（<code>android-twa/app/build/outputs/bundle/release/app-release.aab</code>）</li>
-        <li>本番サイトへの <b>assetlinks.json</b> 配信（<code>/.well-known/assetlinks.json</code> が 200 で返る状態）</li>
-        <li>署名鍵 <code>android-upload-key.jks</code> の生成（<b>バックアップは人間の仕事！</b>）</li>
+        <li>署名済み <b>AAB</b>（CI: <code>android-twa-release.yml</code> → Play に upload）</li>
+        <li>本番 <code>/.well-known/assetlinks.json</code>（Play 署名鍵 SHA-256 を SSOT に反映）</li>
+        <li>ストア素材（スクショ8枚・タブレット・フィーチャー・512アイコン）</li>
+        <li>プロモ動画・Shorts 用縦型動画（任意）</li>
       </ul>
+      <table class="vals">
+        <tr><th>コマンド</th><th>やること</th></tr>
+        <tr><td><code>npm run store-assets:play</code></td><td>Play スクショ・フィーチャーグラフィック生成（kimito）</td></tr>
+        <tr><td><code>npm run store-assets:play:reverse-hack</code></td><td>同上（RH ブランド）</td></tr>
+        <tr><td><code>node scripts/play-set-listing.mjs [brand]</code></td><td>ストア掲載テキスト＋画像を Play API で投入</td></tr>
+        <tr><td><code>node scripts/play-setup-production.mjs [brand]</code></td><td>製品版 draft + 国設定を API で試行（未完了申告があると validate で止まる）</td></tr>
+        <tr><td><code>node scripts/play-submit-review.mjs [brand]</code></td><td>既存 versionCode を製品版に promote（AAB 再ビルド不要）</td></tr>
+        <tr><td><code>node scripts/generate-play-promo-video.mjs [brand]</code></td><td>横型プロモ MP4（Play Console「動画」用）</td></tr>
+        <tr><td><code>node scripts/generate-social-short-promo.mjs [brand]</code></td><td>縦型 9:16（Shorts / TikTok / Reels）</td></tr>
+      </table>
+      <div class="note">📄 申告の回答全文 → リポ内 <code>docs/PLAY-APP-CONTENT-ANSWERS.md</code>（kimito）／<code>docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md</code>（RH）。<b>人間はコピペ＋保存/送信ボタン</b>だけ。</div>
     </div>
 
     <!-- 1 -->
@@ -86,14 +105,12 @@
           <div class="st-sub">play.google.com/console →「アプリを作成」</div>
         </div>
       </div>
-      <div class="note">📷 <b>この画面のキャプチャは無し</b>（ここが Play Console を触る一番最初。アプリ枠を作るまでは中に入れないので、今回は撮りそびれ）。やることは下の表のとおり入れて、申告2つにチェック →「アプリを作成」を押すだけ。</div>
+      <div class="note">📷 この画面のキャプチャは無し（枠を作る前は中に入れない）。表どおり入力 → 申告2つにチェック →「アプリを作成」。</div>
       <table class="vals">
-        <tr><th>アプリ名</th><td>app.config.json の displayName（例: 君斗りんくのWEBサイト健康診断）</td></tr>
-        <tr><th>パッケージ名</th><td>app.config.json の playPackageName（例: <code>com.kimito.link.webhealthcheck</code>）<br>⚠️ AAB に焼き込まれた値と<b>完全一致</b>必須。あとから変更できない</td></tr>
-        <tr><th>デフォルトの言語</th><td>日本語 – ja-JP</td></tr>
-        <tr><th>アプリ / ゲーム</th><td>アプリ</td></tr>
-        <tr><th>無料 / 有料</th><td>無料（公開後に無料→有料へは変更不可）</td></tr>
-        <tr><th>申告</th><td>「デベロッパー プログラム ポリシー」「米国輸出法」両方チェック</td></tr>
+        <tr><th>アプリ名</th><td><code>identity.displayName</code><br>例: 君斗りんくのWEBサイト健康診断 / リバースハック WEB健康診断</td></tr>
+        <tr><th>パッケージ名</th><td><code>stores.playPackageName</code><br>例: <code>com.kimito.link.webhealthcheck</code> / <code>com.reversehack.webhealth</code><br>⚠️ AAB と<b>完全一致</b>。あとから変更不可</td></tr>
+        <tr><th>言語</th><td>日本語 – ja-JP</td></tr>
+        <tr><th>種別</th><td>アプリ / 無料</td></tr>
       </table>
     </div>
 
@@ -102,15 +119,19 @@
       <div class="st-head">
         <div class="st-num">2</div>
         <div>
-          <div class="st-title">作成すると、この画面（ダッシュボード）になる <span class="who human">人間</span></div>
-          <div class="st-sub">「アプリのセットアップ手順」が出たら枠づくり成功</div>
+          <div class="st-title">ダッシュボードを確認 <span class="who human">人間</span></div>
+          <div class="st-sub">「アプリのセットアップ」が出たら枠づくり成功</div>
         </div>
       </div>
       <div class="shot">
-        <img src="../../assets/captures/play/02-dashboard.png" alt="作成直後のダッシュボード画面" loading="lazy">
-        <div class="cap">📷 実画面: 作成直後のダッシュボード。ここで迷子になりがちだけど、見るのは「今すぐテストを開始」だけでOK</div>
+        <img src="../../assets/captures/play/02-dashboard.png" alt="作成直後のダッシュボード" loading="lazy">
+        <div class="cap">📷 kimito 実証: 作成直後。申告タスクが並ぶが<b>先に AAB を上げてOK</b></div>
       </div>
-      <div class="note">💡 「まず初期設定タスクを完了してください」がいっぱい並ぶけど、<b>先に AAB を上げてOK</b>。申告系はあとから AI が回答案を用意してくれる。</div>
+      <div class="shot">
+        <img src="../../assets/captures/play/09b-dashboard-closed-test.png" alt="審査中＋クローズドテスト案内のダッシュボード" loading="lazy">
+        <div class="cap">📷 RH 実証: 製品版審査<b>送信後</b>のダッシュボード。「更新ステータス: 審査中」＋「より多くのテスターでテスト」（1/5）が並ぶこともある</div>
+      </div>
+      <div class="note">💡 <b>適当にぽちぽち NG。</b> 各申告は<b>保存/送信まで</b>押さないと未完了のまま。ダッシュボード <b>5/5</b> になるまで「審査に送信」はグレーのまま。</div>
     </div>
 
     <!-- 3 -->
@@ -118,38 +139,23 @@
       <div class="st-head">
         <div class="st-num">3</div>
         <div>
-          <div class="st-title">内部テストに AAB をドロップ <span class="who human">人間（3分）</span></div>
-          <div class="st-sub">テストとリリース → 内部テスト → リリースを作成</div>
+          <div class="st-title">内部テストに AAB を載せる <span class="who human">人間（3分）</span></div>
+          <div class="st-sub">テストとリリース → 内部テスト → リリースを作成（CI が upload 済みならライブラリから選択）</div>
         </div>
       </div>
       <div class="shot">
-        <img src="../../assets/captures/play/03-internal-test-upload.png" alt="ライブラリから App Bundle を追加する画面" loading="lazy">
-        <div class="cap">📷 実画面: 「ライブラリからの App Bundle の追加」。AI が上げておいた AAB（バージョン 1.0.0・6月13日アップロード済）にチェック →「リリースに追加」</div>
-      </div>
-      <ul class="tidy">
-        <li>App Bundle の枠に <code>app-release.aab</code> をドラッグ&ドロップ</li>
-        <li>「アプリの完全性」に「<b>リリースは Google Play で署名されています</b>」と出ていれば、署名鍵の預け入れ（Play アプリ署名）は自動で有効化済み</li>
-        <li>リリース名は自動入力（例: 1 (1.0.0)）のまま。リリースノートは <code>&lt;ja-JP&gt;</code> タグの中身だけ書き換え（例: 初回リリース（内部テスト））→「次へ」</li>
-      </ul>
-      <div class="shot">
-        <img src="../../assets/captures/play/03b-release-detail.png" alt="リリースの詳細（リリース名とリリースノート）" loading="lazy">
-        <div class="cap">📷 実画面: AAB 追加後の「リリースの詳細」。リリースノートは <code>&lt;ja-JP&gt;…&lt;/ja-JP&gt;</code> の中身だけ書けばOK</div>
+        <img src="../../assets/captures/play/03-internal-test-upload.png" alt="ライブラリから App Bundle を追加" loading="lazy">
+        <div class="cap">📷 ライブラリから AAB にチェック →「リリースに追加」</div>
       </div>
       <div class="shot">
-        <img src="../../assets/captures/play/04-release-preview.png" alt="プレビューして確認する画面" loading="lazy">
-        <div class="cap">📷 実画面: 「プレビューして確認する」。新規インストールのサイズ（例 1.03MB）が出て準備完了 →「保存」</div>
+        <img src="../../assets/captures/play/03b-release-detail.png" alt="リリースの詳細" loading="lazy">
+        <div class="cap">📷 リリースノートは <code>&lt;ja-JP&gt;…&lt;/ja-JP&gt;</code> の中身だけ書き換え</div>
       </div>
-      <div class="note">✅ プレビューで「<b>1件の警告</b>」が出るのはお決まり（難読化ファイル無し・テスター未設定など）。<b>黄色の警告は無視して「保存して公開」</b>でOK。止まるのは赤いエラーのときだけ。</div>
       <div class="shot">
-        <img src="../../assets/captures/play/04b-publish-confirm.png" alt="変更を審査に送信しますか確認ダイアログ" loading="lazy">
-        <div class="cap">📷 実画面: 「○件の変更を審査に送信しますか？」確認ダイアログ。これを押すと Google の審査が始まる</div>
+        <img src="../../assets/captures/play/04-release-preview.png" alt="プレビューして確認" loading="lazy">
+        <div class="cap">📷 黄色の警告（難読化なし等）は<b>無視して保存</b>。赤エラーだけ止まる</div>
       </div>
-      <div class="warn">😱 「送信しますか？」と聞かれてビビるポイント。でも<b>これを押すまでは審査は始まらない</b>。逆に言えば、ここを押さない限り何も外には出ない。準備ができたら「変更を送信」でOK（審査は通常7日以内、それより長いことも）。</div>
-      <div class="shot">
-        <img src="../../assets/captures/play/04c-internal-published.png" alt="審査中の変更（送信完了）画面" loading="lazy">
-        <div class="cap">📷 実画面: 送信後の「審査中の変更」。ここまで来たら人間の作業は完了、あとは待つだけ</div>
-      </div>
-      <div class="note">🏷️ 製品版トラックで「一時的なアプリ名 (unreviewed)」と出るのは正常。審査が通るまで表示が仮名になるだけで、何もしなくていい。</div>
+      <div class="warn">内部テストの審査送信 ≠ 製品版公開。本番は<b>Step 6</b>。内部テストだけでは「12人×14日」の本番アクセス要件は<b>満たせない</b>（Step 7 参照）。</div>
     </div>
 
     <!-- 4 -->
@@ -157,27 +163,16 @@
       <div class="st-head">
         <div class="st-num">4</div>
         <div>
-          <div class="st-title">2つの値を AI に渡す <span class="who human">人間（コピペ2回）</span></div>
-          <div class="st-sub">これで自動化が全部つながる</div>
+          <div class="st-title">2つの値を AI に渡す <span class="who human">コピペ2回</span></div>
+          <div class="st-sub">これで playAppId と assetlinks が自動配線される</div>
         </div>
       </div>
-      <p style="font-size:.92em; margin:8px 0;">渡すのは<b>スクショじゃなくて「文字」2つ</b>。コピペ2回で終わり。</p>
       <table class="vals">
-        <tr><th>① コンソールの URL</th><td>
-          アプリの中の画面で、ブラウザの<b>アドレスバーをクリック → Ctrl+A → Ctrl+C</b> → AI に貼り付け。<br>
-          <code>…/developers/（開発者番号）/app/<b>【ここの数字】</b>/app-dashboard</code> の【数字】が <b>playAppId</b>。<br>
-          → AI が <code>app.config.json</code> の <code>stores.playAppId</code> に記入する
-        </td></tr>
-        <tr><th>② アプリ署名鍵の SHA-256</th><td>
-          左メニュー「<b>Google Play による保護</b>」→「<b>アプリの署名</b>」ページへ（URL 直行なら <code>…/app/【数字】/keymanagement</code>）。<br>
-          一番下の「<b>Digital Asset Links JSON</b>」ボックス右上の <b>📋 コピーボタン</b>を押して、そのまま AI に貼り付けるのが最速・確実。<br>
-          → AI が本番の <code>assetlinks.json</code> を差し替える（これでアプリ上部のアドレスバーが消える）。<b>Play 署名鍵＋アップロード鍵の両方</b>を入れておくと、開発時の直インストールでも検証が通る
-        </td></tr>
+        <tr><th>① playAppId</th><td>Console URL の <code>/app/【数字】/</code> 部分 → <code>stores.playAppId</code></td></tr>
+        <tr><th>② SHA-256</th><td>Google Play による保護 → アプリの署名 → <b>Digital Asset Links JSON</b> の 📋 コピー → AI が assetlinks 更新</td></tr>
       </table>
-      <div class="note">📷 <b>この画面のキャプチャは無し</b>。理由は単純で、SHA-256 は<b>📋 コピーボタン一発で AI に渡せる</b>ので、わざわざ画面を撮る必要がなかったから（むしろスクショだと後半が切れて使えない＝下の警告参照）。場所は左メニュー「Google Play による保護 → アプリの署名」、URL 直行なら <code>…/app/【数字】/keymanagement</code>。</div>
-      <div class="warn">⚠️ 同じページに「<b>アップロード鍵の証明書</b>」も並んでいるけど、assetlinks に入れるのは<b>「アプリ署名鍵の証明書」の方</b>。間違えるとアプリ上部にアドレスバーが出っぱなしになる（キットの金型 README にも同じ注意があるよ）。</div>
-      <div class="note">🧭 <b>迷子あるある</b>: 左上の「すべてのアプリ」に戻ってしまったら、一覧から自分のアプリの行をクリックすれば中に入り直せる。URL に <code>/app/【数字】/</code> が入っていれば「アプリの中」にいる証拠。</div>
-      <div class="warn">📋 <b>フィンガープリントは必ずコピーボタンで渡す</b>（実話）。コンソールの入力欄は横スクロール式なので、スクショでも「印刷→PDF保存」でも<b>画面で切れている後半は写らない</b>。1文字でも欠けると assetlinks は無効。📋 ボタンなら見えていない部分まで全文コピーされる。</div>
+      <div class="warn">⚠️ assetlinks に入れるのは<b>アプリ署名鍵</b>（アップロード鍵と取り違えない）。RH 実証: ブランドごとに fingerprint を分離（<code>app.config.reverse-hack.json</code> の <code>android.sha256CertFingerprints</code>）。<b>📋 コピーボタン必須</b>（スクショだと指紋が切れる）。</div>
+      <div class="note">RH: ディープリンク緑チェックは v7 AAB + assetlinks 修正後に Play Console → ディープリンク → <b>検証を再試行</b>。</div>
     </div>
 
     <!-- 5 -->
@@ -185,50 +180,136 @@
       <div class="st-head">
         <div class="st-num">5</div>
         <div>
-          <div class="st-title">アプリのコンテンツ申告 → 審査用に送信 <span class="who human">人間（最後のボタン）</span></div>
-          <div class="st-sub">回答内容は AI が用意、ボタンを押すのは人間</div>
+          <div class="st-title">アプリのコンテンツ申告 <span class="who human">人間（順番固定）</span></div>
+          <div class="st-sub">ポリシー → アプリのコンテンツ。回答は docs、操作は下の順</div>
         </div>
       </div>
       <div class="shot">
-        <img src="../../assets/captures/play/08-store-listing.png" alt="ストアの掲載情報の入口画面" loading="lazy">
-        <div class="cap">📷 実画面: 「ユーザーを増やす → ストアでの表示 → ストアの掲載情報」。アプリ名・説明文・画像はキットが用意済み。コピペ＆アップロードするだけ</div>
-      </div>
-      <ul class="tidy">
-        <li><b>ストアの掲載情報</b>（ユーザーを増やす → ストアでの表示）: アプリ名・説明文・画像は<b>全部 AI が用意済み</b>（テキストは回答案ドキュメント、画像は <code>store-assets/play/</code>）。人間はコピペ＆アップロードするだけ</li>
-        <li>スクショ要件は<b>アスペクト比 16:9 か 9:16 厳守</b>。AI 生成分は全部 1080x1920（9:16）に揃えてある。タブレット用（7インチ/10インチ）も必須なので同梱</li>
-      </ul>
-      <div class="shot">
-        <img src="../../assets/captures/play/06-app-content.png" alt="アプリのコンテンツ申告画面（ログインの詳細）" loading="lazy">
-        <div class="cap">📷 実画面: 「アプリのコンテンツ」申告のひとつ（ログインの詳細）。プライバシー・広告・レーティング・データセーフティ・健康など各項目を埋める。回答案はキットが用意</div>
+        <img src="../../assets/captures/play/08-store-listing.png" alt="ストアの掲載情報" loading="lazy">
+        <div class="cap">📷 ストア掲載: テキスト・画像は <code>store-assets/</code> から API または手動アップロード</div>
       </div>
       <div class="shot">
-        <img src="../../assets/captures/play/07-submit-review.png" alt="変更を審査に送信ボタン（公開の概要）" loading="lazy">
-        <div class="cap">📷 実画面: 「公開の概要」。申告とリリースが揃うと「○件の変更を審査に送信」ボタンが青く押せるようになる</div>
+        <img src="../../assets/captures/play/06-app-content.png" alt="アプリのコンテンツ申告" loading="lazy">
+        <div class="cap">📷 アプリのコンテンツ: ログインの詳細・プライバシー・広告・レーティング等</div>
       </div>
-      <div class="note">📨 リリースを作っただけでは審査は始まらない。<b>「審査に送信」を押すまでが人間の仕事</b>。あとは待つだけ（数日）。</div>
-      <div class="warn">🟥 押せないときは赤エラーを先に解消。実例:「<b>広告 IDの申告が不完全です</b>」（Android 13 以降は広告 ID 使用の有無の申告が必須）。下の「申告を完了する」から埋めれば送信ボタンが復活する。
-        <div class="shot" style="margin-top:10px;">
-          <img src="../../assets/captures/play/04a-error-adid.png" alt="広告IDの申告が不完全ですエラー" loading="lazy">
-          <div class="cap">📷 実画面: 送信前に出た「1件の問題が検出されました（広告 IDの申告が不完全です）」。これは黄色の警告と違って<b>対処必須の赤エラー</b></div>
+
+      <p style="font-size:.92em;margin:10px 0;"><b>この順で埋めて、各画面で必ず「保存」または「送信」:</b></p>
+      <ol class="tidy">
+        <li><b>プライバシーポリシー</b> — URL を貼る → 保存</li>
+        <li><b>アプリのアクセス権</b> — 「特別なアクセス権なし」→ 保存</li>
+        <li><b>広告</b> — 「広告なし」→ 保存</li>
+        <li><b>データの安全性</b> — 「収集なし」→ 最後まで → <b>送信</b>（保存だけだと未完了）</li>
+        <li><b>コンテンツのレーティング</b> — IARC アンケート → 送信</li>
+        <li><b>ターゲットユーザー</b> — 18歳以上 → 保存</li>
+        <li><b>ニュース / 政府 / 金融 / ヘルス</b> — すべて該当なし → 保存</li>
+        <li><b>ストアの設定</b> — カテゴリ「ツール」・メール・サイト URL → 保存</li>
+      </ol>
+
+      <div class="shot">
+        <img src="../../assets/captures/play/05b-ad-id-declaration.png" alt="広告 ID の申告" loading="lazy">
+        <div class="cap">📷 RH 実証: <b>広告 ID</b> — TWA で広告SDKなし → <b>いいえ</b> → 保存。未申告だと送信ボタンが赤エラーで止まる</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04a-error-adid.png" alt="広告ID申告不完全エラー" loading="lazy">
+        <div class="cap">📷 kimito 実証: 「広告 IDの申告が不完全です」＝<b>赤エラー</b>（黄色警告と違い対処必須）</div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">6</div>
+        <div>
+          <div class="st-title">製品版 v7 を審査に送信 <span class="who human">人間（最後のボタン）</span></div>
+          <div class="st-sub">ダッシュボード 5/5 → 公開の概要 →「○件の変更を審査に送信」</div>
         </div>
       </div>
+      <ol class="tidy">
+        <li><b>テストとリリース → 製品版</b> — v7 draft に AAB が載っていることを確認（CI / API 済みなら触らない）</li>
+        <li><b>国や地域を選択</b> — 日本（＋必要なら「その他すべての国」）→ 保存</li>
+        <li><b>公開の概要</b> — 未送信の変更一覧を確認</li>
+        <li><b>「○件の変更を審査に送信」</b> を押す（RH 実証: 9件）</li>
+      </ol>
+      <div class="shot">
+        <img src="../../assets/captures/play/09c-production-draft.png" alt="製品版 v7 下書き" loading="lazy">
+        <div class="cap">📷 送信前: 製品版 v7 は<b>下書き・非アクティブ</b>。「一時的なアプリ名 (unreviewed)」も正常</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/07b-pending-9-changes.png" alt="9件の変更を審査に送信" loading="lazy">
+        <div class="cap">📷 RH 実証: ボタンが青くなった状態（製品版・ストア・申告9項目がまとまって送信待ち）</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/07-submit-review.png" alt="公開の概要 審査送信ボタン" loading="lazy">
+        <div class="cap">📷 kimito 実証: 公開の概要の送信ボタン（押すまで審査は始まらない）</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04b-publish-confirm.png" alt="審査に送信しますか確認" loading="lazy">
+        <div class="cap">📷 確認ダイアログ → 送信</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/09-production-under-review.png" alt="審査中の変更" loading="lazy">
+        <div class="cap">📷 RH 実証: 送信後「<b>審査中の変更</b>」。ここまで来たら人間の作業は完了 → あとは待つ</div>
+      </div>
+      <div class="shot">
+        <img src="../../assets/captures/play/04c-internal-published.png" alt="審査中の変更 kimito" loading="lazy">
+        <div class="cap">📷 kimito 実証: 内部テスト送信後も同じ「審査中の変更」画面</div>
+      </div>
+      <div class="ok">✅ RH 実証（2026-06）: 上記9件送信 → クイックチェック → <b>審査中</b> まで到達済み。管理対象の公開オフ＝承認後自動公開。</div>
+      <div class="note">📺 プロモ動画（任意）: YouTube 限定公開 → ストア掲載に <code>https://www.youtube.com/watch?v=…</code>。Shorts/TikTok/Reels は審査通過後でも可（説明文は後から編集可能、動画本体は差し替え不可）。</div>
+    </div>
+
+    <!-- 7 optional -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num opt">7</div>
+        <div>
+          <div class="st-title">（条件付き）クローズドテスト 12人×14日 <span class="who human">新規個人アカウントのみ</span></div>
+          <div class="st-sub">2023-11-13 以降の個人開発者アカウントで本番アクセス申請が必要な場合</div>
+        </div>
+      </div>
+      <div class="warn">
+        ダッシュボードに<b>「より多くのテスターでアプリをテスト」</b>（1/5 等）が出ていたら:<br>
+        ① <b>クローズドテスト</b>（内部テストは<b>カウントされない</b>）<br>
+        ② テスター <b>12人以上</b> が opt-in<br>
+        ③ <b>連続14日</b> 維持<br>
+        ④ ダッシュボードから <b>本番環境へのアクセスを申請</b>（アカウント<b>所有者</b>のみ）<br>
+        → その後 Step 6 の製品版送信が可能になる。<br>
+        <a href="https://support.google.com/googleplay/android-developer/answer/14151465" style="color:#1565c0;">Google 公式: 個人開発者のテスト要件</a>
+      </div>
+    </div>
+
+    <!-- pitfalls -->
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num opt">!</div>
+        <div>
+          <div class="st-title">つまずき早見表</div>
+          <div class="st-sub">適当にぽちぽちで起きがちな症状</div>
+        </div>
+      </div>
+      <table class="vals">
+        <tr><th>症状</th><th>原因</th><th>対処</th></tr>
+        <tr><td>送信ボタンがグレー</td><td>ダッシュボード未完了</td><td>Step 5 を順番どおり。データの安全性は<b>送信</b>まで</td></tr>
+        <tr><td>赤エラー「広告 ID」</td><td>広告 ID 未申告</td><td>「いいえ」→ 保存（広告SDKなしアプリ）</td></tr>
+        <tr><td>partner は審査中、webhealth は未送信</td><td>別アプリ</td><td>パッケージ名ごとに Step 5〜6 を実施</td></tr>
+        <tr><td>製品版が下書きのまま</td><td>審査未送信</td><td>公開の概要 → 審査に送信</td></tr>
+        <tr><td>アドレスバーが消えない</td><td>assetlinks 指紋ミス</td><td>Play 署名鍵を 📋 で再コピー、ブランド別 fingerprint 確認</td></tr>
+        <tr><td>12人テストカード</td><td>新規個人アカウント</td><td>Step 7（クローズドテスト）</td></tr>
+      </table>
     </div>
 
     <div class="done-banner">
       <h2>🎉 人間の Play Console 作業、これで全部</h2>
-      <p>枠を作る → AAB をドロップ → 値を2つコピペ → 最後のボタン。<br>残り（掲載情報・スクショ・審査見張り・更新）はキットの自動化が引き受けるよ。</p>
+      <p>枠を作る → AAB を載せる → 値2つコピペ → 申告（順番固定）→ 製品版を審査送信。<br>素材・listing・AAB upload・審査見張りはキット / CI が引き受ける。</p>
     </div>
 
     <div class="note" style="margin-top:22px;">
-      🔗 <b>関連ページ</b>:
+      🔗 <b>関連</b>:
       <a href="../" style="color:#1565c0;font-weight:700;">追体験トップ</a> ／
       <a href="../ios/" style="color:#1565c0;font-weight:700;">iOS 追体験</a> ／
-      <a href="../chrome/" style="color:#1565c0;font-weight:700;">Chrome 追体験</a> ／
       <a href="../../learnings/" style="color:#1565c0;font-weight:700;">実証知見</a> ／
-      <a href="../../guide/" style="color:#1565c0;font-weight:700;">準備ガイド</a> ／
       <a href="../../troubleshooting/" style="color:#1565c0;font-weight:700;">つまずいたら</a>
     </div>
-
   </div>
 </body>
 </html>

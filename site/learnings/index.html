@@ -75,13 +75,18 @@
       <ul>
         <li>Play Console でアプリ枠作成 → <code>playAppId</code> + assetlinks 用 SHA-256 を AI に渡す</li>
         <li>内部テスト or 製品版で AAB ドロップ → <b>審査に送信</b>ボタン（押すまで審査始まらない）</li>
+        <li>申告は<b>順番固定＋各画面で保存/送信</b>（データの安全性・広告 ID がハマりどころ）</li>
+        <li>製品版本番: ダッシュボード 5/5 → 公開の概要で N 件まとめて送信（RH 実証: 9件）</li>
+        <li>新規個人アカウント: クローズドテスト 12人×14日 → 本番アクセス申請が別途必要な場合あり</li>
         <li>GitHub Secrets 3個: keystore + SA JSON</li>
       </ul>
-      <h3>CI で自動</h3>
+      <h3>CI / スクリプトで自動</h3>
       <ul>
         <li>TWA <code>bundleRelease</code> → <code>play-publish.mjs</code></li>
-        <li>製品版: <code>workflow_dispatch -f track=production</code></li>
-        <li>再提出時は <code>versionCode</code> を必ず increment（例: 1→2）</li>
+        <li>ストア素材: <code>generate-play-assets.mjs</code> / listing: <code>play-set-listing.mjs</code></li>
+        <li>製品版 promote: <code>play-setup-production.mjs</code> / <code>play-submit-review.mjs</code></li>
+        <li>再提出時は <code>playVersionCode</code> を必ず increment（例: 6→7）</li>
+        <li>複数ブランド: <code>app.config.reverse-hack.json</code> + パッケージ別 assetlinks fingerprint</li>
       </ul>
       <p>📷 画面付き手順 → <a href="walkthrough/ios/">iOS 追体験</a> ／ <a href="walkthrough/play/">Play 追体験</a></p>
     </div>
