@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Play Console 追体験（実画面つき） | Kimito-Link</title>
-  <meta name="description" content="Google Play Console でアプリの枠を作って本番審査まで送る手順を、実際の画面キャプチャと自動化コマンド付きで追体験できる伴走ガイド。">
+  <title>Google Play Console 追体験（ゆっくり解説・実画面つき） | Kimito-Link</title>
+  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、Google Play Console の本番審査までの手順を追体験。実画面キャプチャと URL 付き。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,6 +55,17 @@
     .url-list li:last-child { border-bottom: none; }
     .url-list .label { display: block; font-weight: 700; color: #15222c; margin-bottom: 2px; }
     .url-list a { word-break: break-all; font-size: .92em; }
+    .talk { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef1f6; }
+    .talk img { width: 52px; height: 52px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); background:#fff; }
+    .talk.link { border-left: 4px solid #1976d2; }
+    .talk.kon { border-left: 4px solid #e8772e; }
+    .talk.tanu { border-left: 4px solid #7e57c2; }
+    .char-name { font-weight: 800; font-size: .86em; margin-bottom: 2px; }
+    .talk.link .char-name { color: #0d47a1; }
+    .talk.kon .char-name { color: #b85c1a; }
+    .talk.tanu .char-name { color: #5e3aa6; }
+    .talk p { font-size: .95em; }
+    .panel-label { font-size: .78em; font-weight: 800; color: #7a8494; text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 8px; }
     .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
     .done-banner h2 { font-size: 1.3em; }
     .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
@@ -69,21 +80,26 @@
     <a class="top-link" href="../../">← トップにもどる</a>
 
     <div class="hero">
-      <h1>Google Play Console 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <p class="sub">kimito 実証（2026-06）＋ <b>リバースハック WEB健康診断</b> 本番審査送信（2026-06）の知見を反映。<br>AAB・assetlinks・ストア素材はキット（AI/CI）が先に済ませる前提。<br><a href="#urls">🔗 対応 URL 一覧はこちら</a></p>
+      <h1>Google Play Console 追体験<br>― ゆっくり解説・実画面つき ―</h1>
+      <p class="sub">りんく・こん太・たぬ姉が、<b>人間が触る画面だけ</b>を順番に説明するよ。<br>リバースハック WEB健康診断の本番審査送信までの実証知見つき。<br><a href="#urls">🔗 対応 URL 一覧はこちら</a></p>
       <div class="progress">
         <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span>
         <span>④ IDと指紋</span><span>⑤ 申告</span><span>⑥ 製品版送信</span><span>⑦ 待つ</span>
       </div>
     </div>
 
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Play Console って、画面が多くて迷子になりがちなんだ。でも<b>人間がやることは決まってる</b>から、実際のスクショと URL を並べて追体験できるようにしたよ。</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>で、AAB とか assetlinks とか重い作業は？</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>それは<b>キット（AI / CI）が先に済ませる</b>の。人間は「申告を埋める」と「最後の審査送信ボタン」を押すくらいでいいわ。適当にぽちぽちは禁物よ。</p></div></div>
+
     <div class="note">
-      🧭 <b>値は全部「そのアプリ専用」。</b>自分のアプリでは <code>app.config.json</code>（または <code>app.config.reverse-hack.json</code>）の
-      <b>displayName</b>・<b>playPackageName</b> に読み替えてね。<b>複数ブランド</b>はパッケージ名が違えば Play 上は<b>別アプリ</b>。
+      🧭 <b>値は全部「そのアプリ専用」。</b><code>app.config.json</code> か <code>app.config.reverse-hack.json</code> の
+      <b>displayName</b>・<b>playPackageName</b> に読み替えてね。<b>パッケージ名が違えば Play 上は別アプリ</b>（partner ≠ webhealth）。
     </div>
 
     <!-- URL index -->
     <div class="url-index" id="urls">
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>まず<b>URL 一覧</b>。迷ったらここから該当画面を開きなさい。ログインは Google アカウントでね。</p></div></div>
       <h2>🔗 URL 一覧（クリックで開く）</h2>
       <p style="font-size:.88em;color:#5a6573;margin-bottom:8px;">Play Console はログイン後に開く。パッケージ名入り URL は RH 実証で動作確認済み。</p>
 
@@ -190,6 +206,8 @@
           <div class="st-sub">人間が Console を開く前に終わっている部分（web-health-check-app リポ）</div>
         </div>
       </div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>Step 0 は<b>人間の前</b>にキットが終わらせる作業。AAB・スクショ・assetlinks・プロモ動画まで、コマンド一発で用意できるよ。</p></div></div>
+      <div class="panel-label">📋 キットが先に用意するもの</div>
       <ul class="tidy">
         <li>署名済み <b>AAB</b>（CI: <code>android-twa-release.yml</code> → Play に upload）</li>
         <li>本番 <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a>（Play 署名鍵 SHA-256 を SSOT に反映）</li>
@@ -221,6 +239,8 @@
           <div class="st-sub"><a href="https://play.google.com/console" target="_blank" rel="noopener">play.google.com/console</a> →「アプリを作成」</div>
         </div>
       </div>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>最初は <a href="https://play.google.com/console" target="_blank" rel="noopener">Play Console</a> で<b>アプリの枠</b>を作るだけだ。5分もかからねえ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>パッケージ名は<b>AAB と完全一致</b>。間違えるとあとから直せないから、<code>app.config</code> を見ながらコピペしなさい。</p></div></div>
       <div class="note">📷 この画面のキャプチャは無し（枠を作る前は中に入れない）。表どおり入力 → 申告2つにチェック →「アプリを作成」。</div>
       <table class="vals">
         <tr><th>アプリ名</th><td><code>identity.displayName</code><br>例: 君斗りんくのWEBサイト健康診断 / リバースハック WEB健康診断</td></tr>
@@ -239,6 +259,8 @@
           <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a>で「アプリのセットアップ」を 5/5 に</div>
         </div>
       </div>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>枠ができたら <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a> に「やることリスト」が出る。申告タスクが並んでて怖いけど、<b>先に AAB を上げてもOK</b>だよ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>大事なのは<b>5/5 になるまで「審査に送信」がグレー</b>のままってこと。入力しただけで「保存」「送信」を忘れる人が多いの。適当にぽちぽち禁止よ。</p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/02-dashboard.png" alt="作成直後のダッシュボード" loading="lazy">
         <div class="cap">📷 kimito 実証: 作成直後。申告タスクが並ぶが<b>先に AAB を上げてOK</b></div>
@@ -262,6 +284,8 @@
           <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a> → リリースを作成</div>
         </div>
       </div>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>まず <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a> に AAB を載せる。CI が upload 済みなら<b>ライブラリから選ぶだけ</b>だ。</p></div></div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>黄色い警告は<b>無視して保存</b>で大丈夫。止まるのは赤エラーだけ。内部テストを送っても<b>本番公開にはならない</b>から、Step 6 まで忘れないでね。</p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/03-internal-test-upload.png" alt="ライブラリから App Bundle を追加" loading="lazy">
         <div class="cap">📷 ライブラリから AAB にチェック →「リリースに追加」</div>
@@ -286,6 +310,8 @@
           <div class="st-sub">これで playAppId と assetlinks が自動配線される</div>
         </div>
       </div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>ここは<b>コピペ2回</b>で自動化がつながるわ。① Console URL から playAppId、② <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">アプリの署名</a> の 📋 ボタンで SHA-256 全文。</p></div></div>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>スクショで指紋渡すな！ 画面で<b>後半が切れる</b>から assetlinks が無効になって、アプリ上部にアドレスバーが出っぱなしになるぞ。</p></div></div>
       <table class="vals">
         <tr><th>① playAppId</th><td>Console URL の <code>/app/【数字】/</code> 部分 → <code>stores.playAppId</code></td></tr>
         <tr><th>② SHA-256</th><td>
@@ -308,6 +334,8 @@
           <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> — 回答は docs、操作は下の順</div>
         </div>
       </div>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Step 5 がいちばん長い。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> を<b>この順番</b>で埋めて、各画面で必ず「保存」か「送信」まで押してね。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>回答文は GitHub の docs に全部書いてあるから<b>コピペでOK</b>。自分で考えなくていいわ。データの安全性は「保存」じゃなく<b>「送信」</b>まで。広告 ID は「いいえ」。</p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/08-store-listing.png" alt="ストアの掲載情報" loading="lazy">
         <div class="cap">📷 ストア掲載: テキスト・画像は <code>store-assets/</code> から API または手動アップロード</div>
@@ -348,6 +376,8 @@
           <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> →「○件の変更を審査に送信」</div>
         </div>
       </div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>いよいよ本番。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> の<b>「○件の変更を審査に送信」</b>を押すまで、審査は始まらないよ。RH 実証では 9 件まとめて送った。</p></div></div>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>製品版が「下書き」のまま見えても、送信前は正常だ。送信後に「<b>審査中の変更</b>」になれば、人間の仕事は終わり。あとは Google を待つだけだな。</p></div></div>
       <ol class="tidy">
         <li><b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">製品版</a></b> — v7 draft に AAB が載っていることを確認</li>
         <li><b>国や地域を選択</b> — 日本（＋必要なら「その他すべての国」）→ 保存</li>
@@ -395,8 +425,8 @@
           <div class="st-sub">2023-11-13 以降の個人開発者アカウントで本番アクセス申請が必要な場合</div>
         </div>
       </div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>2023年11月以降の<b>個人開発者アカウント</b>だけ、別ルートがあるの。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a>で 12人×14日。内部テストは<b>カウントされない</b>わ。</p></div></div>
       <div class="warn">
-        ダッシュボードに<b>「より多くのテスターでアプリをテスト」</b>（1/5 等）が出ていたら:<br>
         ① <b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a></b>（<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a>は<b>カウントされない</b>）<br>
         ② テスター <b>12人以上</b> が opt-in<br>
         ③ <b>連続14日</b> 維持<br>
@@ -415,6 +445,7 @@
           <div class="st-sub">適当にぽちぽちで起きがちな症状</div>
         </div>
       </div>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>つまずいたらこの表。症状 → 原因 → 直し方。迷ったら <a href="#urls">URL 一覧</a> から該当画面を開け。</p></div></div>
       <table class="vals">
         <tr><th>症状</th><th>原因</th><th>対処</th></tr>
         <tr><td>送信ボタンがグレー</td><td>ダッシュボード未完了</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a> 5/5。Step 5 を順番どおり</td></tr>
@@ -428,14 +459,18 @@
 
     <div class="done-banner">
       <h2>🎉 人間の Play Console 作業、これで全部</h2>
-      <p>枠を作る → AAB を載せる → 値2つコピペ → 申告（順番固定）→ 製品版を審査送信。<br>素材・listing・AAB upload・審査見張りはキット / CI が引き受ける。</p>
+      <p>枠を作る → AAB を載せる → 値2つコピペ → 申告（順番固定）→ 製品版を審査送信。</p>
     </div>
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">りんく</div><p>素材・listing・AAB upload・審査見張りはキット / CI が引き受けるから、次のアプリも同じ流れでいけるよ！</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">こん太</div><p>iOS 版は <a href="../ios/">iOS 追体験</a> だ。Android 通ったら SNS 投稿は審査後でも間に合うぞ。</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">たぬ姉</div><p>わからなくなったら <a href="../../story/">ものがたり</a> でキット全体像を復習しなさい。それでは、ゆっくりしていってね。</p></div></div>
 
     <div class="note" style="margin-top:22px;">
       🔗 <b>関連</b>:
       <a href="#urls" style="font-weight:700;">URL 一覧</a> ／
       <a href="../" style="font-weight:700;">追体験トップ</a> ／
       <a href="../ios/" style="font-weight:700;">iOS 追体験</a> ／
+      <a href="../../story/" style="font-weight:700;">ゆっくりものがたり</a> ／
       <a href="../../learnings/" style="font-weight:700;">実証知見</a> ／
       <a href="../../troubleshooting/" style="font-weight:700;">つまずいたら</a> ／
       <a href="../../guide/" style="font-weight:700;">準備ガイド</a>
