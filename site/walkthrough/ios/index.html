@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>App Store Connect 追体験（ゆっくり解説・実画面つき） | Kimito-Link</title>
-  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、App Store 申請を上から ①→②→③ の順で。Mac 不要・実画面キャプチャ付き。">
+  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、App Store 申請を ①→⑤ の順で。Mac 不要・実画面キャプチャ付き。配信地域175か国も CI 自動。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -222,7 +222,7 @@
       <a href="#step-2"><span class="r-num">②</span>枠を作る</a>
       <a class="once" href="#step-3"><span class="r-num">③</span>App Privacy</a>
       <a class="prep" href="#step-4"><span class="r-num">④</span>push（キット）</a>
-      <a class="opt" href="#step-5"><span class="r-num">⑤</span>通過後 配信</a>
+      <a class="prep" href="#step-5"><span class="r-num">⑤</span>配信地域（自動）</a>
     </nav>
 
     <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>iOS は Android より<b>初回だけ</b>手順が多いけど、<b>2回目以降は push するだけ</b>だよ。①〜③ を終えれば、あとはキット任せ。</p></div></div>
@@ -248,13 +248,24 @@
         <span class="label">今やること</span>
         <p>何もしなくてOK。人間は ① から始めてね。</p>
       </div>
-      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>Capacitor iOS ビルド・スクショ30枚・説明文・Review Notes・審査提出まで、<code>ios-appstore-release.yml</code> が自動でやるよ。</p></div></div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>Capacitor iOS ビルド・スクショ30枚・説明文・Review Notes・審査提出・<b>配信地域175か国</b>まで、<code>ios-appstore-release.yml</code> が自動でやるよ。</p></div></div>
       <ul class="tidy">
         <li>iOS ビルド（GitHub Actions・macOS ランナー・<b>Mac 不要</b>）</li>
+        <li>ブランド別アイコン生成（RH は <code>generate-app-icon-reverse-hack.mjs</code>）</li>
         <li>アイコン・スクショ（iPhone / iPad）の生成と ASC アップロード</li>
         <li>説明文・年齢レーティング・価格（無料）の API 同期</li>
         <li>審査提出（<code>WAITING_FOR_REVIEW</code> まで）</li>
+        <li>配信地域（全世界 175/175・日本含む）— <code>appstore-submit.mjs</code> の [7g]</li>
       </ul>
+      <details class="details-toggle">
+        <summary>▶ 配信地域だけ軽く直したいとき（タップで開く）</summary>
+        <p style="margin:10px 0 8px;">フルビルドなしで全世界配信だけ設定する軽量ジョブ:</p>
+        <ul class="tidy">
+          <li>GitHub Actions → <code>asc-set-availability</code> → brand を選んで Run</li>
+          <li>ローカル: <code>npm run asc:set-availability:reverse-hack</code>（ASC API キー要）</li>
+        </ul>
+        <p style="margin-top:8px;font-size:.92em;color:#5a6573;">成功ログ: <code>worldwide availability OK (175/175 territories, JPN=yes)</code></p>
+      </details>
       <div class="warn">RH ブランドで CI を動かすときは、GitHub Actions → <code>ios-appstore-release</code> → <b>brand = reverse-hack</b> を選ぶ。Secret <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> が別途必要。</div>
       <div class="step-next">準備は読むだけ → 次は <a href="#step-1">① 署名（初回）</a></div>
     </div>
@@ -346,7 +357,7 @@
         <tr><th>項目</th><th>RH 例</th><th>kimito 例</th></tr>
         <tr><th>名前</th><td>リバースハック WEB健康診断</td><td>君斗りんくのWEBサイト健康診断</td></tr>
         <tr><th>Bundle ID</th><td><code>com.reversehack.webhealth</code></td><td><code>com.kimito.link.webhealthcheck</code></td></tr>
-        <tr><th>ascAppId</th><td>② で取得 → config に記入</td><td><code>6779860644</code>（済）</td></tr>
+        <tr><th>ascAppId</th><td><code>6780161483</code>（実証）</td><td><code>6779860644</code>（済）</td></tr>
       </table>
       <div class="step-next">✅ 枠ができたら → 次は <a href="#step-3">③ App Privacy</a></div>
     </div>
@@ -396,34 +407,43 @@
       <ol class="mini-steps">
         <li><span class="mini-n">1</span><span>GitHub → Actions → <code>ios-appstore-release</code></span></li>
         <li><span class="mini-n">2</span><span>RH なら <b>brand = reverse-hack</b> を選択 → Run</span></li>
-        <li><span class="mini-n">3</span><span>成功ログ: <code>final state=WAITING_FOR_REVIEW</code></span></li>
+        <li><span class="mini-n">3</span><span>成功ログ: <code>final state=WAITING_FOR_REVIEW</code> と <code>availability applied: 175 territories</code>（または [7g] OK）</span></li>
         <li><span class="mini-n">4</span><span>App Store Connect で「Waiting for Review」を目視確認</span></li>
       </ol>
-      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>アイコンを変えたいときは <code>release-assets/…/app-icon-1024.png</code> をコミットして push するだけ。CI が全サイズ生成してくれるよ。</p></div></div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>アイコンを変えたいときは <code>release-assets/…/app-icon-1024.png</code>（1024px マスター）をコミットして push するだけ。CI が全サイズ生成してくれるよ。<b>512px を 1024 に上書きしない</b>よう注意（RH 実証で CI が落ちた罠）。</p></div></div>
       <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ ④ のゴールは<b>審査待ち</b>のこの画面。kimito 実証:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/ios/version/inflight" target="_blank" rel="noopener">…/apps/6779860644/distribution/ios/version/inflight</a><span class="alt">RH: ascAppId に置き換え</span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/ios/05-waiting-review.png" alt="Waiting for Review" loading="lazy">
         <div class="cap">📷 build · <b>Waiting for Review</b> ＝ 人間の作業は完了 → あとは Apple を待つ</div>
       </div>
-      <div class="ok">✅ ここまで来たら、初回の iOS 人間作業は<b>全部完了</b>。2回目以降は push だけ。</div>
-      <div class="step-next">🎉 審査待ちになったら → 通過後は <a href="#step-5">⑤ 配信地域</a></div>
+      <div class="ok">✅ ここまで来たら、初回の iOS 人間作業は<b>全部完了</b>。2回目以降は push するだけ。配信地域も CI が自動設定する。</div>
+      <div class="step-next">🎉 審査待ちになったら → 任意で <a href="#step-5">⑤ 配信地域の確認</a></div>
     </div>
 
     <!-- ⑤ -->
     <div class="step" id="step-5">
       <div class="st-head">
-        <div class="st-num opt">⑤</div>
+        <div class="st-num ai">⑤</div>
         <div>
-          <div class="st-title">（審査通過後）配信地域をオン <span class="who human">人間</span></div>
-          <div class="st-sub">未設定だとダウンロードできない（最大24h）</div>
+          <div class="st-title">配信地域（全世界） <span class="who ai">キット（自動）</span> <span class="who skip">確認だけ任意</span></div>
+          <div class="st-sub"><code>asc-set-availability</code> / submit [7g] — 175か国・日本含む</div>
         </div>
       </div>
       <div class="now-do">
         <span class="label">今やること</span>
-        <p>審査<b>通過後</b>に、価格と配信可能状況 → 配信地域をオンにする。</p>
+        <p>基本は<b>何もしなくてOK</b>。④ の CI が全世界配信を設定する。念のため ASC の価格画面で 175 か国を目視確認する程度。</p>
       </div>
-      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>審査中にやる必要はないわ。通ったあとでいいの。忘れると「審査は通ったのに DL できない」ってなるから気をつけて。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>価格と配信可能状況</b>。kimito 実証:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/pricing" target="_blank" rel="noopener">…/apps/6779860644/distribution/pricing</a></p></div></div>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>API だけの提出だと「配信地域 0」のまま審査通過 → DL 不可、が起きうるから、キットは <code>POST /v2/appAvailabilities</code> で<b>175/175 自動適用</b>するよ（2026-06 実証済み）。</p></div></div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">A</span><span>④ 成功時 — <code>appstore-submit.mjs</code> の [7g] が自動実行（追加操作不要）</span></li>
+        <li><span class="mini-n">B</span><span>配信だけ直したい — Actions → <code>asc-set-availability</code> → brand 選択 → Run</span></li>
+        <li><span class="mini-n">C</span><span>ローカル — <code>npm run asc:set-availability:reverse-hack</code> または <code>:kimito</code></span></li>
+        <li><span class="mini-n">✓</span><span>任意確認 — 下の ASC 価格画面で「すべての国または地域」相当になっているか</span></li>
+      </ol>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>昔は審査通過後に人間が ASC で国を選んでた。今は API で先に全世界を入れられる。審査中でも OK だ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>審査通過を待たなくていいの。ただし反映に数時間かかることはあるから、DL できないときは <a href="../../troubleshooting/">つまずいたら</a> も見てね。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 任意の目視確認は<b>価格と配信可能状況</b>。kimito 実証:<br><a href="https://appstoreconnect.apple.com/apps/6779860644/distribution/pricing" target="_blank" rel="noopener">…/apps/6779860644/distribution/pricing</a><span class="alt">RH 実証: <a href="https://appstoreconnect.apple.com/apps/6780161483/distribution/pricing" target="_blank" rel="noopener">…/apps/6780161483/distribution/pricing</a></span></p></div></div>
+      <div class="ok">✅ CI ログに <code>175/175 territories</code> が出ていれば、手で国を選ぶ作業は<b>不要</b>。</div>
     </div>
 
     <!-- つまずき -->
@@ -442,13 +462,15 @@
         <tr><td>CI submit が 409</td><td><a href="#step-3">③</a> → App Privacy を<b>公開</b>まで</td></tr>
         <tr><td>RH で profile エラー</td><td><a href="#step-1">①</a> → <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> を登録</td></tr>
         <tr><td>ascAppId 未設定</td><td><a href="#step-2">②</a> → 枠作成 → config に数字を記入</td></tr>
-        <tr><td>審査通過なのに DL 不可</td><td><a href="#step-5">⑤</a> → 配信地域をオン</td></tr>
+        <tr><td>審査通過なのに DL 不可</td><td><a href="#step-5">⑤</a> → <code>asc-set-availability</code> を再実行 → ASC 価格画面で確認（最大24h）</td></tr>
+        <tr><td>CI アイコン 75KB エラー</td><td>1024px マスター（<code>release-assets/…/app-icon-1024.png</code>）を使う。512px で上書きしない</td></tr>
+        <tr><td>配信地域 API 403</td><td><code>GET /v2/appAvailabilities?filter[app]=</code> は禁止。キットは <code>appAvailabilityV2</code> 経路を使う（2026-06 修正済み）</td></tr>
       </table>
     </div>
 
     <div class="done-banner">
       <h2>🎉 iOS 人間の仕事、これで全部</h2>
-      <p>初回: ① 署名 → ② 枠 → ③ Privacy → ④ push<br>2回目以降: push するだけ</p>
+      <p>初回: ① 署名 → ② 枠 → ③ Privacy → ④ push（配信地域も自動）<br>2回目以降: push するだけ</p>
     </div>
     <div class="talk link"><img src="../../images/link-smile.png" alt="りんく" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">りんく</div><p>Android 版は <a href="../play/">Play 追体験</a> だ。RH は Android 審査中だから、iOS も同じ ①〜④ で並行できるよ！</p></div></div>
     <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">こん太</div><p>詳細コマンドは <code>_docs/ios-human-tasks.md</code> と <code>_docs/reverse-hack-mobile-runbook.md</code> だ。</p></div></div>

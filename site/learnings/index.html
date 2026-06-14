@@ -60,10 +60,13 @@
       <ul>
         <li><code>ios-appstore-release.yml</code> → ビルド → IPA → スクショ30枚 → <code>appstore-submit.mjs</code></li>
         <li>成功: <code>WAITING_FOR_REVIEW</code></li>
+        <li><b>配信地域</b>: submit [7g] で全世界 175/175（日本含む）— 審査通過を待たず API 適用可</li>
+        <li>軽量のみ: <code>asc-set-availability.yml</code> または <code>npm run asc:set-availability:*</code></li>
+        <li>マルチブランド: <code>workflow_dispatch</code> で <code>brand=reverse-hack</code> + <code>IOS_APPSTORE_PROFILE_RH_BASE64</code></li>
       </ul>
       <div class="warn">
-        <b>審査通過後</b>だけ: 配信地域をオン（未設定だと DL 不可・最大24h）。<br>
-        <b>アイコン差し替え</b>: 審査中は旧 build が紐付く → 提出取下げ → 新 build link → 再 submit。
+        <b>配信地域 0 の罠</b>: API 提出だけだと国未設定のまま通過しうる → キットは [7g] で自動設定（2026-06 実証）。<br>
+        <b>アイコン差し替え</b>: 1024px マスターを使う。512px で 1024 を上書きすると CI の 75KB チェックが落ちる（RH 実証）。
       </div>
       <h3>アイコン方針（実証）</h3>
       <p>会社ロゴ文字は小サイズで潰れる → <b>紺地 + 白抜きルーペ+チェック</b>（<code>generate-app-icon.mjs</code>）</p>
@@ -113,7 +116,7 @@
     <h2>Secrets 一覧（コピペ用）</h2>
     <table>
       <tr><th>用途</th><th>Secret 名</th></tr>
-      <tr><td>iOS 署名</td><td><code>IOS_DIST_CERT_*</code> / <code>IOS_APPSTORE_PROFILE_BASE64</code> / <code>APPLE_TEAM_ID</code></td></tr>
+      <tr><td>iOS 署名</td><td><code>IOS_DIST_CERT_*</code> / <code>IOS_APPSTORE_PROFILE_BASE64</code> / <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> / <code>APPLE_TEAM_ID</code></td></tr>
       <tr><td>ASC API</td><td><code>APPSTORE_CONNECT_KEY_ID</code> / <code>ISSUER_ID</code> / <code>API_KEY_P8_BASE64</code></td></tr>
       <tr><td>Android</td><td><code>ANDROID_KEYSTORE_*</code> / <code>GOOGLE_PLAY_SA_JSON_BASE64</code></td></tr>
       <tr><td>Chrome</td><td><code>.env.cws</code>（リポジトリ外・gitignore）</td></tr>

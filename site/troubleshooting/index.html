@@ -249,12 +249,20 @@
       <p><strong>配信する国（配信地域）が設定されていない</strong>のが原因。審査の合否と「どの国で配信するか」は別の設定です。新しいアプリで地域を選んでいないと、承認されても誰もダウンロードできません。</p>
     </div>
     <div class="qa qa-fix">
-      <div class="qa-label">▼ 直し方（約2分）</div>
+      <div class="qa-label">▼ 直し方（キット優先 → 手動は予備）</div>
+      <p style="margin-bottom:10px;"><strong>まずキットで全世界配信を API 設定</strong>（2026-06 実証。審査通過前でも可）:</p>
+      <ol class="fix-steps">
+        <li>GitHub Actions → <code>asc-set-availability</code> → brand を選んで Run</li>
+        <li>またはローカル: <code>npm run asc:set-availability:reverse-hack</code>（kimito は <code>:kimito</code>）</li>
+        <li>成功ログ: <code>worldwide availability OK (175/175 territories, JPN=yes)</code></li>
+        <li>④ <code>ios-appstore-release</code> 成功時も submit [7g] で同じ設定が走る</li>
+      </ol>
+      <p style="margin:12px 0 8px;">📷 手順の全体像 → <a href="../walkthrough/ios/" style="color:#1565c0;font-weight:700;">App Store 追体験（実画面）</a></p>
+      <p style="margin-bottom:8px;"><strong>それでも DL できないとき</strong>（反映待ち or 未設定の確認）:</p>
       <ol class="fix-steps">
         <li>App Store Connect でアプリを開く</li>
         <li>「価格および配信状況」を開く</li>
-        <li>「アプリの配信状況」→「配信状況の設定」</li>
-        <li>「すべての国または地域」を選んで確定</li>
+        <li>「すべての国または地域」相当になっているか確認（なければ手動で選んで確定）</li>
         <li>反映は最大24時間（多くは数時間以内）</li>
       </ol>
     </div>
@@ -319,7 +327,7 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256</pre>
   <div class="checklist">
     <h2>✅ 承認メールが来たら、これを確認</h2>
     <ul>
-      <li><strong>iPhone</strong>：配信地域が設定済みか（未設定だとDLできない）</li>
+      <li><strong>iPhone</strong>：配信地域が 175/175 相当か（キット <code>asc-set-availability</code> または submit [7g]）</li>
       <li><strong>iPhone</strong>：実機の App Store で検索 or 直リンクからDLできるか</li>
       <li><strong>Android</strong>：製品版が「審査に送信済み」か（作っただけで止まっていないか）</li>
       <li>反映には時差あり（数時間〜24時間）。すぐ出なくても焦らない</li>
@@ -330,7 +338,7 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256</pre>
   <!-- まとめ -->
   <div class="summary">
     <h2>💡 覚えておく3つのこと</h2>
-    <div class="point"><span class="pn">1</span><span class="pt"><strong>承認 ≠ 公開</strong>：iPhoneは「配信地域」、Androidは「審査送信」という別の一歩があります。</span></div>
+    <div class="point"><span class="pn">1</span><span class="pt"><strong>承認 ≠ 公開</strong>：iPhoneは「配信地域」（キットが API 自動設定・未設定だと DL 不可）、Androidは「審査送信」という別の一歩があります。</span></div>
     <div class="point"><span class="pn">2</span><span class="pt"><strong>反映には時差</strong>：OKが出ても、実機でDLできるまで数時間〜24時間かかります。</span></div>
     <div class="point"><span class="pn">3</span><span class="pt"><strong>困ったらAIに</strong>：エラー画面をスクショして「これ直して」と渡せば、たいてい解決します。</span></div>
   </div>

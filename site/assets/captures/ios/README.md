@@ -10,7 +10,13 @@
 | `02-asc-api-keys.png` | App Store Connect API キー（Team Keys） |
 | `03-apps-new-app.png` | 新規 App 作成フォーム |
 | `04-app-privacy.png` | App のプライバシー「収集しない」→ 公開 |
-| `05-waiting-review.png` | build 10 · Waiting for Review |
+| `05-waiting-review.png` | build · Waiting for Review |
+
+## ⑤ 配信地域（スクショなし・API 自動）
+
+審査提出 CI（`appstore-submit.mjs` [7g]）または軽量ジョブ `asc-set-availability` で **175/175 地域**を設定。  
+追体験ページ Step ⑤ を参照。目視確認 URL 例:  
+`https://appstoreconnect.apple.com/apps/6780161483/distribution/pricing`（RH）
 
 ## 再生成
 
