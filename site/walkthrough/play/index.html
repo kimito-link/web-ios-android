@@ -4,76 +4,194 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Google Play Console 追体験（ゆっくり解説・実画面つき） | Kimito-Link</title>
-  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、Google Play Console の本番審査までの手順を追体験。実画面キャプチャと URL 付き。">
+  <meta name="description" content="りんく・こん太・たぬ姉のゆっくり解説で、Google Play Console の本番審査までを上から順番に。実画面キャプチャと URL 付き。">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #f7f7fb; color: #1a1a1a;
+      line-height: 1.85; font-size: 17px;
+    }
     .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
-    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
-    .hero { text-align: center; padding: 28px 16px 8px; }
-    .hero h1 { font-size: 1.6em; line-height: 1.4; color: #15222c; }
-    .hero .sub { margin-top: 10px; color: #5a6573; font-size: .95em; }
-    .progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
-    .progress span { font-size: .68em; color: #8a94a3; border: 1px solid #dfe3ea; border-radius: 999px; padding: 3px 10px; }
-    .step { background: #fff; border: 1px solid #e7eaf0; border-radius: 16px; padding: 22px 20px; margin: 22px 0; box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04); }
-    .st-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .st-num { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #1565c0; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05em; }
-    .st-num.ai { background: #2e7d32; }
-    .st-num.opt { background: #7b8794; }
-    .st-title { font-size: 1.18em; font-weight: 800; color: #15222c; }
-    .st-sub { color: #7a8494; font-size: .82em; margin-top: 2px; }
-    .who { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 9px; border-radius: 999px; color: #fff; vertical-align: middle; margin-left: 8px; }
+    .top-link {
+      display: inline-block; margin-bottom: 18px; color: #1565c0;
+      text-decoration: none; font-weight: 700; font-size: 1em;
+      min-height: 44px; line-height: 44px;
+    }
+    .hero { text-align: center; padding: 28px 16px 12px; }
+    .hero h1 { font-size: 1.55em; line-height: 1.45; color: #15222c; }
+    .hero .sub { margin-top: 12px; color: #3d4a5c; font-size: 1.02em; }
+    .how-to {
+      background: #fff; border: 2px solid #7e57c2; border-radius: 16px;
+      padding: 18px 16px; margin: 20px 0 8px; text-align: left;
+    }
+    .how-to h2 { font-size: 1.05em; color: #5e3aa6; margin-bottom: 8px; }
+    .how-to ol { padding-left: 1.4em; font-size: 1em; }
+    .how-to li { margin: 6px 0; }
+    .roadmap {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin: 22px 0 10px;
+    }
+    .roadmap a {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 2px solid #dfe3ea; border-radius: 14px;
+      padding: 12px 14px; text-decoration: none; color: #15222c;
+      font-weight: 700; font-size: .95em; min-height: 56px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .roadmap a:hover, .roadmap a:focus {
+      border-color: #1565c0; box-shadow: 0 4px 12px rgba(21,101,192,.15);
+      text-decoration: none;
+    }
+    .roadmap a.prep { border-style: dashed; color: #2e7d32; border-color: #a5d6a7; }
+    .roadmap a.opt { border-color: #cfd8dc; font-weight: 600; color: #5a6573; }
+    .roadmap .r-num {
+      flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: 1em;
+    }
+    .roadmap a.prep .r-num { background: #2e7d32; font-size: .82em; }
+    .roadmap a.opt .r-num { background: #7b8794; font-size: .82em; }
+    .step {
+      background: #fff; border: 1px solid #e7eaf0; border-radius: 16px;
+      padding: 22px 20px; margin: 28px 0;
+      box-shadow: 0 1px 3px rgba(20,30,50,.06), 0 8px 22px rgba(20,30,50,.04);
+      scroll-margin-top: 16px;
+    }
+    .st-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+    .st-num {
+      flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: 1.15em;
+    }
+    .st-num.ai { background: #2e7d32; font-size: .9em; }
+    .st-num.opt { background: #7b8794; font-size: 1em; }
+    .st-title { font-size: 1.22em; font-weight: 800; color: #15222c; line-height: 1.35; }
+    .st-sub { color: #5a6573; font-size: .92em; margin-top: 4px; }
+    .who {
+      display: inline-block; font-size: .72em; font-weight: 800;
+      padding: 3px 10px; border-radius: 999px; color: #fff;
+      vertical-align: middle; margin-left: 6px;
+    }
     .who.human { background: #e8772e; }
     .who.ai { background: #2e7d32; }
-    .shot { margin: 14px 0; border: 1px solid #e7eaf0; border-radius: 12px; overflow: hidden; background: #fbfcfe; }
+    .who.skip { background: #7b8794; }
+    .now-do {
+      background: #fff8e1; border: 2px solid #ffb300; border-radius: 14px;
+      padding: 16px 18px; margin: 0 0 16px; font-size: 1.05em;
+    }
+    .now-do .label {
+      display: block; font-weight: 800; color: #e65100;
+      font-size: .88em; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .now-do p { color: #3e2723; font-weight: 700; }
+    .mini-steps { list-style: none; padding: 0; margin: 0 0 16px; }
+    .mini-steps li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid #eef1f6;
+      font-size: 1em;
+    }
+    .mini-steps li:last-child { border-bottom: none; }
+    .mini-n {
+      flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+      background: #1565c0; color: #fff; font-weight: 800; font-size: .85em;
+      display: flex; align-items: center; justify-content: center; margin-top: 2px;
+    }
+    .step-next {
+      background: #e3f2fd; border: 1px solid #90caf9; border-radius: 12px;
+      padding: 14px 16px; margin-top: 16px; text-align: center;
+      font-weight: 800; color: #0d47a1; font-size: 1.02em;
+    }
+    .step-next a { color: #0d47a1; }
+    .action-btn {
+      display: inline-block; background: #1565c0; color: #fff !important;
+      padding: 14px 22px; border-radius: 12px; font-weight: 800;
+      font-size: 1em; text-decoration: none; margin: 8px 0;
+      min-height: 48px; line-height: 1.3;
+    }
+    .action-btn:hover { background: #0d47a1; text-decoration: none; }
+    .shot {
+      margin: 14px 0; border: 2px solid #e7eaf0; border-radius: 12px;
+      overflow: hidden; background: #fbfcfe;
+    }
     .shot img { display: block; width: 100%; height: auto; }
-    .shot .cap { font-size: .8em; color: #7a8494; padding: 8px 12px; border-top: 1px solid #eef1f6; background: #fff; }
-    .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1a3a5c; }
+    .shot .cap {
+      font-size: .92em; color: #3d4a5c; padding: 10px 14px;
+      border-top: 1px solid #eef1f6; background: #fff;
+    }
+    .note {
+      background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #1a3a5c;
+    }
     .note b { color: #0d47a1; }
-    .warn { background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #6b5200; }
-    .ok { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 12px; padding: 12px 14px; margin: 14px 0; font-size: .9em; color: #1b5e20; }
+    .warn {
+      background: #fcf4dd; border: 1px solid #f0dca0; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #5d4037;
+    }
+    .ok {
+      background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 12px;
+      padding: 14px 16px; margin: 14px 0; font-size: .98em; color: #1b5e20;
+    }
     ul.tidy { margin: 10px 0 4px; padding-left: 1.2em; }
-    ul.tidy li { margin: 4px 0; font-size: .92em; }
+    ul.tidy li { margin: 6px 0; font-size: .98em; }
     ol.tidy { margin: 10px 0 4px; padding-left: 1.4em; }
-    ol.tidy li { margin: 6px 0; font-size: .92em; }
-    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .88em; }
-    table.vals th, table.vals td { border: 1px solid #e7eaf0; padding: 7px 10px; text-align: left; vertical-align: top; }
-    table.vals th { background: #f3f6fa; color: #15222c; white-space: nowrap; }
-    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; word-break: break-all; }
+    ol.tidy li { margin: 8px 0; font-size: .98em; }
+    table.vals { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .95em; }
+    table.vals th, table.vals td {
+      border: 1px solid #e7eaf0; padding: 10px 12px;
+      text-align: left; vertical-align: top;
+    }
+    table.vals th { background: #f3f6fa; color: #15222c; }
+    code {
+      background: #eef1f6; border-radius: 5px; padding: 2px 7px;
+      font-size: .88em; word-break: break-all;
+    }
     a { color: #1565c0; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .url-index { background: #fff; border: 2px solid #1565c0; border-radius: 16px; padding: 20px 18px; margin: 18px 0 22px; }
-    .url-index h2 { font-size: 1.1em; color: #0d47a1; margin-bottom: 12px; }
-    .url-index h3 { font-size: .95em; color: #15222c; margin: 16px 0 8px; }
-    .url-index .brand-tag { display: inline-block; font-size: .68em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
-    .url-index .brand-tag.kimito { background: #eef5ff; color: #1565c0; }
-    .url-index .brand-tag.rh { background: #e8f5e9; color: #2e7d32; }
-    .url-index .brand-tag.common { background: #f3f6fa; color: #5a6573; }
-    .url-list { list-style: none; padding: 0; margin: 0; }
-    .url-list li { font-size: .88em; margin: 6px 0; padding: 6px 0; border-bottom: 1px solid #eef1f6; line-height: 1.5; }
-    .url-list li:last-child { border-bottom: none; }
-    .url-list .label { display: block; font-weight: 700; color: #15222c; margin-bottom: 2px; }
-    .url-list a { word-break: break-all; font-size: .92em; }
-    .talk { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef1f6; }
-    .talk img { width: 52px; height: 52px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); background:#fff; }
-    .talk.link { border-left: 4px solid #1976d2; }
-    .talk.kon { border-left: 4px solid #e8772e; }
-    .talk.tanu { border-left: 4px solid #7e57c2; }
-    .char-name { font-weight: 800; font-size: .86em; margin-bottom: 2px; }
+    .talk {
+      display: flex; gap: 14px; align-items: flex-start;
+      margin: 14px 0; padding: 14px 16px; border-radius: 12px;
+      background: #f8fafc; border: 1px solid #eef1f6;
+    }
+    .talk img {
+      width: 56px; height: 56px; border-radius: 50%; flex: 0 0 auto;
+      object-fit: cover; border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1); background: #fff;
+    }
+    .talk.link { border-left: 5px solid #1976d2; }
+    .talk.kon { border-left: 5px solid #e8772e; }
+    .talk.tanu { border-left: 5px solid #7e57c2; }
+    .char-name { font-weight: 800; font-size: .92em; margin-bottom: 4px; }
     .talk.link .char-name { color: #0d47a1; }
     .talk.kon .char-name { color: #b85c1a; }
     .talk.tanu .char-name { color: #5e3aa6; }
-    .talk p { font-size: .95em; }
-    .talk.screen-url { background: #f3eef9; border: 1px solid #d1c4e9; margin-bottom: 6px; }
+    .talk p { font-size: 1em; }
+    .talk.screen-url {
+      background: #f3eef9; border: 2px solid #b39ddb; margin-bottom: 8px;
+    }
     .talk.screen-url a { font-weight: 700; word-break: break-all; }
-    .talk.screen-url .alt { font-size: .88em; color: #5a6573; margin-top: 6px; display: block; }
-    .done-banner { text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; padding: 26px 20px; margin-top: 26px; }
-    .done-banner h2 { font-size: 1.3em; }
-    .done-banner p { opacity: .92; margin-top: 8px; font-size: .92em; }
+    .talk.screen-url .alt {
+      font-size: .92em; color: #5a6573; margin-top: 8px; display: block;
+    }
+    .details-toggle { margin: 12px 0; }
+    .details-toggle summary {
+      cursor: pointer; font-weight: 700; color: #1565c0;
+      padding: 10px 0; font-size: .98em; min-height: 44px;
+    }
+    .done-banner {
+      text-align: center; background: linear-gradient(135deg,#1976d2,#0d47a1);
+      color: #fff; border-radius: 16px; padding: 28px 20px; margin-top: 28px;
+    }
+    .done-banner h2 { font-size: 1.35em; }
+    .done-banner p { opacity: .95; margin-top: 10px; font-size: 1em; }
     @media (max-width: 520px) {
-      .hero h1 { font-size: 1.35em; }
+      body { font-size: 16px; }
+      .hero h1 { font-size: 1.3em; }
+      .roadmap { grid-template-columns: 1fr; }
       table.vals th { white-space: normal; }
+      .st-num { width: 44px; height: 44px; font-size: 1.05em; }
     }
   </style>
 </head>
@@ -83,309 +201,363 @@
 
     <div class="hero">
       <h1>Google Play Console 追体験<br>― ゆっくり解説・実画面つき ―</h1>
-      <p class="sub">りんく・こん太・たぬ姉が、<b>人間が触る画面だけ</b>を順番に説明するよ。<br>各スクショの<b>直前</b>に、たぬ姉が「この画面の URL」を教えるから迷子にならない。</p>
-      <div class="progress">
-        <span>① 枠を作る</span><span>② ダッシュボード</span><span>③ AABを上げる</span>
-        <span>④ IDと指紋</span><span>⑤ 申告</span><span>⑥ 製品版送信</span><span>⑦ 待つ</span>
-      </div>
+      <p class="sub">りんく・こん太・たぬ姉が、<b>上から ① → ② → ③ …</b> の順で案内するよ。<br>飛ばさず、1つずつ進めれば、小学生のころからパソコンを触ってない人でも終われる。</p>
     </div>
 
-    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Play Console って、画面が多くて迷子になりがちなんだ。でも<b>人間がやることは決まってる</b>から、スクショの直前にたぬ姉が URL を教えてくれる追体験にしたよ。</p></div></div>
-    <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>で、AAB とか assetlinks とか重い作業は？</p></div></div>
-    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>URL は<b>一覧にまとめない</b>わ。スクショの<b>すぐ上</b>に「この画面はこの URL」と書くから、今どの画面を見てるかわかるでしょ。</p></div></div>
+    <div class="how-to">
+      <h2>📖 このページの使い方（3つだけ）</h2>
+      <ol>
+        <li><b>下の地図</b>の ① から順番に進める（飛ばさない）</li>
+        <li>各 Step の<b>「今やること」</b>を読んで、Play Console を操作する</li>
+        <li>スクショの<b>すぐ上</b>で、たぬ姉が「この画面の URL」を教えてくれる</li>
+      </ol>
+    </div>
+
+    <nav class="roadmap" aria-label="手順の地図">
+      <a class="prep" href="#step-0"><span class="r-num">準</span>準備（読むだけ）</a>
+      <a href="#step-1"><span class="r-num">①</span>アプリの枠を作る</a>
+      <a href="#step-2"><span class="r-num">②</span>ダッシュボード確認</a>
+      <a href="#step-3"><span class="r-num">③</span>中身（AAB）を載せる</a>
+      <a href="#step-4"><span class="r-num">④</span>2つコピペ</a>
+      <a href="#step-5"><span class="r-num">⑤</span>申告を埋める</a>
+      <a href="#step-6"><span class="r-num">⑥</span>本番を送る</a>
+      <a class="opt" href="#step-7"><span class="r-num">⑦</span>条件付き（任意）</a>
+    </nav>
+
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Play Console は画面がたくさんあるけど、<b>人間がやることは ①〜⑥ だけ</b>だよ。上から順に進めてね。</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>難しいビルドとか素材づくりは？</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>「準備」はキット（AI）が先にやるの。<b>あなたは ① からでいい</b>わ。各画面の URL は、スクショの<b>すぐ上</b>に書いてあるから、今どこを見てるか迷わないでしょ。</p></div></div>
 
     <div class="note">
-      🧭 <b>値は全部「そのアプリ専用」。</b><code>app.config.json</code> か <code>app.config.reverse-hack.json</code> の
-      <b>displayName</b>・<b>playPackageName</b> に読み替えてね。<b>パッケージ名が違えば Play 上は別アプリ</b>（partner ≠ webhealth）。
+      🧭 アプリ名・パッケージ名は、<code>app.config.json</code> か <code>app.config.reverse-hack.json</code> を見ながら<b>コピペ</b>してね。パッケージ名が違うと、Play 上は<b>別アプリ</b>になるわ。
     </div>
 
-    <!-- 0 -->
-    <div class="step">
+    <!-- 準備 -->
+    <div class="step" id="step-0">
       <div class="st-head">
-        <div class="st-num ai">0</div>
+        <div class="st-num ai">準</div>
         <div>
-          <div class="st-title">先に AI / CI が用意するもの <span class="who ai">自動</span></div>
-          <div class="st-sub">人間が Console を開く前に終わっている部分（web-health-check-app リポ）</div>
+          <div class="st-title">準備：キットが先に用意するもの <span class="who ai">自動</span> <span class="who skip">読むだけ</span></div>
+          <div class="st-sub">人間は触らなくてOK。① に進んでね。</div>
         </div>
       </div>
-      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>Step 0 は<b>人間の前</b>にキットが終わらせる作業。AAB・スクショ・assetlinks・プロモ動画まで、コマンド一発で用意できるよ。</p></div></div>
-      <div class="panel-label">📋 キットが先に用意するもの</div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>何もしなくて大丈夫。ここは「キットが先に終わらせる作業」の説明よ。</p>
+      </div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>AAB（アプリの入れ物）・スクショ・Web とのつなぎ設定・プロモ動画まで、コマンド一発で用意できるよ。人間の前に終わってる。</p></div></div>
       <ul class="tidy">
-        <li>署名済み <b>AAB</b>（CI: <code>android-twa-release.yml</code> → Play に upload）</li>
-        <li>本番 <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a>（Play 署名鍵 SHA-256 を SSOT に反映）</li>
-        <li>ストア素材（スクショ8枚・タブレット・フィーチャー・512アイコン）</li>
-        <li>プロモ動画・Shorts 用縦型動画（任意）</li>
+        <li>署名済み <b>AAB</b>（CI が Play に upload）</li>
+        <li>本番 <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a>（Web とアプリをつなぐ設定）</li>
+        <li>ストア用スクショ・画像・プロモ動画（任意）</li>
       </ul>
-      <table class="vals">
-        <tr><th>コマンド</th><th>やること</th></tr>
-        <tr><td><code>npm run store-assets:play</code></td><td>Play スクショ・フィーチャーグラフィック生成（kimito）</td></tr>
-        <tr><td><code>npm run store-assets:play:reverse-hack</code></td><td>同上（RH ブランド）</td></tr>
-        <tr><td><code>node scripts/play-set-listing.mjs [brand]</code></td><td>ストア掲載テキスト＋画像を Play API で投入</td></tr>
-        <tr><td><code>node scripts/play-setup-production.mjs [brand]</code></td><td>製品版 draft + 国設定を API で試行（未完了申告があると validate で止まる）</td></tr>
-        <tr><td><code>node scripts/play-submit-review.mjs [brand]</code></td><td>既存 versionCode を製品版に promote（AAB 再ビルド不要）</td></tr>
-        <tr><td><code>node scripts/generate-play-promo-video.mjs [brand]</code></td><td>横型プロモ MP4（Play Console「動画」用）</td></tr>
-        <tr><td><code>node scripts/generate-social-short-promo.mjs [brand]</code></td><td>縦型 9:16（Shorts / TikTok / Reels）</td></tr>
-      </table>
-      <div class="note">📄 申告の回答全文:
-        <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS.md" target="_blank" rel="noopener">PLAY-APP-CONTENT-ANSWERS.md</a>（kimito）／
-        <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md" target="_blank" rel="noopener">PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md</a>（RH）。
-        <b>人間はコピペ＋保存/送信ボタン</b>だけ。</div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>assetlinks の確認は<b>本番 Web</b>。RH なら<br><a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json</a><span class="alt">kimito: <a href="https://app.web-health-check.link/.well-known/assetlinks.json" target="_blank" rel="noopener">app.web-health-check.link/.well-known/assetlinks.json</a></span></p></div></div>
+      <details class="details-toggle">
+        <summary>▶ 開発者向け：コマンド一覧（タップで開く）</summary>
+        <table class="vals">
+          <tr><th>コマンド</th><th>やること</th></tr>
+          <tr><td><code>npm run store-assets:play</code></td><td>Play スクショ生成（kimito）</td></tr>
+          <tr><td><code>npm run store-assets:play:reverse-hack</code></td><td>同上（RH）</td></tr>
+          <tr><td><code>node scripts/play-set-listing.mjs [brand]</code></td><td>ストア掲載を API 投入</td></tr>
+          <tr><td><code>node scripts/play-submit-review.mjs [brand]</code></td><td>製品版へ promote</td></tr>
+        </table>
+        <div class="note" style="margin-top:10px;">📄 申告の回答全文:
+          <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS.md" target="_blank" rel="noopener">kimito 用</a>／
+          <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md" target="_blank" rel="noopener">RH 用</a>。
+          ⑤ で<b>コピペ＋保存/送信</b>するだけ。</div>
+      </details>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>Web とのつなぎ設定の確認はここ。RH:<br><a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json</a><span class="alt">kimito: <a href="https://app.web-health-check.link/.well-known/assetlinks.json" target="_blank" rel="noopener">app.web-health-check.link/.well-known/assetlinks.json</a></span></p></div></div>
+      <div class="step-next">準備は読むだけ → 次は <a href="#step-1">① アプリの枠を作る</a></div>
     </div>
 
-    <!-- 1 -->
-    <div class="step">
+    <!-- ① -->
+    <div class="step" id="step-1">
       <div class="st-head">
-        <div class="st-num">1</div>
+        <div class="st-num">①</div>
         <div>
-          <div class="st-title">「アプリを作成」フォームを埋める <span class="who human">人間（5分）</span></div>
-          <div class="st-sub"><a href="https://play.google.com/console" target="_blank" rel="noopener">play.google.com/console</a> →「アプリを作成」</div>
+          <div class="st-title">アプリの枠を作る <span class="who human">人間（5分）</span></div>
+          <div class="st-sub">Play Console で「アプリを作成」— 最初の1回だけ</div>
         </div>
       </div>
-      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>最初は <a href="https://play.google.com/console" target="_blank" rel="noopener">Play Console</a> で<b>アプリの枠</b>を作るだけだ。5分もかからねえ。</p></div></div>
-      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>パッケージ名は<b>AAB と完全一致</b>。間違えるとあとから直せないから、<code>app.config</code> を見ながらコピペしなさい。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>アプリを作成</b>（スクショ無し・最初の1回だけ）。<br><a href="https://play.google.com/console" target="_blank" rel="noopener">https://play.google.com/console</a> → 右上「アプリを作成」</p></div></div>
-      <div class="note">📷 枠を作る前は中に入れないのでキャプチャ無し。表どおり入力 → 申告2つにチェック →「アプリを作成」。</div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>Play Console を開いて、表のとおり入力 →「アプリを作成」を押す。</p>
+      </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>下の<b>青いボタン</b>で Play Console を開く</span></li>
+        <li><span class="mini-n">2</span><span>右上の「<b>アプリを作成</b>」を押す</span></li>
+        <li><span class="mini-n">3</span><span>表のとおり入力（パッケージ名は<b>コピペ</b>。自分で打たない）</span></li>
+        <li><span class="mini-n">4</span><span>申告2つにチェック →「<b>アプリを作成</b>」</span></li>
+      </ol>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>最初は<b>枠を作るだけ</b>だ。5分もかからねえ。パッケージ名を間違えるとあとから直せないから気をつけろ。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p><code>app.config</code> の<b>パッケージ名</b>をそのままコピペしなさい。AAB と1文字でも違うと別物になるわ。</p></div></div>
+      <p><a class="action-btn" href="https://play.google.com/console" target="_blank" rel="noopener">Play Console を開く →</a></p>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>アプリを作成</b>（スクショ無し）。<br><a href="https://play.google.com/console" target="_blank" rel="noopener">https://play.google.com/console</a> → 右上「アプリを作成」</p></div></div>
       <table class="vals">
         <tr><th>アプリ名</th><td><code>identity.displayName</code><br>例: 君斗りんくのWEBサイト健康診断 / リバースハック WEB健康診断</td></tr>
-        <tr><th>パッケージ名</th><td><code>stores.playPackageName</code><br>例: <code>com.kimito.link.webhealthcheck</code> / <code>com.reversehack.webhealth</code><br>⚠️ AAB と<b>完全一致</b>。あとから変更不可</td></tr>
+        <tr><th>パッケージ名</th><td><code>stores.playPackageName</code><br>例: <code>com.kimito.link.webhealthcheck</code> / <code>com.reversehack.webhealth</code><br>⚠️ あとから変更不可</td></tr>
         <tr><th>言語</th><td>日本語 – ja-JP</td></tr>
         <tr><th>種別</th><td>アプリ / 無料</td></tr>
       </table>
+      <div class="step-next">✅ 枠ができたら → 次は <a href="#step-2">② ダッシュボード確認</a></div>
     </div>
 
-    <!-- 2 -->
-    <div class="step">
+    <!-- ② -->
+    <div class="step" id="step-2">
       <div class="st-head">
-        <div class="st-num">2</div>
+        <div class="st-num">②</div>
         <div>
           <div class="st-title">ダッシュボードを確認 <span class="who human">人間</span></div>
-          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a>で「アプリのセットアップ」を 5/5 に</div>
+          <div class="st-sub">やることリストを見る。今は 0/5 でもOK。③ へ進んでね。</div>
         </div>
       </div>
-      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>枠ができたら <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a> に「やることリスト」が出る。申告タスクが並んでて怖いけど、<b>先に AAB を上げてもOK</b>だよ。</p></div></div>
-      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>大事なのは<b>5/5 になるまで「審査に送信」がグレー</b>のままってこと。入力しただけで「保存」「送信」を忘れる人が多いの。適当にぽちぽち禁止よ。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>ダッシュボード</b>（アプリのセットアップ）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">…/com.reversehack.webhealth/app-dashboard</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-dashboard" target="_blank" rel="noopener">…/com.kimito.link.webhealthcheck/app-dashboard</a></span></p></div></div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>ダッシュボードを開いて、やることリストをざっと見る。怖がらなくてOK。</p>
+      </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>下のリンクで<b>ダッシュボード</b>を開く</span></li>
+        <li><span class="mini-n">2</span><span>「アプリのセットアップ」の数字を確認（0/5 でも大丈夫）</span></li>
+        <li><span class="mini-n">3</span><span>そのまま <a href="#step-3"><b>③ へ進む</b></a>（先に AAB を載せてOK）</span></li>
+      </ol>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>申告タスクがたくさん並んでて怖いけど、<b>先に ③ で AAB を載せてもOK</b>だよ。⑤ で順番に埋めれば 5/5 になる。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>最終的には<b>5/5 になるまで「審査に送信」は押せない</b>の。でも今は見るだけでいいわ。入力したら必ず「保存」か「送信」まで押しなさい。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>ダッシュボード</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">…/com.reversehack.webhealth/app-dashboard</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-dashboard" target="_blank" rel="noopener">…/com.kimito.link.webhealthcheck/app-dashboard</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/02-dashboard.png" alt="作成直後のダッシュボード" loading="lazy">
-        <div class="cap">📷 kimito 実証: 作成直後。申告タスクが並ぶが<b>先に AAB を上げてOK</b></div>
+        <div class="cap">📷 作成直後。申告タスクが並ぶが、<b>先に ③ へ進んでOK</b></div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面も<b>ダッシュボード</b>（審査送信後・クローズドテスト案内つき）。URL は上と同じ:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">…/com.reversehack.webhealth/app-dashboard</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ ⑥ まで終わった<b>あと</b>のダッシュボード（審査中の例）。URL は上と同じ:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">…/com.reversehack.webhealth/app-dashboard</a></p></div></div>
       <div class="shot">
-        <img src="../../assets/captures/play/09b-dashboard-closed-test.png" alt="審査中＋クローズドテスト案内のダッシュボード" loading="lazy">
-        <div class="cap">📷 RH 実証: 製品版審査<b>送信後</b>のダッシュボード。「更新ステータス: 審査中」＋「より多くのテスターでテスト」（1/5）が並ぶこともある</div>
+        <img src="../../assets/captures/play/09b-dashboard-closed-test.png" alt="審査中のダッシュボード" loading="lazy">
+        <div class="cap">📷 ⑥ 送信後:「更新ステータス: 審査中」と出れば、人間の作業は完了</div>
       </div>
-      <div class="note">💡 <b>適当にぽちぽち NG。</b> 各申告は<b>保存/送信まで</b>押さないと未完了のまま。
-        <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">RH ダッシュボード</a> /
-        <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-dashboard" target="_blank" rel="noopener">kimito ダッシュボード</a>
-        が <b>5/5</b> になるまで「審査に送信」はグレーのまま。</div>
+      <div class="step-next">✅ 見終わったら → 次は <a href="#step-3">③ 中身（AAB）を載せる</a></div>
     </div>
 
-    <!-- 3 -->
-    <div class="step">
+    <!-- ③ -->
+    <div class="step" id="step-3">
       <div class="st-head">
-        <div class="st-num">3</div>
+        <div class="st-num">③</div>
         <div>
-          <div class="st-title">内部テストに AAB を載せる <span class="who human">人間（3分）</span></div>
-          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a> → リリースを作成</div>
+          <div class="st-title">中身（AAB）を載せる <span class="who human">人間（3分）</span></div>
+          <div class="st-sub">内部テストに AAB を載せる — 本番公開にはまだならない</div>
         </div>
       </div>
-      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>まず <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a> に AAB を載せる。CI が upload 済みなら<b>ライブラリから選ぶだけ</b>だ。</p></div></div>
-      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>黄色い警告は<b>無視して保存</b>で大丈夫。止まるのは赤エラーだけ。内部テストを送っても<b>本番公開にはならない</b>から、Step 6 まで忘れないでね。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>内部テスト → ライブラリから AAB 追加</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></span></p></div></div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>「内部テスト」を開いて、ライブラリから AAB を選び、「保存」する。</p>
+      </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span><b>内部テスト</b>の画面を開く（たぬ姉の URL）</span></li>
+        <li><span class="mini-n">2</span><span>「リリースを作成」→ ライブラリから AAB にチェック →「リリースに追加」</span></li>
+        <li><span class="mini-n">3</span><span>リリースノートを書く（中身だけ書き換え）</span></li>
+        <li><span class="mini-n">4</span><span>黄色い警告は<b>無視して保存</b>（赤エラーだけ止まる）</span></li>
+      </ol>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>CI が upload 済みなら<b>ライブラリから選ぶだけ</b>だ。ここで本番公開にはならねえ。⑥ まで忘れるな。</p></div></div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>黄色＝警告（保存できる）。赤＝エラー（直すまで止まる）。覚えておいてね。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>内部テスト → AAB 追加</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/03-internal-test-upload.png" alt="ライブラリから App Bundle を追加" loading="lazy">
         <div class="cap">📷 ライブラリから AAB にチェック →「リリースに追加」</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>内部テスト → リリースの詳細</b>（ノート編集）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>リリースの詳細</b>（ノート編集）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/03b-release-detail.png" alt="リリースの詳細" loading="lazy">
-        <div class="cap">📷 リリースノートは <code>&lt;ja-JP&gt;…&lt;/ja-JP&gt;</code> の中身だけ書き換え</div>
+        <div class="cap">📷 リリースノートは <code>&lt;ja-JP&gt;…&lt;/ja-JP&gt;</code> の<b>中身だけ</b>書き換え</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>内部テスト → プレビューして確認</b>。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>プレビューして確認</b>。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">…/tracks/internal-testing</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/04-release-preview.png" alt="プレビューして確認" loading="lazy">
-        <div class="cap">📷 黄色の警告（難読化なし等）は<b>無視して保存</b>。赤エラーだけ止まる</div>
+        <div class="cap">📷 黄色の警告は<b>無視して保存</b>。赤エラーだけ止まる</div>
       </div>
-      <div class="warn">内部テストの審査送信 ≠ 製品版公開。本番は<b>Step 6</b>。内部テストだけでは「12人×14日」の本番アクセス要件は<b>満たせない</b>（Step 7 参照）。</div>
+      <div class="warn">⚠️ 内部テストを送っても<b>本番公開にはならない</b>。本番は ⑥。⑦ の 12人×14日 は内部テストでは<b>カウントされない</b>。</div>
+      <div class="step-next">✅ 保存できたら → 次は <a href="#step-4">④ 2つコピペ</a></div>
     </div>
 
-    <!-- 4 -->
-    <div class="step">
+    <!-- ④ -->
+    <div class="step" id="step-4">
       <div class="st-head">
-        <div class="st-num">4</div>
+        <div class="st-num">④</div>
         <div>
-          <div class="st-title">2つの値を AI に渡す <span class="who human">コピペ2回</span></div>
-          <div class="st-sub">これで playAppId と assetlinks が自動配線される</div>
+          <div class="st-title">2つコピペ <span class="who human">コピペ2回</span></div>
+          <div class="st-sub">AI に渡す値。Web とアプリがつながる</div>
         </div>
       </div>
-      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>ここは<b>コピペ2回</b>で自動化がつながるわ。① Console URL から playAppId、② <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">アプリの署名</a> の 📋 ボタンで SHA-256 全文。</p></div></div>
-      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>スクショで指紋渡すな！ 画面で<b>後半が切れる</b>から assetlinks が無効になって、アプリ上部にアドレスバーが出っぱなしになるぞ。</p></div></div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>2つの値をコピーして AI（または担当者）に渡す。スクショで渡さない。</p>
+      </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span>Console の URL から <b>playAppId</b>（数字の部分）をコピー</span></li>
+        <li><span class="mini-n">2</span><span>「アプリの署名」画面で 📋 ボタンから <b>SHA-256 全文</b>をコピー</span></li>
+        <li><span class="mini-n">3</span><span>AI が Web のつなぎ設定（assetlinks）を更新 → ディープリンクで「検証を再試行」</span></li>
+      </ol>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>📋 コピーボタンを使いなさい。<b>スクショだと指紋が切れて</b>、アプリ上部にアドレスバーが出っぱなしになるわ。</p></div></div>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>スクショで指紋渡すな！ 後半が切れて無効になるぞ。</p></div></div>
       <table class="vals">
-        <tr><th>① playAppId</th><td>Console URL の <code>/app/【数字】/</code> 部分 → <code>stores.playAppId</code></td></tr>
-        <tr><th>② SHA-256</th><td>
-          <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">アプリの署名</a>
-          → <b>Digital Asset Links JSON</b> の 📋 コピー → AI が
-          <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks.json</a> 更新
-        </td></tr>
+        <tr><th>① playAppId</th><td>Console URL の <code>/app/【数字】/</code> → <code>stores.playAppId</code></td></tr>
+        <tr><th>② SHA-256</th><td>アプリの署名 → <b>Digital Asset Links JSON</b> の 📋 → assetlinks 更新</td></tr>
       </table>
-      <div class="warn">⚠️ assetlinks に入れるのは<b>アプリ署名鍵</b>（アップロード鍵と取り違えない）。RH 実証: ブランドごとに fingerprint を分離（<code>app.config.reverse-hack.json</code> の <code>android.sha256CertFingerprints</code>）。<b>📋 コピーボタン必須</b>（スクショだと指紋が切れる）。</div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>アプリの署名</b>（SHA-256 を 📋 コピー）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">…/keymanagement</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/keymanagement" target="_blank" rel="noopener">…/keymanagement</a></span></p></div></div>
-      <div class="note">📷 署名画面は指紋が切れるのでキャプチャ無し。<b>Digital Asset Links JSON</b> の 📋 ボタンで全文コピー。</div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ assetlinks 修正後は<b>ディープリンク</b>で再検証。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/deeplinks" target="_blank" rel="noopener">…/deeplinks</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/deeplinks" target="_blank" rel="noopener">…/deeplinks</a></span></p></div></div>
-      <div class="note">RH: ディープリンク緑チェックは v7 AAB + assetlinks 修正後に<b>検証を再試行</b>。</div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>アプリの署名</b>（📋 で全文コピー）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">…/keymanagement</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/keymanagement" target="_blank" rel="noopener">…/keymanagement</a></span></p></div></div>
+      <div class="note">📷 署名画面は指紋が切れるのでキャプチャ無し。<b>Digital Asset Links JSON</b> の 📋 ボタンを使う。</div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 設定更新後は<b>ディープリンク</b>で再検証。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/deeplinks" target="_blank" rel="noopener">…/deeplinks</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/deeplinks" target="_blank" rel="noopener">…/deeplinks</a></span></p></div></div>
+      <div class="step-next">✅ コピペが終わったら → 次は <a href="#step-5">⑤ 申告を埋める</a></div>
     </div>
 
-    <!-- 5 -->
-    <div class="step">
+    <!-- ⑤ -->
+    <div class="step" id="step-5">
       <div class="st-head">
-        <div class="st-num">5</div>
+        <div class="st-num">⑤</div>
         <div>
-          <div class="st-title">アプリのコンテンツ申告 <span class="who human">人間（順番固定）</span></div>
-          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> — 回答は docs、操作は下の順</div>
+          <div class="st-title">申告を埋める <span class="who human">人間（順番固定）</span></div>
+          <div class="st-sub">アプリのコンテンツ — 回答は docs からコピペ</div>
         </div>
       </div>
-      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>Step 5 がいちばん長い。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> を<b>この順番</b>で埋めて、各画面で必ず「保存」か「送信」まで押してね。</p></div></div>
-      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>回答文は GitHub の docs に全部書いてあるから<b>コピペでOK</b>。自分で考えなくていいわ。データの安全性は「保存」じゃなく<b>「送信」</b>まで。広告 ID は「いいえ」。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>ストアの掲載情報</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/store-presence" target="_blank" rel="noopener">…/store-presence</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/store-presence" target="_blank" rel="noopener">…/store-presence</a></span></p></div></div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>下の<b>1〜8 の順番</b>どおりに埋めて、各画面で「保存」か「送信」まで押す。</p>
+      </div>
+      <div class="talk link"><img src="../../images/link-smile.png" alt="りんく"><div><div class="char-name">りんく</div><p>⑤ がいちばん長いけど、<b>自分で考えなくていい</b>よ。GitHub の docs からコピペするだけ。順番を間違えないでね。</p></div></div>
+      <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>「データの安全性」は「保存」じゃなく<b>「送信」</b>まで。広告 ID は<b>「いいえ」</b>。入力しただけで終わらせないで。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ まず<b>ストアの掲載情報</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/store-presence" target="_blank" rel="noopener">…/store-presence</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/store-presence" target="_blank" rel="noopener">…/store-presence</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/08-store-listing.png" alt="ストアの掲載情報" loading="lazy">
-        <div class="cap">📷 ストア掲載: テキスト・画像は <code>store-assets/</code> から API または手動アップロード</div>
+        <div class="cap">📷 ストア掲載: テキスト・画像は <code>store-assets/</code> から</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>アプリのコンテンツ</b>（申告一覧）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a></span></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 次は<b>アプリのコンテンツ</b>（申告一覧）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/06-app-content.png" alt="アプリのコンテンツ申告" loading="lazy">
-        <div class="cap">📷 アプリのコンテンツ: ログインの詳細・プライバシー・広告・レーティング等</div>
+        <div class="cap">📷 申告一覧。下の 1〜8 を<b>この順番</b>で</div>
       </div>
 
-      <p style="font-size:.92em;margin:10px 0;"><b>この順で埋めて、各画面で必ず「保存」または「送信」:</b></p>
-      <ol class="tidy">
-        <li><b>プライバシーポリシー</b> — RH: <a href="https://partner.reverse-re-birth-hack.com/privacy" target="_blank" rel="noopener">partner…/privacy</a> / kimito: <a href="https://web-health-check.link/privacy-policy.html" target="_blank" rel="noopener">privacy-policy.html</a> → 保存</li>
-        <li><b>アプリのアクセス権</b> — 「特別なアクセス権なし」→ 保存</li>
-        <li><b>広告</b> — 「広告なし」→ 保存</li>
-        <li><b>データの安全性</b> — 「収集なし」→ 最後まで → <b>送信</b>（保存だけだと未完了）</li>
-        <li><b>コンテンツのレーティング</b> — IARC アンケート → 送信</li>
-        <li><b>ターゲットユーザー</b> — 18歳以上 → 保存</li>
-        <li><b>ニュース / 政府 / 金融 / ヘルス</b> — すべて該当なし → 保存</li>
-        <li><b>ストアの設定</b> — カテゴリ「ツール」・メール・サイト URL → 保存（RH: <a href="https://partner.reverse-re-birth-hack.com/" target="_blank" rel="noopener">partner.reverse-re-birth-hack.com</a>）</li>
+      <p style="font-size:1.02em;margin:14px 0 8px;font-weight:800;color:#15222c;">⑤ の中身（1 → 2 → 3 … 順番固定）</p>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span><b>プライバシーポリシー</b> — URL を貼る → 保存</span></li>
+        <li><span class="mini-n">2</span><span><b>アプリのアクセス権</b> — 「特別なアクセス権なし」→ 保存</span></li>
+        <li><span class="mini-n">3</span><span><b>広告</b> — 「広告なし」→ 保存</span></li>
+        <li><span class="mini-n">4</span><span><b>データの安全性</b> — 「収集なし」→ 最後まで → <b>送信</b></span></li>
+        <li><span class="mini-n">5</span><span><b>コンテンツのレーティング</b> — アンケート → 送信</span></li>
+        <li><span class="mini-n">6</span><span><b>ターゲットユーザー</b> — 18歳以上 → 保存</span></li>
+        <li><span class="mini-n">7</span><span><b>ニュース / 政府 / 金融 / ヘルス</b> — すべて該当なし → 保存</span></li>
+        <li><span class="mini-n">8</span><span><b>ストアの設定</b> — カテゴリ「ツール」→ 保存</span></li>
       </ol>
+      <div class="note">📄 回答文の全文: <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS-REVERSE-HACK.md" target="_blank" rel="noopener">RH 用 docs</a> / <a href="https://github.com/kimito-link/web-health-check-app/blob/main/docs/PLAY-APP-CONTENT-ANSWERS.md" target="_blank" rel="noopener">kimito 用 docs</a></div>
 
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>広告 ID の申告</b>（アプリのコンテンツ内）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>広告 ID の申告</b>。「いいえ」→ 保存。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">…/app-content/overview</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/05b-ad-id-declaration.png" alt="広告 ID の申告" loading="lazy">
-        <div class="cap">📷 RH 実証: <b>広告 ID</b> — TWA で広告SDKなし → <b>いいえ</b> → 保存。未申告だと送信ボタンが赤エラーで止まる</div>
+        <div class="cap">📷 広告 ID — TWA で広告なし → <b>いいえ</b> → 保存。未申告だと ⑥ が赤エラーで止まる</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面も<b>広告 ID 未申告のエラー</b>（公開の概要 or 製品版）。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a> から飛ぶことも。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 未申告だとこういう<b>赤エラー</b>が出る（対処必須）:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/04a-error-adid.png" alt="広告ID申告不完全エラー" loading="lazy">
-        <div class="cap">📷 kimito 実証: 「広告 IDの申告が不完全です」＝<b>赤エラー</b>（黄色警告と違い対処必須）</div>
+        <div class="cap">📷 「広告 IDの申告が不完全です」＝<b>赤エラー</b>（黄色警告と違う）</div>
       </div>
+      <div class="step-next">✅ ダッシュボードが 5/5 になったら → 次は <a href="#step-6">⑥ 本番を送る</a></div>
     </div>
 
-    <!-- 6 -->
-    <div class="step">
+    <!-- ⑥ -->
+    <div class="step" id="step-6">
       <div class="st-head">
-        <div class="st-num">6</div>
+        <div class="st-num">⑥</div>
         <div>
-          <div class="st-title">製品版 v7 を審査に送信 <span class="who human">人間（最後のボタン）</span></div>
-          <div class="st-sub"><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> →「○件の変更を審査に送信」</div>
+          <div class="st-title">本番を審査に送る <span class="who human">人間（最後のボタン）</span></div>
+          <div class="st-sub">公開の概要 →「○件の変更を審査に送信」</div>
         </div>
       </div>
-      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>いよいよ本番。<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> の<b>「○件の変更を審査に送信」</b>を押すまで、審査は始まらないよ。RH 実証では 9 件まとめて送った。</p></div></div>
-      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>製品版が「下書き」のまま見えても、送信前は正常だ。送信後に「<b>審査中の変更</b>」になれば、人間の仕事は終わり。あとは Google を待つだけだな。</p></div></div>
-      <ol class="tidy">
-        <li><b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">製品版</a></b> — v7 draft に AAB が載っていることを確認</li>
-        <li><b>国や地域を選択</b> — 日本（＋必要なら「その他すべての国」）→ 保存</li>
-        <li><b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a></b> — 未送信の変更一覧を確認</li>
-        <li><b>「○件の変更を審査に送信」</b> を押す（RH 実証: 9件）</li>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>「公開の概要」を開いて、青い「○件の変更を審査に送信」ボタンを押す。</p>
+      </div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span><b>製品版</b>に AAB が載っているか確認</span></li>
+        <li><span class="mini-n">2</span><span><b>国や地域</b> — 日本を選んで保存</span></li>
+        <li><span class="mini-n">3</span><span><b>公開の概要</b> — 未送信の変更を確認</span></li>
+        <li><span class="mini-n">4</span><span>「<b>○件の変更を審査に送信</b>」→ 確認 → 送信</span></li>
       </ol>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>製品版</b>（v7 下書き確認）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">…/tracks/production</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/production" target="_blank" rel="noopener">…/tracks/production</a></span></p></div></div>
+      <div class="talk link"><img src="../../images/link-normal.png" alt="りんく"><div><div class="char-name">りんく</div><p>このボタンを押すまで、審査は<b>始まらない</b>よ。RH 実証では 9 件まとめて送った。</p></div></div>
+      <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太"><div><div class="char-name">こん太</div><p>「下書き」のまま見えても正常だ。送信後に「<b>審査中の変更</b>」になれば、人間の仕事は終わり。あとは Google を待つだけだな。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>製品版</b>（下書き確認）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/production" target="_blank" rel="noopener">…/tracks/production</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/production" target="_blank" rel="noopener">…/tracks/production</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/09c-production-draft.png" alt="製品版 v7 下書き" loading="lazy">
-        <div class="cap">📷 送信前: 製品版 v7 は<b>下書き・非アクティブ</b>。「一時的なアプリ名 (unreviewed)」も正常</div>
+        <div class="cap">📷 送信前: 製品版は<b>下書き</b>で正常</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>公開の概要</b>（9件の変更を審査に送信）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></span></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>公開の概要</b>（送信ボタン）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></span></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/07b-pending-9-changes.png" alt="9件の変更を審査に送信" loading="lazy">
-        <div class="cap">📷 RH 実証: ボタンが青くなった状態（製品版・ストア・申告9項目がまとまって送信待ち）</div>
+        <div class="cap">📷 ボタンが青くなった状態（RH 実証: 9件）</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面も<b>公開の概要</b>（送信ボタン）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/07-submit-review.png" alt="公開の概要 審査送信ボタン" loading="lazy">
-        <div class="cap">📷 kimito 実証: 公開の概要の送信ボタン（押すまで審査は始まらない）</div>
+        <div class="cap">📷 送信ボタン（押すまで審査は始まらない）</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>審査に送信しますか</b>（確認ダイアログ）。押す直前の公開の概要:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 確認ダイアログ。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/04b-publish-confirm.png" alt="審査に送信しますか確認" loading="lazy">
         <div class="cap">📷 確認ダイアログ → 送信</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>審査中の変更</b>（送信後）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ 送信後は<b>審査中の変更</b>。ここまで来たら人間の作業完了:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
       <div class="shot">
         <img src="../../assets/captures/play/09-production-under-review.png" alt="審査中の変更" loading="lazy">
-        <div class="cap">📷 RH 実証: 送信後「<b>審査中の変更</b>」。ここまで来たら人間の作業は完了 → あとは待つ</div>
+        <div class="cap">📷 「<b>審査中の変更</b>」＝ 人間の作業は完了 → あとは待つ</div>
       </div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面も<b>審査中の変更</b>（kimito 実証・内部テスト送信後）。同じ URL:<br><a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/publishing/overview" target="_blank" rel="noopener">…/publishing/overview</a></p></div></div>
-      <div class="shot">
-        <img src="../../assets/captures/play/04c-internal-published.png" alt="審査中の変更 kimito" loading="lazy">
-        <div class="cap">📷 kimito 実証: 内部テスト送信後も同じ「審査中の変更」画面</div>
-      </div>
-      <div class="ok">✅ RH 実証（2026-06）: 上記9件送信 → クイックチェック → <b>審査中</b> まで到達済み。管理対象の公開オフ＝承認後自動公開。</div>
-      <div class="note">📺 プロモ動画（任意）:
-        <a href="https://www.youtube.com/watch?v=jyO9VGHsw2k" target="_blank" rel="noopener">YouTube 限定公開</a>
-        → <a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/store-presence" target="_blank" rel="noopener">ストア掲載</a>に
-        <code>https://www.youtube.com/watch?v=jyO9VGHsw2k</code>。
-        Shorts/TikTok/Reels は審査通過後でも可。</div>
+      <div class="ok">✅ RH 実証（2026-06）: 9件送信 → クイックチェック → <b>審査中</b> まで到達済み。</div>
+      <div class="step-next">🎉 ⑥ まで終わったら、人間の Play Console 作業は<b>全部完了</b>。あとは Google の審査を待つだけ。</div>
     </div>
 
-    <!-- 7 optional -->
-    <div class="step">
+    <!-- ⑦ -->
+    <div class="step" id="step-7">
       <div class="st-head">
-        <div class="st-num opt">7</div>
+        <div class="st-num opt">⑦</div>
         <div>
-          <div class="st-title">（条件付き）クローズドテスト 12人×14日 <span class="who human">新規個人アカウントのみ</span></div>
-          <div class="st-sub">2023-11-13 以降の個人開発者アカウントで本番アクセス申請が必要な場合</div>
+          <div class="st-title">（条件付き）12人×14日テスト <span class="who human">新規個人だけ</span></div>
+          <div class="st-sub">2023年11月以降の個人開発者アカウントだけ。該当しなければ飛ばしてOK。</div>
         </div>
       </div>
-      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>2023年11月以降の<b>個人開発者アカウント</b>だけ、別ルートがあるの。内部テストは<b>カウントされない</b>わ。</p></div></div>
-      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>クローズドテスト</b>（12人×14日）。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">…/tracks/closed-testing</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/closed-testing" target="_blank" rel="noopener">…/tracks/closed-testing</a></span></p></div></div>
+      <div class="now-do">
+        <span class="label">今やること</span>
+        <p>ダッシュボードに「12人テスト」の案内が出ている人だけ。該当しなければ読むだけでOK。</p>
+      </div>
+      <div class="talk tanu"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>2023年11月以降の<b>個人開発者</b>だけ、別ルートがあるの。<b>内部テスト（③）はカウントされない</b>わ。クローズドテストで 12人×14日。</p></div></div>
+      <div class="talk tanu screen-url"><img src="../../images/tanunee-normal.png" alt="たぬ姉"><div><div class="char-name">たぬ姉</div><p>↓ この画面は<b>クローズドテスト</b>。RH:<br><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">…/tracks/closed-testing</a><span class="alt">kimito: <a href="https://play.google.com/console/u/0/developers/app/com.kimito.link.webhealthcheck/tracks/closed-testing" target="_blank" rel="noopener">…/tracks/closed-testing</a></span></p></div></div>
+      <ol class="mini-steps">
+        <li><span class="mini-n">1</span><span><b>クローズドテスト</b>でテスト（内部テストは不可）</span></li>
+        <li><span class="mini-n">2</span><span>テスター <b>12人以上</b> が参加</span></li>
+        <li><span class="mini-n">3</span><span><b>連続14日</b> 維持</span></li>
+        <li><span class="mini-n">4</span><span>ダッシュボードから <b>本番環境へのアクセスを申請</b> → その後 ⑥</span></li>
+      </ol>
       <div class="warn">
-        ① <b><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a></b>（<a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/internal-testing" target="_blank" rel="noopener">内部テスト</a>は<b>カウントされない</b>）<br>
-        ② テスター <b>12人以上</b> が opt-in<br>
-        ③ <b>連続14日</b> 維持<br>
-        ④ ダッシュボードから <b>本番環境へのアクセスを申請</b>（アカウント<b>所有者</b>のみ）<br>
-        → その後 Step 6 の製品版送信が可能になる。<br>
         <a href="https://support.google.com/googleplay/android-developer/answer/14151465" style="color:#1565c0;">Google 公式: 個人開発者のテスト要件</a>
       </div>
     </div>
 
-    <!-- pitfalls -->
-    <div class="step">
+    <!-- つまずき -->
+    <div class="step" id="step-help">
       <div class="st-head">
-        <div class="st-num opt">!</div>
+        <div class="st-num opt">?</div>
         <div>
-          <div class="st-title">つまずき早見表</div>
-          <div class="st-sub">適当にぽちぽちで起きがちな症状</div>
+          <div class="st-title">つまずいたら</div>
+          <div class="st-sub">症状 → 直し方（各 Step のたぬ姉 URL から該当画面を開く）</div>
         </div>
       </div>
-      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>つまずいたらこの表。症状 → 原因 → 直し方。迷ったら各 Step のたぬ姉が案内してる URL から該当画面を開け。</p></div></div>
+      <div class="talk kon"><img src="../../images/konta-normal.png" alt="こん太"><div><div class="char-name">こん太</div><p>エラーが出たらこの表を見ろ。迷ったら、今の Step の<b>たぬ姉の URL</b>を開いて、同じ画面か確認しな。</p></div></div>
       <table class="vals">
-        <tr><th>症状</th><th>原因</th><th>対処</th></tr>
-        <tr><td>送信ボタンがグレー</td><td>ダッシュボード未完了</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-dashboard" target="_blank" rel="noopener">ダッシュボード</a> 5/5。Step 5 を順番どおり</td></tr>
-        <tr><td>赤エラー「広告 ID」</td><td>広告 ID 未申告</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/app-content/overview" target="_blank" rel="noopener">アプリのコンテンツ</a> → いいえ → 保存</td></tr>
-        <tr><td>partner は審査中、webhealth は未送信</td><td>別アプリ</td><td><code>com.reversehack.partner</code> ≠ <code>com.reversehack.webhealth</code></td></tr>
-        <tr><td>製品版が下書きのまま</td><td>審査未送信</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/publishing/overview" target="_blank" rel="noopener">公開の概要</a> → 審査に送信</td></tr>
-        <tr><td>アドレスバーが消えない</td><td>assetlinks 指紋ミス</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/keymanagement" target="_blank" rel="noopener">署名鍵</a> 📋 → <a href="https://app.reverse-re-birth-hack.com/.well-known/assetlinks.json" target="_blank" rel="noopener">assetlinks</a> 確認</td></tr>
-        <tr><td>12人テストカード</td><td>新規個人アカウント</td><td><a href="https://play.google.com/console/u/0/developers/app/com.reversehack.webhealth/tracks/closed-testing" target="_blank" rel="noopener">クローズドテスト</a>（Step 7）</td></tr>
+        <tr><th>症状</th><th>対処（どの Step？）</th></tr>
+        <tr><td>送信ボタンがグレー</td><td><a href="#step-5">⑤</a> を順番どおり。ダッシュボード 5/5 まで</td></tr>
+        <tr><td>赤エラー「広告 ID」</td><td><a href="#step-5">⑤</a> → 広告 ID「いいえ」→ 保存</td></tr>
+        <tr><td>製品版が下書きのまま</td><td><a href="#step-6">⑥</a> → 審査に送信ボタンを押す</td></tr>
+        <tr><td>アドレスバーが消えない</td><td><a href="#step-4">④</a> → 📋 コピーで指紋を渡し直す</td></tr>
+        <tr><td>12人テストの案内</td><td><a href="#step-7">⑦</a>（個人開発者のみ）</td></tr>
       </table>
     </div>
 
     <div class="done-banner">
       <h2>🎉 人間の Play Console 作業、これで全部</h2>
-      <p>枠を作る → AAB を載せる → 値2つコピペ → 申告（順番固定）→ 製品版を審査送信。</p>
+      <p>① 枠 → ② 確認 → ③ AAB → ④ コピペ → ⑤ 申告 → ⑥ 送信</p>
     </div>
-    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">りんく</div><p>素材・listing・AAB upload・審査見張りはキット / CI が引き受けるから、次のアプリも同じ流れでいけるよ！</p></div></div>
-    <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">こん太</div><p>iOS 版は <a href="../ios/">iOS 追体験</a> だ。Android 通ったら SNS 投稿は審査後でも間に合うぞ。</p></div></div>
-    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">たぬ姉</div><p>わからなくなったら <a href="../../story/">ものがたり</a> でキット全体像を復習しなさい。それでは、ゆっくりしていってね。</p></div></div>
+    <div class="talk link"><img src="../../images/link-smile.png" alt="りんく" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">りんく</div><p>素材づくり・審査見張りはキット / CI がやるから、次のアプリも同じ ①〜⑥ でいけるよ！</p></div></div>
+    <div class="talk kon"><img src="../../images/konta-smile.png" alt="こん太" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">こん太</div><p>iOS 版は <a href="../ios/">iOS 追体験</a> だ。Android 通ったら SNS は審査後でも間に合うぞ。</p></div></div>
+    <div class="talk tanu"><img src="../../images/tanunee-smile.png" alt="たぬ姉" style="width:44px;height:44px;border-radius:50%"><div><div class="char-name">たぬ姉</div><p>わからなくなったら <a href="../../story/">ものがたり</a> で復習しなさい。上から ① → ② → … と進めれば、誰でも終わるわ。それでは、ゆっくりしていってね。</p></div></div>
 
     <div class="note" style="margin-top:22px;">
       🔗 <b>関連</b>:
