@@ -51,9 +51,9 @@
 
     <div class="hero">
       <h1>Chrome Web Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <p class="sub">実際に拡張 v8.6.71 を申請したときの画面で、同じ手順をなぞれるよ。<br>初回 OAuth セットアップ（約15分）のあとは、<b>コマンド2つ</b>で審査提出まで自動。</p>
+      <p class="sub">実際に拡張を申請したときの画面で、同じ手順をなぞれるよ。<br>初回 OAuth セットアップ（約15分）のあとは、ふだんの更新は<b>コマンド2つ</b>で審査提出まで自動。<br>説明文や画像を直す日は、画面を自動でなぞる<b>別ルート</b>(下の⑥)に切り替えると速い。</p>
       <div class="progress">
-        <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span>
+        <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span><span>⑥ 画像/説明の編集</span>
       </div>
     </div>
 
@@ -174,9 +174,41 @@ CWS_ITEM_ID=...</pre>
       </ul>
     </div>
 
+    <div class="step">
+      <div class="st-head">
+        <div class="st-num">6</div>
+        <div>
+          <div class="st-title">説明文や画像を直したいとき <span class="who human">別ルート</span></div>
+          <div class="st-sub">コードじゃなく「ストアの見た目」を直す日の道具</div>
+        </div>
+      </div>
+      <p style="font-size:.92em;">上の <code>publish-cws</code>(API) は <b>新しい zip を上げて審査に出す</b>のが速い王道。
+        でも「説明文の言い回しを直す」「スクショを差し替える」みたいな
+        <b>ストア掲載情報の編集</b>は、ダッシュボード画面を直接さわる方が確実。
+        そこは画面を自動でなぞるスクリプトでまとめてやる:</p>
+      <pre>GO=1 node scripts/cws-all-in-one.mjs</pre>
+      <ul class="tidy">
+        <li>説明文の差し替え → スクショ5枚アップ → 下書き保存 → 審査送信 を1回で実行</li>
+        <li>初回に一度ログインした <code>.cws-profile</code> を使うので OAuth 設定は不要</li>
+        <li>PowerShell が使えない環境の zip 作成は <code>node build-zip.mjs</code>（Git Bash + Node 版）</li>
+      </ul>
+      <div class="warn">
+        ⚠️ <b>たぬ姉メモ</b>: 画面自動操作は Google が UI を変えると詰まりやすい。実際に
+        <b>①スクショを別の画像枠（440×280 のプロモ枠）に入れて「画像サイズが不正」</b>、
+        <b>②送信ボタンが空振り</b>でハマった。<b>スクショは 1280×800 の枠だけ</b>に入れ、
+        <b>送信ボタンは座標クリック</b>、<b>確認ダイアログはサイドバーのナビを除外</b>して掴むのが効いた。
+      </div>
+      <table class="vals">
+        <tr><th>速い・無人で更新</th><td>コード(zip)を上げて審査 → <code>publish-cws</code>(API)</td></tr>
+        <tr><th>説明文・画像を直す</th><td>ダッシュボードを画面自動操作 → <code>cws-all-in-one.mjs</code></td></tr>
+      </table>
+    </div>
+
     <div class="done-banner">
       <h2>🎉 Chrome 人間の仕事、これで全部</h2>
-      <p>初回: アイテム + OAuth + .env.cws。<br>更新のたび: version bump → build-zip → publish-cws → 審査メールを待つ。</p>
+      <p>初回: アイテム + OAuth + .env.cws。<br>
+        ふだんの更新は <b>2コマンド(API)</b> が速い王道。<br>
+        説明文や画像を直す日は <b>画面自動操作</b>(<code>cws-all-in-one</code>) に切り替える。</p>
     </div>
 
     <div class="note" style="margin-top:22px;">
