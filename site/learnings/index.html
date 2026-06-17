@@ -72,6 +72,40 @@
       <p>会社ロゴ文字は小サイズで潰れる → <b>紺地 + 白抜きルーペ+チェック</b>（<code>generate-app-icon.mjs</code>）</p>
     </div>
 
+    <div class="card">
+      <h3>🔐 認証つきアプリの §4.8（Sign in with Apple）— 第三者ログインの種類で対応が変わる</h3>
+      <p>
+        <b>§4.8</b>: 第三者/ソーシャルログイン（Google・X(Twitter)・Facebook 等）で主アカウントを作る/認証するアプリは、
+        <b>同等の選択肢として Sign in with Apple(SIWA) を併設</b>しなければならない。<code>server.url</code> 連動型でも
+        ログイン画面は本番Webそのものなので、<b>アプリ内に出るログインボタンが §4.8 の対象</b>になる。
+      </p>
+      <h3>分岐：Email/PW があるか、ソーシャル専用か</h3>
+      <ul>
+        <li><b>A. Email/PW + ソーシャル（例: Gmail 併用）</b> → <b>iOS だけソーシャルボタンを隠す</b>。
+          carve-out #1「自社アカウント基盤のみ」が成立し §4.8 が発火しない。Email/PW で入れるので機能は無傷。
+          実証: <code>partnership_program_website</code>（<code>applyIOSGoogleHide()</code> + CSS + MutationObserver の3層）。</li>
+        <li><b>B. ソーシャル専用（例: X 専用ログイン）</b> → <b>隠すとログイン手段がゼロ</b>になり A は使えない。
+          よって <b>SIWA を併設(Strategy A)</b>して正面突破する。<code>app.config.json</code> に
+          <code>appleSiwaServiceId</code> を予約 → Clerk→Apple Developer 設定後 <code>siwaEnabled:true</code>。</li>
+      </ul>
+      <h3>もう一つの壁：ソーシャル OAuth は WebView で拒否される</h3>
+      <p>
+        Google OAuth は埋め込み WebView を UA で検出して拒否（<code>403 disallowed_useragent</code>）。
+        <b>X(Twitter) OAuth も同方針</b>。Bパターンは SIWA 併設に加え、必要なら
+        <code>@capacitor/browser</code> で OAuth を <code>SFSafariViewController</code> に逃がす。
+      </p>
+      <div class="warn">
+        <b>Clerk はプロバイダのプラットフォーム別出し分けが無い</b>（instance 単位でグローバル）。
+        iOS で隠すのは UI レイヤーのみ（上記3層）。<br>
+        <b>allowNavigation の落とし穴</b>: 連動型で本番ドメインしか許可しないと OAuth リダイレクト先
+        （<code>x.com</code> / <code>*.twitter.com</code> / <code>*.clerk.com</code> / <code>*.clerk.accounts.dev</code>）が
+        遮断され<b>アプリ内ログインが必ず失敗</b>する。capacitor.config の <code>server.allowNavigation</code> に必ず足す。<br>
+        <b>審査用デモアカウント(§5.1.1)必須</b>: ログインアプリは審査員が入れないと即却下。2FA は無効化して渡す。
+      </div>
+      <p>出典: <code>_docs/apple-reject-knowledge-base.md</code> §4.8（リバースハック実通過の返信文つき）／
+        kimito.link（X専用＝Bパターンの実適用）。</p>
+    </div>
+
     <h2>▶ Android（Google Play）</h2>
     <div class="card">
       <h3>人間が触る画面</h3>
