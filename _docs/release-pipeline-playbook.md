@@ -92,6 +92,7 @@ release-notes/CURRENT-ja.txt    <-- 1 ファイルで「次回見せる新機能
 | `scripts/appstore-submit.mjs` | iOS リリース・スクリプト本体（メタデータ自動入力 + 審査提出） |
 | `scripts/play-publish.mjs` | Android リリース・スクリプト本体（AAB upload + リリース作成 + 審査提出） |
 | `scripts/release-bump.mjs` | バージョンと SW キャッシュ番号を一括 bump |
+| `scripts/bootstrap-secrets.mjs` | `.secrets-local/` の鍵ファイルを base64 化して GitHub Secrets に一括登録（§5.2.5） |
 
 ### 3.3 GitHub Actions ワークフロー
 
@@ -178,7 +179,22 @@ release-notes/CURRENT-ja.txt    <-- 1 ファイルで「次回見せる新機能
 | `ANDROID_KEYSTORE_BASE64` | `android-upload-key.jks` を base64 化したもの |
 | `ANDROID_KEYSTORE_PROPERTIES` | `keystore.properties` の中身そのまま（**base64 ではなくテキスト**） |
 
-### 5.3 base64 化の作り方（PowerShell）
+### 5.2.5 一括登録（推奨・手で1個ずつ入れない）
+
+鍵ファイルを `.secrets-local/`（コミット禁止・gitignore 済み）に置けば、`bootstrap-secrets.mjs` が
+全部を base64 化して `gh secret set` で一括登録する。**人間の「12回の手登録」を1コマンドに縮める。**
+
+```bash
+node scripts/bootstrap-secrets.mjs            # 何が登録されるか確認（ドライ・鍵の中身は出さない）
+node scripts/bootstrap-secrets.mjs --apply    # 実際に gh secret set
+node scripts/bootstrap-secrets.mjs --help     # 置くべきファイル名の一覧
+```
+
+`APPLE_TEAM_ID` は `app.config.json` の `stores.appleTeamId` から自動で入る。
+これで自動化できないのは Apple/Google 側に API が無い 3 点だけ（ASC アプリ枠作成 / Play 新規アプリ作成 /
+Sign in with Apple の Services ID・Key 作成）。それ以外の Secret 手登録はこのスクリプトで消える。
+
+### 5.3 base64 化の作り方（PowerShell・手動で作りたいとき）
 
 ```powershell
 # Apple .p8
@@ -242,7 +258,7 @@ base64 -i ~/Apple/AuthKey_XXXX.p8 | pbcopy
 
 1. このプレイブックの §3 のファイルをコピーしてくる
 2. §4 の置換値をすべて入れる
-3. §5 の Secrets を全部 GitHub に登録
+3. §5 の Secrets を登録（鍵を `.secrets-local/` に置いて `node scripts/bootstrap-secrets.mjs --apply` ＝ §5.2.5）
 4. 動作確認：
    - `release-notes/CURRENT-ja.txt` に何か書く
    - `npm run release:bump:patch`
@@ -442,7 +458,7 @@ node scripts/play-publish.mjs --status   # 読み取りだけ。本番には影�
 [ ] § 2 の前提条件を満たしている
 [ ] § 3 のファイルを全部コピーした
 [ ] § 4 の置換値をすべて新アプリ用に変えた
-[ ] § 5 の Secrets を全部登録した（iOS 9 + Android 3 = 12 個）
+[ ] § 5 の Secrets を登録した（鍵を .secrets-local/ に置いて bootstrap-secrets.mjs --apply ＝ §5.2.5。iOS 9 + Android 3 = 12 個）
 [ ] § 6.4 の動作確認チェックポイントが全部 OK
 [ ] § 8 の落とし穴を読んで、自分のアプリ固有の事情と照合した
 [ ] _docs/release-one-click.md に「このアプリ専用の運用メモ」を書いた

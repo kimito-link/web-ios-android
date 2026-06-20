@@ -96,13 +96,12 @@ if (fs.existsSync(path.join(twaDir, 'app'))) {
 }
 
 // --- Step 4: 手動でやること(GUI/Secrets)を明示 ---
-step(3, TOTAL, 'GitHub Secrets(リポ Settings > Secrets > Actions に登録)');
-[
-  'APPLE_TEAM_ID', 'APPSTORE_CONNECT_KEY_ID', 'APPSTORE_CONNECT_ISSUER_ID',
-  'APPSTORE_CONNECT_API_KEY_P8_BASE64', 'IOS_DIST_CERT_CER_BASE64',
-  'IOS_DIST_PRIVATE_KEY_PEM_BASE64', 'IOS_DIST_CERT_PASSWORD', 'IOS_APPSTORE_PROFILE_BASE64',
-  'ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PROPERTIES', 'GOOGLE_PLAY_SA_JSON_BASE64',
-].forEach((s) => console.log(`  - ${s}`));
+step(3, TOTAL, 'GitHub Secrets — 鍵を置いて一括登録（手で1個ずつ入れない）');
+console.log('  鍵を .secrets-local/ に置けば、次の1コマンドで全 Secret を登録できます:');
+console.log('    node scripts/bootstrap-secrets.mjs            # 何が登録されるか確認（ドライ）');
+console.log('    node scripts/bootstrap-secrets.mjs --apply    # 実際に gh secret set');
+console.log('  必要なファイル名は `node scripts/bootstrap-secrets.mjs --help` で一覧。');
+console.log('  （APPLE_TEAM_ID は app.config.json から自動。鍵の作り方は release-pipeline-playbook §6）');
 
 step(4, TOTAL, '最後の手動GUI(自動化不可・審査側/人間)');
 console.log('  - ASC: アプリ枠の新規作成(Apple API不可)→ ascAppId を app.config.json stores に記入');

@@ -5,3 +5,15 @@ _drafts/
 .env
 .env.*
 .env.cws
+
+# 署名鍵・証明書・APIキー等を置く一時ディレクトリ（bootstrap-secrets.mjs 用）。
+# 絶対にコミットしない＝鍵流出防止。中身は base64 化して GitHub Secrets に登録する。
+.secrets-local/
+*.p8
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+*.cer
+*-private.key
+service-account*.json
