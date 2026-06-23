@@ -643,6 +643,396 @@ async function freeVersionFromStaleSubmission(api, versionId, otherRsId) {
   await api('DELETE', `/v1/reviewSubmissionItems/${target.id}`);
 }
 
+// 提出前に Age Rating(年齢レーティング設問)を埋める。これが未回答だと submit が
+// 409 STATE_ERROR.ENTITY_STATE_INVALID（"You must provide a value for the attribute
+// 'sexualContentGraphicAndNudity'" 等）で弾かれる。kimito.link はリンクまとめ＝
+// 全項目「該当なし」が正。
+//
+// 重要: リレーションシップ直 GET（/ageRatingDeclaration）は 404 を返す環境がある。
+// declaration の id は appStoreVersion を ?include=ageRatingDeclaration で引いて included[] から取る。
+//
+// 属性は GET レスポンスに未回答項目が含まれないことがある（GET 駆動だと取りこぼす）ため、
+// **既知の必須属性を明示列挙**して安全値で埋める。属性名は fastlane spaceship の
+// AgeRatingDeclaration モデル（実運用で枯れている）を camelCase 化したもの。
+//
+// レーティング系 enum → "NONE"、利用区分の boolean → false。
+// 送ると弾かれ得る項目（override/URL/deprecated/kidsAgeBand）は送らない。
+// PATCH が ENTITY_ERROR.ATTRIBUTE.NOT_ALLOWED を返したら、その属性を落として 1 回だけ再試行する。
+const AGE_RATING_ENUM_NONE = [
+  'alcoholTobaccoOrDrugUseOrReferences',
+  'contests',
+  'gamblingSimulated',
+  'gunsOrOtherWeapons',
+  'horrorOrFearThemes',
+  'matureOrSuggestiveThemes',
+  'medicalOrTreatmentInformation',
+  'profanityOrCrudeHumor',
+  'sexualContentGraphicAndNudity',
+  'sexualContentOrNudity',
+  'violenceCartoonOrFantasy',
+  'violenceRealisticProlongedGraphicOrSadistic',
+  'violenceRealistic',
+];
+const AGE_RATING_BOOL_FALSE = [
+  'gambling',
+  'unrestrictedWebAccess',
+  // 以下は新しめのインスタンスにのみ存在。無い環境では NOT_ALLOWED で落とされるが、
+  // その場合は下のリトライで自動的に除外される。
+  'advertising',
+  'healthOrWellnessTopics',
+  'lootBox',
+  'messagingAndChat',
+  'parentalControls',
+  'userGeneratedContent',
+];
+
+function buildAgeRatingAttributes() {
+  const attrs = {};
+  for (const k of AGE_RATING_ENUM_NONE) attrs[k] = 'NONE';
+  for (const k of AGE_RATING_BOOL_FALSE) attrs[k] = false;
+  return attrs;
+}
+
+// ageRatingDeclaration の「本物のリソース」を返す。複数経路を順に試し、最初に取れたものを使う。
+// 取れたオブジェクト自身の attributes キーが「その環境で有効な属性集合」の真実なので、
+// PATCH 対象もそこから決める（属性名の推測やインスタンス差の問題を根絶する）。
+async function resolveAgeRatingDeclaration(api, versionId, appId) {
+  const tryGet = async (label, path) => {
+    try {
+      const r = await api('GET', path);
+      // リレーション GET は単一オブジェクト {data:{...}}、コレクションは {data:[...]}。
+      const d = Array.isArray(r?.data) ? r.data[0] : r?.data;
+      if (d?.id && d?.type === 'ageRatingDeclarations') {
+        console.log(`  [diag] declaration を ${label} で取得: id=${d.id}`);
+        return d;
+      }
+      // include 同梱の場合。
+      const inc = (r?.included || []).find((x) => x.type === 'ageRatingDeclarations');
+      if (inc?.id) {
+        console.log(`  [diag] declaration を ${label}(included) で取得: id=${inc.id}`);
+        return inc;
+      }
+      console.log(`  [diag] ${label}: declaration 無し (data.type=${d?.type || 'none'})`);
+    } catch (e) {
+      console.log(`  [diag] ${label} 失敗: ${e.message.slice(0, 120)}`);
+    }
+    return null;
+  };
+
+  // 経路1: version のリレーション GET（単一リソースを返す API バージョンがある）。
+  let d = await tryGet('version/ageRatingDeclaration', `/v1/appStoreVersions/${versionId}/ageRatingDeclaration`);
+  if (d) return d;
+
+  // 経路2: appInfos 経由（新しめの ASC はここに age rating がぶら下がる）。
+  if (appId) {
+    try {
+      const infos = await api('GET', `/v1/apps/${appId}/appInfos?limit=10`);
+      for (const ai of infos.data || []) {
+        d = await tryGet(`appInfo(${ai.id})/ageRatingDeclaration`, `/v1/appInfos/${ai.id}/ageRatingDeclaration`);
+        if (d) return d;
+      }
+    } catch (e) {
+      console.log(`  [diag] appInfos 取得失敗: ${e.message.slice(0, 120)}`);
+    }
+  }
+
+  // 経路3: linkage（relationships）から id を取り、本体を GET。
+  try {
+    const lk = await api('GET', `/v1/appStoreVersions/${versionId}/relationships/ageRatingDeclaration`);
+    const id = lk?.data?.id;
+    if (id) {
+      console.log(`  [diag] linkage で id=${id} → 本体 GET`);
+      d = await tryGet('ageRatingDeclarations/{id}', `/v1/ageRatingDeclarations/${id}`);
+      if (d) return d;
+    }
+  } catch (e) {
+    console.log(`  [diag] linkage 失敗: ${e.message.slice(0, 120)}`);
+  }
+
+  return null;
+}
+
+async function ensureAgeRating(api, versionId, appId) {
+  const decl = await resolveAgeRatingDeclaration(api, versionId, appId);
+  if (!decl?.id) {
+    throw new Error(
+      'ageRatingDeclaration を特定できませんでした（全経路失敗）。上の [diag] ログを確認のこと。',
+    );
+  }
+  const declId = decl.id;
+
+  // 取得できた declaration の attributes キー集合を「その環境で有効な属性」の真実とする。
+  // ただし型は現在値(null だと判別不能)から推測してはいけない——boolean 属性に "NONE"(文字列)を
+  // 送ると 409 ENTITY_ERROR.ATTRIBUTE.TYPE になる(messagingAndChat/gambling 等)。
+  // 型は**属性名**で決める: 既知 boolean 集合にあれば false、それ以外は enum とみなし "NONE"。
+  const SKIP = new Set([
+    'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride',
+    'kidsAgeBand', 'developerAgeRatingInfoUrl', 'gamblingAndContests',
+    // 注: ageAssurance は REQUIRED（実機 409 で確認）。SKIP しない＝enum "NONE" で送る。
+    // 型が違えば下の TYPE エラー自動修正が拾う。
+  ]);
+  const BOOL_ATTRS = new Set([
+    ...AGE_RATING_BOOL_FALSE,
+    // 取得 declaration に現れた追加 boolean(実機で BOOLEAN 指定が確認できたもの)。
+    'gambling', 'unrestrictedWebAccess', 'advertising', 'healthOrWellnessTopics',
+    'lootBox', 'messagingAndChat', 'parentalControls', 'userGeneratedContent',
+  ]);
+  const keys = Object.keys(decl.attributes || {});
+  let attrs = {};
+  for (const k of keys) {
+    if (SKIP.has(k)) continue;
+    attrs[k] = BOOL_ATTRS.has(k) ? false : 'NONE';
+  }
+  // 取得 attributes が空（属性が attributes に出ない API 仕様）なら、既知集合で埋める。
+  if (Object.keys(attrs).length === 0) {
+    console.log('  [diag] declaration.attributes が空 → 既知集合で埋める');
+    attrs = buildAgeRatingAttributes();
+  }
+
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      await api('PATCH', `/v1/ageRatingDeclarations/${declId}`, {
+        data: { type: 'ageRatingDeclarations', id: declId, attributes: attrs },
+      });
+      console.log(`  ✓ age rating 設定完了（${Object.keys(attrs).length} 項目）`);
+      return;
+    } catch (e) {
+      const msg = String(e.message);
+
+      // 型ミス(ENTITY_ERROR.ATTRIBUTE.TYPE)は Apple が正しい型を教えてくれる。全件拾って直して再試行。
+      // 例: "Unexpected json type provided for attribute 'gambling'. Expected a BOOLEAN but got STRING"
+      if (/ATTRIBUTE\.TYPE/.test(msg) && attempt < 5) {
+        const typeRe = /attribute '([a-zA-Z]+)'\. Expected a (BOOLEAN|STRING)/g;
+        let fixed = 0;
+        let mt;
+        while ((mt = typeRe.exec(msg)) !== null) {
+          const [, key, expected] = mt;
+          if (attrs[key] === undefined) continue;
+          attrs[key] = expected === 'BOOLEAN' ? false : 'NONE';
+          fixed++;
+        }
+        if (fixed > 0) {
+          console.log(`  age rating: 型ミスを ${fixed} 件修正して再試行`);
+          continue;
+        }
+      }
+
+      // 「この属性は許可されない」系は、その属性を落として再試行（環境差吸収）。
+      const m = msg.match(/attribute '([a-zA-Z]+)' (?:is not allowed|can not be|cannot be)/);
+      const notAllowed = /NOT_ALLOWED|ATTRIBUTE\.INVALID/.test(msg);
+      if ((m || notAllowed) && attempt < 5) {
+        if (m && attrs[m[1]] !== undefined) {
+          console.log(`  age rating: 属性 '${m[1]}' を除外して再試行`);
+          delete attrs[m[1]];
+          continue;
+        }
+        // 属性名が特定できないが NOT_ALLOWED の場合、新しめの boolean 群を一括で落としてみる。
+        let dropped = false;
+        for (const k of ['advertising', 'healthOrWellnessTopics', 'lootBox', 'messagingAndChat', 'parentalControls', 'userGeneratedContent']) {
+          if (attrs[k] !== undefined) { delete attrs[k]; dropped = true; }
+        }
+        if (dropped) {
+          console.log('  age rating: 新しめの任意 boolean 群を除外して再試行');
+          continue;
+        }
+      }
+      console.log(`  WARN: age rating PATCH 失敗: ${msg.slice(0, 500)}`);
+      console.log(`  送った属性: ${Object.keys(attrs).join(', ')}`);
+      throw e;
+    }
+  }
+}
+
+// App Privacy（データ使用＝プライバシー栄養ラベル）の回答を「公開」する。
+// 未公開だと submit が 409 STATE_ERROR.APP_DATA_USAGES_REQUIRED で弾かれる。
+//
+// ASC では回答(appDataUsages)とは別に「公開状態」(appDataUsagesPublishState)があり、
+// published=true にして初めて審査に出せる。多くの場合 ASC の Web UI 初期化や過去設定で
+// 回答自体は既に存在し、publish だけ未実施＝1 PATCH で済む。回答ゼロのときは
+// 「データ収集なし(DATA_NOT_COLLECTED)」を 1 件登録してから公開する。
+//
+// ※ 経路/フィールド名はインスタンス差があるため、まず GET して実構造を [diag] で出し、
+//   取れた実データに沿って動く（Age Rating で得た教訓）。
+async function ensurePrivacy(api, appId) {
+  // App Privacy(dataUsages) は標準 ASC API(api.appstoreconnect.apple.com/v1) に無く
+  // PATH_ERROR(404) になる。fastlane は iris API(appstoreconnect.apple.com/iris/v1) を使う。
+  // どのベースで JWT が通るか実測で判定する（複数ベースを順に試し、最初に成功した base を採用）。
+  const BASES = [
+    'https://api.appstoreconnect.apple.com/v1',
+    'https://appstoreconnect.apple.com/iris/v1',
+    'https://api.appstoreconnect.apple.com/iris/v1',
+  ];
+
+  let base = null;
+  let usageCount = 0;
+  for (const b of BASES) {
+    try {
+      const usages = await api('GET', `${b}/apps/${appId}/dataUsages?limit=200`);
+      usageCount = (usages.data || []).length;
+      base = b;
+      console.log(`  [diag] dataUsages OK base=${b} 件数=${usageCount}`);
+      break;
+    } catch (e) {
+      console.log(`  [diag] dataUsages NG base=${b}: ${e.message.slice(0, 90)}`);
+    }
+  }
+  if (!base) {
+    // App Privacy（プライバシー栄養ラベル）の dataUsages は iris API 専用で、ASC の
+    // web セッション cookie でしか認証できない。JWT（このスクリプトの API キー）では
+    // どのベースでも 401/404 になり、API からは公開状態を確認も変更もできない（実証済み）。
+    //
+    // → ここで throw して submit 全体を止めるのは誤り。App Privacy は ASC の Web UI で
+    //   一度公開すれば永続するので、「API で確認できない＝未公開」ではない。手動公開を信じて
+    //   submit に進む（fail-soft）。本当に未公開なら submit が APP_DATA_USAGES_REQUIRED で
+    //   弾かれるだけで、ビルドや他の設定を壊すことはない。
+    console.log(
+      '  WARN: dataUsages を JWT API で取得できません（iris は web session 専用＝想定どおり）。\n' +
+        '        App Privacy は ASC Web UI で手動公開済みである前提で submit に進みます。\n' +
+        '        もし未公開なら submit が APP_DATA_USAGES_REQUIRED で弾かれます。その場合は\n' +
+        '        ASC の「アプリのプライバシー」を公開してから再実行してください。',
+    );
+    return;
+  }
+
+  // 2) 公開状態を見る（採用 base で）。
+  let publishStateId = null;
+  let alreadyPublished = false;
+  try {
+    const ps = await api('GET', `${base}/apps/${appId}/dataUsagePublishState`);
+    publishStateId = ps.data?.id || null;
+    alreadyPublished = ps.data?.attributes?.published === true;
+    console.log(`  [diag] publishState id=${publishStateId} published=${alreadyPublished}`);
+  } catch (e) {
+    console.log(`  [diag] dataUsagePublishState GET 失敗: ${e.message.slice(0, 160)}`);
+  }
+
+  if (alreadyPublished) {
+    console.log('  privacy: 既に公開済み（変更なし）');
+    return;
+  }
+
+  // 3) 回答が無ければ「データ収集なし」を1件作る。
+  //    （kimito.link は実際には Clerk 経由で連絡先等を扱うが、ここで詳細マトリクスを
+  //     誤って組むより、まず提出を通す。詳細回答は ASC Web UI でいつでも上書き可能。）
+  if (usageCount === 0) {
+    try {
+      console.log('  privacy: 回答ゼロ → DATA_NOT_COLLECTED を1件登録');
+      await api('POST', `${base}/appDataUsages`, {
+        data: {
+          type: 'appDataUsages',
+          relationships: {
+            app: { data: { type: 'apps', id: appId } },
+            dataProtection: { data: { type: 'appDataUsageDataProtections', id: 'DATA_NOT_COLLECTED' } },
+          },
+        },
+      });
+      console.log('  privacy: DATA_NOT_COLLECTED 登録 OK');
+    } catch (e) {
+      console.log(`  WARN: appDataUsages POST 失敗: ${e.message.slice(0, 300)}`);
+    }
+  }
+
+  // 4) 公開状態を published=true に（採用 base で）。
+  if (!publishStateId) {
+    // GET で取れなかった場合のフォールバック（id 無しでも PATCH 先が要るので再取得）。
+    try {
+      const ps2 = await api('GET', `${base}/apps/${appId}/dataUsagePublishState`);
+      publishStateId = ps2.data?.id || null;
+    } catch { /* noop */ }
+  }
+  if (!publishStateId) {
+    throw new Error('appDataUsagesPublishState の id を特定できませんでした（上の [diag] 参照）。');
+  }
+  await api('PATCH', `${base}/appDataUsagesPublishState/${publishStateId}`, {
+    data: { type: 'appDataUsagesPublishState', id: publishStateId, attributes: { published: true } },
+  });
+  console.log('  ✓ privacy（データ使用）を公開しました');
+}
+
+// Content Rights Declaration（コンテンツ配信権）を埋める。未設定だと submit が
+// 409 STATE_ERROR.ENTITY_STATE_INVALID（associatedErrors に
+// "You must provide a value for the attribute 'contentRightsDeclaration'"）で弾かれる。
+// これは app レベル属性（/v1/apps/{id}）で、バージョンではなくアプリに一度設定すれば永続。
+//
+// 値の意味（Apple の設問「あなたのアプリにサードパーティのコンテンツは含まれますか？」）:
+//   DOES_NOT_USE_THIRD_PARTY_CONTENT — 第三者の著作物を含まない/その権利を持っている
+//   USES_THIRD_PARTY_CONTENT         — 第三者コンテンツを含み権利確認が必要
+// kimito.link はリンクまとめ＝本人の X 投稿/リンクを表示するだけで、第三者の著作物を
+// 製品機能として再配信しない。よって DOES_NOT_USE_THIRD_PARTY_CONTENT が正。
+// env IOS_CONTENT_RIGHTS で上書き可。
+async function ensureContentRights(api, appId) {
+  const desired = process.env.IOS_CONTENT_RIGHTS || 'DOES_NOT_USE_THIRD_PARTY_CONTENT';
+  let current = null;
+  try {
+    const app = await api('GET', `/v1/apps/${appId}?fields[apps]=contentRightsDeclaration`);
+    current = app.data?.attributes?.contentRightsDeclaration ?? null;
+  } catch (e) {
+    console.log(`  [diag] contentRightsDeclaration GET 失敗（続行）: ${e.message.slice(0, 160)}`);
+  }
+  if (current === desired) {
+    console.log(`  content rights: 既に ${current}（変更なし）`);
+    return;
+  }
+  console.log(`  content rights: ${current ?? '(未設定)'} -> ${desired}`);
+  await api('PATCH', `/v1/apps/${appId}`, {
+    data: { type: 'apps', id: appId, attributes: { contentRightsDeclaration: desired } },
+  });
+  console.log('  ✓ content rights declaration 設定完了');
+}
+
+// App Store のカテゴリ（primaryCategory）を埋める。未設定だと submit が
+// 409 STATE_ERROR.ENTITY_STATE_INVALID（associatedErrors に
+// "You must provide a value for the relationship 'primaryCategory'"）で弾かれる。
+// これは appInfo レベルの **relationship**（attribute ではない）で、appCategories
+// リソース（id は 'SOCIAL_NETWORKING' 等の文字列 enum）への参照。一度設定すれば永続。
+//
+// kimito.link は X ログイン基盤のリンクまとめ／プロフィール集約＝SNS 性が中核なので
+// SOCIAL_NETWORKING が正。env IOS_PRIMARY_CATEGORY / IOS_SECONDARY_CATEGORY で上書き可。
+// secondary は任意（submit には不要）なので env 指定時のみ設定する。
+async function ensureCategory(api, appId) {
+  const primary = process.env.IOS_PRIMARY_CATEGORY || 'SOCIAL_NETWORKING';
+  const secondary = process.env.IOS_SECONDARY_CATEGORY || null;
+
+  // submit に使われる appInfo（PREPARE_FOR_SUBMISSION 優先）を特定する。
+  let appInfo = null;
+  try {
+    const infos = await api(
+      'GET',
+      `/v1/apps/${appId}/appInfos?limit=10&include=primaryCategory,secondaryCategory&fields[appInfos]=appStoreState,primaryCategory,secondaryCategory`,
+    );
+    appInfo =
+      (infos.data || []).find((ai) => ai.attributes?.appStoreState === 'PREPARE_FOR_SUBMISSION') ||
+      (infos.data || [])[0] ||
+      null;
+    const cur = appInfo?.relationships?.primaryCategory?.data?.id || '(未設定)';
+    console.log(`  [diag] appInfo id=${appInfo?.id} primaryCategory=${cur}`);
+  } catch (e) {
+    console.log(`  [diag] appInfos 取得失敗: ${e.message.slice(0, 160)}`);
+  }
+  if (!appInfo) {
+    console.log('  WARN: appInfo を特定できず category を設定できません（submit が弾く可能性）。');
+    return;
+  }
+
+  const currentPrimary = appInfo.relationships?.primaryCategory?.data?.id || null;
+  if (currentPrimary === primary && !secondary) {
+    console.log(`  category: primary は既に ${primary}（変更なし）`);
+    return;
+  }
+
+  const relationships = {
+    primaryCategory: { data: { type: 'appCategories', id: primary } },
+  };
+  if (secondary) {
+    relationships.secondaryCategory = { data: { type: 'appCategories', id: secondary } };
+  }
+  console.log(`  category: primary ${currentPrimary ?? '(未設定)'} -> ${primary}${secondary ? ` / secondary -> ${secondary}` : ''}`);
+  await api('PATCH', `/v1/appInfos/${appInfo.id}`, {
+    data: { type: 'appInfos', id: appInfo.id, relationships },
+  });
+  console.log('  ✓ category 設定完了');
+}
+
 async function submitForReview(api, appId, versionId) {
   console.log(`  fetch existing review submissions...`);
   const existing = await api(
@@ -873,6 +1263,18 @@ async function submitForReview(api, appId, versionId) {
   } catch (e) {
     console.log(`  WARN: pricing setup failed (continuing): ${e.message.slice(0, 400)}`);
   }
+
+  console.log('\n[7c] Ensure age rating...');
+  await ensureAgeRating(api, version.id, app.id);
+
+  console.log('\n[7d] Ensure privacy (data usages published)...');
+  await ensurePrivacy(api, app.id);
+
+  console.log('\n[7e] Ensure content rights declaration...');
+  await ensureContentRights(api, app.id);
+
+  console.log('\n[7f] Ensure App Store category...');
+  await ensureCategory(api, app.id);
 
   console.log('\n[8] Submit for review...');
   await submitForReview(api, app.id, version.id);

@@ -545,3 +545,53 @@ Thank you for your patience.
 - [ ] Usage Data → Product Interaction 申告(analytics があれば)
 - [ ] Linked to You / Not used for Tracking
 - [ ] privacy URL / support URL が 200 を返す
+
+---
+
+## 提出時の「必須項目」連鎖 — `reviewSubmissionItems` の 409 を1つずつ潰す
+
+これは**却下ではなく submit 段階のブロッカー**。`appstore-submit.mjs` が
+`POST /v1/reviewSubmissionItems` で `409 STATE_ERROR.ENTITY_STATE_INVALID` を返すとき、
+`meta.associatedErrors` に「**次に足りない1項目だけ**」が出る。一括では出ないので
+**1項目直す → WF 再実行 → 次の1項目** を繰り返すしかない。kimito.link の初回提出で
+実際に出た順と、`scripts/appstore-submit.mjs` に入れた冪等な自動化（`[7c]`〜`[7f]`）:
+
+| 出る順 | エラー | 対象 | 種別 | 入れた値 / 対処 |
+|---|---|---|---|---|
+| `[7c]` | `'sexualContentGraphicAndNudity'` 等が未回答 | ageRatingDeclaration | attribute | 全項目 enum→`NONE` / boolean→`false`。型は**属性名**で判定（現在値 null から推測しない）。Apple の TYPE エラーから自動修正。`ageAssurance` は `NONE` で送る（REQUIRED） |
+| `[7d]` | `APP_DATA_USAGES_REQUIRED` | App Privacy（dataUsages） | — | **下記の重大注意。JWT API では不可＝ASC Web UI で手動公開**。スクリプトは GET 失敗時 fail-soft で submit に進む |
+| `[7e]` | `'contentRightsDeclaration'` 未設定 | `/v1/apps/{id}` | **attribute** | リンクまとめ等は `DOES_NOT_USE_THIRD_PARTY_CONTENT` |
+| `[7f]` | `'primaryCategory'` 未設定 | `/v1/appInfos/{id}` | **relationship**（appCategories への参照・id は `SOCIAL_NETWORKING` 等の文字列 enum） | SNS 性が中核なら `SOCIAL_NETWORKING` |
+
+`contentRightsDeclaration`(attribute) と `primaryCategory`(relationship) は**型が違う**点に注意
+（PATCH の body 構造が `attributes` か `relationships` かで変わる）。いずれも **app/appInfo に
+一度設定すれば永続**＝2回目以降の提出は「既に設定済み（変更なし）」で素通りする。
+
+### 🔴 最重要: App Privacy（プライバシー栄養ラベル）は JWT API では公開できない
+
+`dataUsages` / `dataUsagePublishState`（プライバシー栄養ラベル）は **App Store Connect API
+（ES256 JWT のキー）では操作できない**。実測で確定:
+
+- `https://api.appstoreconnect.apple.com/v1/apps/{id}/dataUsages` → **404 PATH_ERROR**
+- `https://appstoreconnect.apple.com/iris/v1/.../dataUsages` → **401**（iris は ASC の **web session cookie 専用**）
+- `https://api.appstoreconnect.apple.com/iris/v1/...` → **404**
+
+fastlane が App Privacy を扱えるのは Apple ID ログイン（web セッション）を使うから。
+**API キーだけの CI からは原理的に公開できない。**
+
+→ **対処は ASC Web UI で「アプリのプライバシー」を一度手動公開するだけ**（永続する）。
+`appstore-submit.mjs` の `ensurePrivacy()` は、dataUsages GET が全ベースで失敗しても
+**throw せず WARN を出して submit に進む（fail-soft）**設計にしてある。「API で確認できない＝
+未公開」ではないため。本当に未公開なら submit が `APP_DATA_USAGES_REQUIRED` で弾くので安全。
+
+**次のアプリでやること**: 提出前に ASC で App Privacy を手動公開しておく。これを知らないと
+「API で公開しようとして 10 回ハマる」。CI 側は何もしなくてよい（fail-soft で素通りする）。
+
+### 署名証明書の MAC 検証フレーク（一過性）
+
+`Install signing certificate` で `security: SecKeychainItemImport: MAC verification failed
+during PKCS12 import (wrong password?)` が **~4回に1回** 出ることがある。原因は
+OpenSSL 3.x が `pkcs12 -export` で作る .p12 の SHA-256 MAC を macOS の `security import` が
+時々検証できない相性問題（**証明書/パスワードは正しい**）。`ios-appstore-release.yml` では
+`openssl pkcs12 -export` に **`-macalg sha1 -legacy`** を付けて根治し、念のため import を
+**最大3回リトライ**している。それでも稀に出たら **WF を再実行すれば越える**。
