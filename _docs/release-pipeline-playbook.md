@@ -107,6 +107,8 @@ release-notes/CURRENT-ja.txt    <-- 1 ファイルで「次回見せる新機能
 | --- | --- |
 | `_docs/release-one-click.md` | プロジェクト固有の運用手順（このアプリ専用） |
 | `_docs/release-pipeline-playbook.md` | このファイル（汎用版） |
+| `_docs/google-play-submission-playbook.md` | Play 提出の追体験記録（TWA 生成・Console 11項目・データセーフティの実値・winpty/packageId 罠） |
+| `_docs/apple-reject-knowledge-base.md` | iOS 却下ナレッジ（Android 申告と整合させる基準） |
 
 ### 3.5 npm scripts（`package.json` の `scripts` に追加）
 

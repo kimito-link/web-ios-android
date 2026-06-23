@@ -133,6 +133,16 @@ node scripts/android-patch-signing.mjs
 
 ---
 
+## 提出まで通すなら（実体験プレイブック）
+
+このREADMEは `android-twa/` を**生成する**手順。生成後に **Play Console へ提出して審査に出す**
+全工程（bubblewrap 対話CLIを winpty で突破／packageId のドメイン逆順罠／Play Console 必須申告
+11項目の実値＝データセーフティ・コンテンツレーティング・対象年齢など）は
+**`../../_docs/google-play-submission-playbook.md`** に追体験記録として残してある。次のアプリは
+そちらを併読すると最短で通せる。
+
+---
+
 ## 実証済みの参照アプリ（金型の出どころ）
 
 - `../../../Exosome/android-twa` — TWA の最小実物（manifest / app build.gradle の署名注入後の姿）。
