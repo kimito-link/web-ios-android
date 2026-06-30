@@ -7,7 +7,11 @@ TWA(Bubblewrap) プロジェクト生成 → AAB ビルド → Play Console の�
 関連の正本:
 - `templates/android-twa/README.md` — TWA プロジェクト生成手順の正本
 - `_docs/release-pipeline-playbook.md` — Web/iOS/Android 同時リリース・パイプライン
-- `_docs/apple-reject-knowledge-base.md` — iOS 側の却下ナレッジ（Android 申告と整合させる基準）
+- `_docs/apple-reject-knowledge-base.md` — iOS 側の却下ナレッジ（Android 申告と整合させる基準）。
+  **スクショ自動化の正本でもある**: §2.3「kimito ケーススタディ」に、OAuth専用ログイン
+  (Clerk×X)は Playwright/CDP で認証スクショを自動取得できない(X/Cloudflare/Chrome の bot 対策で
+  全滅)＝**公開ページだけでスクショを構成する**方式(`scripts/capture-public-screenshots.mjs` 原型)
+  が解、と記録。Play のスクショも同じく公開ページ方式で撮れば storageState/デモ垢ログイン不要。
 
 > ⚠️ 申告（データセーフティ・コンテンツレーティング・対象年齢）は**法的な意味を持つ回答**。
 > 下の値は「X ログインのリンクまとめアプリ（課金なし・広告なし・Vercel Analytics のみ）」の

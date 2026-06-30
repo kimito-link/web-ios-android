@@ -181,6 +181,32 @@ slot1(最左・最重要)が旧ログイン画面のまま残った。教訓:
 4. **速い却下(~2.5h)は手がかり**。前回と同じトリガを踏んだ可能性大。「もう直した」を鵜呑みにせず
    実際に出荷された内容(peek + build log)を見る。
 
+### kimito ケーススタディ — OAuth専用ログイン(Clerk×X)は Playwright 自動化が不可能 → 公開ページ方式で回避(2026-06-30)
+
+v1.0.7 は「Playwright で email/password ログインして認証後画面を撮る」前提だった。だが認証が
+**OAuth専用(Clerk標準 `<SignIn/>` × X/Twitter)**だと、その前提が崩れる。kimito で storageState
+自動取得を**3経路すべて試して全滅**した一次記録:
+
+1. **新規ブラウザで X OAuth を自動ログイン** → X が「ログインを一時的に制限しました」。普段の
+   Chrome では同じ垢に普通にログインできるのに、Playwright 制御ブラウザ(CDP痕跡)だけ弾く。
+2. **persistent context で普段の Chrome プロファイル(Xログイン済み)を流用** → X 制限は突破し
+   Clerk コールバックまで到達するが、**Cloudflare の「私はロボットではありません」CAPTCHA が
+   ループ**(チェック→消える→再出現)して突破不可。Playwright制御を Cloudflare が検知。
+3. **CDP attach(`--remote-debugging-port`)で手動ログイン済み Chrome に後付け接続** → Chrome 新仕様
+   `DevTools remote debugging requires a non-default data directory` で通常プロファイルのリモート
+   デバッグが拒否される。
+
+→ **Clerk × X × Cloudflare × Chrome の四重 bot 対策で、Playwright/CDP による認証スクショの
+自動取得は事実上不可能**。さらに Clerk の `__session` は **session cookie(ブラウザを閉じると揮発)**
+なので「Chrome を閉じてから Cookie DB を sqlite 読み」も無駄(閉じた瞬間に消える)。
+
+**解 = 認証スクショを撮らない。公開ページだけでストアスクショを構成する**(partnership 方式・
+`scripts/capture-public-screenshots.mjs` が原型)。リンクまとめ/プロフィール系アプリは公開
+プロフィールページに成果物(AI生成bio・リンク・投稿)が実表示されるので、ログイン後ダッシュボードを
+撮らなくても価値が伝わる。Apple 2.3.3 は「実アプリ画面」を求めるが、公開ページも実アプリの一部
+(WebView がそのまま表示する画面)なので要件を満たす。**次アプリでも OAuth専用ログインなら最初から
+公開ページ方式を採れ**(email/PW ログインが使えるアプリだけ v1.0.7 の認証スクショ方式が有効)。
+
 ---
 
 ## §2.5 Software Requirements
