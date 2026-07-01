@@ -12,6 +12,7 @@
 | パス | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
 | `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→TWA案内→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
+| `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
 | `workflows/ios-shell-guardrail.yml` | 独自ネイティブ注入の再混入を CI で赤にするガード | 無改変(禁止パターンはアプリ非依存に一般化済み) |
@@ -52,7 +53,10 @@
 
 ## 使い方(連動型アプリを新規に作る)
 
-1. アプリのリポジトリで `app.config.json` を埋める(identity / brand / contact / businessModel)。
+0. **Web 本体を作る**(まだ無ければ): `next-app/` を新リポの `apps/web/`(等)にコピーし、
+   `{{...}}` を app.config.json の値で置換。Clerk を使うなら `next-app/README-clerk.md` に従い
+   `@clerk/nextjs` を入れて `.template` を配置。Capacitor はこの Web を `server.url` で読む。
+1. アプリのリポジトリで `app.config.json` を埋める(identity / brand / contact / businessModel / **auth**)。
 2. `capacitor.config.template.ts` の `{{...}}` を app.config.json の値に置換して
    そのリポの `capacitor.config.ts` を作る。
    - `{{bundleId}}` = identity.bundleId / `{{displayName}}` = identity.displayName

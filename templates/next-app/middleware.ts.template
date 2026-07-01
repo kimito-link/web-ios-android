@@ -1,0 +1,47 @@
+// ============================================================================
+// Clerk 認証の middleware。auth.provider === "clerk" のとき middleware.ts として配置。
+// kimitolink-linktree の実運用版を金型化。
+//
+// ★ ストア審査の落とし穴（重要）:
+//   スクショ自動撮影スクリプト（capture-appstore/play-screenshots.mjs）は
+//   「未ログイン状態」でページを開いて撮る。認証必須ページしか無いと真っ白/リダイレクトで
+//   撮影が失敗する。だから撮影対象の紹介ページ（/ や /store-preview 等）は必ず
+//   public に入れておくこと。iOS/Play どちらの初回提出でもここで詰まりやすい。
+// ============================================================================
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+// 未ログインでもアクセスできる公開ルート。ここに無いパスは自動的に認証必須になる。
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/logout(.*)",
+  // 法務・料金など公開が要る静的ページ。
+  "/terms(.*)",
+  "/privacy(.*)",
+  "/price(.*)",
+  // ★ ストア審査スクショ撮影専用ページ（noindex 推奨・未ログインで撮る）。
+  "/store-preview(.*)",
+  "/demo(.*)",
+  // クローラー/OG 画像が未ログインで叩くもの。
+  "/robots.txt",
+  "/sitemap.xml",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
+  // 第三者が未ログインで踏む公開 API があればここに追加（例: OG 画像生成 /api/og）。
+  "/api/og(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+});
+
+export const config = {
+  matcher: [
+    // 静的アセット・_next を除く全ルート。
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};

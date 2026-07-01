@@ -5,6 +5,8 @@ _drafts/
 .env
 .env.*
 .env.cws
+# ただしテンプレのサンプル env（秘密なし・プレースホルダのみ）は追跡する。
+!templates/**/.env.example
 
 # 署名鍵・証明書・APIキー等を置く一時ディレクトリ（bootstrap-secrets.mjs 用）。
 # 絶対にコミットしない＝鍵流出防止。中身は base64 化して GitHub Secrets に登録する。

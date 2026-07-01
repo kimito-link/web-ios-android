@@ -307,6 +307,44 @@
     </div>
   </div>
 
+  <!-- Android: 送信ボタンがグレーで押せない -->
+  <div class="card">
+    <span class="card-tag tag-android">🤖 Android</span>
+    <h2>「審査に送信」ボタンがグレーで押せない</h2>
+    <div class="qa qa-symptom">
+      <div class="qa-label">▼ 症状</div>
+      <p>掲載情報もアプリのコンテンツも全部埋めたのに、「公開の概要」の<strong>「審査に送信」ボタンが灰色</strong>のまま。「ダッシュボードで必要な手順を完了してください」とだけ出て、何が足りないのか分からない。</p>
+    </div>
+    <div class="qa qa-cause">
+      <div class="qa-label">▼ 原因</div>
+      <p>製品版の下書き（DRAFT）リリースが「あとで確認する」状態のまま止まっていて、リリースが<strong>「確認済み」に確定していない</strong>だけ。AABは乗っているのに、最後のひと押しが残っています。</p>
+    </div>
+    <div class="qa qa-fix">
+      <div class="qa-label">▼ 直し方</div>
+      <p><strong>テストとリリース → 製品版 → 「リリースを編集」</strong>（新規作成ではなく既存を編集）→ 「次へ」→ プレビュー画面で「保存」→ 出てくる案内で「概要に移動」。<br>
+      これで「公開の概要」の送信ボタンが<strong>青く押せる状態</strong>になります。</p>
+      <p style="margin-top:10px; background:#fff8e1; border-radius:8px; padding:10px 12px;">💡 プレビュー画面で「<strong>リリースでエラーが検出されました</strong>」と赤く出ても、中身は「ProGuardの難読化解除ファイルがない」という<strong>警告1つだけ</strong>のことが多いです。Capacitor/TWAアプリは難読化しないので<strong>無害・そのまま送信OK</strong>。ここで手が止まりがちなので覚えておくと安心です。</p>
+    </div>
+  </div>
+
+  <!-- Android: 掲載情報が反映されない（スクショ8枚超過） -->
+  <div class="card">
+    <span class="card-tag tag-android">🤖 Android</span>
+    <h2>アイコンや掲載情報がストアに反映されない（一覧が緑ロボのまま）</h2>
+    <div class="qa qa-symptom">
+      <div class="qa-label">▼ 症状</div>
+      <p>掲載文・アイコン・スクショをアップしたはずなのに、Play Console のアプリ一覧が<strong>デフォルトの緑ロボアイコンのまま</strong>。掲載情報がまるごと空に見える。自動入力スクリプトのログは「権限がありません(403)」と言っている。</p>
+    </div>
+    <div class="qa qa-cause">
+      <div class="qa-label">▼ 原因</div>
+      <p>実は権限ではなく、<strong>スクショの枚数オーバー</strong>。Play は1言語あたり<strong>スクショ8枚まで</strong>。撮影が6.5型と6.7型の両サイズを出すと10枚になり、保存チェックで弾かれて<strong>まとめて全部破棄</strong>される（アイコンも掲載文も一緒に消える）。エラーが「403（権限）」の形で返るので、原因を勘違いしやすい罠です。</p>
+    </div>
+    <div class="qa qa-fix">
+      <div class="qa-label">▼ 直し方</div>
+      <p>スクショを<strong>8枚以内</strong>に絞るだけ。最新のキットの <code>play-fill-listing.mjs</code> は<strong>自動で8枚に切る</strong>ようになっているので、AIに「掲載情報を入れ直して」と頼めば直ります。</p>
+    </div>
+  </div>
+
   <!-- Android: 署名 -->
   <div class="card">
     <span class="card-tag tag-android">🤖 Android</span>
