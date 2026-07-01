@@ -30,18 +30,37 @@ bubblewrap で android-twa/ 生成   ← 対話CLIが鬼門。winpty で TTY を
   ↓
 internal トラック配信   ← 初回 WF で通る
   ↓
-production = draft で止まる   ← API では3項目を埋められない（下記）
+production = draft で止まる   ← API では多くの項目を埋められない（下記）
   ↓
-Play Console で 11項目を手入力   ← ここが本プレイブックの主題
+Play Console で 必須申告を手入力   ← ここが本プレイブックの主題
   ↓
-クイックチェック（自動・約12分）→ 自動で審査送信
+「製品版リリースの作成」画面で 手動「次へ→審査に送信」   ← ★最後はUI必須（WFは止まる）
+  ↓
+クイックチェック（自動・約12〜15分）→ 自動で審査キュー投入
 ```
 
-**API 自動化の限界**：production の `App content / Data safety / Content rating` 等は
-Google Play Developer API では設定できず、**Play Console の Web UI でしか入力できない**
-（iOS の App Privacy が ASC 手動公開なのと同じ構造）。`play-publish.mjs` は production で
-`changesNotSentForReview` を検知したら自動で **draft フォールバック**して AAB だけ乗せる設計なので、
-11項目を埋める前に WF を回しても空振りにはならない（draft で待てる）。
+**API 自動化の限界（2026-06 kimito 実体験で確定した境界線）**：
+- **Data safety だけは API/スクリプトで送れる**（実績あり）。CSV決定を生成 → Publisher API で
+  送信、で `DONE` まで自動化できた（`play-generate-data-safety-csv.mjs` / `play-fill-data-safety.mjs`
+  / `lib/play-data-safety-template.json`。キット正本化候補）。
+- **App content / Content rating（IARC）は Google が API を出していない**＝**初回だけ手入力必須**
+  （自動化不可・確定）。iOS の App Privacy が ASC 手動公開なのと同じ構造。
+- **最後の「審査に送信」も Web UI 必須**（下記 §3）。`play-publish.mjs` は **冪等設計**で、同一
+  versionCode＋同一 notes が既にトラックにいると `[skip] Nothing to do` で早期 return するため、
+  WF を何度回しても **production への昇格・審査送信は進まない**。AAB を乗せる所までが WF の仕事で、
+  審査送信は人間が Console で押す。これを「WF が止まった」と誤解しないこと（仕様）。
+
+`play-publish.mjs` は production で `changesNotSentForReview` を検知したら自動で **draft
+フォールバック**して AAB だけ乗せる設計なので、申告を埋める前に WF を回しても空振りにはならない
+（draft で待てる）。**ただし draft のまま止まると審査送信ボタンがグレーになる**ので、最後は
+UI で DRAFT を確認・確定する必要がある（§3・`FIRST-SUBMISSION-blockers.md` C2）。
+
+**掲載情報の自動入力（`play-fill-listing.mjs`）の落とし穴**: 掲載文・アイコン・グラフィック・
+スクショを API で入れられるが、**phoneScreenshots は 1 言語 8 枚まで**。capture が 6.5"/6.7"
+両サイズを出して 10 枚になると `edits:validate` が `403 "more than 8 screenshots"` で落ち、
+**edit ごと破棄されて掲載情報が丸ごと消える**（アイコンがデフォルト表示のまま＝一見「サムネイル
+無し」）。しかも 403 なので soft-fail が「権限が原因」とミスリードする。キット版は 8 枚キャップ＋
+content-limit 403 の判別を実装済み。詳細は `FIRST-SUBMISSION-blockers.md` C1。
 
 ---
 
@@ -149,13 +168,52 @@ internal 配信後、production を出すと draft で止まる。Play Console �
 
 ---
 
-## 3. 送信（最後）
+## 3. 送信（最後）— ★ここで詰まりやすい（2026-06〜07 実体験）
 
-11項目すべて保存 → 「公開の概要」→ 変更一覧が「審査にまだ送信されていない変更」に並ぶ。
-「審査のためにアプリを送信」ボタンは最初グレーで、上に「一般的な問題のクイックチェックを実行する
-（残り約N分）」が出る。説明文どおり **チェック完了（約10〜15分）で自動的に審査へ送信される**ので、
-ボタンを手で押す必要はない（押せるなら押してもよい）。送信後は Google の審査（数時間〜数日）→
-通れば production で一般公開。
+WF では審査送信されない（§0参照）。最後は必ず **Play Console UI でリリースを「次へ→審査に送信」**。
+順序は次の2段階。
+
+> **このプレイブックは元は TWA(Bubblewrap/kimito.link)前提**だが、§2〜§3 の Play Console 手順は
+> **Capacitor アプリ（malwarecheck.site / apps/mobile）でも全く同じ**。違うのは AAB の作り方だけ
+> （bubblewrap ではなく `npx cap add android` → Gradle。`android-play-release.yml` の Capacitor 版）。
+> パッケージ名・掲載情報・11項目申告・審査送信の手順は共通。
+
+> **既に production に DRAFT リリースがある場合（play-publish が draft フォールバック済み）**は、
+> 「新しいリリースを作成」ではなく **「リリースを編集」** で既存 DRAFT を開く（下の①はどちらの
+> 入口でも同じ画面に着く）。malwarecheck では WF が versionCode=2 の DRAFT を先に作っていたので
+> 「リリースを編集」経由だった。**送信ボタンがグレーアウトしていたら、この DRAFT を開いて
+> 「次へ→（レビュー画面）→保存→[公開の概要]に移動」を一度通す**とボタンが有効化される
+> （＝DRAFT を「確認済み」に確定する必要がある。保存だけの draft のままだと送信できない）。
+> 詳細は `FIRST-SUBMISSION-blockers.md` C2。
+
+### ① 「製品版リリースの作成」画面（テストとリリース → 製品版 → 新しいリリースを作成／既存なら「リリースを編集」）
+- AAB は WF が既に乗せているので、この画面の **App Bundle テーブルに version 1 (1.0.0) が載っている**
+  ことを確認する。
+- ⚠️ **罠：上の「ここにアップロードする App Bundle をドロップしてください」枠が空に見えて焦る**が、
+  これは*追加で別の bundle を足したい人向けの入力欄*。下のテーブルに既存 bundle があれば
+  **アップロードは不要・枠は空のままでよい**。「uploadする内容がない」のは正常。
+- リリース名（=versionCode の `1` 等）とリリースノート(ja-JP)が入っていることを確認。
+- 「アプリの完全性」=自動保護オン・Google Play 署名 OK を確認。
+- 下にスクロールして **右下「次へ」** を押す（押せない＝グレーなら必須項目が空。リリースノート等を埋める）。
+
+### ② 「プレビューして確認する」画面 → 審査送信
+- 内容プレビューを確認 → **「審査のためにアプリを送信」（または「リリースの公開を開始」）** を押す。
+- ⚠️ 上部に **「リリースでエラーが検出されました」** と赤く出ても、「もっと見る」で開くと実体は
+  **警告1件＝「App Bundle に難読化解除ファイル(ProGuard mapping)がありません」**なことが多い。
+  **Capacitor / TWA は minify しないので該当なし・無害・提出をブロックしない**（エラー0件・警告1件で
+  送信できる）。ここで手が止まりやすいので覚えておく。
+- Capacitor 版でこの画面に「保存」しかない場合は、まず「保存」→ダイアログ「[公開の概要]に移動」で
+  公開の概要へ。そこで **「N件の変更を審査に送信」** が有効化されるので押す（→確認ダイアログ
+  「変更を審査に送信」）。§3 ③ の状態遷移で送信成功を確認する。
+
+### ③ 送信後の「公開の概要」での状態遷移（送信できた証拠）
+1. 押した直後は上部に **「一般的な問題のクイックチェックを実行する（残り約 N 分）」** のバー。
+   説明文に「チェックが完了するとすぐに審査のために送信されます」とあり、**約12〜15分の自動チェック後に
+   自動で審査キューへ**入る（このバーが出ていれば送信操作は成功している）。
+2. チェック完了後、バーが消えて **「変更内容は現在審査中です。アプリの審査時に他の問題が見つかる
+   ことがあります。」** に変わる ＝ **正式に審査キューに入った最終サイン**。ここまで来たら人の操作は終了。
+3. 以後は Google の審査（数時間〜数日、初回は長め）→ 承認で production 一般公開（「完全公開を開始」を
+   選んでいれば日本で自動公開）。指摘ならメールで来るので修正して再送信。
 
 **direct-link が効かない / SPA が重い**：Play Console はスクショ取得が30秒タイムアウトしたり
 サイドバーが折り畳まれたりする。`bubblewrap`/`gh` で自動化できる所は自動化し、Console の手入力は
@@ -169,5 +227,17 @@ internal 配信後、production を出すと draft で止まる。Play Console �
 2. `winpty` で bubblewrap init → packageId を是正して `update` → `android-patch-signing.mjs`。
 3. version を 1.0.0/1 に戻して `android-twa/` をコミット（鍵は .gitignore）。
 4. `android-play-release.yml`（track=internal）で配信実績 → track=production は draft で待つ。
-5. Play Console で上表 11項目を入力（**API では不可**）。データセーフティが最長。
-6. クイックチェック完了で自動審査送信。iOS の App Privacy 手動公開と同じ「Web UI 必須」枠。
+5. **掲載情報も API で入る**（`play-fill-listing.mjs`＝掲載文/アイコン/フィーチャーグラフィック/
+   スクショ）。⚠️ **スクショは 8 枚まで**（超過すると edit ごと破棄・掲載情報が全消え＝キット版は
+   8枚キャップ済み）。**Data safety も自動化できる**（`play-generate-data-safety-csv.mjs`→
+   `play-fill-data-safety.mjs`、Publisher API 送信で `DONE`）。**App content / Content rating は
+   API 無し＝手入力必須**。※ これら play-fill-* はキット `templates/scripts/` に還元済み。
+6. **最後の「次へ→審査に送信」は Play Console UI でやる**（WF は冪等スキップで止まる＝仕様）。
+   「製品版リリースの作成」画面でアップロード枠が空でも、テーブルに bundle があれば追加不要。
+   **送信ボタンがグレーなら、製品版 DRAFT を「リリースを編集→次へ→保存→[公開の概要]に移動」で
+   確定**するとボタンが有効化される（C2）。レビュー画面の「エラー検出」は ProGuard mapping 無しの
+   警告で無害。
+7. 送信後「クイックチェック（約12〜15分）」→ 見出しが「審査中の変更」に変われば審査投入完了。
+   iOS の App Privacy 手動公開と同じ「Web UI 必須」枠。
+8. **Capacitor でも同じ**：§2〜§3 の Console 手順は TWA/Capacitor 共通。違うのは AAB の作り方だけ
+   （`npx cap add android`→Gradle vs bubblewrap）。

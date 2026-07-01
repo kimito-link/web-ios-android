@@ -109,6 +109,66 @@ Apple は「足りないものを1つずつ」しか教えてくれないので�
 
 ---
 
+## C. Android（Play）提出系ブロッカー — 「枠さえ作ればスムーズ」は嘘だった
+
+> 以前このファイルは「Android は Play のアプリ枠さえ作ればスムーズ」と締めていたが、
+> malwarecheck.site の Android 初回提出（2026-07-01・`com.reversehack.malwarecheck`）で
+> **枠作成後に2つの詰まりを踏んだ**。どちらも「掲載情報が一切反映されない／審査に送信できない」
+> という致命的な見た目になるのに、原因がUIやログからは分かりにくい。次アプリで必ず再発する。
+
+### C1. スクショが8枚を超えて edit ごと破棄される（掲載情報が全部消える）
+- **症状**: `play-fill-listing.mjs` のログで graphics のアップロード自体は成功（icon/featureGraphic/
+  screenshots が `-> https://lh3...` を返す）しているのに、最後の
+  `POST /edits/{id}:validate -> 403: "This app has more than 8 screenshots for language ja-JP." PERMISSION_DENIED`
+  で落ちる。catch で `edits DELETE` するので **edit ごと破棄され、アイコン・掲載文・グラフィック・
+  スクショが全部反映されない**。Play Console の一覧ではアイコンがデフォルトの緑ロボットのまま＝
+  「サムネイルがない」に見える。
+- **原因**: capture ステップが 6.5" と 6.7" の**両サイズを出すと 1 言語 10 枚**になる。Play の
+  phoneScreenshots は **1 言語あたり最大 8 枚**。超過すると validate が弾く。
+- **ミスリードの罠**: エラーは 403 PERMISSION_DENIED で返るので、soft-fail が
+  「Service Account に CAN_MANAGE_PUBLIC_LISTING 権限が無い」と誤って報告する。**実際は権限では
+  なくスクショ枚数**。403 の message を見分けること（"more than N screenshots" は権限問題ではない）。
+- **直し方**: `play-fill-listing.mjs` で phoneScreenshots を **8枚に slice**（キット版は
+  `PLAY_MAX_PHONE_SCREENSHOTS=8` で実装済み・超過分はログに出す）。さらにキット版は
+  `isContentLimit403()` で「枚数超過などの content-limit 403」を権限 soft-fail から除外し、
+  真因を大きく出すようにした。**capture 側で 8 枚以内に絞る**のも併用推奨。
+
+### C2. 「審査に送信」ボタンがグレーアウトして押せない（DRAFT を編集し直すと解ける）
+- **症状**: 掲載情報・コンテンツ・データセーフティを全部埋めても、「公開の概要（publishing）」の
+  **「審査のためにアプリを送信」ボタンがグレーアウト**。「審査のために変更を送信するには、アプリ
+  ダッシュボードで必要な手順を完了してください」と出る。ダッシュボードは iOS 風の完了チェックが
+  無く、何が足りないのか分かりにくい。
+- **原因**: production トラックの **DRAFT リリースが「後で確認するために保存」状態**のまま
+  （AAB は乗っているが、リリースが「確認済み」に確定していない）。play-publish.mjs が
+  changesNotSentForReview で draft フォールバックした結果、リリースがレビュー未確定で止まる。
+- **直し方**（UI 手順・自動化不可）:
+  1. **テストとリリース → 製品版 → 「リリースを編集」**（既存 DRAFT を開く。"新しいリリースを作成"
+     ではない）。
+  2. 内容（App Bundle テーブルに version が載っている・リリースノートがある）を確認して **「次へ」**。
+  3. 「プレビューして確認する」画面で **「保存」**（この時点ではまだ提出ではない）。
+  4. ダイアログ「[公開の概要] に移動しますか?」→ **「概要に移動」**。
+  5. 公開の概要に戻ると **「N件の変更を審査に送信」ボタンが有効化**されている。これを押す。
+- **⚠️ レビュー画面の「リリースでエラーが検出されました」に驚かない**: 実体は
+  **警告1件＝「App Bundle に難読化解除ファイル(ProGuard mapping)がありません」**であることが多い。
+  **Capacitor / TWA は minify しないので該当なし＝無害・提出をブロックしない**。「エラー」表記だが
+  エラー0件・警告1件で送信できる。
+
+### Android 内部 ID の取得（Play Console SPA が直リンクを弾くとき）
+- Play Console は `.../app/<appId>/publishing` 等の**直 URL 遷移をアプリ一覧に弾く**ことがある。
+  一度アプリ行をクリックして `.../app/<appId>/app-dashboard` に着地すれば、以後 URL の `<appId>`
+  （例 `4974258818391969379`）や production の `tracks/<trackId>` が取れる。SPA は本文更新が遅延する
+  ので、クリック後は 2〜3 秒待ってからスクショで確認する。
+- 一覧のアイコンがデフォルト表示でも**実際は反映済みのことがある**（キャッシュ）。ダッシュボード
+  右上のアプリ名横アイコンで正しい素材が出ていれば反映済み。
+
+### Android クイックチェック（送信できた証拠）
+- 「N件の変更を審査に送信」→確認ダイアログ「変更を審査に送信」を押すと、公開の概要の見出しが
+  **「審査にまだ送信されていない変更」→「審査中の変更」に変わる**（＝送信成功のサイン）。
+  同時に「一般的な問題のクイックチェックを実行する（残り約 N 分）」バーが出て、**完了すると自動で
+  本審査キューへ**投入される。審査は通常 7 日以内。
+
+---
+
 ## まとめ: 初回提出チェックリスト（提出の「前」に全部 ✓）
 
 ```
@@ -130,11 +190,18 @@ ASC UI 手動が要る項目（API で効かない）
 [ ] サブタイトル（30字以内・ASO 効く）
 [ ] コンテンツ配信権（B7 で API 設定できれば UI 不要）
 [ ] App プライバシー公開（B8）
+
+Android（Play）— ビルドは iOS の共通修正が効いてスムーズだが、掲載/送信で詰まる
+[ ] C1 phoneScreenshots は 8枚以内（超過で edit ごと破棄・掲載情報が全消え）
+[ ] C2 送信ボタンがグレーなら 製品版 DRAFT を「リリースを編集→次へ→保存→概要に移動」で有効化
+[ ] レビュー画面の「エラー検出」＝実体は ProGuard mapping 無し警告（Capacitor/TWA は無害）
+[ ] アプリのコンテンツ11項目（google-play-submission-playbook.md §2）は API 無し＝手入力
+[ ] 最後の「審査に送信」は Play Console UI（WF は冪等スキップで止まる＝仕様）
 ```
 
-> これらを埋めれば、`appstore-submit.mjs` が
+> iOS はこれらを埋めれば `appstore-submit.mjs` が
 > `PATCH submitted=true` → `final state=WAITING_FOR_REVIEW` を出して**審査キューに入る**。
 >
-> Android（`android-play-release.yml`）は iOS と違い、Play のアプリ枠さえ作れば
-> dry_run 成功 → 本番 Publish までスムーズ（iOS で踏んだ共通修正が効くため）。
-> Play 固有の初回手順は `google-play-submission-playbook.md`。
+> Android（`android-play-release.yml`）は **ビルド〜AAB アップロードまでは** iOS の共通修正が
+> 効いてスムーズ。ただし**掲載情報の反映（C1）と審査送信（C2）で詰まる**ので上記 C セクションを
+> 潰すこと。Play 固有の初回手順の全体像は `google-play-submission-playbook.md`。
