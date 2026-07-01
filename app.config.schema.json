@@ -83,7 +83,13 @@
         "thirdPartyProvidersOnAndroid": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
         "siwaEnabled": { "type": "boolean", "description": "Whether Sign in with Apple is configured in the auth provider (true → SIWA button shows on all platforms)" },
         "demoAccountUsernameSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo username" },
-        "demoAccountPasswordSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo password" }
+        "demoAccountPasswordSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo password" },
+
+        "brandPreset": { "type": ["string", "null"], "description": "templates/auth/brands/<brand>.json のブランドスラッグ。設定するとそのブランドの Clerk ドメイン・X OAuth 設定を引き継ぐ(例: kimito-link)。setup-clerk-x-oauth.mjs がここを起点に値を解決する" },
+        "clerkCustomDomain": { "type": ["string", "null"], "format": "hostname", "description": "Clerk 本番カスタムドメイン (例: clerk.surechigai-romi.link)。brandPreset を使わない場合に直接指定する。本番デプロイ前に Clerk Dashboard > Domains で設定し DNS CNAME を通すこと" },
+        "xCallbackUrl": { "type": ["string", "null"], "format": "uri", "description": "X Developer Portal に登録する Callback URL (例: https://clerk.surechigai-romi.link/v1/oauth_callback)。brandPreset があれば callbackUrlTemplate から自動生成されるので空でよい" },
+        "requiredXScopes": { "type": "array", "items": { "type": "string" }, "description": "X OAuth に要求するスコープ。tweet.write は絶対に入れない(authorize 画面ループの罠)。空なら Clerk デフォルト/プリセット値を使う", "default": ["users.read", "tweet.read", "offline.access"] },
+        "shareInstanceAcrossApps": { "type": ["boolean", "null"], "description": "ブランドプリセットの方式A/B をアプリ単位で上書きする。true=方式A(ブランドの Clerk インスタンス・ユーザーDBを共有), false=方式B(このアプリは独自インスタンス)。未指定ならプリセットの shareInstanceAcrossApps に従う" }
       }
     },
 
@@ -112,6 +118,22 @@
         "githubRepo": { "type": "string" },
         "vercelTeamSlug": { "type": ["string", "null"] },
         "vercelProjectName": { "type": ["string", "null"] }
+      }
+    },
+
+    "siblingServices": {
+      "type": "array",
+      "description": "同じブランド/オーナーが運営する姉妹サービス。各サイトに相互導線カードを出すための SSOT。方式A(Clerk インスタンス共有)で sharedAccount=true なら『同じアカウントでそのまま使える(登録不要)』を訴求できる",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "姉妹サービスの表示名" },
+          "tagline": { "type": "string", "description": "1行の説明文" },
+          "url": { "type": "string", "format": "uri", "description": "姉妹サービスのURL" },
+          "sharedAccount": { "type": "boolean", "description": "true: 同一ブランドでアカウント(Clerkインスタンス)共有=導線で『登録不要』を訴求" }
+        }
       }
     }
   }
