@@ -210,6 +210,47 @@ v1.0.7 は「Playwright で email/password ログインして認証後画面を�
 (WebView がそのまま表示する画面)なので要件を満たす。**次アプリでも OAuth専用ログインなら最初から
 公開ページ方式を採れ**(email/PW ログインが使えるアプリだけ v1.0.7 の認証スクショ方式が有効)。
 
+#### 続報(2026-07-02) — 「公開ページ方式」でも“どの公開ページを撮るか”で再却下 → 実プロフを撮れ
+
+6/30に「公開ページ方式」へ切替えたが、実際に撮っていたのは `/store-preview/#store-N`(=マスコット
+＋キャッチコピー＋作り物グラフの**紹介モックパネル**・(bare)レイアウトでヘッダ無し)だった。これで
+**2.3.3 再却下**(「大半が actual app in use でない」)。**教訓: モックは(bare)でヘッダを消せても、
+"ユーザーが到達しない作り物の画面"なので 2.3.3 を満たさない。** 実ユーザーが日常的に見る本物の
+画面=**実在の公開プロフィール(kimito は `/streamerfunch/`)** を撮って初めて "actual app in use"。
+
+**実プロフを撮る時の X 露出隠し(§4.8/§2.3.1 対策)= 撮影スクリプト側の注入CSS(アプリ本体は無変更が原則):**
+```css
+/* ログイン誘導リンクを隠す。ヘッダCTA＋下部CTAの sign-in アンカー */
+a[href*="/sign-in"],
+/* 「Xでフォロー」等の外部Xリンク。★:not([href*="/status/"]) 必須★ */
+a[href*="x.com"]:not([href*="/status/"]),
+a[href*="twitter.com"]:not([href*="/status/"]) { display: none !important; }
+```
+- 🔴**最大の地雷**: `a[href*="x.com"]` を一律hideすると、実ツイートカードのアンカー
+  (`x.com/<user>/status/<id>`)まで消えて**実コンテンツが全滅→空slot→2.3.3自爆**。kimito 実測で
+  status リンクは11個あった。必ず `:not([href*="/status/"])` で投稿カードを守る。
+- **見出し＋文言が残るプロモCTAブロックは、アンカーだけ消しても不十分**(「あなたも作れます/Xでログイン
+  するだけ」の文言が残りマーケ素材と見なされうる)。→ そのブロックに `data-screenshot-hide` 属性を
+  付け(実挙動不変の静的属性・2.3.1火種にならない)、`[data-screenshot-hide]{display:none}` で
+  ブロックごと隠す。`section:has(a[href*="/sign-in"])` は実コンテンツを巻き込むリスクで却下、属性方式が安全。
+
+**撮影スクリプトの実戦チューニング(遅延ハイドレート対策):**
+- ツイート枠は IntersectionObserver＋画像(twimg)ロードで初めて高さを持つ。goto 後の待ちが2秒だと
+  見出し＋プレースホルダだけ写る → **初期待ち~7秒＋全体スクロールで起こす＋対象内 img の complete 待ち**。
+- 背の高い枠(実測857px)は `scrollIntoView({block:'start'})` だと実コンテンツがフォールド下 → `block:'center'`。
+- **fail-closed**: scrollToSelector 指定があるのに要素が無ければ**エラーで中断**(silent skip で空スクショ
+  提出=2.3.3再発を防ぐ)。X API制限バナー(琥珀)や「取得できません」が出てる時間帯は撮影しない。
+
+**ASCアップロードは自動化できる／返信＋再提出は画面のみ:**
+- アップロード: `node scripts/app/appstore-upload-screenshots.mjs`(ASC API `/v1/appScreenshots`)。
+  認証は `APPSTORE_CONNECT_KEY_ID`/`_ISSUER_ID`/`_API_KEY_P8_BASE64`(kimito は `.secrets-local/`
+  の `ASC_KEY_ID.txt`/`ASC_ISSUER_ID.txt`/`AuthKey.p8` から組む)。DRY は `IOS_SCREENSHOTS_DRY=1`。
+  古いスクショは自動削除して再UPされる(kimito 実績 uploaded=12 deleted=16)。
+- **返信テキストは Apple が API 公開していない → App Store Connect の App Review 画面で貼る**。
+  アップロード後、審査ステータスが「却下済み」→「審査準備完了」に変わり「App Reviewに再提出」ボタンが
+  押せる(この最終送信も画面のみ・[[android-final-submit-state]] と同じ構造)。返信は「差し替えた事実」
+  だけ簡潔に(§下部「実際に通った返信文」の原則)。
+
 ---
 
 ## §2.5 Software Requirements
