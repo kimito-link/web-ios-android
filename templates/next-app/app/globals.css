@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/*
+  Tailwind 4 のトークン定義。config ファイルではなく CSS の @theme に集約する
+  （最新・最軽量。kimitolink-linktree のカラー戦略を Tailwind 4 形式へ移植したもの）。
+
+  ブランド色は app.config.json の brand.primaryColor / brand.accentColor を
+  setup-new-app.mjs が {{...}} に流し込む想定。未置換でも中間色で描画は壊れない。
+
+  使い方: text-brand / bg-brand-accent / text-ink / font-mincho など Tailwind クラスで参照。
+*/
+@theme {
+  /* ブランド主色・アクセント（app.config.json から注入） */
+  --color-brand: {{primaryColor}};
+  --color-brand-accent: {{accentColor}};
+
+  /* 本文インク（WCAG 目安で gray-500 より濃く。淡色背景でも十分なコントラスト） */
+  --color-ink: #0f172a;
+  --color-ink-muted: #334155;
+
+  /* 温かみのベージュ基調（LP の世界観用・任意）。 */
+  --color-warm-bg: #f7f1e7;
+  --color-warm-paper: #fffbf5;
+  --color-warm-ink: #2c2117;
+  --color-warm-gold: #b07a1e;
+
+  /* フォント: 本文=ゴシック / 見出し=明朝（格調・やさしさ）。
+     next/font で読み込んだ変数（--font-sans / --font-mincho）に接続する（layout.tsx 参照）。 */
+  --font-sans: var(--font-noto-sans-jp, ui-sans-serif, system-ui, sans-serif);
+  --font-mincho: var(--font-shippori-mincho, "Yu Mincho", "Hiragino Mincho ProN", serif);
+}
+
+/* 既定の地色・文字色。ダーク背景アプリなら :root を上書きする。 */
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

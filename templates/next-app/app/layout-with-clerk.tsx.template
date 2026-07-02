@@ -1,0 +1,66 @@
+// ============================================================================
+// Clerk を使う場合の layout.tsx。app.config.json の auth.provider === "clerk"
+// のとき、これを app/layout.tsx に採用する（拡張子 .template を外して置換）。
+//
+// 前提（README-clerk.md 参照）:
+//   1. pnpm add @clerk/nextjs
+//   2. .env.local に Clerk のキー一式（.env.example をコピーして埋める）
+//   3. middleware.ts（同ディレクトリの middleware.ts.template）を配置
+//
+// kimitolink-linktree の実運用 ClerkProvider を金型化。単体アプリ向けの最小構成を
+// 基本にし、複数アプリで Clerk を共有する「方式A（サテライト）」はコメントで示す。
+// ============================================================================
+import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { jaJP } from "@clerk/localizations";
+import { Noto_Sans_JP, Shippori_Mincho } from "next/font/google";
+import "./globals.css";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  variable: "--font-noto-sans-jp",
+  display: "swap",
+});
+const shipporiMincho = Shippori_Mincho({
+  weight: ["500", "700"],
+  subsets: ["latin"],
+  variable: "--font-shippori-mincho",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://{{productionDomain}}"),
+  title: { default: "{{displayName}}", template: "%s | {{displayName}}" },
+  description: "{{shortDescription}}",
+  openGraph: { type: "website", locale: "ja_JP", siteName: "{{displayName}}" },
+  twitter: { card: "summary_large_image" },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ClerkProvider
+      localization={jaJP}
+      signInUrl="/sign-in/"
+      signUpUrl="/sign-up/"
+      // 認証後は必ず /dashboard/ へ着地（env が欠けても二重に保証）。
+      signInForceRedirectUrl="/dashboard/"
+      signUpForceRedirectUrl="/dashboard/"
+      signInFallbackRedirectUrl="/dashboard/"
+      signUpFallbackRedirectUrl="/dashboard/"
+      afterSignOutUrl="/"
+      // ── 方式A（複数アプリで Clerk インスタンスを共有する場合）だけ有効化 ──
+      // app.config.json の auth.shareInstanceAcrossApps === true のとき、
+      // 姉妹アプリのオリジンをここに列挙してリダイレクトを許可する。
+      // allowedRedirectOrigins={
+      //   process.env.NODE_ENV === "development"
+      //     ? ["http://localhost:3000", "https://sibling-app.example.com"]
+      //     : ["https://sibling-app.example.com"]
+      // }
+      // allowedRedirectProtocols={["http:", "https:"]}
+    >
+      <html lang="ja" className={`${notoSansJP.variable} ${shipporiMincho.variable}`}>
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  );
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../brand-preset.schema.json",
+  "brand": "kimito-link",
+  "displayName": "Kimito-Link",
+  "provider": "clerk",
+
+  "clerk": {
+    "customDomain": "clerk.kimito.link",
+    "publishableKeyEnv": "CLERK_PUBLISHABLE_KEY",
+    "secretKeyEnv": "CLERK_SECRET_KEY",
+    "shareInstanceAcrossApps": true,
+    "sharedInstancePublishableKeyEnv": "KIMITO_CLERK_PUBLISHABLE_KEY",
+    "sharedInstanceSecretKeyEnv": "KIMITO_CLERK_SECRET_KEY"
+  },
+
+  "xOAuth": {
+    "sharedApp": true,
+    "clientIdEnv": "X_OAUTH_CLIENT_ID",
+    "clientSecretEnv": "X_OAUTH_CLIENT_SECRET",
+    "requiredScopes": ["users.read", "tweet.read", "offline.access"],
+    "forbiddenScopes": ["tweet.write"]
+  },
+
+  "callbackUrlTemplate": "https://{clerkDomain}/v1/oauth_callback",
+
+  "notes": "Kimito-Link ブランド共通の X ログイン。【既定=方式A: Clerkインスタンス共有】 shareInstanceAcrossApps=true。kimito ブランドの全アプリが同じ Clerk 本番インスタンス(clerk.kimito.link)・同じユーザーDBを共有する。各アプリは自前の pk_live を作らず、kimito の本番鍵を env KIMITO_CLERK_PUBLISHABLE_KEY / KIMITO_CLERK_SECRET_KEY 経由で受け取る。利点: ファンが1アカウントで全アプリ利用可・X Callback は https://clerk.kimito.link/v1/oauth_callback の1個だけ・開発用 accounts.dev Callback も不要。注意: ユーザー・MAU課金が全アプリ合算/設定変更は全アプリ波及/後でDBを分けるのは大変。【方式Bにしたい場合】 このブランドをコピーして shareInstanceAcrossApps=false にすると、各アプリが独自 Clerk インスタンスを持ち X アプリ(Client ID/Secret)だけ共有する形になる(ユーザーDBはアプリ別)。X Developer アプリは A/B どちらでも1個を共有(同意画面に Kimito-Link のロゴ)。Client ID/Secret/本番鍵の実値は env と GitHub Secrets / Vercel に置き、このファイルには絶対に書かない。"
+}

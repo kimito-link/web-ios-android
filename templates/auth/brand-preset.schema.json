@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BrandAuthPreset",
+  "description": "1ブランド分の Clerk + X(Twitter) OAuth 認証設定。複数アプリ(iOS/Android/Web/Chrome)で共有する『ブランドの認証アイデンティティ』を1ファイルに集約する。実の秘密(Client Secret 等)は書かず、env 名だけを参照する。",
+  "type": "object",
+  "required": ["brand", "provider", "clerk", "xOAuth"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "brand": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]+$",
+      "description": "ブランドの一意なスラッグ。app.config.json の auth.brandPreset がこの値を指す (例: kimito-link)"
+    },
+
+    "displayName": {
+      "type": "string",
+      "description": "X の同意画面・各種UIに出るブランド表示名 (例: Kimito-Link)"
+    },
+
+    "provider": {
+      "type": "string",
+      "enum": ["clerk"],
+      "description": "認証プロバイダ。現状 clerk のみ対応"
+    },
+
+    "clerk": {
+      "type": "object",
+      "required": ["customDomain"],
+      "additionalProperties": false,
+      "properties": {
+        "_note": { "type": "string", "description": "人間向けの自由メモ(任意)。_ で始まるキーはコメント用" },
+        "_方式の選び方": { "type": "string", "description": "人間向けの自由メモ(任意)" },
+        "customDomain": {
+          "type": "string",
+          "format": "hostname",
+          "description": "Clerk 本番カスタムドメイン (例: clerk.kimito.link)。本番デプロイ前に Clerk Dashboard > Domains で設定し DNS CNAME を通すこと"
+        },
+        "publishableKeyEnv": {
+          "type": "string",
+          "default": "CLERK_PUBLISHABLE_KEY",
+          "description": "公開鍵(pk_live_)を読む env 名。Expo なら EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY、Next.js なら NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+        },
+        "secretKeyEnv": {
+          "type": "string",
+          "default": "CLERK_SECRET_KEY",
+          "description": "秘密鍵(sk_live_)を読む env 名"
+        },
+        "shareInstanceAcrossApps": {
+          "type": "boolean",
+          "default": false,
+          "description": "【方式A/B の切替】true(方式A): このブランドの全アプリが同じ Clerk インスタンス(=同じユーザーDB)を共有。kimito でログイン→他アプリでもログイン済み、の SSO 構成。各アプリは sharedInstance*KeyEnv の鍵を使う。false(方式B): 各アプリが別 Clerk アプリを持ち、X アプリ(Client ID/Secret)だけ共有(ユーザーDBはアプリ別)"
+        },
+        "sharedInstancePublishableKeyEnv": {
+          "type": "string",
+          "description": "方式A 専用。ブランド共有 Clerk インスタンスの公開鍵(pk_live_)を読む env 名。各アプリはこの env からブランドの本番鍵を受け取り、自前の鍵は持たない (例: KIMITO_CLERK_PUBLISHABLE_KEY)"
+        },
+        "sharedInstanceSecretKeyEnv": {
+          "type": "string",
+          "description": "方式A 専用。ブランド共有 Clerk インスタンスの秘密鍵(sk_live_)を読む env 名 (例: KIMITO_CLERK_SECRET_KEY)。実値はファイルに書かず env / Secrets に置く"
+        }
+      }
+    },
+
+    "xOAuth": {
+      "type": "object",
+      "required": ["clientIdEnv", "clientSecretEnv", "requiredScopes"],
+      "additionalProperties": false,
+      "properties": {
+        "sharedApp": {
+          "type": "boolean",
+          "default": true,
+          "description": "true: このブランドの全アプリが同一の X Developer アプリ(Client ID/Secret)を共有する。X の同意画面にブランドのロゴ・名前が出る"
+        },
+        "clientIdEnv": {
+          "type": "string",
+          "description": "X OAuth 2.0 Client ID を読む env 名 (例: X_OAUTH_CLIENT_ID)。値はファイルに書かず env / GitHub Secrets / Vercel に置く"
+        },
+        "clientSecretEnv": {
+          "type": "string",
+          "description": "X OAuth 2.0 Client Secret を読む env 名 (例: X_OAUTH_CLIENT_SECRET)。絶対にファイルに平書きしない"
+        },
+        "requiredScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "ログインに必要な最小スコープ。これだけで十分。例: users.read tweet.read offline.access",
+          "default": ["users.read", "tweet.read", "offline.access"]
+        },
+        "forbiddenScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "付けてはいけないスコープ。tweet.write が混ざると X の authorize 画面でループする(kimito.link で実証済みの罠)。setup-clerk-x-oauth.mjs がここをチェックする",
+          "default": ["tweet.write"]
+        }
+      }
+    },
+
+    "callbackUrlTemplate": {
+      "type": "string",
+      "default": "https://{clerkDomain}/v1/oauth_callback",
+      "description": "X Developer Portal に登録する Callback URL の組み立て方。{clerkDomain} は本番カスタムドメイン、開発時は {appInstance}.clerk.accounts.dev に置き換わる"
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "このブランド固有の運用メモ(任意)"
+    }
+  }
+}

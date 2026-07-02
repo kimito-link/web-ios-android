@@ -12,6 +12,7 @@
 | パス | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
 | `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→TWA案内→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
+| `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
 | `workflows/ios-shell-guardrail.yml` | 独自ネイティブ注入の再混入を CI で赤にするガード | 無改変(禁止パターンはアプリ非依存に一般化済み) |
@@ -23,12 +24,24 @@
 | `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
 | `web/` | **Web→アプリDL導線**(公式バッジ取得・UA出し分け・Smart App Banner・CSS)。詳細は [`web/README.md`](web/README.md) | `{{ascAppId}}`/`{{playPackageName}}`/`{{productionUrl}}`/`{{primaryColor}}`/`{{accentColor}}` を置換 |
 | `scripts/generate-privacy-page.mjs` | プライバシーポリシーHTML生成(健康/Play 審査で必須の公開URL)。API非依存・静的生成のため陳腐化しない | **無改変**(app.config.json 駆動) |
+| `scripts/asc-create-profile.mjs` | App Store 用 Provisioning Profile を ASC API で作成(Developer Portal 手動不要)。`CERT_SERIAL` で Secret の .cer に一致する証明書を選ぶ(複数証明書の不一致=Export IPA 失敗を防ぐ)。先頭ゼロ無視のシリアル比較 | **無改変**(env 駆動。詳細は `_docs/FIRST-SUBMISSION-blockers.md` B4) |
+| `scripts/asc-set-content-rights.mjs` | app の `contentRightsDeclaration` を API 設定(初回提出の必須・ASC UI では効かないことがある) | **無改変**(app.config.json `stores.contentRights` 駆動。同 B7) |
 | `scripts/android-patch-signing.mjs` | bubblewrap の build.gradle に signingConfig を冪等注入 | **無改変**(構造依存のみ) |
 | `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
 | `scripts/copy-web-to-www.mjs` | src/ → www/ ミラー(Capacitor フォールバック生成) | **無改変** |
 | `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
+| `scripts/setup-clerk-x-oauth.mjs` | **Clerk + X OAuth セットアップ補助**。app.config.json(+ブランドプリセット)を読んでチェックリスト表示 / `.env.local` ひな形追記 / Vercel 一括登録。`--write-env` / `--write-vercel` フラグで動作変更。`pk_test_` から開発用 Callback を自動デコード | **無改変**(app.config.json 駆動) |
+| `auth/brand-preset.schema.json` | **ブランド認証プリセットの JSON Schema**。1ブランド分の Clerk + X OAuth 設定の構造定義(秘密は env 名参照のみ) | 無改変 |
+| `auth/brands/kimito-link.json` | **Kimito-Link ブランドの認証プリセット**(実証済み)。Clerk ドメイン・X scope・X アプリ共有方針・env 名を集約。`auth.brandPreset: "kimito-link"` で継承 | **無改変**(値はブランド固定) |
+| `auth/brands/_TEMPLATE.json` | **新ブランド用ひな形**。コピーして `<brand>.json` を作り `<...>` を埋める。クリエイターが自分のブランドで X ログインを使う入口 | `<...>` を自ブランドの値に置換 |
+| `docs/clerk-x-oauth-checklist.md` | **Clerk + X OAuth ハマりポイント手順書**（kimito.link 実体験ベース）。ブランドプリセット方式・開発 Callback 登録・tweet.write 混入・Callback URL 不一致・dev 鍵の本番混入など既知の罠を集約。新アプリ追加のたびに参照する | — |
 
+> 🚦 **新アプリの「初回提出」は** [`../_docs/FIRST-SUBMISSION-blockers.md`](../_docs/FIRST-SUBMISSION-blockers.md) を上から潰す。
+> 最初の1回だけ順番に踏む iOS/Android のブロッカー8個（Team ID空・lockfile古い・splashロゴパス・
+> 証明書不一致・playwright未導入・電話番号偽物・contentRights未設定・App プライバシー未公開）＋
+> ASC UI 手動項目（カテゴリ/年齢/サブタイトル）を、CIログの実文言つきで集約。2回目以降は §7 の push 一発。
+>
 > 📚 **Apple 却下が来たら** [`../_docs/apple-reject-knowledge-base.md`](../_docs/apple-reject-knowledge-base.md) を見る。
 > 「却下パターン → 原因 → **実際に通った返信文**」を集約(リバースハック partner v1.0.0〜v1.0.9 の実例、固有名は一般化)。
 > `lint-pre-submission.mjs` の各チェックはこの KB のガイドライン番号に対応する。
@@ -40,7 +53,10 @@
 
 ## 使い方(連動型アプリを新規に作る)
 
-1. アプリのリポジトリで `app.config.json` を埋める(identity / brand / contact / businessModel)。
+0. **Web 本体を作る**(まだ無ければ): `next-app/` を新リポの `apps/web/`(等)にコピーし、
+   `{{...}}` を app.config.json の値で置換。Clerk を使うなら `next-app/README-clerk.md` に従い
+   `@clerk/nextjs` を入れて `.template` を配置。Capacitor はこの Web を `server.url` で読む。
+1. アプリのリポジトリで `app.config.json` を埋める(identity / brand / contact / businessModel / **auth**)。
 2. `capacitor.config.template.ts` の `{{...}}` を app.config.json の値に置換して
    そのリポの `capacitor.config.ts` を作る。
    - `{{bundleId}}` = identity.bundleId / `{{displayName}}` = identity.displayName

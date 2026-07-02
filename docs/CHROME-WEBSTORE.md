@@ -22,12 +22,28 @@ iOS の「配信地域」、Android の「審査送信」と同じで、**最後
 
 ## 全体像：4つの値を1ファイルに入れれば、以降は2コマンド
 
+### ★ 推奨：Node 版（Windows + Git Bash で固まらない）
+
+```bash
+npm run publish:cws         # zip作成 → アップロード → 検証待ち → 審査提出（全自動）
+# 事前確認だけしたいとき:
+npm run publish:cws:check   # ID/権限の検証だけ（読み取り専用・提出しない）
+npm run publish:cws:upload  # アップロードのみ（下書き確認・提出しない）
+```
+
+> **なぜ Node 版が正本か（罠⑤）**：PowerShell 版（`.ps1`）は、ユーザーの PowerShell プロファイル
+> （`Microsoft.PowerShell_profile.ps1`）にパースエラーがあると巻き込まれて **0バイトの空 zip** を作り、
+> 申請が静かに失敗する。日本語パス（`デスクトップ`）の文字化けも誘発する。Node 版は外部依存ゼロ・
+> PowerShell 非経由で、zip 生成も Node の zlib で自前実装しているため、この事故が起きない。詳細は罠⑤。
+
+### 旧：PowerShell 版（プロファイルがクリーンな環境向け）
+
 ```powershell
 .\build-zip.ps1      # 拡張を zip にパッケージ化
 .\publish-cws.ps1    # アップロード → 確認 → 審査提出
 ```
 
-この2コマンドが動くために、`.env.cws` に **4つの値** を1回だけ用意します。
+どちらの版も、`.env.cws` に **4つの値** を1回だけ用意すれば動きます。
 
 | 値 | どこで取る |
 |---|---|
@@ -127,6 +143,23 @@ CWS_ITEM_ID=...
 - **CDN等の外部コードを実行時に読む**と「リモートコード」違反で却下（MV3）。ライブラリは `vendor/` に同梱。
 - zip に `vendor/`（同梱ライブラリ）が**入っているか**を毎回確認（抜けると却下＋機能死）。
 
+### 罠⑤：PowerShell 版が「空 zip」を作って静かに失敗する（Windows + Git Bash）★実際に踏んだ
+**症状**：`npm run zip:cws`（PowerShell の `build-zip.ps1` / `make-zip.ps1`）を回すと、赤いパースエラーが
+大量に出たあと `ZIP_CREATED ... (0 bytes)` という **0バイトの zip** が作られ、続く publish が
+`ERROR: zip がありません` で止まる。
+
+**原因**：PowerShell は起動時に**ユーザープロファイル**（`Microsoft.PowerShell_profile.ps1`）を読み込む。
+そこに構文エラー（閉じ括弧/終端引用符の欠落など）があると、その後に流す `.ps1` まで一緒に
+パース段階で壊れ、スクリプト内の変数（`$items` / `$dst`）が空になり `Compress-Archive` が空 zip を吐く。
+さらに日本語パス（`デスクトップ`）が `繝・せ繧ｯ繝医ャ繝�` に化け、パス解決も失敗する。
+
+**対処（恒久）**：**PowerShell を経由しない Node 版を使う**。zip 生成を PowerShell の `Compress-Archive` から
+Node の `zlib`（外部依存なし）に置き換えた `build-zip-node.mjs` / `publish-cws-node.mjs` を用意済み。
+`npm run publish:cws` がそれを呼ぶ。これでプロファイル汚染・日本語パスの両方の事故が消える。
+
+> グローバル運用ルール（`AI_HARNESS_OPERATION.md`）の「Windows シェルは Git Bash 優先・PowerShell の
+> インライン実行を避ける」と同じ理由。**PowerShell に処理を投げる npm スクリプトは地雷**だと考える。
+
 ---
 
 ## ✅ Chrome 公開チェックリスト
@@ -135,7 +168,8 @@ CWS_ITEM_ID=...
 - [ ] zip に `vendor/`（同梱ライブラリ）が含まれている
 - [ ] 名前/説明/画像に禁止語（無料/Free/Premium 等）が無い
 - [ ] 外部CDNを実行時に読んでいない（リモートコード違反回避）
-- [ ] `.\publish-cws.ps1` で `status=OK` を確認
+- [ ] `npm run publish:cws:check` で `✅ ID 正しく権限あり` を確認（提出前の権限チェック）
+- [ ] `npm run publish:cws` で `審査提出 完了: status=OK` を確認（PowerShell 版は罠⑤に注意）
 - [ ] 審査メール（数時間〜数日）を待つ → 承認後ストアに反映
 
 ---

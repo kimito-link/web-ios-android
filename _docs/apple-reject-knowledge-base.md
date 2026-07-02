@@ -32,12 +32,13 @@ WKWebView でWebアプリを包んだ「ハイブリッドアプリ」を Apple 
 5. [§2.5 Software Requirements](#25-software-requirements)
 6. [§3.0 / §3.1 Business model + IAP](#30--31-business-model--iap)
 7. [§4.2 Minimum Functionality](#42-minimum-functionality)
-8. [§4.3 Spam](#43-spam)
-9. [§4.7 Mini Apps / Plug-ins](#47-mini-apps--plug-ins)
-10. [§4.8 Login Services / Sign in with Apple](#48-login-services--sign-in-with-apple)
-11. [§5.1 Privacy / アカウント削除](#51-privacy--アカウント削除)
-12. [実際に通った Resolution Center 返信文(テンプレ)](#実際に通った-resolution-center-返信文)
-13. [審査前チェックリスト](#審査前チェックリスト)
+8. [§4 Design — ログインで外部ブラウザに飛ぶ](#4-design--ログインで外部ブラウザに飛ぶkimito-2026-06-30-で確定した本命原因)
+9. [§4.3 Spam](#43-spam)
+10. [§4.7 Mini Apps / Plug-ins](#47-mini-apps--plug-ins)
+11. [§4.8 Login Services / Sign in with Apple](#48-login-services--sign-in-with-apple)
+12. [§5.1 Privacy / アカウント削除](#51-privacy--アカウント削除)
+13. [実際に通った Resolution Center 返信文(テンプレ)](#実際に通った-resolution-center-返信文)
+14. [審査前チェックリスト](#審査前チェックリスト)
 
 ---
 
@@ -68,6 +69,8 @@ Capacitor + Vite + 認証SaaS でWebアプリを包んだ構成で最も刺さ�
 | v1.0.6 | 2.1(a) Information Needed | reviewer が `apple-reviewer`(`@domain`欠落)でログインできず | submit script が ASC の stale 値を env より優先(`pick()`) | submit で **env を pick() より優先**。版固有の preamble を notes から除去 |
 | v1.0.7 | 2.3.3 "screenshots only display a login screen" | スクショがログイン画面のみ | capture script が未認証 `/sign-in` を撮っていた | capture で **デモ資格でログイン → /dashboard 到達後に撮影**。creds 欠落時 exit 1(fail-closed) |
 | v1.0.8 | 2.3.3(再) "screenshots only display a login screen" | 新スクショを撮ったのに slot1 が旧ログイン画面のまま | upload が filename 一致で skip(ASC slot は versionString を跨いで persist) | upload で **delete-then-reupload**(撮り直すたび全削除→再upload)。slot1(最左)を最強画面に |
+| kimito 0.1.0 | **4 Design** "taken to the **default web browser** to sign in" | ログインボタンで外部Safariが開く | `capacitor.config.ts` の `server.allowNavigation` に **`appleid.apple.com` が無く**、SIWAボタンで未許可ドメイン遷移→iOSが外部Safariを開いた | **allowNavigation に `appleid.apple.com`/`*.apple.com` を追加**（1ドメイン足すだけ・ネイティブパッチ不要・追加のみで本番ログイン無傷）。Googleは WKWebView ブロックのため足さない。詳細§4 Design |
+| kimito 0.1.0 | **2.1(a)** ソーシャルログインの仕方が不明 | 審査員がX専用ログイン(email/PWフォーム無し)でアクセス不可 | reviewer notes にログイン手順が無かった | `review-notes/CURRENT-en.txt` を版管理し「Continue with X→デモ垢→2FA無効」手順＋**SIWA保険経路**を明記。詳細§4 Design 末尾 |
 
 ---
 
@@ -181,6 +184,32 @@ slot1(最左・最重要)が旧ログイン画面のまま残った。教訓:
 4. **速い却下(~2.5h)は手がかり**。前回と同じトリガを踏んだ可能性大。「もう直した」を鵜呑みにせず
    実際に出荷された内容(peek + build log)を見る。
 
+### kimito ケーススタディ — OAuth専用ログイン(Clerk×X)は Playwright 自動化が不可能 → 公開ページ方式で回避(2026-06-30)
+
+v1.0.7 は「Playwright で email/password ログインして認証後画面を撮る」前提だった。だが認証が
+**OAuth専用(Clerk標準 `<SignIn/>` × X/Twitter)**だと、その前提が崩れる。kimito で storageState
+自動取得を**3経路すべて試して全滅**した一次記録:
+
+1. **新規ブラウザで X OAuth を自動ログイン** → X が「ログインを一時的に制限しました」。普段の
+   Chrome では同じ垢に普通にログインできるのに、Playwright 制御ブラウザ(CDP痕跡)だけ弾く。
+2. **persistent context で普段の Chrome プロファイル(Xログイン済み)を流用** → X 制限は突破し
+   Clerk コールバックまで到達するが、**Cloudflare の「私はロボットではありません」CAPTCHA が
+   ループ**(チェック→消える→再出現)して突破不可。Playwright制御を Cloudflare が検知。
+3. **CDP attach(`--remote-debugging-port`)で手動ログイン済み Chrome に後付け接続** → Chrome 新仕様
+   `DevTools remote debugging requires a non-default data directory` で通常プロファイルのリモート
+   デバッグが拒否される。
+
+→ **Clerk × X × Cloudflare × Chrome の四重 bot 対策で、Playwright/CDP による認証スクショの
+自動取得は事実上不可能**。さらに Clerk の `__session` は **session cookie(ブラウザを閉じると揮発)**
+なので「Chrome を閉じてから Cookie DB を sqlite 読み」も無駄(閉じた瞬間に消える)。
+
+**解 = 認証スクショを撮らない。公開ページだけでストアスクショを構成する**(partnership 方式・
+`scripts/capture-public-screenshots.mjs` が原型)。リンクまとめ/プロフィール系アプリは公開
+プロフィールページに成果物(AI生成bio・リンク・投稿)が実表示されるので、ログイン後ダッシュボードを
+撮らなくても価値が伝わる。Apple 2.3.3 は「実アプリ画面」を求めるが、公開ページも実アプリの一部
+(WebView がそのまま表示する画面)なので要件を満たす。**次アプリでも OAuth専用ログインなら最初から
+公開ページ方式を採れ**(email/PW ログインが使えるアプリだけ v1.0.7 の認証スクショ方式が有効)。
+
 ---
 
 ## §2.5 Software Requirements
@@ -190,6 +219,9 @@ slot1(最左・最重要)が旧ログイン画面のまま残った。教訓:
   ビジネスロジック変更は違反。
 - **§2.5.6 WebKit必須**: Capacitor は既定 WKWebView で準拠。`UIWebView`(ITMS-90809、2020年自動却下)を
   古い Cordova plugin が引き込むことがある。`nm` で `.app` を確認。
+- **`server.allowNavigation` の不足は §4 Design 却下に化ける**: 認証プロバイダのドメイン(特に
+  `appleid.apple.com`)が抜けていると、そのボタンで未許可ドメイン遷移→iOSが外部Safariを開く＝
+  「ログインで外部ブラウザに飛ぶ」却下。→ [§4 Design](#4-design--ログインで外部ブラウザに飛ぶkimito-2026-06-30-で確定した本命原因) 参照。
 
 ---
 
@@ -241,6 +273,59 @@ v1.0.4 で来た7問(community集約の5問より多い)。reviewer notes で**�
 4. **外部リンクは `SFSafariViewController`** で開く(embedded WebView でなく)。
 5. **reviewer notes にネイティブ機能を画面名つきで明記**(reviewer は1アプリ~3分・見えない機能に気付かない)。
 6. **catalog アプリは 4.2.2 で明示的に免除**。
+
+---
+
+## §4 Design — 「ログインで外部ブラウザに飛ぶ」却下（kimito 2026-06-30 で確定した本命原因）
+
+> Verbatim 却下文 (kimito Submission 57b5895d):
+> "Guideline 4 - Design: the user is taken to the **default web browser** to sign in or register,
+> which provides a poor user experience. Revise the app to enable users to sign in **in the app**.
+> You may implement the **Safari View Controller API** to display web content within the app."
+
+OAuth/ソーシャルログインのハイブリッドアプリで頻出。「アプリ内でログインさせろ・外部Safariに飛ばすな」。
+
+### ★最初に疑うのは `allowNavigation` のドメイン不足（実コードで確定した最有力原因・最軽量解）
+
+WKWebView は **`server.allowNavigation` に無いドメインへ遷移しようとすると iOS が外部 Safari を開く**。
+認証プロバイダのドメインが allowNavigation から欠けていると、**そのボタンを押した瞬間に外部ブラウザに飛ぶ**＝この却下の症状そのもの。kimito では `appleid.apple.com`(Sign in with Apple) が抜けていた。
+
+**チェック手順（capacitor.config.ts の server.allowNavigation を見る）**:
+- 自ドメイン(`kimito.link` / `*.kimito.link`)＋使う認証プロバイダのドメインが**全部**入っているか。
+- X(Twitter)ログイン: `x.com` / `*.x.com` / `twitter.com` / `*.twitter.com` / `api.twitter.com`
+- Clerk: `*.clerk.accounts.dev` / `<本番frontend API。例 clerk.kimito.link>`
+- **Apple(SIWA): `appleid.apple.com` / `*.apple.com`** ← 抜けやすい。足すと WebView 内で完結。
+- 1ドメイン足すだけ＝**ネイティブパッチ(navigationDelegate)も @capacitor/browser も不要・Web/`<SignIn/>`無改変**。
+  既存ドメインを消さず**追加のみ**なので本番ログイン破壊リスク最小（[[login-winning-pattern]] の轍を踏まない）。
+
+### ⚠️ Google は allowNavigation に足しても解決しない（足すな）
+
+`accounts.google.com` は **embedded WebView からの OAuth を Google 側が `disallowed_useragent` でブロック**する
+（§4.8「Google OAuth は WKWebView でブロックされる」参照）。allowNavigation に入れても WebView 内で成立しない。
+Google を出すなら別経路(ASWebAuthenticationSession 等)が要る＝重い。Clerk Dashboard で Google を出さない判断が軽い。
+
+### それでも飛ぶ場合の重い対処（allowNavigation で直らなかった時だけ）
+
+プロバイダ側が `window.open`/`target=_blank`/Universal Link で能動的に外部 Safari を開いているケース。
+- **4A `@capacitor/browser`**: プラグイン追加(原則1に抵触なし)。だが「いつ Browser.open を呼ぶか」を
+  `<SignIn/>` を触らずに実装する必要があり、`window.open` 横取りのブートストラップが要る(Clerk が
+  `location.assign` で全画面遷移する場合は横取り不可)。
+- **4B navigationDelegate(Swift)**: WKWebView の `decidePolicyForNavigationAction` で認可ドメインを
+  `SFSafariViewController` に流す。**黒画面6原則の原則1「独自VC/AppDelegate注入しない」と正面衝突**＝
+  キットの大原則を破る意思決定が要る(重い)。
+- 切り分け: どのボタン(X/Apple)で飛ぶかで原因が違う。**この作業は全部 PC の WF で完結する**ので、まず
+  allowNavigation を足して WF で再ビルド→`submit_for_review=true`で審査に出し、**Apple の却下/通過で答え合わせ**
+  する(このプロジェクトは実機/TestFlight確認を一度もやっていない＝WFループが実ワークフロー。[[ios-workflow-is-pc-wf-only]])。
+
+### 関連 #2.1 — 審査員がソーシャルログインの仕方が分からず詰まる(同時に来やすい)
+
+X/Apple 専用ログイン(email/PWフォーム無し)のアプリは、審査 Notes に**ログイン手順を明記**しないと
+2.1(a) "unable to access" を食らう。kimito の対処(`review-notes/CURRENT-en.txt` を版管理):
+- 「① Continue with X を押す ② App Review Information のデモ垢を入力 ③ 2FAは無効」の手順を英語で明記。
+- **保険経路**: 「Sign in with Apple でも同等の全機能に到達できる(審査員自身の Apple ID 可)」と書く。
+  X 側の bot 検査で詰んでも審査員が必ずログインできる二重化。
+- リポ側の組込み: `appstore-submit.mjs` の reviewer notes 解決順を
+  env `IOS_REVIEW_NOTES`(全文上書き) → `review-notes/CURRENT-en.txt` → app.config 汎用テンプレ、にする。
 
 ---
 

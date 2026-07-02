@@ -1,0 +1,31 @@
+{
+  "$schema": "../brand-preset.schema.json",
+  "_README": "新しいブランドの X ログインを使う人はこのファイルをコピーして brands/<あなたのブランド>.json を作り、<...> を埋める。秘密(Client Secret)はここに書かず env 名だけ書く。手本は brands/kimito-link.json。",
+
+  "brand": "<your-brand-slug>",
+  "displayName": "<あなたのブランド表示名>",
+  "provider": "clerk",
+
+  "clerk": {
+    "customDomain": "clerk.<your-domain>",
+    "publishableKeyEnv": "CLERK_PUBLISHABLE_KEY",
+    "secretKeyEnv": "CLERK_SECRET_KEY",
+
+    "_方式の選び方": "true=方式A(全アプリで1つのClerk・ユーザーDB共有・1アカウントで全アプリ)。false=方式B(アプリごとに独立・Xアプリだけ共有)。迷うなら false で始めて後でA化も可。",
+    "shareInstanceAcrossApps": false,
+    "sharedInstancePublishableKeyEnv": "<YOURBRAND>_CLERK_PUBLISHABLE_KEY",
+    "sharedInstanceSecretKeyEnv": "<YOURBRAND>_CLERK_SECRET_KEY"
+  },
+
+  "xOAuth": {
+    "sharedApp": true,
+    "clientIdEnv": "X_OAUTH_CLIENT_ID",
+    "clientSecretEnv": "X_OAUTH_CLIENT_SECRET",
+    "requiredScopes": ["users.read", "tweet.read", "offline.access"],
+    "forbiddenScopes": ["tweet.write"]
+  },
+
+  "callbackUrlTemplate": "https://{clerkDomain}/v1/oauth_callback",
+
+  "notes": "<このブランド固有のメモがあれば書く。無ければ空でよい>"
+}

@@ -51,6 +51,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **プライバシーページ生成** | `templates/scripts/generate-privacy-page.mjs`（健康/Play 必須の公開URL・API非依存） | `Exosome` |
 | **設定の単一真実源** | `app.config.schema.json`（identity/stores/brand/contact/auth/businessModel/ownership の JSON Schema） | `Exosome` |
 | **却下対応KB（Fable学習素材）** | `_docs/apple-reject-knowledge-base.md` | `partnership_program_website/_docs/` |
+| **初回提出ブロッカー全リスト** | `_docs/FIRST-SUBMISSION-blockers.md`（新アプリの「最初の1回」だけ順番に踏むiOS/Android詰まり8個＋ASC UI手動項目。症状=CIログ文言・原因・直し方） | `malwarecheck.site`（iOS初回提出 2026-07 実戦） |
 | **Web→アプリDL導線 知見KB** | `_docs/web-to-app-install-best-practices.md` | `Exosome`（ディープリサーチ確証分） |
 | **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
 

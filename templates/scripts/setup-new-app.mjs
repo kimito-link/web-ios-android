@@ -45,6 +45,17 @@ try { config = loadAppConfig(); } catch (e) { fail(e.message); process.exit(1); 
 const PLACEHOLDER = [/^YOUR_/i, /^PLACEHOLDER/i, /^TODO/i, /^CHANGE_ME/i, /^example\./i, /^com\.example/i, /^</];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER.some((re) => re.test(v));
 
+// 電話番号だけに適用する追加のダミー判定(B6)。他フィールドに誤爆させないため電話専用。
+// 非数字を除去してから判定する。実在番号にも 0000 の並びはありうる(市外局番の 0 落ち等)ので、
+// blocking にはせず warn(下の検証ループ参照)。より強いダミー signature に絞る:
+//   - 0 が 6 個以上連続(実在番号ではほぼ無い)、または
+//   - 加入者番号が全桁ダミー(1234567890 / 0000000000 の完全一致系)。
+const isDummyPhone = (v) => {
+  if (typeof v !== 'string') return false;
+  const digits = v.replace(/\D/g, '');
+  return /0{6,}/.test(digits) || /^(?:\+?\d{1,3})?0{7,}$/.test(digits) || digits.includes('1234567890');
+};
+
 const REQUIRED = [
   ['identity.displayName', config.identity?.displayName],
   ['identity.bundleId', config.identity?.bundleId],
@@ -52,6 +63,8 @@ const REQUIRED = [
   ['stores.playPackageName', config.stores?.playPackageName],
   ['contact.email', config.contact?.email],
   ['contact.privacyUrl', config.contact?.privacyUrl],
+  // 電話番号(B6): 却下対応で実際に問題になった。形式チェックのみ(実在確認は不可)。
+  ['contact.phoneE164', config.contact?.phoneE164],
   ['ownership.githubOrg', config.ownership?.githubOrg],
   ['ownership.githubRepo', config.ownership?.githubRepo],
 ];
@@ -60,11 +73,37 @@ header('必須フィールドの検証');
 let errs = 0;
 for (const [field, value] of REQUIRED) {
   if (!value || isPlaceholder(value)) { fail(`${field} 未設定 (${JSON.stringify(value)})`); errs++; }
-  else ok(`${field} = ${value}`);
+  else if (field === 'contact.phoneE164' && isDummyPhone(value)) {
+    // ヒューリスティックなので blocking にしない(実在番号を誤って弾かない)。人間に確認を促す。
+    warn(`${field} がダミー番号に見えます (${JSON.stringify(value)})。実在の連絡先電話番号か確認を(B6)`);
+    ok(`${field} = ${value} (要確認)`);
+  } else ok(`${field} = ${value}`);
 }
 if (errs > 0) {
   console.error(`\n検証失敗: ${errs} 件の必須フィールドを app.config.json に記入してください。`);
   process.exit(1);
+}
+
+// --- 依存の事前チェック: Playwright(B5) ---
+// FIRST-SUBMISSION-blockers.md B5: capture-*-screenshots.mjs は @playwright/test に依存するが
+// 新規アプリの package.json には入っていないことが多い。dry_run でも検出できるが、setup 時点で
+// 気づけば 1 サイクル早い。スクショ capture スクリプトが実在するときだけ警告する。
+{
+  const pkgPath = path.join(ROOT, 'package.json');
+  let pkg = null;
+  try { pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')); } catch { /* package.json 無し/壊れは別途扱い */ }
+  const hasPlaywright = Boolean(
+    pkg?.devDependencies?.['@playwright/test'] || pkg?.dependencies?.['@playwright/test'],
+  );
+  const capturesExist =
+    fs.existsSync(path.join(ROOT, 'scripts/capture-appstore-screenshots.mjs')) ||
+    fs.existsSync(path.join(ROOT, 'scripts/capture-play-screenshots.mjs'));
+  if (capturesExist && !hasPlaywright) {
+    warn('@playwright/test が package.json に無い。スクショ capture が実行時に落ちます(B5)。');
+    console.log('       修正: pnpm add -w -D @playwright/test  (または npm i -D @playwright/test)');
+  } else if (capturesExist) {
+    ok('@playwright/test あり(スクショ capture の依存充足)');
+  }
 }
 
 const { displayName, bundleId, productionDomain } = config.identity;
@@ -108,6 +147,8 @@ console.log('  - ASC: アプリ枠の新規作成(Apple API不可)→ ascAppId �
 console.log('  - Play Console: 新アプリ作成 + 既存/新規 Service Account に権限付与');
 console.log('  - iOS「配信地域」設定 / Android「審査用に送信」ボタン(最後の一押しは人間)');
 console.log('  詳細: docs/TROUBLESHOOTING.md / _docs/apple-reject-knowledge-base.md');
+console.log('  ↓ ASC アプリ枠 / Play アプリの作成が終わったら、API で実在確認できます:');
+console.log('    node scripts/verify-manual-setup-done.mjs   # creds があれば ASC/Play の枠を検証');
 
 header('setup-new-app: 完了');
 console.log(`アプリ「${displayName}」(${bundleId}) の準備が整いました。`);

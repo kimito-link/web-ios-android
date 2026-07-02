@@ -260,6 +260,111 @@ if (!playCapture) {
 }
 
 // ----------------------------------------------------------------------------
+// CHECK 9 — Capacitor WebView 黒画面/ATS の静的チェック
+//   _docs/CAPACITOR-GOLDEN-RULES.md をコード化。server.url が cleartext(http)だと
+//   ATS にブロックされ黒画面になる。NSAllowsArbitraryLoads の乱用も審査で指摘される。
+//   このキットの真実の源は capacitor.config.ts(原則2)。.ts をテキスト走査し、
+//   無ければ .json に fallback。{{...}} プレースホルダ(未コピーのテンプレ)は skip。
+// ----------------------------------------------------------------------------
+{
+  const capTs = readFile('capacitor.config.ts');
+  const capJson = capTs != null ? null : readJson('capacitor.config.json');
+  const capSource = capTs != null ? capTs : (readFile('capacitor.config.json') || null);
+  const sourceName = capTs != null ? 'capacitor.config.ts' : 'capacitor.config.json';
+  // server.url は「server ブロック内の url」に限定する。プラグイン等の別の url: を誤読すると
+  // false fail/false ok になる(レビュー指摘 HIGH)。
+  //   - .json: JSON.parse して server.url を直読み(最も確実)。
+  //   - .ts  : `server: { ... }` ブロックを切り出してから、その中の url: だけ拾う。
+  let serverUrl = null;
+  if (capJson) {
+    serverUrl = capJson.server?.url ?? null;
+  } else if (capSource) {
+    const serverBlock = capSource.match(/\bserver\s*:\s*\{([\s\S]*?)\}/);
+    const scope = serverBlock ? serverBlock[1] : '';
+    const urlMatch = scope.match(/\burl\s*:\s*['"]([^'"]+)['"]/);
+    serverUrl = urlMatch ? urlMatch[1] : null;
+  }
+  const isPlaceholderUrl = serverUrl ? /\{\{|<\.\.\.>|example\.com/.test(serverUrl) : false;
+  // cleartext:true は server ブロック内に限定して判定(別ブロックの同名キー誤読を避ける)。
+  const serverScope = capJson
+    ? JSON.stringify(capJson.server || {})
+    : (capSource?.match(/\bserver\s*:\s*\{([\s\S]*?)\}/)?.[1] || '');
+
+  if (!capSource) {
+    skip('capacitor-server-cleartext', 'capacitor.config.(ts|json) が無い(server.url 連動型でなければ可)');
+  } else if (!serverUrl) {
+    // バンドル型(server.url 無し)は正当。原則1では連動型が標準だが、ここでは fail にしない。
+    skip('capacitor-server-cleartext', `${sourceName} に server.url が無い(バンドル型なら可)`);
+  } else if (isPlaceholderUrl) {
+    skip('capacitor-server-cleartext', `${sourceName} の server.url が未コピーのプレースホルダ`);
+  } else if (/^http:\/\//i.test(serverUrl)) {
+    fail('capacitor-server-cleartext', 'ATS', `${sourceName} server.url が http:// (cleartext)。ATS にブロックされ黒画面の原因になる: ${serverUrl}`);
+  } else if (!/^https:\/\//i.test(serverUrl)) {
+    warn('capacitor-server-scheme', 'ATS', `${sourceName} server.url が https:// でない: ${serverUrl}`);
+  } else {
+    // cleartext:true が明示されていれば http 読込を許してしまうので警告(server ブロック内のみ)。
+    // .ts の `cleartext: true` と .json の `"cleartext":true` 両対応。
+    if (/["']?cleartext["']?\s*:\s*true\b/.test(serverScope)) {
+      warn('capacitor-cleartext-flag', 'ATS', `${sourceName} server に cleartext: true。https 運用では不要。意図しない http 読込を許す`);
+    }
+    ok('capacitor-server-cleartext', `server.url = ${serverUrl} (https)`);
+  }
+
+  // Info.plist の NSAllowsArbitraryLoads=true は ATS を全面無効化する。審査指摘リスク。
+  const infoPlist = readFile('ios/App/App/Info.plist');
+  if (infoPlist == null) {
+    skip('ats-arbitrary-loads', 'ios/App/App/Info.plist が無い(CI で cap copy 後に生成)');
+    // <true/>(短縮形, Xcode/plutil の既定)と <true></true>(手書き長形式)の両方を拾う。
+  } else if (/<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/?>(<\/true>)?/.test(infoPlist)) {
+    warn('ats-arbitrary-loads', 'ATS', 'Info.plist NSAllowsArbitraryLoads=true。ATS 全面無効化は審査で指摘されうる。必要な例外ドメインだけ許可に絞る');
+  } else {
+    ok('ats-arbitrary-loads', 'NSAllowsArbitraryLoads の乱用なし');
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 10〜13 — ASC の Read-Only 検証(contentRightsDeclaration / App プライバシー公開 /
+//   配信地域 / reviewer デモ値の stale)。creds + bundleId があるときだけ有効化。
+//   _docs/FIRST-SUBMISSION-blockers.md B7/B8 を「症状が出てから直す」から
+//   「submit 前に API で読み取って止める」ゲートに昇格する。
+//   API 呼び出しはこの区画のみ。ローカルで creds が無ければ skip し高速フィードバックを壊さない。
+// ----------------------------------------------------------------------------
+{
+  const { hasAscCreds, runAscReadonlyChecks } = await import('./lib/asc-readonly-checks.mjs');
+  const ascBundleId = appConfig?.identity?.bundleId;
+  if (!ascBundleId || String(ascBundleId).startsWith('<')) {
+    skip('asc-readonly-manual-items', 'app.config identity.bundleId が未設定');
+  } else if (!hasAscCreds()) {
+    skip('asc-readonly-manual-items', 'APPSTORE_CONNECT_* creds が無い(ローカル実行)');
+  } else {
+    const results = await runAscReadonlyChecks(ascBundleId);
+    for (const { name, guideline, result } of results) {
+      if (result.status === 'fail') fail(name, guideline, result.detail);
+      else if (result.status === 'warn') warn(name, guideline, result.detail);
+      else ok(name, result.detail);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 14 — 直近 bump で SW キャッシュ版数の更新がスキップされていないか
+//   release-bump.mjs が release-history/<version>.json に立てる sw_cache_bump_skipped を拾う。
+//   bump 時の warn は埋もれやすいので、提出前 lint で2段目のセーフティネットにする。
+// ----------------------------------------------------------------------------
+if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
+  const history = readJson(`release-history/${marketingVersion}.json`);
+  if (!history) {
+    skip('sw-cache-bump', `release-history/${marketingVersion}.json が無い(release-bump 未実行 or 別運用)`);
+  } else if (history.sw_cache_bump_skipped === true) {
+    warn('sw-cache-bump', 'process', `直近 bump(${marketingVersion})で SW キャッシュ版数の更新がスキップされた。古い Service Worker が残る恐れ。sw.js の CACHE_NAME パターンか SW_CACHE_PREFIX を確認`);
+  } else {
+    ok('sw-cache-bump', `release-history/${marketingVersion}.json: SW キャッシュ bump スキップなし`);
+  }
+} else {
+  skip('sw-cache-bump', 'marketingVersion が semver でないため履歴照合をスキップ');
+}
+
+// ----------------------------------------------------------------------------
 // Output
 // ----------------------------------------------------------------------------
 console.log('');
