@@ -82,7 +82,8 @@ export async function runAscReadonlyChecks(bundleId) {
 // 「却下対応してもズレたまま」の手がかりとして、ASC 側の現在値と env の食い違いを事前に可視化する。
 // env が優先されるため blocking にはしない(warn)。env 未指定なら比較不能なので skip 相当の ok。
 async function checkReviewDemoStale(api, appId) {
-  const envUser = process.env.IOS_REVIEW_DEMO_USERNAME;
+  // secret に紛れる末尾改行/空白で誤検知しないよう trim して比較する(module 内の他の env と同様)。
+  const envUser = (process.env.IOS_REVIEW_DEMO_USERNAME || '').trim();
   if (!envUser) {
     // ログイン不要アプリ or demo 値未使用。比較対象が無いので沈黙(ok)。
     return R('ok', 'IOS_REVIEW_DEMO_USERNAME 未指定(demo 比較なし)');
@@ -100,7 +101,9 @@ async function checkReviewDemoStale(api, appId) {
       null;
     if (!target) return R('ok', '比較対象の appStoreVersion が無い(初回提出前など)');
     const detail = await getReviewDetail(api, target.id);
-    const ascUser = detail?.attributes?.demoAccountName ?? null;
+    const ascUser = detail?.attributes?.demoAccountName != null
+      ? String(detail.attributes.demoAccountName).trim()
+      : null;
     if (ascUser && ascUser !== envUser) {
       return R('warn',
         `ASC 側 demoAccountName が env と不一致。次回 submit で env 値が上書きするが、` +

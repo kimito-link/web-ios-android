@@ -228,3 +228,27 @@
 ---
 
 *この設計書は次の実装フェーズにそのまま渡せる。実装担当モデルは、まず対象スクリプトを読み、既存の`ok`/`fail`/`warn`/`skip`パターンと`readJson`/`readFile`ヘルパーを再利用してタスクを実装すること。新規ロジックのために独自のログ関数やJSON読み込みを再発明しない。*
+
+---
+
+## 7. 実装結果（2026-07-02 完了）
+
+全7タスクを実装済み。設計時の想定と実装で変わった点を正直に記録する（次に触る人のため）。
+
+### CHECK 番号の実マッピング（`lint-pre-submission.mjs`）
+設計では「CHECK 9〜14」と仮置きしたが、実装は既存 CHECK 1〜8 の後に以下を追加した:
+- **CHECK 9** = Capacitor 黒画面/ATS 静的チェック（タスク4）
+- **CHECK 10〜13** = ASC Read-Only（タスク1: contentRights / App プライバシー公開 / 配信地域、＋タスク3: reviewer デモ値 stale）
+- **CHECK 14** = SW キャッシュ bump スキップ検出（タスク5）
+- タスク7（Playwright B5）は lint ではなく `setup-new-app.mjs` に実装（capture スクリプトがある時だけ warn）。
+- タスク6（電話ダミー）も `setup-new-app.mjs`。タスク2は独立スクリプト `verify-manual-setup-done.mjs`。
+
+### 設計から変えた実装判断
+1. **App ID は新 env（`ASC_APP_ID`）を作らず、`identity.bundleId` から `findApp` で解決**。他の全 ASC スクリプトと統一。設計の擬似コードにあった `ascGet('/v1/apps/{id}')` 直叩きはやめ、既存 `makeAscClient`/`findApp` を再利用。
+2. **配信地域のエンドポイント**: 設計の `/v1/apps/{id}/availableTerritories` は **deprecated**（fastlane #21968）。正: `/v1/apps/{id}/appAvailabilityV2` → `/v2/appAvailabilities/{id}/territoryAvailabilities`。
+3. **App プライバシー公開（B8）は JWT では読めないのが正常**（`appstore-submit.mjs` の `ensurePrivacy` を精読して確定）。dataUsage 系は iris API + web セッション cookie 専用。よって CHECK 11 は「読めない=warn（未公開扱いにしない）」に倒す。エンドポイントも submit と同一の `${base}/apps/{id}/dataUsagePublishState`（単数・3ホスト base プローブ）に合わせた。
+4. **B7/B8 は submit 時に自動修復される**（`ensureContentRights`/`ensurePrivacy`/`ensureCategory`）。lint の役割は「最後の砦」ではなく **早期警告**。この位置づけを実装コメントに明記。
+5. **fail の精緻化** = 「findings は止める / availability は止めない」。API 到達不能・404・想定外形状は false fail を出さず warn。ローカルのネット断で提出全体を止めない。
+6. **Capacitor は真実の源 `capacitor.config.ts`** をテキスト走査（`.json` fallback）。`{{...}}` プレースホルダは skip（GOLDEN-RULES 原則2）。設計の擬似コードは `.json` 前提だった。
+7. **タスク5 は2段構え**: `release-bump.mjs` が `release-history/<v>.json` に `sw_cache_bump_skipped` を記録 → lint CHECK 14 が拾う。
+8. **タスク6 の電話ダミー検出は電話フィールド専用**（`isDummyPhone`）にして、`isPlaceholder` に `/0{4,}/` を足して全フィールドに誤爆させることを回避。

@@ -45,9 +45,16 @@ try { config = loadAppConfig(); } catch (e) { fail(e.message); process.exit(1); 
 const PLACEHOLDER = [/^YOUR_/i, /^PLACEHOLDER/i, /^TODO/i, /^CHANGE_ME/i, /^example\./i, /^com\.example/i, /^</];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER.some((re) => re.test(v));
 
-// 電話番号だけに適用する追加のダミー判定(B6)。0 が 4 個以上連続する番号は
-// +81 90 0000 0000 のような明らかなダミー。他フィールドに誤爆させないため電話専用にする。
-const isDummyPhone = (v) => typeof v === 'string' && /0{4,}/.test(v);
+// 電話番号だけに適用する追加のダミー判定(B6)。他フィールドに誤爆させないため電話専用。
+// 非数字を除去してから判定する。実在番号にも 0000 の並びはありうる(市外局番の 0 落ち等)ので、
+// blocking にはせず warn(下の検証ループ参照)。より強いダミー signature に絞る:
+//   - 0 が 6 個以上連続(実在番号ではほぼ無い)、または
+//   - 加入者番号が全桁ダミー(1234567890 / 0000000000 の完全一致系)。
+const isDummyPhone = (v) => {
+  if (typeof v !== 'string') return false;
+  const digits = v.replace(/\D/g, '');
+  return /0{6,}/.test(digits) || /^(?:\+?\d{1,3})?0{7,}$/.test(digits) || digits.includes('1234567890');
+};
 
 const REQUIRED = [
   ['identity.displayName', config.identity?.displayName],
@@ -67,7 +74,9 @@ let errs = 0;
 for (const [field, value] of REQUIRED) {
   if (!value || isPlaceholder(value)) { fail(`${field} 未設定 (${JSON.stringify(value)})`); errs++; }
   else if (field === 'contact.phoneE164' && isDummyPhone(value)) {
-    fail(`${field} がダミー番号 (${JSON.stringify(value)})。実在の連絡先電話番号を設定してください(B6)`); errs++;
+    // ヒューリスティックなので blocking にしない(実在番号を誤って弾かない)。人間に確認を促す。
+    warn(`${field} がダミー番号に見えます (${JSON.stringify(value)})。実在の連絡先電話番号か確認を(B6)`);
+    ok(`${field} = ${value} (要確認)`);
   } else ok(`${field} = ${value}`);
 }
 if (errs > 0) {

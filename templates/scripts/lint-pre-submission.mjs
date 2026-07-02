@@ -268,12 +268,27 @@ if (!playCapture) {
 // ----------------------------------------------------------------------------
 {
   const capTs = readFile('capacitor.config.ts');
+  const capJson = capTs != null ? null : readJson('capacitor.config.json');
   const capSource = capTs != null ? capTs : (readFile('capacitor.config.json') || null);
   const sourceName = capTs != null ? 'capacitor.config.ts' : 'capacitor.config.json';
-  // server.url を抽出(.ts の `url: 'https://...'` / .json の "url": "https://..." 両対応)。
-  const urlMatch = capSource ? capSource.match(/\burl\s*:\s*['"]([^'"]+)['"]/) : null;
-  const serverUrl = urlMatch ? urlMatch[1] : null;
+  // server.url は「server ブロック内の url」に限定する。プラグイン等の別の url: を誤読すると
+  // false fail/false ok になる(レビュー指摘 HIGH)。
+  //   - .json: JSON.parse して server.url を直読み(最も確実)。
+  //   - .ts  : `server: { ... }` ブロックを切り出してから、その中の url: だけ拾う。
+  let serverUrl = null;
+  if (capJson) {
+    serverUrl = capJson.server?.url ?? null;
+  } else if (capSource) {
+    const serverBlock = capSource.match(/\bserver\s*:\s*\{([\s\S]*?)\}/);
+    const scope = serverBlock ? serverBlock[1] : '';
+    const urlMatch = scope.match(/\burl\s*:\s*['"]([^'"]+)['"]/);
+    serverUrl = urlMatch ? urlMatch[1] : null;
+  }
   const isPlaceholderUrl = serverUrl ? /\{\{|<\.\.\.>|example\.com/.test(serverUrl) : false;
+  // cleartext:true は server ブロック内に限定して判定(別ブロックの同名キー誤読を避ける)。
+  const serverScope = capJson
+    ? JSON.stringify(capJson.server || {})
+    : (capSource?.match(/\bserver\s*:\s*\{([\s\S]*?)\}/)?.[1] || '');
 
   if (!capSource) {
     skip('capacitor-server-cleartext', 'capacitor.config.(ts|json) が無い(server.url 連動型でなければ可)');
@@ -287,9 +302,10 @@ if (!playCapture) {
   } else if (!/^https:\/\//i.test(serverUrl)) {
     warn('capacitor-server-scheme', 'ATS', `${sourceName} server.url が https:// でない: ${serverUrl}`);
   } else {
-    // cleartext:true が明示されていれば http 読込を許してしまうので警告。
-    if (capSource && /\bcleartext\s*:\s*true\b/.test(capSource)) {
-      warn('capacitor-cleartext-flag', 'ATS', `${sourceName} に cleartext: true。https 運用では不要。意図しない http 読込を許す`);
+    // cleartext:true が明示されていれば http 読込を許してしまうので警告(server ブロック内のみ)。
+    // .ts の `cleartext: true` と .json の `"cleartext":true` 両対応。
+    if (/["']?cleartext["']?\s*:\s*true\b/.test(serverScope)) {
+      warn('capacitor-cleartext-flag', 'ATS', `${sourceName} server に cleartext: true。https 運用では不要。意図しない http 読込を許す`);
     }
     ok('capacitor-server-cleartext', `server.url = ${serverUrl} (https)`);
   }
@@ -298,7 +314,8 @@ if (!playCapture) {
   const infoPlist = readFile('ios/App/App/Info.plist');
   if (infoPlist == null) {
     skip('ats-arbitrary-loads', 'ios/App/App/Info.plist が無い(CI で cap copy 後に生成)');
-  } else if (/<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/.test(infoPlist)) {
+    // <true/>(短縮形, Xcode/plutil の既定)と <true></true>(手書き長形式)の両方を拾う。
+  } else if (/<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/?>(<\/true>)?/.test(infoPlist)) {
     warn('ats-arbitrary-loads', 'ATS', 'Info.plist NSAllowsArbitraryLoads=true。ATS 全面無効化は審査で指摘されうる。必要な例外ドメインだけ許可に絞る');
   } else {
     ok('ats-arbitrary-loads', 'NSAllowsArbitraryLoads の乱用なし');
