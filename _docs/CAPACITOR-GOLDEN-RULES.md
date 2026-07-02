@@ -38,6 +38,13 @@
    - Info.plist `UIUserInterfaceStyle=Dark`(起動の白フラッシュ防止)
    - LaunchScreen.storyboard の背景色をブランド背景色に
    WebView 下地は `capacitor.config` の `backgroundColor` が担当。**これより増やさない**。増やすなら「金型アプリにも同じ修正を入れるべきか」を先に問う。
+   - 🔴**背景色は「スプラッシュ画像の地色」と必ず一致させる**(白/黒フラッシュ根絶の肝)。不一致だと、
+     スプラッシュが `launchAutoHide` で消えた後〜`server.url` 読込完了までの間、下地色がむき出しで見える。
+     **kimito 実例(2026-07-02)**: スプラッシュは青地#00427B+白ロゴなのに `backgroundColor` が白#FFFFFFFF
+     → 実機で「開いた瞬間まっ白」。原因は「アプリが白基調だから白背景」という誤判断(スプラッシュは青地なのに)。
+     背景色4箇所(root/ios/android/plugins.SplashScreen)を #00427B に揃えて解消。`launchShowDuration` は
+     全リポ標準の1500のまま(伸ばすと審査で起動が遅いと見られる)。**背景色を決めるときはテーマの明暗でなく
+     "スプラッシュ画像の地色"を見る。**
 
 4. **`ios/` `android/` は git にコミットしない**(`.gitignore`)。CI で `npx cap copy` の都度新生成。古い人手調整が CI に持ち越されないように。
 
