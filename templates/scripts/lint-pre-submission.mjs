@@ -260,6 +260,76 @@ if (!playCapture) {
 }
 
 // ----------------------------------------------------------------------------
+// CHECK 9 — Capacitor WebView 黒画面/ATS の静的チェック
+//   _docs/CAPACITOR-GOLDEN-RULES.md をコード化。server.url が cleartext(http)だと
+//   ATS にブロックされ黒画面になる。NSAllowsArbitraryLoads の乱用も審査で指摘される。
+//   このキットの真実の源は capacitor.config.ts(原則2)。.ts をテキスト走査し、
+//   無ければ .json に fallback。{{...}} プレースホルダ(未コピーのテンプレ)は skip。
+// ----------------------------------------------------------------------------
+{
+  const capTs = readFile('capacitor.config.ts');
+  const capSource = capTs != null ? capTs : (readFile('capacitor.config.json') || null);
+  const sourceName = capTs != null ? 'capacitor.config.ts' : 'capacitor.config.json';
+  // server.url を抽出(.ts の `url: 'https://...'` / .json の "url": "https://..." 両対応)。
+  const urlMatch = capSource ? capSource.match(/\burl\s*:\s*['"]([^'"]+)['"]/) : null;
+  const serverUrl = urlMatch ? urlMatch[1] : null;
+  const isPlaceholderUrl = serverUrl ? /\{\{|<\.\.\.>|example\.com/.test(serverUrl) : false;
+
+  if (!capSource) {
+    skip('capacitor-server-cleartext', 'capacitor.config.(ts|json) が無い(server.url 連動型でなければ可)');
+  } else if (!serverUrl) {
+    // バンドル型(server.url 無し)は正当。原則1では連動型が標準だが、ここでは fail にしない。
+    skip('capacitor-server-cleartext', `${sourceName} に server.url が無い(バンドル型なら可)`);
+  } else if (isPlaceholderUrl) {
+    skip('capacitor-server-cleartext', `${sourceName} の server.url が未コピーのプレースホルダ`);
+  } else if (/^http:\/\//i.test(serverUrl)) {
+    fail('capacitor-server-cleartext', 'ATS', `${sourceName} server.url が http:// (cleartext)。ATS にブロックされ黒画面の原因になる: ${serverUrl}`);
+  } else if (!/^https:\/\//i.test(serverUrl)) {
+    warn('capacitor-server-scheme', 'ATS', `${sourceName} server.url が https:// でない: ${serverUrl}`);
+  } else {
+    // cleartext:true が明示されていれば http 読込を許してしまうので警告。
+    if (capSource && /\bcleartext\s*:\s*true\b/.test(capSource)) {
+      warn('capacitor-cleartext-flag', 'ATS', `${sourceName} に cleartext: true。https 運用では不要。意図しない http 読込を許す`);
+    }
+    ok('capacitor-server-cleartext', `server.url = ${serverUrl} (https)`);
+  }
+
+  // Info.plist の NSAllowsArbitraryLoads=true は ATS を全面無効化する。審査指摘リスク。
+  const infoPlist = readFile('ios/App/App/Info.plist');
+  if (infoPlist == null) {
+    skip('ats-arbitrary-loads', 'ios/App/App/Info.plist が無い(CI で cap copy 後に生成)');
+  } else if (/<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/.test(infoPlist)) {
+    warn('ats-arbitrary-loads', 'ATS', 'Info.plist NSAllowsArbitraryLoads=true。ATS 全面無効化は審査で指摘されうる。必要な例外ドメインだけ許可に絞る');
+  } else {
+    ok('ats-arbitrary-loads', 'NSAllowsArbitraryLoads の乱用なし');
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 10〜12 — ASC UI 手動項目の Read-Only 検証(contentRightsDeclaration /
+//   App プライバシー公開 / 配信地域)。creds + bundleId があるときだけ有効化。
+//   _docs/FIRST-SUBMISSION-blockers.md B7/B8 を「症状が出てから直す」から
+//   「submit 前に API で読み取って止める」ゲートに昇格する。
+//   API 呼び出しはこの区画のみ。ローカルで creds が無ければ skip し高速フィードバックを壊さない。
+// ----------------------------------------------------------------------------
+{
+  const { hasAscCreds, runAscReadonlyChecks } = await import('./lib/asc-readonly-checks.mjs');
+  const ascBundleId = appConfig?.identity?.bundleId;
+  if (!ascBundleId || String(ascBundleId).startsWith('<')) {
+    skip('asc-readonly-manual-items', 'app.config identity.bundleId が未設定');
+  } else if (!hasAscCreds()) {
+    skip('asc-readonly-manual-items', 'APPSTORE_CONNECT_* creds が無い(ローカル実行)');
+  } else {
+    const results = await runAscReadonlyChecks(ascBundleId);
+    for (const { name, guideline, result } of results) {
+      if (result.status === 'fail') fail(name, guideline, result.detail);
+      else if (result.status === 'warn') warn(name, guideline, result.detail);
+      else ok(name, result.detail);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Output
 // ----------------------------------------------------------------------------
 console.log('');

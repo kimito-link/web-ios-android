@@ -67,6 +67,28 @@ if (errs > 0) {
   process.exit(1);
 }
 
+// --- 依存の事前チェック: Playwright(B5) ---
+// FIRST-SUBMISSION-blockers.md B5: capture-*-screenshots.mjs は @playwright/test に依存するが
+// 新規アプリの package.json には入っていないことが多い。dry_run でも検出できるが、setup 時点で
+// 気づけば 1 サイクル早い。スクショ capture スクリプトが実在するときだけ警告する。
+{
+  const pkgPath = path.join(ROOT, 'package.json');
+  let pkg = null;
+  try { pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')); } catch { /* package.json 無し/壊れは別途扱い */ }
+  const hasPlaywright = Boolean(
+    pkg?.devDependencies?.['@playwright/test'] || pkg?.dependencies?.['@playwright/test'],
+  );
+  const capturesExist =
+    fs.existsSync(path.join(ROOT, 'scripts/capture-appstore-screenshots.mjs')) ||
+    fs.existsSync(path.join(ROOT, 'scripts/capture-play-screenshots.mjs'));
+  if (capturesExist && !hasPlaywright) {
+    warn('@playwright/test が package.json に無い。スクショ capture が実行時に落ちます(B5)。');
+    console.log('       修正: pnpm add -w -D @playwright/test  (または npm i -D @playwright/test)');
+  } else if (capturesExist) {
+    ok('@playwright/test あり(スクショ capture の依存充足)');
+  }
+}
+
 const { displayName, bundleId, productionDomain } = config.identity;
 const { playPackageName } = config.stores;
 const TOTAL = 4;
