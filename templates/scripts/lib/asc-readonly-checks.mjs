@@ -15,7 +15,7 @@
 //     エンドポイントが 404/想定外形状を返したら false fail を出さず 'warn'（手動確認を促す）に倒す。
 //     = 「分からなければ止める」ではなく「分からなければ人間に確認させる」。blocking を誤爆させない。
 import fs from 'node:fs';
-import { makeAscClient, findApp } from './asc-api.mjs';
+import { makeAscClient, findApp, listVersions, getReviewDetail } from './asc-api.mjs';
 
 // asc-set-content-rights.mjs と同一の解決順（.p8 直値 / パス / base64）。
 export function resolveAscPrivateKey() {
@@ -73,7 +73,43 @@ export async function runAscReadonlyChecks(bundleId) {
   out.push({ name: 'asc-content-rights-declared', guideline: 'meta/B7', result: await checkContentRightsDeclared(api, appId) });
   out.push({ name: 'asc-app-privacy-published', guideline: 'privacy/B8', result: await checkAppPrivacyPublished(api, appId) });
   out.push({ name: 'asc-territories-configured', guideline: 'process', result: await checkTerritoriesConfigured(api, appId) });
+  out.push({ name: 'asc-review-demo-stale', guideline: 'process', result: await checkReviewDemoStale(api, appId) });
   return out;
+}
+
+// --- ASC 側 reviewer デモ値の stale 検出(タスク3) --------------------------------
+// appstore-submit.mjs は demoAccountName/Password を env-first で上書きするが(env が正)、
+// 「却下対応してもズレたまま」の手がかりとして、ASC 側の現在値と env の食い違いを事前に可視化する。
+// env が優先されるため blocking にはしない(warn)。env 未指定なら比較不能なので skip 相当の ok。
+async function checkReviewDemoStale(api, appId) {
+  const envUser = process.env.IOS_REVIEW_DEMO_USERNAME;
+  if (!envUser) {
+    // ログイン不要アプリ or demo 値未使用。比較対象が無いので沈黙(ok)。
+    return R('ok', 'IOS_REVIEW_DEMO_USERNAME 未指定(demo 比較なし)');
+  }
+  try {
+    // 編集可能な最新バージョン(submit 対象になりうるもの)の reviewDetail を見る。
+    const versions = await listVersions(api, appId, 50);
+    const editableStates = new Set([
+      'PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'METADATA_REJECTED',
+      'REJECTED', 'INVALID_BINARY', 'WAITING_FOR_REVIEW',
+    ]);
+    const target =
+      versions.find((v) => v.platform === 'IOS' && editableStates.has(v.appStoreState)) ||
+      versions.find((v) => v.platform === 'IOS') ||
+      null;
+    if (!target) return R('ok', '比較対象の appStoreVersion が無い(初回提出前など)');
+    const detail = await getReviewDetail(api, target.id);
+    const ascUser = detail?.attributes?.demoAccountName ?? null;
+    if (ascUser && ascUser !== envUser) {
+      return R('warn',
+        `ASC 側 demoAccountName が env と不一致。次回 submit で env 値が上書きするが、` +
+        `今の食い違いは「却下対応してもログインできない」の手がかり: ASC="${ascUser}" env="${envUser}"`);
+    }
+    return R('ok', 'ASC 側 demoAccountName は env と一致(または未設定)');
+  } catch (e) {
+    return R('warn', `reviewDetail を確認できなかった(手動確認を): ${e.message}`);
+  }
 }
 
 // --- B7: contentRightsDeclaration -------------------------------------------
@@ -92,21 +128,37 @@ async function checkContentRightsDeclared(api, appId) {
 }
 
 // --- B8: App プライバシー「公開」------------------------------------------------
-// ASC UI で「アプリのプライバシー」の右上「公開」を押さないと、保存しただけでは審査に出せない。
-// appDataUsagesPublishState の published=true を確認する。エンドポイント差異に備え warn へ倒す。
+// ASC UI で「アプリのプライバシー」の右上「公開」を押さないと、保存だけでは審査に出せない。
+// ⚠️ 重要(appstore-submit.mjs ensurePrivacy で実証済み): App Privacy の dataUsage 系は
+//    標準 JWT API(api.appstoreconnect.apple.com/v1)には無く、iris API + web セッション
+//    cookie でしか認証できない。このスクリプトの API キー(JWT)では **どのベースでも
+//    401/404 になり、公開状態を API から読めないのが正常**。よって:
+//      - 読めない = 「未公開」ではない → fail にしない(false fail を出さない)。
+//      - 読めて published=false のときだけ fail(実際に未公開)。
+//    そもそも submit 時に ensurePrivacy が公開を試みる二段構え。ここは「早期に気づく」補助。
+// 経路/ベースは submit の ensurePrivacy と同一にして挙動を揃える(dataUsagePublishState は単数)。
 async function checkAppPrivacyPublished(api, appId) {
-  try {
-    const r = await api('GET', `/v1/apps/${appId}/dataUsagesPublishState`);
-    const published = r?.data?.attributes?.published;
-    if (published === true) return R('ok', 'App プライバシーは公開済み');
-    if (published === false) {
-      return R('fail', 'App プライバシーが未公開。ASC UI「アプリのプライバシー」→ 右上「公開」ボタンを押す(保存だけでは不可)(B8)');
+  const BASES = [
+    'https://api.appstoreconnect.apple.com/v1',
+    'https://appstoreconnect.apple.com/iris/v1',
+    'https://api.appstoreconnect.apple.com/iris/v1',
+  ];
+  for (const base of BASES) {
+    try {
+      const ps = await api('GET', `${base}/apps/${appId}/dataUsagePublishState`);
+      const published = ps?.data?.attributes?.published;
+      if (published === true) return R('ok', 'App プライバシーは公開済み');
+      if (published === false) {
+        return R('fail', 'App プライバシーが未公開。ASC UI「アプリのプライバシー」→ 右上「公開」を押す(保存だけでは不可)。submit 時に ensurePrivacy も公開を試みる(B8)');
+      }
+      // 200 だが published が boolean でない(形状差異)。誤爆を避け warn。
+      return R('warn', 'App プライバシーの公開状態を判定できなかった(形状差異)。ASC UI で「公開」済みか手動確認を(B8)');
+    } catch {
+      // このベースは 401/404。次のベースを試す。
     }
-    // published が boolean で返らない（形状差異）。誤爆を避け warn。
-    return R('warn', 'App プライバシーの公開状態を判定できなかった。ASC UI で「公開」済みか手動確認を(B8)');
-  } catch (e) {
-    return R('warn', `App プライバシーの公開状態を確認できなかった(手動確認を): ${e.message}(B8)`);
   }
+  // 全ベースで読めない = JWT では確認不可(想定どおり)。fail にせず、手動/submit 任せである旨を warn。
+  return R('warn', 'App プライバシーの公開状態は JWT API では確認できません(iris は web セッション専用＝想定どおり)。ASC UI で「公開」済みか確認。未公開なら submit が APP_DATA_USAGES_REQUIRED で弾く(B8)');
 }
 
 // --- 配信地域 -----------------------------------------------------------------

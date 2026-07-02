@@ -45,6 +45,10 @@ try { config = loadAppConfig(); } catch (e) { fail(e.message); process.exit(1); 
 const PLACEHOLDER = [/^YOUR_/i, /^PLACEHOLDER/i, /^TODO/i, /^CHANGE_ME/i, /^example\./i, /^com\.example/i, /^</];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER.some((re) => re.test(v));
 
+// 電話番号だけに適用する追加のダミー判定(B6)。0 が 4 個以上連続する番号は
+// +81 90 0000 0000 のような明らかなダミー。他フィールドに誤爆させないため電話専用にする。
+const isDummyPhone = (v) => typeof v === 'string' && /0{4,}/.test(v);
+
 const REQUIRED = [
   ['identity.displayName', config.identity?.displayName],
   ['identity.bundleId', config.identity?.bundleId],
@@ -52,6 +56,8 @@ const REQUIRED = [
   ['stores.playPackageName', config.stores?.playPackageName],
   ['contact.email', config.contact?.email],
   ['contact.privacyUrl', config.contact?.privacyUrl],
+  // 電話番号(B6): 却下対応で実際に問題になった。形式チェックのみ(実在確認は不可)。
+  ['contact.phoneE164', config.contact?.phoneE164],
   ['ownership.githubOrg', config.ownership?.githubOrg],
   ['ownership.githubRepo', config.ownership?.githubRepo],
 ];
@@ -60,7 +66,9 @@ header('必須フィールドの検証');
 let errs = 0;
 for (const [field, value] of REQUIRED) {
   if (!value || isPlaceholder(value)) { fail(`${field} 未設定 (${JSON.stringify(value)})`); errs++; }
-  else ok(`${field} = ${value}`);
+  else if (field === 'contact.phoneE164' && isDummyPhone(value)) {
+    fail(`${field} がダミー番号 (${JSON.stringify(value)})。実在の連絡先電話番号を設定してください(B6)`); errs++;
+  } else ok(`${field} = ${value}`);
 }
 if (errs > 0) {
   console.error(`\n検証失敗: ${errs} 件の必須フィールドを app.config.json に記入してください。`);
@@ -130,6 +138,8 @@ console.log('  - ASC: アプリ枠の新規作成(Apple API不可)→ ascAppId �
 console.log('  - Play Console: 新アプリ作成 + 既存/新規 Service Account に権限付与');
 console.log('  - iOS「配信地域」設定 / Android「審査用に送信」ボタン(最後の一押しは人間)');
 console.log('  詳細: docs/TROUBLESHOOTING.md / _docs/apple-reject-knowledge-base.md');
+console.log('  ↓ ASC アプリ枠 / Play アプリの作成が終わったら、API で実在確認できます:');
+console.log('    node scripts/verify-manual-setup-done.mjs   # creds があれば ASC/Play の枠を検証');
 
 header('setup-new-app: 完了');
 console.log(`アプリ「${displayName}」(${bundleId}) の準備が整いました。`);

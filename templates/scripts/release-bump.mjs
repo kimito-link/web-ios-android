@@ -106,6 +106,9 @@ if (fs.existsSync(GRADLE)) {
 
 // 以下はレイアウト依存のオプション項目。ファイルが「無い」ならスキップ。
 // ファイルは「ある」のにパターン不一致なら throw(黙ってズレ続けるのを防ぐ)。
+// SW キャッシュ bump がスキップされたか(regex 不一致で版数が上がらなかったか)を記録する。
+// warn は埋もれやすいので、release-history 雛形にフラグとして残し、lint-pre-submission が拾う。
+let swCacheBumpSkipped = false;
 if (fs.existsSync(SW)) {
   let sw = fs.readFileSync(SW, 'utf8');
   // prefix を正規表現に流用(特殊文字をエスケープ)。CACHE_NAME = '<prefix><N>' を想定。
@@ -119,12 +122,17 @@ if (fs.existsSync(SW)) {
     fs.writeFileSync(SW, sw);
     console.log(`  sw.js cache version ${oldCacheN} -> ${newCacheN} (prefix="${SW_CACHE_PREFIX}")`);
   } else {
+    // sw.js は「ある」のに CACHE_NAME パターンに一致しない = 版数が上がらないまま出荷される恐れ。
+    // 気づかれずに埋もれる warn なので、下の release-history にフラグを立てて lint に拾わせる。
+    swCacheBumpSkipped = true;
     console.warn(
       `  [warn] sw.js: CACHE_NAME = '${SW_CACHE_PREFIX}<N>' パターンに一致せず。` +
-        `prefix が違う場合は env SW_CACHE_PREFIX で指定するか、このブロックを調整してください。`,
+        `SW キャッシュ版数が上がりません(古い SW が残る恐れ)。prefix が違う場合は env SW_CACHE_PREFIX ` +
+        `で指定するか、このブロックを調整してください。lint-pre-submission がこの取りこぼしを検出します。`,
     );
   }
 } else {
+  // sw.js 自体が無いのは PWA 未使用の正当な構成。フラグは立てない(swCacheBumpSkipped=false のまま)。
   console.warn('  [warn] sw.js が無いためスキップ(PWA 未使用の構成)');
 }
 
@@ -196,6 +204,9 @@ try {
     bumped_from: fromVersion,
     bumped_at: new Date().toISOString(),
     release_notes: notesText,
+    // SW キャッシュ版数の bump がスキップされたか(true なら古い SW が残る恐れ)。
+    // lint-pre-submission が直近版のこのフラグを見て提出前に警告する。
+    sw_cache_bump_skipped: swCacheBumpSkipped,
     // 以下は release workflow が完了時に追記する想定(手動で埋めても良い):
     gate_blackscreen_check_run_id: null,
     gate_blackscreen_check_result: null,

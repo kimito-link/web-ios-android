@@ -306,8 +306,8 @@ if (!playCapture) {
 }
 
 // ----------------------------------------------------------------------------
-// CHECK 10〜12 — ASC UI 手動項目の Read-Only 検証(contentRightsDeclaration /
-//   App プライバシー公開 / 配信地域)。creds + bundleId があるときだけ有効化。
+// CHECK 10〜13 — ASC の Read-Only 検証(contentRightsDeclaration / App プライバシー公開 /
+//   配信地域 / reviewer デモ値の stale)。creds + bundleId があるときだけ有効化。
 //   _docs/FIRST-SUBMISSION-blockers.md B7/B8 を「症状が出てから直す」から
 //   「submit 前に API で読み取って止める」ゲートに昇格する。
 //   API 呼び出しはこの区画のみ。ローカルで creds が無ければ skip し高速フィードバックを壊さない。
@@ -327,6 +327,24 @@ if (!playCapture) {
       else ok(name, result.detail);
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 14 — 直近 bump で SW キャッシュ版数の更新がスキップされていないか
+//   release-bump.mjs が release-history/<version>.json に立てる sw_cache_bump_skipped を拾う。
+//   bump 時の warn は埋もれやすいので、提出前 lint で2段目のセーフティネットにする。
+// ----------------------------------------------------------------------------
+if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
+  const history = readJson(`release-history/${marketingVersion}.json`);
+  if (!history) {
+    skip('sw-cache-bump', `release-history/${marketingVersion}.json が無い(release-bump 未実行 or 別運用)`);
+  } else if (history.sw_cache_bump_skipped === true) {
+    warn('sw-cache-bump', 'process', `直近 bump(${marketingVersion})で SW キャッシュ版数の更新がスキップされた。古い Service Worker が残る恐れ。sw.js の CACHE_NAME パターンか SW_CACHE_PREFIX を確認`);
+  } else {
+    ok('sw-cache-bump', `release-history/${marketingVersion}.json: SW キャッシュ bump スキップなし`);
+  }
+} else {
+  skip('sw-cache-bump', 'marketingVersion が semver でないため履歴照合をスキップ');
 }
 
 // ----------------------------------------------------------------------------
