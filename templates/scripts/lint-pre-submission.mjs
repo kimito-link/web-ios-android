@@ -159,15 +159,21 @@ const captureScript = readFile('scripts/capture-appstore-screenshots.mjs');
 if (!captureScript) {
   warn('screenshot-capture-script', '2.3.3', 'scripts/capture-appstore-screenshots.mjs が無い(committed スクショ運用なら可)');
 } else {
+  // 認証方式は2通り: Clerk等の直接ログイン(IOS_REVIEW_DEMO_USERNAME/_PASSWORD)、
+  // またはCI直接ログインがbot検知で弾かれるアプリ向けの storageState 再利用
+  // (IOS_REVIEW_STORAGE_STATE_JSON_BASE64。名前はIOS_だがAndroid captureとも共用可)。
   const usesDemo = captureScript.includes('IOS_REVIEW_DEMO_USERNAME') && captureScript.includes('IOS_REVIEW_DEMO_PASSWORD');
+  const usesStorageState = captureScript.includes('IOS_REVIEW_STORAGE_STATE_JSON_BASE64');
+  const usesAuth = usesDemo || usesStorageState;
   const failsClosed = /process\.exit\(1\)/.test(captureScript);
-  if (!usesDemo) {
+  if (!usesAuth) {
     // ログイン不要アプリ(public 画面のみで価値が伝わる)では正当。warn に留める。
     warn(
       'screenshot-capture-auth',
       '2.3.3',
-      'capture が IOS_REVIEW_DEMO_USERNAME/_PASSWORD を読まない。ログイン認証アプリなら ' +
-        'ログイン後画面を撮らないと v1.0.7 と同じ 2.3.3 却下になる。ログイン不要アプリなら無視可。',
+      'capture が IOS_REVIEW_DEMO_USERNAME/_PASSWORD も IOS_REVIEW_STORAGE_STATE_JSON_BASE64 も ' +
+        '読まない。ログイン認証アプリならログイン後画面を撮らないと v1.0.7 と同じ 2.3.3 却下になる。' +
+        'ログイン不要アプリなら無視可。',
     );
   } else if (!failsClosed) {
     fail('screenshot-capture-failclosed', '2.3.3', 'creds 欠落時に process.exit(1) しない。silent fallback は 2.3.3 を再発させる');
@@ -249,9 +255,16 @@ if (!playCapture) {
   skip('play-capture-auth', 'scripts/capture-play-screenshots.mjs が無い');
 } else {
   const usesDemo = playCapture.includes('IOS_REVIEW_DEMO_USERNAME') && playCapture.includes('IOS_REVIEW_DEMO_PASSWORD');
+  const usesStorageState = playCapture.includes('IOS_REVIEW_STORAGE_STATE_JSON_BASE64');
+  const usesAuth = usesDemo || usesStorageState;
   const failsClosed = /process\.exit\(1\)/.test(playCapture);
-  if (!usesDemo) {
-    warn('play-capture-auth', '2.3.3', 'Play capture が demo creds を読まない。ログイン認証アプリならログイン後を撮ること');
+  if (!usesAuth) {
+    warn(
+      'play-capture-auth',
+      '2.3.3',
+      'Play capture が demo creds も IOS_REVIEW_STORAGE_STATE_JSON_BASE64 も読まない。' +
+        'ログイン認証アプリならログイン後を撮ること。',
+    );
   } else if (!failsClosed) {
     fail('play-capture-failclosed', '2.3.3', 'Play capture も creds 欠落時 exit 1 すること');
   } else {
