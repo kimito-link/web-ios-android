@@ -1,9 +1,11 @@
 <#
 .SYNOPSIS
-  android-twa/android-upload-key.jks の SHA256 fingerprint を表示する。
+  .secrets-local/android-upload-key.jks の SHA256 fingerprint を表示する。
 .DESCRIPTION
   金型（無改変で使える）。出どころ: partnership_program_website/scripts/print-android-fingerprint.ps1
-  Digital Asset Links（本番サイトの /.well-known/assetlinks.json）に貼る値を確認するためのもの。
+  TWA/Capacitor どちらの Android 構成でも共用。
+  Digital Asset Links（本番サイトの /.well-known/assetlinks.json）に貼る値を確認するためのもの
+  （TWA構成のみ必要。Capacitor構成では通常不要）。
   - 製品版に出している場合は、Play Console の「アプリの署名」→「アプリ署名鍵証明書」の SHA256 を使うこと
     （Play App Signing が有効な場合、ローカルの upload key とは別の指紋になる）。
 #>
@@ -14,10 +16,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-$twaDir   = Join-Path $repoRoot "android-twa"
-$jks      = Join-Path $twaDir "android-upload-key.jks"
-$propsFile = Join-Path $twaDir "keystore.properties"
+$repoRoot   = Resolve-Path (Join-Path $PSScriptRoot "..")
+$secretsDir = Join-Path $repoRoot ".secrets-local"
+$jks       = Join-Path $secretsDir "android-upload-key.jks"
+$propsFile = Join-Path $secretsDir "keystore.properties"
 
 if (-not (Test-Path $jks))       { throw "鍵がありません: $jks（create-android-keystore.ps1 で作成）" }
 if (-not (Test-Path $propsFile)) { throw "$propsFile がありません" }

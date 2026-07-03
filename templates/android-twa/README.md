@@ -8,8 +8,14 @@ TWA は Capacitor とは別系統。Android は「Web をネイティブシェ�
 **Bubblewrap (TWA)** を使い、iOS は Capacitor（`../capacitor/`）を使う、という分担。
 
 > ⚠️ **署名鍵 (`android-upload-key.jks`) はこの金型に含まれない／コピーしない。**
-> 鍵はアプリごとに `create-android-keystore.ps1` で生成し、安全にバックアップする。
+> 鍵はアプリごとに `../scripts/create-android-keystore.ps1` で生成し、安全にバックアップする。
 > 鍵を失うと既存アプリを二度と更新できない（Play が同じ鍵での署名を要求するため）。
+
+> ℹ️ 署名鍵の生成(`create-android-keystore.ps1`)・指紋表示(`print-android-fingerprint.ps1`)・
+> 署名注入(`android-patch-signing.mjs`)の3本は **TWA/Capacitor 共用の汎用スクリプト**なので
+> `templates/scripts/` 直下にある（`android-patch-signing.mjs` は `--gradle`/`--keystore` 引数で
+> TWA(`android-twa/app/build.gradle`)/Capacitor(`android/app/build.gradle`)どちらも指定可）。
+> このディレクトリの `scripts/` には TWA 固有の `build-android-aab.ps1` のみ残っている。
 
 ---
 
@@ -23,10 +29,10 @@ TWA は Capacitor とは別系統。Android は「Web をネイティブシェ�
 | `assetlinks.json.example` | Digital Asset Links の見本 | `package_name` / SHA256 を置換。本番サイトの `/.well-known/` に配信 |
 | `bubblewrap-config.json.example` | JDK/SDK パス設定の見本 | マシンごとのパスに置換 |
 | `gitignore.snippet` | 鍵・成果物を除外する .gitignore 追記分 | そのまま追記 |
-| `scripts/android-patch-signing.mjs` | init/update 後に署名ブロックを注入（**無改変**） | アプリ固有値なし |
-| `scripts/create-android-keystore.ps1` | 署名鍵 + keystore.properties を生成 | `-DistinguishedName` を渡す |
-| `scripts/print-android-fingerprint.ps1` | SHA256 指紋を表示（assetlinks 用、**無改変**） | アプリ固有値なし |
 | `scripts/build-android-aab.ps1` | Release AAB をビルド（**無改変**） | アプリ固有値なし |
+| `../scripts/android-patch-signing.mjs` | init/update 後に署名ブロックを注入（`--gradle`/`--keystore` 引数対応） | アプリ固有値なし |
+| `../scripts/create-android-keystore.ps1` | 署名鍵 + keystore.properties を `.secrets-local/` に生成 | `-DistinguishedName` を渡す |
+| `../scripts/print-android-fingerprint.ps1` | SHA256 指紋を表示（assetlinks 用、**無改変**） | アプリ固有値なし |
 
 `app/`（Java・Gradle wrapper・res/アイコン）は **`bubblewrap init` が自動生成する**ので
 金型には含めない（手でコピーすると古い AGP/依存で陳腐化する）。金型が持つのは

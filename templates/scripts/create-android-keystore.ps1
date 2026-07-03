@@ -3,9 +3,13 @@
   Android アップロード用キーストア（android-upload-key.jks）と keystore.properties を作成する。
 .DESCRIPTION
   金型。出どころ: partnership_program_website/scripts/create-android-keystore.ps1
+  TWA(bubblewrap)/Capacitor どちらの Android 構成でも共用の汎用スクリプト（keystoreの
+  作り方はビルド方式に依存しないため）。
   - 既存ファイルがある場合は上書きしない（誤消失防止＝鍵を失うとアプリ更新不能になるため）。
   - keytool は JAVA_HOME か .bubblewrap-config.json の jdkPath（JDK 17 同梱）を使う。
-  - 出力先: android-twa/android-upload-key.jks, android-twa/keystore.properties
+  - 出力先: .secrets-local/android-upload-key.jks, .secrets-local/keystore.properties
+    （bootstrap-secrets.mjs がこのファイル名で .secrets-local/ から読んで
+    GitHub Secrets に登録する。ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PROPERTIES）。
   - DistinguishedName（証明書のCN等）は引数で渡す。app.config.json の ownership.organization /
     contact 名から組み立てるか、-DistinguishedName で明示する。プレースホルダのまま実行しないこと。
   ★この jks は各アプリで固有。キット間でコピーしない。生成後は安全な場所にバックアップする。
@@ -25,10 +29,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$repoRoot  = Resolve-Path (Join-Path $PSScriptRoot "..")
-$twaDir    = Join-Path $repoRoot "android-twa"
-$jks       = Join-Path $twaDir "android-upload-key.jks"
-$propsFile = Join-Path $twaDir "keystore.properties"
+$repoRoot   = Resolve-Path (Join-Path $PSScriptRoot "..")
+$secretsDir = Join-Path $repoRoot ".secrets-local"
+New-Item -ItemType Directory -Force -Path $secretsDir | Out-Null
+$jks       = Join-Path $secretsDir "android-upload-key.jks"
+$propsFile = Join-Path $secretsDir "keystore.properties"
 
 if ($DistinguishedName -match '<') {
   throw "DistinguishedName がプレースホルダのままです。-DistinguishedName 'CN=..., O=..., L=Tokyo, C=JP' を指定してください。"
@@ -90,7 +95,8 @@ Write-Host "  jks   : $jks"
 Write-Host "  props : $propsFile"
 Write-Host ""
 Write-Host "次は: scripts/print-android-fingerprint.ps1 でローカル鍵の SHA256 を確認、"
+Write-Host "  node scripts/bootstrap-secrets.mjs --apply で GitHub Secrets に登録。"
 Write-Host "Play Console アップロード後は『アプリの署名』の SHA256 を"
-Write-Host "本番サイトの /.well-known/assetlinks.json に反映してください。"
+Write-Host "本番サイトの /.well-known/assetlinks.json に反映してください(TWA構成のみ必要)。"
 Write-Host ""
 Write-Host "⚠️ この jks と keystore.properties は絶対に commit しない（.gitignore へ）。失うとアプリ更新不能。バックアップ必須。"
