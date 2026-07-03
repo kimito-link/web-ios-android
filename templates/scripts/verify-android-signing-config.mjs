@@ -2,8 +2,9 @@
 // Android「未署名 AAB 出荷事故」防止ゲート。
 //
 // 背景（出典: Exosome android-play-release.yml で実証）:
-//   bubblewrap は build.gradle に signingConfig を生成しないため、そのままビルドすると
-//   未署名 AAB ができ、Play Console がアップロードを弾く。CI/ローカルの bundleRelease の
+//   bubblewrap(TWA) も `npx cap add android`(Capacitor) も build.gradle に
+//   signingConfig を生成しないため、そのままビルドすると未署名 AAB ができ、
+//   Play Console がアップロードを弾く。CI/ローカルの bundleRelease の
 //   「前」にこのチェックを通すことで、Play に弾かれる前に検出して止められる。
 //   android-patch-signing.mjs を流せば signingConfig は注入される（このスクリプトはその検証）。
 //

@@ -121,17 +121,25 @@ if (fs.existsSync(genAssets)) {
   warn('generate-store-assets.mjs が見つかりません(キットからコピーしてください)。');
 }
 
-// --- Step 3: Android TWA 初期化案内 ---
-step(2, TOTAL, 'Android TWA 初期化(bubblewrap)');
+// --- Step 3: Android 初期化案内(Capacitor優先。TWAはIAP不要な軽量アプリ向けの代替) ---
+step(2, TOTAL, 'Android 初期化(Capacitor)');
+const androidDir = path.join(ROOT, 'android');
 const twaDir = path.join(ROOT, 'android-twa');
-if (fs.existsSync(path.join(twaDir, 'app'))) {
-  ok('android-twa/app あり — bubblewrap init はスキップ。');
+if (fs.existsSync(path.join(androidDir, 'app'))) {
+  ok('android/app あり — cap add android はスキップ。');
+} else if (fs.existsSync(path.join(twaDir, 'app'))) {
+  ok('android-twa/app あり(TWA構成) — bubblewrap init はスキップ。');
+  console.log('  ※ TWA構成はGoogle Play Billing(アプリ内課金)をネイティブ組み込みできません。');
+  console.log('    IAPが必要なら android-twa/ を捨てて Capacitor(android/) に切り替えてください。');
 } else {
-  console.log(`  domain    : https://${productionDomain}`);
-  console.log(`  packageId : ${playPackageName}`);
-  console.log('  ↓ 対話式です。プロンプトに答えてから再実行してください:');
-  console.log(`    npx @bubblewrap/cli init --manifest https://${productionDomain}/manifest.webmanifest`);
-  console.log('  署名鍵は templates/android-twa/scripts/create-android-keystore.ps1(Windows)で生成。');
+  console.log('  ↓ npm install 後に実行してください:');
+  console.log('    npx cap add android');
+  console.log('  署名鍵は templates/android-twa/scripts/create-android-keystore.ps1(Windows)で生成');
+  console.log('  (TWA専用ではなく汎用のkeystore生成スクリプトとして流用可)。');
+  console.log('  ');
+  console.log('  ※ IAP(アプリ内課金)が不要な単純なWebラップだけで良い場合は、代わりに');
+  console.log('    軽量なTWA(bubblewrap)構成も選べます:');
+  console.log(`      npx @bubblewrap/cli init --manifest https://${productionDomain}/manifest.webmanifest`);
 }
 
 // --- Step 4: 手動でやること(GUI/Secrets)を明示 ---

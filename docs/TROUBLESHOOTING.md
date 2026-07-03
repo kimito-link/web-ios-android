@@ -173,6 +173,59 @@ GitHub Actions が古い方（または `cancel-in-progress` 設定次第で新�
 
 ---
 
+## 🤖 Android：TWA(bubblewrap)ではアプリ内課金(IAP)が組み込めない
+
+### こんな症状
+Android版に Google Play Billing（アプリ内課金）を実装しようとしたら、
+`android-twa/` プロジェクトにネイティブの購入プラグインを追加する方法が見つからない。
+
+### 原因
+**TWA(Trusted Web Activity/bubblewrap)は「WebサイトをそのままAndroidアプリ化する」軽量ラッパー**で、
+ネイティブコードを持たない設計。Google Play Billingのようなネイティブ機能をアプリに
+組み込む余地が原理的にない。iOSのCapacitorアプリと足並みを揃えたつもりで
+「Androidだけ軽量なTWAのまま」進めていると、IAP実装フェーズで詰む。
+
+### 直し方
+IAPが必要なら最初から **Capacitor** で `android/` プロジェクトを生成する
+（`android-twa/` は使わない）。`templates/workflows/android-play-release.yml` は
+Capacitor版に統一済み。IAPが不要な単純なWebラップだけで良いアプリは、
+引き続きTWA(bubblewrap)の方が軽量なので、そちらを選んでよい
+（`setup-new-app.mjs` が両方の選択肢を案内する）。
+
+> 🦝 たぬ姉「TWAとCapacitorはどっちも『Webサイトをアプリにする』手段だけど、
+> ネイティブ機能が要るかどうかで選ぶものが変わるよ。課金が絡むなら最初からCapacitor！」
+
+---
+
+## 🤖 IAP：存在しないプラグイン名をコードにハードコードしてしまう罠
+
+### こんな症状
+`iap-billing.js`（クライアント購入コード）が `window.Capacitor.Plugins.InAppPurchases`
+のような特定のプラグインを参照しているが、`npm install` しようとすると
+パッケージが見つからない・そもそもnpmに存在しない。
+
+### 原因
+「いかにもありそうな名前」（例: `@capacitor-community/in-app-purchases`）を
+実在確認せずに実装で仮置きしてしまい、そのまま忘れられるパターン。
+実際に2026年時点で確認したところ、このパッケージ名はnpm/GitHubに存在せず、
+2020年の提案issueが未実装のまま放置されたものだった。IAPの実機結線を
+後回し（P5後半等）にしていると、この手のプラグイン名ミスが長期間気づかれずに残る。
+
+### 直し方
+IAPプラグインを選ぶ前に、実装前チェックリストとして毎回確認する：
+1. npm/GitHubで実際に存在するか（`npm view <package>` や検索で確認、憶測で書かない）
+2. アクティブにメンテされているか（最終公開日・Issue対応状況）
+3. **サーバー側の検証方式と噛み合うか** — 自前サーバーでストアAPIへ直接
+   `purchaseToken`/レシートを検証する設計なら、プラグインが生のトークンを
+   露出するか確認する。RevenueCat等の「購入から検証・エンタイトルメント管理まで
+   自社バックエンドで完結させる」タイプのSDKは、生のpurchaseTokenを
+   意図的にラップして見せないことがある（RevenueCat公式コミュニティで
+   スタッフが "the purchase token isn't exposed through RevenueCat's APIs" と明言）。
+   既存の自前検証資産を活かしたいなら、生トークンをそのまま返す
+   `@capgo/native-purchases` のような直結型プラグインの方が噛み合う。
+
+---
+
 ## 🤖 Android：「審査にまだ送信されていない」のまま進まない
 
 ### こんな症状

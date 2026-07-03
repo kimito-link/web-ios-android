@@ -1,15 +1,28 @@
 #!/usr/bin/env node
-// Patch android-twa/app/build.gradle after `bubblewrap update` or `bubblewrap init`.
-// Bubblewrap does NOT generate signingConfig, so Play Console rejects the AAB
-// with "アップロードしたすべてのバンドルに署名する必要があります".
+// Patch <target>/app/build.gradle so `bundleRelease` produces a signed AAB.
+// Neither bubblewrap (TWA) nor `npx cap add android` (Capacitor) generate a
+// signingConfig, so Play Console rejects the AAB with
+// "アップロードしたすべてのバンドルに署名する必要があります".
 // This script idempotently injects the signing block so the next bundleRelease
-// produces a properly signed AAB.
+// produces a properly signed AAB. Works against either layout — pass --gradle
+// to point at the actual build.gradle (android-twa/app/build.gradle for TWA,
+// android/app/build.gradle for Capacitor).
+//
+// 使い方:
+//   node scripts/android-patch-signing.mjs
+//   node scripts/android-patch-signing.mjs --gradle android/app/build.gradle
+//   node scripts/android-patch-signing.mjs --gradle android/app/build.gradle --keystore ../android-upload-key.jks
 import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const GRADLE = path.join(REPO, 'android-twa', 'app', 'build.gradle');
+function arg(name, def) {
+  const i = process.argv.indexOf(name);
+  return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : def;
+}
+
+const GRADLE = arg('--gradle', 'android-twa/app/build.gradle');
+// storeFile はこの build.gradle からの相対パス。TWA/Capacitor どちらも
+// <target>/app/build.gradle という同じ深さなので既定値は共通で使える。
+const KEYSTORE_REL_PATH = arg('--keystore', '../android-upload-key.jks');
 
 if (!fs.existsSync(GRADLE)) {
   console.error(`Not found: ${GRADLE}`);
@@ -20,7 +33,7 @@ let src = fs.readFileSync(GRADLE, 'utf8');
 
 // --- 1. Already patched? ---
 if (src.includes('signingConfigs') && src.includes('signingConfig signingConfigs.release')) {
-  console.log('android-patch-signing: already patched, nothing to do.');
+  console.log(`android-patch-signing: ${GRADLE} already patched, nothing to do.`);
   process.exit(0);
 }
 
@@ -43,7 +56,7 @@ if (!src.includes('keystorePropertiesFile')) {
 const SIGNING_CONFIGS = `\
     signingConfigs {
         release {
-            storeFile file("../android-upload-key.jks")
+            storeFile file("${KEYSTORE_REL_PATH}")
             storePassword keystoreProperties['storePassword']
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
@@ -67,4 +80,4 @@ if (!src.includes('signingConfig signingConfigs.release')) {
 }
 
 fs.writeFileSync(GRADLE, src, 'utf8');
-console.log('android-patch-signing: done. build.gradle is ready for signed bundleRelease.');
+console.log(`android-patch-signing: done. ${GRADLE} is ready for signed bundleRelease.`);

@@ -11,7 +11,7 @@
 
 | パス | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
-| `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→TWA案内→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
+| `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→Android初期化案内(Capacitor優先/IAP不要ならTWAも可)→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
 | `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
@@ -26,9 +26,10 @@
 | `scripts/generate-privacy-page.mjs` | プライバシーポリシーHTML生成(健康/Play 審査で必須の公開URL)。API非依存・静的生成のため陳腐化しない | **無改変**(app.config.json 駆動) |
 | `scripts/asc-create-profile.mjs` | App Store 用 Provisioning Profile を ASC API で作成(Developer Portal 手動不要)。`CERT_SERIAL` で Secret の .cer に一致する証明書を選ぶ(複数証明書の不一致=Export IPA 失敗を防ぐ)。先頭ゼロ無視のシリアル比較 | **無改変**(env 駆動。詳細は `_docs/FIRST-SUBMISSION-blockers.md` B4) |
 | `scripts/asc-set-content-rights.mjs` | app の `contentRightsDeclaration` を API 設定(初回提出の必須・ASC UI では効かないことがある) | **無改変**(app.config.json `stores.contentRights` 駆動。同 B7) |
-| `scripts/android-patch-signing.mjs` | bubblewrap の build.gradle に signingConfig を冪等注入 | **無改変**(構造依存のみ) |
+| `scripts/android-patch-signing.mjs` | build.gradle に signingConfig を冪等注入(Capacitor `android/`・TWA `android-twa/` どちらも `--gradle`/`--keystore` で指定可) | **無改変**(構造依存のみ) |
 | `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
-| `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
+| `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・iOS版(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
+| `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/copy-web-to-www.mjs` | src/ → www/ ミラー(Capacitor フォールバック生成) | **無改変** |
 | `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
 | `scripts/setup-clerk-x-oauth.mjs` | **Clerk + X OAuth セットアップ補助**。app.config.json(+ブランドプリセット)を読んでチェックリスト表示 / `.env.local` ひな形追記 / Vercel 一括登録。`--write-env` / `--write-vercel` フラグで動作変更。`pk_test_` から開発用 Callback を自動デコード | **無改変**(app.config.json 駆動) |
@@ -82,7 +83,7 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 | コピー元 | 自リポの置き場所 | 書き換える値 |
 | --- | --- | --- |
 | **P** `.github/workflows/ios-appstore-release.yml` | `.github/workflows/` | `env: APP_BUNDLE_ID` / `APP_NAME` |
-| **P** `.github/workflows/android-play-release.yml` | `.github/workflows/` | `env: PLAY_PACKAGE_NAME` |
+| `.github/workflows/android-play-release.yml`(Capacitor版・金型 templates/workflows/ が正) | `.github/workflows/` | `env: PLAY_PACKAGE_NAME` / `APP_NAME` |
 | **F** `.github/workflows/ios-blackscreen-check.yml`(輝度ゲート本体・Pには無い) | `.github/workflows/` | `APP_BUNDLE_ID` + 発明B3点(下記) |
 | **F** `.github/workflows/ios-shell-guardrail.yml`(or 本キットの汎用版) | `.github/workflows/` | 無改変 |
 | **P** `scripts/lib/asc-api.mjs` / `scripts/lib/play-api.mjs` | `scripts/lib/` | 無改変(env で制御) |

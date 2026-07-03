@@ -8,7 +8,8 @@
 //
 // 更新対象(存在するものだけ。レイアウト依存のオプション項目は無ければ警告してスキップ):
 //   1. package.json    -> "version": "x.y.z"            (常に)
-//   2. <android-twa>/app/build.gradle -> versionCode +1, versionName "x.y.z" (常に)
+//   2. android/app/build.gradle または android-twa/app/build.gradle
+//      -> versionCode +1, versionName "x.y.z" (Capacitor(android/)を優先、無ければTWA(android-twa/)、両方無ければ警告)
 //   3. sw.js           -> CACHE_NAME prefix + 連番 +1   (PWA を使うとき)
 //   4. index.html      -> <meta name="app-version">     (アプリ内表示があるとき)
 //   5. app.js          -> DEFAULT_APP_VERSION           (同上)
@@ -31,7 +32,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..');
 
 const PKG = path.join(REPO, 'package.json');
-const GRADLE = path.join(REPO, 'android-twa', 'app', 'build.gradle');
+// Capacitor(android/)を優先。無ければTWA(android-twa/)にフォールバック。
+const GRADLE_CAPACITOR = path.join(REPO, 'android', 'app', 'build.gradle');
+const GRADLE_TWA = path.join(REPO, 'android-twa', 'app', 'build.gradle');
+const GRADLE = fs.existsSync(GRADLE_CAPACITOR) ? GRADLE_CAPACITOR : GRADLE_TWA;
 const SW = path.join(REPO, 'sw.js');
 const CHANGELOG = path.join(REPO, 'CHANGELOG.md');
 const NOTES = path.join(REPO, 'release-notes', 'CURRENT-ja.txt');
@@ -92,16 +96,16 @@ if (fs.existsSync(GRADLE)) {
   let gradle = fs.readFileSync(GRADLE, 'utf8');
   const codeMatch = gradle.match(/(versionCode\s+)(\d+)/);
   if (!codeMatch) {
-    throw new Error('Could not find versionCode in android-twa/app/build.gradle');
+    throw new Error(`Could not find versionCode in ${path.relative(REPO, GRADLE)}`);
   }
   const oldCode = Number(codeMatch[2]);
   const newCode = oldCode + 1;
   gradle = gradle.replace(/(versionCode\s+)\d+/, `$1${newCode}`);
   gradle = gradle.replace(/(versionName\s+)"[^"]*"/, `$1"${toVersion}"`);
   fs.writeFileSync(GRADLE, gradle);
-  console.log(`  build.gradle updated (versionCode ${oldCode} -> ${newCode}, versionName ${toVersion})`);
+  console.log(`  ${path.relative(REPO, GRADLE)} updated (versionCode ${oldCode} -> ${newCode}, versionName ${toVersion})`);
 } else {
-  console.warn('  [warn] android-twa/app/build.gradle が無いためスキップ(Android を出さない構成)');
+  console.warn('  [warn] android/app/build.gradle も android-twa/app/build.gradle も無いためスキップ(Android を出さない構成)');
 }
 
 // 以下はレイアウト依存のオプション項目。ファイルが「無い」ならスキップ。

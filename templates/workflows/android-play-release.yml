@@ -1,9 +1,14 @@
-# 【金型テンプレート】Google Play 申請用ワークフロー（GitHub Actions 版）
+# 【金型テンプレート】Google Play 申請用ワークフロー（GitHub Actions 版・Capacitor）
 #
 # 移植元: partnership_program_website/.github/workflows/android-play-release.yml
+#         (TWA/bubblewrap 版から Capacitor 版へ全面改修。iOS 版 ios-appstore-release.yml
+#          の Capacitor ビルドパターンと対称。IAP(アプリ内課金)が必要なアプリは
+#          TWA では Google Play Billing をネイティブに組み込めないため、この Capacitor 版を使う。
+#          IAP 不要な単純な Web ラップだけなら TWA(bubblewrap)の方が軽量 — その場合は
+#          過去バージョンの android-twa 版テンプレを参照。)
 #
-# - `android-twa/` の TWA プロジェクトを `bundleRelease` でビルドし、Service Account 経由で
-#   Play Console に AAB をアップロードして指定トラックにリリースを作成する。
+# - Capacitor で `android/` プロジェクトを生成し、`bundleRelease` でビルド、
+#   Service Account 経由で Play Console に AAB をアップロードして指定トラックにリリースを作成する。
 # - 初期トラックは `internal`（内部テスト）が安全。製品版に上げる準備ができたら下の
 #   `PLAY_TRACK` を `production` に変更すると `changesNotSentForReview=false` で
 #   Google レビューに自動送信される。
@@ -12,14 +17,15 @@
 # 1. このファイルをアプリリポの `.github/workflows/android-play-release.yml` にコピー。
 # 2. 下の <...> プレースホルダを app.config.json の値で置換する:
 #      <PLAY_PACKAGE_NAME>  = stores.playPackageName (無ければ identity.bundleId)
+#      <APP_NAME>           = identity.shortName (webDir stub の <title> に使用)
 #      <PRODUCTION_URL>     = "https://" + identity.productionDomain  (審査スクショ取得元)
 # 3. `PLAY_TRACK` を初回は internal、本番準備後に production へ。
 # 4. 下の「必要な Secrets」を登録。リリース実体スクリプトは partnership からコピー。
 #
 # ── 必要な GitHub Secrets ────────────────────────────────────────
-#   ANDROID_KEYSTORE_BASE64          android-twa の upload-key .jks を base64 化
+#   ANDROID_KEYSTORE_BASE64          android/ の upload-key .jks を base64 化
 #                                    Windows PowerShell:
-#                                      [Convert]::ToBase64String([IO.File]::ReadAllBytes('android-twa\android-upload-key.jks'))
+#                                      [Convert]::ToBase64String([IO.File]::ReadAllBytes('android-upload-key.jks'))
 #   ANDROID_KEYSTORE_PROPERTIES      keystore.properties の中身そのもの（複数行）
 #                                    例:
 #                                      storePassword=xxx
@@ -44,12 +50,17 @@ on:
       - main
     paths:
       - ".github/workflows/android-play-release.yml"
-      - "android-twa/app/build.gradle"
+      - "capacitor.config.json"
+      - "package.json"
       - "release-notes/CURRENT-ja.txt"
       - "scripts/play-publish.mjs"
       - "scripts/play-fill-listing.mjs"
       - "scripts/play-fill-data-safety.mjs"
       - "scripts/play-review-check.mjs"
+      - "scripts/android-patch-signing.mjs"
+      - "scripts/verify-android-signing-config.mjs"
+      - "scripts/verify-android-splash-not-default.mjs"
+      - "scripts/generate-capacitor-splash.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # Play release. Same lesson as the iOS workflow path-filter fix:
       # any script the workflow actually runs must appear here or
@@ -57,6 +68,7 @@ on:
       - "scripts/capture-play-screenshots.mjs"
       - "scripts/lib/play-api.mjs"
       - "store-assets/play/**"
+      - "store-assets/appstore/app-icon-1024.png"
       - "app.config.json"
 
 concurrency:
@@ -73,6 +85,7 @@ jobs:
     env:
       # ↓↓↓ app.config.json の値で置換 ↓↓↓
       PLAY_PACKAGE_NAME: <PLAY_PACKAGE_NAME>   # stores.playPackageName / 無ければ identity.bundleId
+      APP_NAME: <APP_NAME>                     # identity.shortName
       # ↑↑↑ ここまで ↑↑↑
       # production = Google Play 製品版審査キューに入る (changesNotSentForReview=false)
       # internal にすると内部テストトラック止まりで審査されない。初回は internal 推奨。
@@ -109,20 +122,76 @@ jobs:
         with:
           packages: "platform-tools platforms;android-36 build-tools;36.0.0"
 
-      - name: Set up Node
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
-      # Playwright + pnpm only needed for the capture-play-screenshots
-      # step further down. The earlier Play scripts (publish, fill-listing,
-      # fill-data-safety) use only Node built-ins + scripts/lib/play-api.mjs.
       - name: Setup pnpm
         # Don't pass `version:` — package.json#packageManager pins the pnpm
         # version and pnpm/action-setup@v6 errors on multi-version specification.
         uses: pnpm/action-setup@v6
-      - name: Install Node dependencies (for Playwright capture)
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Capacitor Android toolchain + assets
+        run: pnpm add --save-dev @capacitor/android@8 @capacitor/assets@3 @capacitor/splash-screen@8
+
+      - name: Prepare webDir (Capacitor uses dist/public; server.url overrides at runtime)
+        run: |
+          mkdir -p dist/public
+          if [ ! -f dist/public/index.html ]; then
+            echo "<!doctype html><html><head><meta charset=\"utf-8\"><title>${APP_NAME}</title></head><body>loading...</body></html>" > dist/public/index.html
+          fi
+
+      - name: Add/copy Android platform
+        run: |
+          if [ ! -d android/app ]; then
+            npx cap add android
+          fi
+          npx cap copy android
+
+      - name: Generate or reuse app icon + splash, verify not shipping Capacitor defaults
+        run: |
+          set -euo pipefail
+          MASTER="store-assets/appstore/app-icon-1024.png"
+          mkdir -p assets
+          if [ -f "$MASTER" ]; then
+            echo "Using committed $MASTER"
+            cp "$MASTER" assets/icon-only.png
+          else
+            echo "MASTER not committed — generating via icons:generate"
+            pnpm icons:generate
+            if [ ! -f "$MASTER" ]; then
+              echo "::error::icons:generate did not produce $MASTER. Check scripts/generate-app-icons.mjs."
+              exit 1
+            fi
+            cp "$MASTER" assets/icon-only.png
+          fi
+          # スプラッシュソースは iOS と共用（generate-capacitor-splash.mjs は
+          # プラットフォーム非依存で assets/splash*.png を出力するだけ）。
+          node scripts/generate-capacitor-splash.mjs
+          # 生成「前」に、Capacitor デフォルトのスプラッシュ画像のハッシュを記録。
+          node scripts/verify-android-splash-not-default.mjs --snapshot
+          npx @capacitor/assets generate --android --androidProject android --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
+          # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
+          node scripts/verify-android-splash-not-default.mjs --verify
+
+      - name: Set Android versionName/versionCode from package.json and CI run number
+        run: |
+          set -euo pipefail
+          GRADLE="android/app/build.gradle"
+          MARK_VER="$(node -p "require('./package.json').version")"
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"$MARK_VER\"/g" "$GRADLE"
+          BN="${GITHUB_RUN_NUMBER:-0}"
+          if [ "$BN" -le 1 ]; then
+            BN="$(date +%s)"
+          fi
+          sed -i -E "s/versionCode [0-9]+/versionCode $BN/g" "$GRADLE"
+          echo "versionName=$MARK_VER versionCode=$BN"
+          echo "MARK_VER=$MARK_VER" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_CODE=$BN" >> "$GITHUB_ENV"
 
       - name: Restore signing material
         env:
@@ -130,29 +199,50 @@ jobs:
           ANDROID_KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
         run: |
           set -euo pipefail
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android-twa/android-upload-key.jks
-          printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > android-twa/keystore.properties
-          ls -l android-twa/android-upload-key.jks android-twa/keystore.properties
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android-upload-key.jks
+          printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > keystore.properties
+          ls -l android-upload-key.jks keystore.properties
 
-      # 未署名 AAB 出荷事故ゲート: bundleRelease の「前」に signingConfig を検証。
-      # bubblewrap は signingConfig を生成しないため、無いと Play がアップロードを弾く。
-      # android-patch-signing.mjs を流せば注入される（このステップはその検証）。
-      - name: Verify build.gradle has signingConfig
-        run: node scripts/verify-android-signing-config.mjs --gradle android-twa/app/build.gradle
+      # 未署名 AAB 出荷事故ゲート: bundleRelease の「前」に signingConfig を注入・検証。
+      # Capacitor の `cap add android` は signingConfig を生成しないため、無いと
+      # Play がアップロードを弾く。android-patch-signing.mjs で注入してから検証する。
+      - name: Patch + verify build.gradle has signingConfig
+        run: |
+          node scripts/android-patch-signing.mjs --gradle android/app/build.gradle --keystore ../android-upload-key.jks
+          node scripts/verify-android-signing-config.mjs --gradle android/app/build.gradle
 
       - name: Build release AAB
-        working-directory: android-twa
+        working-directory: android
         run: |
           set -euo pipefail
           chmod +x ./gradlew
           ./gradlew --no-daemon bundleRelease
           ls -l app/build/outputs/bundle/release/
 
+      # iOS の IPA バージョン検証ゲートと対称: AAB に焼き込まれた versionName が
+      # package.json と一致しているかをアップロード前に確認する（出荷ミス防止）。
+      - name: Verify AAB versionName before upload
+        run: |
+          set -euo pipefail
+          AAB_PATH="android/app/build/outputs/bundle/release/app-release.aab"
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/36.0.0"
+          UNZIP_DIR="$(mktemp -d)"
+          unzip -q "$AAB_PATH" -d "$UNZIP_DIR" base/manifest/AndroidManifest.xml
+          GOT="$("$BUILD_TOOLS/aapt2" dump badging "$AAB_PATH" 2>/dev/null | grep -oE "versionName='[^']*'" | head -1 | sed -E "s/versionName='([^']*)'/\1/" || true)"
+          if [ -z "$GOT" ]; then
+            echo "::warning::aapt2 dump badging で versionName を取得できませんでした（AAB形式のため一部ツールで非対応の場合あり）。gradle側の設定を信頼して続行します。"
+          elif [ "$GOT" != "$MARK_VER" ]; then
+            echo "::error::AAB の versionName ($GOT) が package.json ($MARK_VER) と一致しません。"
+            exit 1
+          else
+            echo "AAB versionName=$GOT (expected $MARK_VER) — OK"
+          fi
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7
         with:
           name: android-aab
-          path: android-twa/app/build/outputs/bundle/release/app-release.aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
       - name: Restore Service Account JSON
@@ -215,12 +305,12 @@ jobs:
       - name: Publish to Play Console (uses $PLAY_TRACK)
         env:
           GOOGLE_PLAY_SA_JSON_PATH: .secrets/google-play-sa.json
-          PLAY_AAB_PATH: android-twa/app/build/outputs/bundle/release/app-release.aab
+          PLAY_AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
         run: node scripts/play-publish.mjs
 
       - name: Cleanup secrets
         if: always()
         run: |
           rm -f .secrets/google-play-sa.json
-          rm -f android-twa/android-upload-key.jks
-          rm -f android-twa/keystore.properties
+          rm -f android-upload-key.jks
+          rm -f keystore.properties

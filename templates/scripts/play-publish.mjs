@@ -10,9 +10,10 @@
 //   env GOOGLE_PLAY_SA_JSON_PATH or _BASE64 or _JSON
 //   env PLAY_PACKAGE_NAME (省略時は app.config.json の stores.playPackageName)
 //   env PLAY_TRACK         (default: internal — production にしてから本番リリース)
-//   env PLAY_AAB_PATH      (default: android-twa/app/build/outputs/bundle/release/app-release.aab)
+//   env PLAY_AAB_PATH      (default: android/app/build/outputs/bundle/release/app-release.aab、
+//                            無ければ android-twa/... にフォールバック)
 //   ./release-notes/CURRENT-ja.txt (release notes, ja-JP)
-//   ./android-twa/app/build.gradle -> versionCode (for sanity)
+//   android/app/build.gradle または android-twa/app/build.gradle -> versionCode (for sanity)
 //
 // Modes:
 //   --draft   create a draft release (don't submit). Default if PLAY_DRAFT=1.
@@ -30,7 +31,10 @@ const APP_CONFIG = loadAppConfig();
 
 const PACKAGE = process.env.PLAY_PACKAGE_NAME || APP_CONFIG.stores.playPackageName;
 const TRACK = process.env.PLAY_TRACK || 'internal';
-const AAB_PATH = process.env.PLAY_AAB_PATH || path.join(REPO, 'android-twa', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
+// Capacitor(android/)を優先。無ければTWA(android-twa/)にフォールバック。
+const AAB_PATH_CAPACITOR = path.join(REPO, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
+const AAB_PATH_TWA = path.join(REPO, 'android-twa', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
+const AAB_PATH = process.env.PLAY_AAB_PATH || (fs.existsSync(AAB_PATH_CAPACITOR) ? AAB_PATH_CAPACITOR : AAB_PATH_TWA);
 
 if (!PACKAGE) {
   throw new Error(
@@ -55,7 +59,9 @@ function readReleaseNotes() {
 }
 
 function readVersionCode() {
-  const p = path.join(REPO, 'android-twa', 'app', 'build.gradle');
+  const pCapacitor = path.join(REPO, 'android', 'app', 'build.gradle');
+  const pTwa = path.join(REPO, 'android-twa', 'app', 'build.gradle');
+  const p = fs.existsSync(pCapacitor) ? pCapacitor : pTwa;
   if (!fs.existsSync(p)) return null;
   const m = fs.readFileSync(p, 'utf8').match(/versionCode\s+(\d+)/);
   return m ? Number(m[1]) : null;
