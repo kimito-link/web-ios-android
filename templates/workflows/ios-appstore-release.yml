@@ -47,6 +47,7 @@ on:
       - ".github/workflows/ios-appstore-release.yml"
       - "capacitor.config.json"
       - "package.json"
+      - "app.config.json"
       - "scripts/appstore-submit.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # workflow's most fragile steps (capture/verify/screenshot-upload).
