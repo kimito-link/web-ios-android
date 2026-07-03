@@ -37,6 +37,7 @@ import { makeAscClient, findApp, listVersions, getLocalizations, getReviewDetail
 import { loadAppConfig, productionUrl, isPlaceholder } from './lib/app-config.mjs';
 import { uploadIPhoneScreenshots } from './lib/asc-screenshot-upload.mjs';
 import { ensureFreePricing } from './lib/asc-pricing.mjs';
+import { ensureAllTerritoriesAvailable } from './lib/asc-availability.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..');
@@ -410,8 +411,11 @@ async function ensureAppInfoLocalization(api, appId) {
 
   try {
     if (loc) {
+      // ASC API は UPDATE で 'locale' 属性を送ると
+      // ENTITY_ERROR.ATTRIBUTE.NOT_ALLOWED で拒否する(locale は作成時のみ)。
+      const { locale: _locale, ...patchAttrs } = attrs;
       await api('PATCH', `/v1/appInfoLocalizations/${loc.id}`, {
-        data: { type: 'appInfoLocalizations', id: loc.id, attributes: attrs },
+        data: { type: 'appInfoLocalizations', id: loc.id, attributes: patchAttrs },
       });
       console.log(`  appInfoLocalization patched id=${loc.id} privacy=${STORE_PRIVACY_URL}`);
     } else {
@@ -427,7 +431,14 @@ async function ensureAppInfoLocalization(api, appId) {
       console.log(`  appInfoLocalization created id=${r.data?.id || '(unknown)'} privacy=${STORE_PRIVACY_URL}`);
     }
   } catch (e) {
-    console.log(`  WARN: appInfoLocalization write failed; ASC UI may need manual confirmation: ${e.message.slice(0, 400)}`);
+    // privacyPolicyUrl 等はここが失敗すると submit 時に
+    // ENTITY_ERROR.ATTRIBUTE.REQUIRED で再度落ちる。WARN で握り潰さず、
+    // どのフィールドが未反映になりうるか分かるようにログを厚くする。
+    console.log(
+      `  WARN: appInfoLocalization write failed (privacyPolicyUrl/subtitle/name may remain unset; ` +
+        `submit will likely fail with ENTITY_ERROR.ATTRIBUTE.REQUIRED). ` +
+        `Fix manually in ASC UI if this recurs: ${e.message.slice(0, 400)}`,
+    );
   }
 }
 
@@ -1262,6 +1273,13 @@ async function submitForReview(api, appId, versionId) {
     await ensureFreePricing(api, app.id);
   } catch (e) {
     console.log(`  WARN: pricing setup failed (continuing): ${e.message.slice(0, 400)}`);
+  }
+
+  console.log('\n[7b2] Ensure territory availability (all territories)...');
+  try {
+    await ensureAllTerritoriesAvailable(api, app.id);
+  } catch (e) {
+    console.log(`  WARN: territory availability setup failed (continuing): ${e.message.slice(0, 400)}`);
   }
 
   console.log('\n[7c] Ensure age rating...');

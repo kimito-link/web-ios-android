@@ -165,7 +165,9 @@ async function checkAppPrivacyPublished(api, appId) {
 }
 
 // --- 配信地域 -----------------------------------------------------------------
-// 0 件だと審査に通っても実機 DL できない。初回のみ関係するため warn（2 回目以降で毎回鳴らさない）。
+// 0 件だと審査に通っても実機 DL できない。appstore-submit.mjs [7b2] で
+// ensureAllTerritoriesAvailable による自動修復が入っているため、ここは
+// submit を経由しない経路(手動確認・過去バージョンの検証等)向けの検知として残す。
 // v1 availableTerritories は deprecated。v2 appAvailabilities → territoryAvailabilities を辿る。
 async function checkTerritoriesConfigured(api, appId) {
   try {
@@ -178,7 +180,7 @@ async function checkTerritoriesConfigured(api, appId) {
     const terr = await api('GET', `/v2/appAvailabilities/${availId}/territoryAvailabilities?limit=1`);
     const count = (terr?.data || []).length;
     if (count === 0) {
-      return R('warn', '配信地域が0件。ASC UI「価格および配信状況」→「すべての国または地域」を選択(反映まで最大24h)');
+      return R('warn', '配信地域が0件。次回 appstore-submit.mjs 実行で自動設定されるが、急ぐ場合はASC UI「価格および配信状況」→「すべての国または地域」を選択(反映まで最大24h)');
     }
     return R('ok', '配信地域が設定済み');
   } catch (e) {

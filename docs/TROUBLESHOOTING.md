@@ -88,6 +88,91 @@ Guideline **5.1.1(ii)** でリジェクト。「カメラ／写真へのアク�
 
 ---
 
+## 🍎 iOS：`appInfoLocalization` の更新が `ATTRIBUTE.NOT_ALLOWED` で失敗
+
+### こんな症状
+審査提出の自動化が `409 ENTITY_ERROR.ATTRIBUTE.NOT_ALLOWED` で失敗。
+`appInfoLocalizations` の**更新（PATCH）**でだけ起きる（新規作成のPOSTは通る）。
+
+### 原因
+ASC APIは `appInfoLocalizations` の **PATCH に `locale` 属性を含めると拒否**します。
+`locale` は作成（POST）時にしか設定できない属性で、更新時は送ってはいけません。
+name/subtitle/privacyPolicyUrl等と同じ `attrs` オブジェクトをPOSTにもPATCHにも
+使い回すコードだと、うっかりPATCHにも `locale` が乗ってしまいます。
+
+### 直し方
+PATCH直前に `locale` をオブジェクトから分割除去する。
+実装例：`scripts/appstore-submit.mjs` の `ensureAppInfoLocalization()`。
+```js
+const { locale: _locale, ...patchAttrs } = attrs;
+await api('PATCH', `/v1/appInfoLocalizations/${loc.id}`, {
+  data: { type: 'appInfoLocalizations', id: loc.id, attributes: patchAttrs },
+});
+```
+
+> 🦝 たぬ姉「POSTとPATCHで送っていいフィールドが違うのはASC APIあるある。
+> 使い回すオブジェクトは要注意だよ！」
+
+---
+
+## 🍎 iOS：初回提出が土壇場で `STATE_ERROR.APP_DATA_USAGES_REQUIRED`（409）
+
+### こんな症状
+ビルド・アップロード・スクショ・age rating・カテゴリまで全部自動で通ったのに、
+**最後の「審査へ提出」の一歩手前**で `409 STATE_ERROR.APP_DATA_USAGES_REQUIRED` が出て失敗。
+`associatedErrors` に `/v1/appDataUsages/` が出ているのが目印。
+
+### 原因
+「App のプライバシー」（データ収集の申告＝プライバシー栄養ラベル）が
+**App Store Connect の Web UI で未公開**。
+この `dataUsages` は Apple の制限で **Web session 専用**であり、
+CIが使うJWT（APIキー）認証では読み書きできません。自動化スクリプトは
+`[7d] Ensure privacy` ステップで検出だけしてWARNを出し、fail-softで
+submitへ進む設計になっています（実装：`ensurePrivacyPublished()` 相当のブロック）。
+つまり**この1項目だけは自動化できず、必ず人間がGUIで公開する必要がある**。
+
+### 直し方（人間の作業・2〜3分）
+1. [App Store Connect](https://appstoreconnect.apple.com) → アプリ → 「App のプライバシー」
+2. 「データタイプ」の「編集」から、実際に収集しているデータ種別だけチェック
+   （例：メールアドレス／メールまたはテキストメッセージ／ユーザID など。
+   使っていない電話番号・位置情報・写真等はチェックしない）
+3. 各データ種別ごとに聞かれる3問に実態通り回答：
+   - 用途 → 広告/アナリティクス目的で使っていなければ「**アプリの機能**」のみ
+   - ユーザの個人情報に関連付けられるか → アカウントに紐づくなら「**はい**」
+   - トラッキング目的で使うか → 広告ネットワーク等と共有していなければ「**いいえ**」
+4. 最後に **「公開」** ボタンを押す（下書き保存だけでは不十分）
+5. 公開後にCIを再実行すれば通る
+
+> ⚠️ 「収集しない」で嘘の申告をしない。OAuthログインやメール送信機能があるアプリは
+> 大抵メールアドレス等を収集している。実態と違う申告は Guideline 5.1.1/5.1.2 で
+> 審査リジェクトの典型パターンになる。
+
+---
+
+## ⚙️ CI：`workflow_dispatch` の手動再実行と直前のpushが衝突してキャンセルされる
+
+### こんな症状
+`gh workflow run` で手動再実行した直後に、直前のgit pushで自動起動していた別のrunが
+（あるいは逆に、手動runの方が）**理由もなく `cancelled` になる**。
+`gh run cancel` で片方を止めたつもりが、実は残したかった方が消えていた、ということも起きる。
+
+### 原因
+同じ concurrency group（同一ワークフロー・同一ブランチ）に対して
+push トリガーと workflow_dispatch トリガーがほぼ同時に走ると、
+GitHub Actions が古い方（または `cancel-in-progress` 設定次第で新しい方）を
+自動キャンセルする。手動での `gh run cancel` 発行タイミングと重なると、
+意図と逆のrunが残ることがある。
+
+### 直し方
+- pushした直後は**手動 `workflow_dispatch` を追い打ちで撃たない**
+  （push側のrunが自動で起動するのを待つ）
+- 再実行が必要なら、まず `gh run list --workflow=<file> --limit 5` で
+  **現在アクティブなrunが本当に1本だけか**を確認してから待つ
+- 複数走ってしまったら、キャンセル操作の直後にもう一度 `gh run list` で
+  「意図した方が生きているか」を必ず確認する（キャンセルして終わりにしない）
+
+---
+
 ## 🤖 Android：「審査にまだ送信されていない」のまま進まない
 
 ### こんな症状
