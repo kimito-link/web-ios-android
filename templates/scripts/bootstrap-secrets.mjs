@@ -186,12 +186,20 @@ function main() {
     }
 
     try {
-      // gh secret set NAME --repo owner/repo --body <payload>  （--body で標準入力経由・ログに値は残さない）
-      execFileSync('gh', ['secret', 'set', spec.name, '--repo', repo, '--body', payload], { stdio: 'pipe' });
+      // gh secret set NAME --repo owner/repo は「値」を引数に取らず標準入力から読む。
+      // --body <値> のようにコマンドライン引数に秘密を渡すと、失敗時に execFileSync の
+      // エラーメッセージへ実行コマンド全体（＝秘密の値）がそのまま載ってログに残る事故を招く
+      // （実例: resend で githubRepo 誤りにより全件失敗し、証明書秘密鍵等が露出した）。
+      execFileSync('gh', ['secret', 'set', spec.name, '--repo', repo], {
+        input: payload,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
       console.log(`  OK    ${spec.name.padEnd(36)} ← ${source}`);
       willSet++;
     } catch (e) {
-      console.error(`  FAIL  ${spec.name.padEnd(36)} 登録失敗: ${String(e.message || e).split('\n')[0]}`);
+      // stderr だけを見せる。stdout/エラーオブジェクトには起動コマンド全体が乗ることがあるため使わない。
+      const stderrText = e && e.stderr ? String(e.stderr).trim().split('\n')[0] : '(詳細不明)';
+      console.error(`  FAIL  ${spec.name.padEnd(36)} 登録失敗: ${stderrText}`);
     }
   }
 
