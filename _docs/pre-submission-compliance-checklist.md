@@ -19,19 +19,19 @@
 
 | 項目 | ツール/方法 | ガイドライン | 薄殻当てはまり度 |
 |---|---|---|---|
-| プラットフォーム言及（Android/Google Play/Windows 等の文字・スクショ写り込み） | greenlight / grep / スクショ専用ページ(bare layout) | App Store審査 | **高**（X/𝕏ロゴ写り込みは過去却下歴）|
+| プラットフォーム言及（Android/Google Play/Windows 等の文字・スクショ写り込み） | greenlight / grep / スクショ専用ページ(bare layout) | App Store審査 | **高**（X/𝕏ロゴ写り込みは過去却下歴）| <!-- impl: templates/scripts/lint-pre-submission.mjs#platform-references -->
 | プレースホルダ文字列（Lorem ipsum/Coming soon/TBD） | greenlight / grep | 2.3 メタデータ | 中 |
-| ハードコードされた HTTP/IPv4 URL（本番URL設定ミス） | greenlight / grep | — | **高**（server.url の設定ミス検出に有効）|
-| プライバシーポリシー参照の有無 | greenlight / 手動 | 5.1.1 | 高 |
+| ハードコードされた HTTP/IPv4 URL（本番URL設定ミス） | greenlight / grep | — | **高**（server.url の設定ミス検出に有効）| <!-- impl: templates/scripts/lint-pre-submission.mjs#capacitor-server-cleartext (部分: server.url のみ。全ファイル grep は未実装) -->
+| プライバシーポリシー参照の有無 | greenlight / 手動 | 5.1.1 | 高 | <!-- impl: templates/scripts/lint-pre-submission.mjs#app-config-review-urls -->
 | ハードコードされたシークレット/APIキー | greenlight / gitleaks | 1.6 | 中（殻にキーを置かなければ低）|
-| 非公開API使用 | greenlight / IPA解析 | 2.5.1 | 低（殻にネイティブcoードほぼ無し＝空振り）|
-| UIWebView 残存（削除済みAPI・hard reject） | greenlight | 2.5.1 | 中（古いプラグイン由来の混入に注意）|
+| 非公開API使用 | greenlight / IPA解析 | 2.5.1 | 低（殻にネイティブcoードほぼ無し＝空振り）| <!-- impl: none (IPA バイナリ解析が必要で source grep では空振り。薄殻当てはまり度:低・キット事故実績なし。greenlight 非採用の判断は §greenlight 導入の判断基準を参照) -->
+| UIWebView 残存（削除済みAPI・hard reject） | greenlight | 2.5.1 | 中（古いプラグイン由来の混入に注意）| <!-- impl: templates/scripts/lint-pre-submission.mjs#uiwebview-scan (ios/ コミット時のみ。CI 生成運用の最終ゲートは Apple ITMS-90809) -->
 | 動的コード実行・暗号マイニング | greenlight | 2.5.2 / 3.1.5 | 低 |
-| メタデータ違反（他PF言及/到達不能URL/禁止語/著作権年） | **fastlane precheck**（iOS・メタデータのみ） | 2.3 | 高 |
+| メタデータ違反（他PF言及/到達不能URL/禁止語/著作権年） | **fastlane precheck**（iOS・メタデータのみ） | 2.3 | 高 | <!-- impl: templates/scripts/lint-pre-submission.mjs#platform-references (部分: 他PF言及のみ。fastlane precheck 本体=到達不能URL/禁止語/著作権年は未導入) -->
 | Swiftコードのlint | swiftlint（fastlane経由・raise_if_swiftlint_error でCIゲート可） | — | **低**（殻はSwiftほぼ無し）|
-| **iOS プライバシーマニフェスト宣言**（`PrivacyInfo.xcprivacy`：Required Reason API カテゴリ＋理由コード） | 手動確認 + CIでファイル存在検査 | 必須SDK要件(2024-05) | **高**（後述）|
-| Android: AAB署名 | リリースWF（既存 android-patch-signing） | — | 高 |
-| Android: Data Safety 整合 | **Data Safety CSV 自動生成→API送信**（kimito実装済み）| Play Data Safety | **高** |
+| **iOS プライバシーマニフェスト宣言**（`PrivacyInfo.xcprivacy`：Required Reason API カテゴリ＋理由コード） | 手動確認 + CIでファイル存在検査 | 必須SDK要件(2024-05) | **高**（後述）| <!-- impl: templates/scripts/lint-pre-submission.mjs#privacy-manifest -->
+| Android: AAB署名 | リリースWF（既存 android-patch-signing） | — | 高 | <!-- impl: templates/scripts/android-patch-signing.mjs -->
+| Android: Data Safety 整合 | **Data Safety CSV 自動生成→API送信**（kimito実装済み）| Play Data Safety | **高** | <!-- impl: templates/scripts/play-fill-data-safety.mjs -->
 | Android: 権限の最小化 | manifest grep / Google Checks | Play権限ポリシー | 中 |
 
 ### iOS プライバシーマニフェスト（薄殻の中核・見落とし注意）
@@ -41,6 +41,7 @@
   - `@capacitor/filesystem` の FileTimestamp → `C617.1`
 - 通常は Capacitor/各プラグインが同梱マニフェストを持つが、**提出要件としては開発者責任**。最終バンドルに集約されているか Xcode で確認。
 - 参照: [Capacitor公式 privacy-manifest](https://capacitorjs.com/docs/v5/ios/privacy-manifest)
+- **実装時の裏取り補正（2026-07-04）**: `cap add ios` のアプリテンプレ（ios-pods-template / ios-spm-template）は app-level `PrivacyInfo.xcprivacy` を**生成しない**（SDK 側 Capacitor.framework が同梱、ionic-team/capacitor #7321 = Capacitor 6.0.0 以降）。よって単純な「ファイル存在検査」は CI 生成プロジェクトで必ず false-fail する。lint の `privacy-manifest` チェックは「`@capacitor/ios` <6 なら fail ／ ios/ コミット済みでマニフェストを置いたのに pbxproj 未参照なら fail（バンドルされない）／ ios/ コミット済み・マニフェスト無しは warn」に落としてある。
 
 ---
 

@@ -3,7 +3,8 @@
     "zip:cws": "node scripts/chrome/build-zip-node.mjs",
     "publish:cws": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs",
     "publish:cws:check": "node scripts/chrome/publish-cws-node.mjs --check",
-    "publish:cws:upload": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs --upload-only"
+    "publish:cws:upload": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs --upload-only",
+    "lint:docs": "node scripts/verify-doc-impl-coverage.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5"

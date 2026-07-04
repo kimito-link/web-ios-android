@@ -249,8 +249,12 @@ function main() {
   console.log(`  blank:         ${blank}`);
   console.log(`  bytes:         ${size}`);
 
-  // List answer keys that weren't matched to any template row — these
-  // would be dead config entries pointing at PSL_* IDs that don't exist.
+  // Answer keys that weren't matched to any template row = dead config
+  // entries pointing at PSL_* IDs that don't exist. The intended answer is
+  // silently never applied (REQUIRED questions stay blank → Play flags
+  // "needs attention" or the dataSafety API 400s). Fail-closed:
+  // _docs/pre-submission-compliance-checklist.md の CI 構成案は
+  // 「Data Safety CSV生成の整合（orphan key 0）」を PR ゲート必須としている。
   const seenComposites = new Set();
   for (const row of rows) {
     seenComposites.add(row[0]);
@@ -258,8 +262,10 @@ function main() {
   }
   const orphanKeys = Object.keys(ANSWERS).filter((k) => !seenComposites.has(k));
   if (orphanKeys.length > 0) {
-    console.warn(`  WARN: ${orphanKeys.length} ANSWER keys did not match any template row:`);
-    for (const k of orphanKeys) console.warn(`    - ${k}`);
+    console.error(`  FAIL: ${orphanKeys.length} ANSWER keys did not match any template row:`);
+    for (const k of orphanKeys) console.error(`    - ${k}`);
+    console.error('  テンプレ更新(ヘッダのコメント参照)か ANSWERS の typo を疑うこと。orphan key 0 が提出前提。');
+    process.exit(1);
   }
 }
 

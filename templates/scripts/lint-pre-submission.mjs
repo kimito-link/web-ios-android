@@ -378,6 +378,139 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
 }
 
 // ----------------------------------------------------------------------------
+// CHECK 15 — iOS プライバシーマニフェスト(PrivacyInfo.xcprivacy)
+//   _docs/pre-submission-compliance-checklist.md (A) 表「iOS プライバシーマニフェスト宣言」のコード化。
+//   裏取り済みの実態(2026-07-04, ionic-team/capacitor main):
+//     - `cap add ios` のアプリテンプレ(ios-pods-template / ios-spm-template)は
+//       app-level PrivacyInfo.xcprivacy を生成しない。
+//     - SDK 側(Capacitor.framework / CapacitorCordova)はマニフェストを同梱
+//       (commit #7321, 2024-03-11 → Capacitor 6.0.0 以降に同梱)。
+//   よって「ファイルが無ければ fail」は CI 生成プロジェクトで必ず false-fail する。
+//   検査は次の3点に落とす:
+//     1. @capacitor/ios < 6 → SDK 自体がマニフェスト無し = ITMS-91053 リスク → fail
+//     2. ios/ をコミットしていて app-level マニフェストを置いた場合、
+//        pbxproj から参照されていなければバンドルされない(置いた意図が実装されていない) → fail
+//     3. ios/ コミット + マニフェスト無しは、自前 native code が Required Reason API を
+//        使う場合のみ必要 → warn(Xcode の Privacy Report で確認を促す)
+//   ⚠ バージョン閾値・必須SDKリストは更新されうる。一次ソース:
+//     https://developer.apple.com/support/third-party-SDK-requirements/
+// ----------------------------------------------------------------------------
+{
+  const capIosVer =
+    pkg?.dependencies?.['@capacitor/ios'] || pkg?.devDependencies?.['@capacitor/ios'] || null;
+  const iosAppDir = path.join(ROOT, 'ios', 'App');
+  const hasIosDir = fs.existsSync(iosAppDir);
+  const majorMatch = capIosVer ? String(capIosVer).match(/\d+/) : null;
+  const capIosMajor = majorMatch ? Number(majorMatch[0]) : null;
+
+  if (!capIosVer && !hasIosDir) {
+    skip('privacy-manifest', '@capacitor/ios 依存も ios/App も無い(iOS 配布しないなら可)');
+  } else if (capIosVer && capIosMajor == null) {
+    warn('privacy-manifest', '必須SDK要件(2024-05)', `@capacitor/ios のバージョン "${capIosVer}" を解釈できない。6 以上(SDK 同梱マニフェストあり)か確認すること`);
+  } else if (capIosMajor != null && capIosMajor < 6) {
+    fail(
+      'privacy-manifest',
+      '必須SDK要件(2024-05)',
+      `@capacitor/ios ${capIosVer} (<6) は PrivacyInfo.xcprivacy を同梱しない。ITMS-91053 / 提出却下リスク。` +
+        'Capacitor 6+ へ更新するか、app-level の PrivacyInfo.xcprivacy を ios/App/App に追加して pbxproj に登録すること',
+    );
+  } else if (hasIosDir) {
+    const manifest = readFile('ios/App/App/PrivacyInfo.xcprivacy');
+    const pbx = readFile('ios/App/App.xcodeproj/project.pbxproj');
+    if (manifest == null) {
+      warn(
+        'privacy-manifest',
+        '必須SDK要件(2024-05)',
+        'ios/ をコミットしているが app-level PrivacyInfo.xcprivacy が無い。薄殻(自前 native code 無し)なら ' +
+          'SDK 同梱マニフェストで足りるが、自前コードが Required Reason API(UserDefaults 等)を使うなら必須。' +
+          'Xcode の Privacy Report(Product > Archive > Generate Privacy Report)で最終バンドルを確認すること',
+      );
+    } else if (!/NSPrivacyAccessedAPITypes|NSPrivacyCollectedDataTypes|NSPrivacyTracking/.test(manifest)) {
+      warn('privacy-manifest', '必須SDK要件(2024-05)', 'PrivacyInfo.xcprivacy はあるが宣言キーが1つも無い(空マニフェスト)。宣言内容を確認すること');
+    } else if (pbx != null && !pbx.includes('PrivacyInfo.xcprivacy')) {
+      fail(
+        'privacy-manifest',
+        '必須SDK要件(2024-05)',
+        'ios/App/App/PrivacyInfo.xcprivacy はあるが project.pbxproj から参照されていない = ビルドにバンドルされない。' +
+          'Xcode でターゲット App の Copy Bundle Resources に追加すること',
+      );
+    } else {
+      ok('privacy-manifest', 'app-level PrivacyInfo.xcprivacy あり(バンドル参照 OK)');
+    }
+  } else {
+    // ios/ は CI の `npx cap add ios` で生成される運用(ios-appstore-release.yml)。
+    // Capacitor >=6 なら SDK 側マニフェストが同梱され、テンプレが app-level を生成しないのは正常。
+    ok('privacy-manifest', `@capacitor/ios ${capIosVer} (>=6): SDK 同梱マニフェストあり。ios/ は CI 生成(app-level 非生成が正常)`);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 16 — UIWebView 残存(2.5.1 / ITMS-90809 hard reject)
+//   _docs/pre-submission-compliance-checklist.md (A) 表のコード化。薄殻での当てはまり度は
+//   「中(古いプラグイン由来の混入)」。ios/ をコミットしている場合のみ検査可能
+//   (CI 生成運用では Apple 側の ITMS-90809 が最終ゲート)。
+//   自前ソース(ios/App/App)でのヒットは fail、Pods 等プラグイン領域はコメント誤検知が
+//   ありうるため warn(要調査)に留める。
+// ----------------------------------------------------------------------------
+{
+  const iosRoot = path.join(ROOT, 'ios');
+  if (!fs.existsSync(iosRoot)) {
+    skip('uiwebview-scan', 'ios/ が無い(CI 生成運用。最終ゲートは Apple の ITMS-90809)');
+  } else {
+    const textExt = /\.(swift|m|h|mm|pbxproj|storyboard|xib|plist|podspec)$/i;
+    const ownHits = [];
+    const vendorHits = [];
+    const ownPrefix = path.join(iosRoot, 'App', 'App') + path.sep;
+    for (const f of walkDir(iosRoot)) {
+      const base = path.basename(f);
+      if (!textExt.test(f) && base !== 'Podfile' && base !== 'Podfile.lock') continue;
+      const c = fs.readFileSync(f, 'utf8');
+      if (!c.includes('UIWebView')) continue;
+      (f.startsWith(ownPrefix) ? ownHits : vendorHits).push(path.relative(ROOT, f));
+    }
+    if (ownHits.length > 0) {
+      fail('uiwebview-scan', '2.5.1', `自前 iOS ソースに UIWebView 参照(削除済み API・ITMS-90809 で hard reject): ${ownHits.slice(0, 5).join(', ')}`);
+    } else if (vendorHits.length > 0) {
+      warn('uiwebview-scan', '2.5.1', `プラグイン/Pods 領域に UIWebView 文字列(コメントの可能性あり、要調査): ${vendorHits.slice(0, 5).join(', ')}`);
+    } else {
+      ok('uiwebview-scan', 'ios/ に UIWebView 参照なし');
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 17 — Android Data Safety の配線(申告パイプラインが繋がっているか)
+//   Data Safety 自体は play-generate-data-safety-csv.mjs(CSV 生成・orphan key 0 で fail-closed)
+//   + play-fill-data-safety.mjs(API 送信)で実装済み。ここでは「release workflow が
+//   送信スクリプトを実行しているか」の配線を検査する。CHECK 7 は path filter の整合しか
+//   見ておらず、workflow が invoke 自体をやめても素通りするのが穴だった。
+// ----------------------------------------------------------------------------
+{
+  const playWfRel = process.env.APP_PLAY_WORKFLOW || '.github/workflows/android-play-release.yml';
+  const playWf = readFile(playWfRel);
+  if (playWf == null) {
+    skip('data-safety-wiring', `${playWfRel} が無い(Android 配布しないなら可)`);
+  } else if (!playWf.includes('play-fill-data-safety.mjs')) {
+    fail(
+      'data-safety-wiring',
+      'Play Data Safety',
+      `${playWfRel} が play-fill-data-safety.mjs を実行していない。Data Safety 未申告(または stale)のまま公開されると Play ポリシー違反。` +
+        'templates/workflows/android-play-release.yml の該当 step を復元すること',
+    );
+  } else if (!fs.existsSync(path.join(ROOT, 'scripts', 'play-fill-data-safety.mjs'))) {
+    fail('data-safety-wiring', 'Play Data Safety', 'workflow は play-fill-data-safety.mjs を参照するが scripts/ に実体が無い');
+  } else {
+    const hasGenerator = fs.existsSync(path.join(ROOT, 'scripts', 'play-generate-data-safety-csv.mjs'));
+    const hasTemplate = fs.existsSync(path.join(ROOT, 'scripts', 'lib', 'play-data-safety-template.json'));
+    if (hasGenerator && !hasTemplate) {
+      warn('data-safety-wiring', 'Play Data Safety', 'play-generate-data-safety-csv.mjs はあるが scripts/lib/play-data-safety-template.json が無い(生成スクリプトが実行時に必ず落ちる)。キットの templates/scripts/lib/ からコピーすること');
+    } else {
+      ok('data-safety-wiring', 'workflow → play-fill-data-safety.mjs の配線あり');
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Output
 // ----------------------------------------------------------------------------
 console.log('');
