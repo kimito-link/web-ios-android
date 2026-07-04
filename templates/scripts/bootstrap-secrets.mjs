@@ -209,6 +209,11 @@ function main() {
     console.log('  実際に登録するには再度 --apply を付けて実行してください:');
     console.log('    node scripts/bootstrap-secrets.mjs --apply');
   }
+  if (apply && willSet > 0) {
+    console.log(`\n  ${dir} 配下の鍵ファイルは GitHub Secrets に登録済みです。`);
+    console.log('  ローカルの平文コピーは攻撃対象を増やすだけなので、安全な場所（暗号化ボリューム等）へ');
+    console.log('  移動するか削除を検討してください（.jks/.p8/.mobileprovision 等は失うと再発行が必要）。');
+  }
   if (missingRequired > 0) {
     console.log('\n  ※ 未配置(必須)がある間は CI のリリースが失敗します。鍵を用意して再実行してください。');
     console.log('    鍵の作り方: _docs/release-pipeline-playbook.md §6（Apple/Google のファースト・タイム・セットアップ）。');
