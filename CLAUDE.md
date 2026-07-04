@@ -53,6 +53,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **却下対応KB（Fable学習素材）** | `_docs/apple-reject-knowledge-base.md` | `partnership_program_website/_docs/` |
 | **初回提出ブロッカー全リスト** | `_docs/FIRST-SUBMISSION-blockers.md`（新アプリの「最初の1回」だけ順番に踏むiOS/Android詰まり8個＋ASC UI手動項目。症状=CIログ文言・原因・直し方） | `malwarecheck.site`（iOS初回提出 2026-07 実戦） |
 | **Web→アプリDL導線 知見KB** | `_docs/web-to-app-install-best-practices.md` | `Exosome`（ディープリサーチ確証分） |
+| **Clerk X OAuth ログイン無人E2E検証 KB** | `_docs/clerk-x-oauth-e2e-verification-playbook.md`（ログイン判定偽陽性・1タップ導線URL食い違い・タイムアウト時証跡収集・Windows spawn罠・Xレート制限、の5事故と直し方） | `surechigai-romi-link` 2026-07-04実戦 |
 | **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
 
 > ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。
