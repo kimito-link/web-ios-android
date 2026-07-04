@@ -197,11 +197,16 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+        # android-patch-signing.mjs が注入する storeFile("../android-upload-key.jks")と
+        # rootProject.file("keystore.properties")は、どちらも android/app/build.gradle
+        # からの相対解決＝android/ 直下を指す。ここに書かないと bundleRelease が
+        # 「file doesn't exist」で落ちる(リポジトリルートに書くのは誤り)。
+        # (2026-07-04 resend実戦で踏んだ地雷)
         run: |
           set -euo pipefail
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android-upload-key.jks
-          printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > keystore.properties
-          ls -l android-upload-key.jks keystore.properties
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/android-upload-key.jks
+          printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > android/keystore.properties
+          ls -l android/android-upload-key.jks android/keystore.properties
 
       # 未署名 AAB 出荷事故ゲート: bundleRelease の「前」に signingConfig を注入・検証。
       # Capacitor の `cap add android` は signingConfig を生成しないため、無いと
@@ -300,7 +305,17 @@ jobs:
           # Soft-fail on 403 (SA missing "Manage store presence") so the
           # release pipeline keeps building during the one-time UI grant.
           PLAY_PREFILL_ALLOW_PERMISSION_SKIP: "1"
-        run: node scripts/play-fill-data-safety.mjs --optional
+        # scripts/play-fill-data-safety.mjs はこの金型にまだ実装されていない
+        # (play-fill-listing.mjsの対として計画のみ)。実装するまでは存在チェックして
+        # スキップする — データセーフティは Play Console UI で手動入力する運用でよい。
+        # (2026-07-04 resend実戦: 未実装のままworkflowだけ呼んでおりMODULE_NOT_FOUNDで
+        #  パイプライン全体が失敗する地雷を踏んだ)
+        run: |
+          if [ -f scripts/play-fill-data-safety.mjs ]; then
+            node scripts/play-fill-data-safety.mjs --optional
+          else
+            echo "::notice::scripts/play-fill-data-safety.mjs not found — skipping (Data Safety is filled manually in Play Console)."
+          fi
 
       - name: Publish to Play Console (uses $PLAY_TRACK)
         env:
@@ -312,5 +327,5 @@ jobs:
         if: always()
         run: |
           rm -f .secrets/google-play-sa.json
-          rm -f android-upload-key.jks
-          rm -f keystore.properties
+          rm -f android/android-upload-key.jks
+          rm -f android/keystore.properties

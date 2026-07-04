@@ -1,4 +1,4 @@
-# Capacitor 連動型(server.url)アプリの金型 — 黒画面を二度と起こさない6原則
+# Capacitor 連動型(server.url)アプリの金型 — 黒画面とCI地雷を二度と起こさない10原則
 
 > このキットで iOS/Android アプリを作るときの **中核ルール**。
 > 富士山コンパス(fujisan)が 2026-03〜05 に iOS 起動黒画面の「修正」を **10回以上配信して毎回外し**、
@@ -54,6 +54,27 @@
 
 7. **アイコン/スプラッシュは store-assets のマスターから CI が毎回生成し、「差し替わったこと」をハッシュで確認する**。原則4(`ios/` 非コミット)の帰結として、`cap add ios` が置く **Capacitor デフォルトの青い×ロゴが毎ビルド復活する**。`@capacitor/assets generate` は `icon-only.png` だけでは**アイコンしか生成せず、スプラッシュは生成しない**(silent skip)。→ ①スプラッシュマスター(2732×2732)を `store-assets/` にコミット ②CI で `assets/splash.png` として渡す ③生成後に**Contents.json が実際に参照する画像**が全て存在し、かつ生成前(=デフォルト)のハッシュ集合に1つも含まれないことを確認し、ダメならビルドを赤にする(直接証拠ゲート)。
    ⚠️ 固定ファイル名のハッシュ比較は不可: `@capacitor/assets` は旧ファイル(`splash-2732x2732.png`)を上書きせず、**新ファイル名(`Default@1x~universal~anyany.png` 等)で書いて Contents.json を差し替える**。検証は常に「出荷時に参照されるもの」基準で行う。実装例: Exosome `.github/workflows/ios-appstore-release.yml` の「Generate icons + splash」(2026-06、デフォルトスプラッシュ出荷事故の再発防止。初版ゲートはこの罠で正しく赤になり、罠の存在自体を発見した)。
+
+8. **`capacitor.config.ts` の `webDir` と、CI がその場所に何を作るかを一致させる**。この金型は `dist/public` を
+   運用標準にする(「Prepare webDir」ステップがここにフォールバック用stubを生成する。かつてあった
+   `copy-web-to-www.mjs`(`src/`→`www/`ミラー)は未使用のまま設計だけ残っていた死んだコードだったので削除済み)。
+   **kimito resend実戦(2026-07-04)**: `webDir: 'www'`のまま7回連続でAndroidビルドが失敗していた。
+   真因は`cap copy android`が`www/`を探すのに`Prepare webDir`は`dist/public`にしか作らない不一致で、
+   `capacitor.config.json`の書き込みが失敗し`capacitor.settings.gradle`が生成されずGradleが
+   `Could not read script capacitor.settings.gradle`で落ちる、という3階層先のエラーとして現れた
+   (根本原因から遠いエラーメッセージで出るので気づきにくい)。**新規アプリを作るときは
+   `capacitor.config.ts`の`webDir`とワークフローの`Prepare webDir`が同じパスを指しているか
+   最初に目視確認すること**。
+9. **署名鍵ファイルは、それを読む Gradle 設定と同じ相対パス基準に置く**。`android-patch-signing.mjs`が
+   注入する`storeFile("../android-upload-key.jks")`は`android/app/build.gradle`からの相対解決＝
+   **`android/`直下**を指す。CIの`Restore signing material`ステップはここ(`android/android-upload-key.jks`・
+   `android/keystore.properties`)に書くこと。リポジトリルートに書くと`signReleaseBundle`が
+   「file doesn't exist」で落ちる(2026-07-04 resend実戦で発見・修正)。
+10. **ワークフローが呼ぶスクリプトは、実装してから配線する**。`play-fill-data-safety.mjs`は
+    `play-fill-listing.mjs`の対として計画だけされ実装されないままワークフローから呼ばれ続けており、
+    `MODULE_NOT_FOUND`でリリースパイプライン全体を毎回落としていた(2026-07-04 resend実戦で発見)。
+    未実装スクリプトを呼ぶステップは`if [ -f <script> ]`で存在チェックしてスキップ可能にし、
+    「呼ばれているが存在しない」状態を放置しない。
 
 ---
 

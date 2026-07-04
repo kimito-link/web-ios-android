@@ -23,7 +23,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: '{{bundleId}}',
   appName: '{{displayName}}',
-  webDir: 'www',
+  // server.url のリモート読込が主。dist/public はオフライン/未応答時のフォールバック
+  // stub のみを置く場所で、CI の「Prepare webDir」ステップがここに生成する。
+  // (2026-07-04 resend実戦: webDir='www'のままだとcap copy androidが失敗し
+  //  capacitor.settings.gradleが生成されずビルド不能になる地雷を踏んだ。要dist/public)
+  webDir: 'dist/public',
   backgroundColor: '{{backgroundColorARGB}}',
   ios: {
     contentInset: 'always',
