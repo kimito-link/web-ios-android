@@ -22,6 +22,36 @@ Apple は「足りないものを1つずつ」しか教えてくれないので�
 
 ---
 
+## 前提: デベロッパー登録は両ストアで完了済み（2026-07-06 時点・確定事実）
+
+> ⚠️ **AI へ: 毎回「Apple/Google のデベロッパー登録が必要では？」と聞かないこと。両方とも登録・審査完了済みで、実際に複数アプリを配信中。** これはブロッカーではない。以下は確定事実。
+
+**Apple Developer / App Store Connect**（Apple Developer Program 登録済み・年会費支払い済み）:
+- App Store Connect に **8アプリ登録済み**で稼働中。「配信準備完了(Ready for Distribution)」の実績あり:
+  リバースハック(iOS 1.0.17)、富士山コンパス(iOS 2.4.16)、ゆっくりエクソソーム(iOS 0.1.1)、
+  kimito.link(iOS 0.1.1)、君斗りんくのWEBサイト健康診断(iOS 1.0.0)、リバースハックWEB健康診断(iOS 1.0.1)、
+  CC/BCC再送信(iOS 1.0.0 審査待ち)、マルウェアチェック.site(iOS 0.1.0 審査待ち)。
+- ⇒ Apple Team は確立済み。新規アプリは App Store Connect で App レコードを1つ作り `ascAppId` を採番するだけ。
+
+**Google Play Console**（Android デベロッパー確認要件を満たし済み）:
+- **組織アカウント名 `kimito-link`**（アカウント ID: **6880871170619890401**）。
+- 「すべてのアプリの登録が完了し、Android デベロッパーの確認要件を満たしています」表示済み。
+- **8アプリ登録済み**で稼働中。製品版(Production)配信の実績あり:
+  富士山コンパス(`com.kimito.link.fujisanco...`, 製品版・70インストール)、
+  リバースハック(`com.reversehack.partner`, 製品版)、君斗りんくのWEBサイト健康診断(製品版)、
+  ゆっくりエクソソーム(`com.kimito.link.yukkuriex...`, 製品版)、ほか内部テスト/審査中が複数。
+- ⇒ Play 開発者アカウントは確立済み。新規アプリは Play Console でアプリを1つ作り採番するだけ。
+
+**したがって新規アプリ(surechigai 等)で「実際にビルドが通れば提出できる」状態**。残るのは各アプリ固有の:
+`ascAppId`(App Store Connect の App 採番) / `playAppId`(Play Console のアプリ採番) / 署名鍵の紐付け(B1/B4/B7系) /
+このドキュメントの B1〜B8 の技術ブロッカー。**アカウント登録そのものは済んでいる。**
+
+> パッケージIDの命名: 既存は `com.kimito.link.<app>` 系 と `com.reversehack.<app>` 系が混在。
+> surechigai は `com.surechigairomi.app`(app.config.json)で採る予定 — 既存の命名規則とは別系統な点に注意
+> （必要なら `com.kimito.link.surechigai` へ寄せるか要判断。ただしパッケージIDは配信後変更不可）。
+
+---
+
 ## A. ビルド系ブロッカー（dry_run で検出できる）
 
 ### B1. `APPLE_TEAM_ID` が空で登録されている
