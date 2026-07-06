@@ -794,6 +794,41 @@
       </div>
     </div>
 
+    <!-- ⑥ アプリが自分でけんこう診断を出す(計器の思想) -->
+    <div class="step">
+      <div class="step-top">
+        <div class="step-circle">⑥</div>
+        <div class="step-main">
+          <h3>できたアプリは、自分で「けんこう診断」を出す</h3>
+          <p class="one-line">調子が悪いとき、あなたが説明しなくてもAIが自分で調べて直せる</p>
+        </div>
+        <div class="step-char">
+          <img src="images/link-smile.png" alt="りんく">
+          <span>りんく</span>
+        </div>
+      </div>
+      <div class="illust" style="background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🤒</span>なんか<br>おかしい</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📋</span>アプリが<br>自己申告</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🤖</span>AIが数字で<br>原因特定</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🔧</span>直る</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#aaa;">「見てきて」「押してみて」の往復ナシで直ります</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        このキットで作るアプリには「計器」が入ります。<br>
+        アプリが自分の調子（何件処理した・何秒かかった・どこで失敗した）を<br>
+        数字でメモしてくれるので、不具合のときあなたが状況を説明しなくても、<br>
+        AIがそのメモを読んで原因を特定し、修正まで進められます。
+        <div class="tip">💡 実例：ある配信ツールで「診断画面が固まる」不具合を、計器の数字だけで原因特定→修正し、表示にかかる時間が <b>817秒 → 0.005秒</b> になりました。人間がやったのは最後の再読み込みボタン1回だけ。仕組みの正体は <code>docs/ai-rules/04_SELF_VERIFICATION.md</code>（AIが読む用）にあります。</div>
+      </div>
+    </div>
+
   </div><!-- /steps-grid -->
 </div><!-- /main-wrap -->
 
