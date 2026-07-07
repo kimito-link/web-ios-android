@@ -238,6 +238,7 @@ base64 -i ~/Apple/AuthKey_XXXX.p8 | pbcopy
 2. 同じ画面で **App ID** を作成。Bundle ID は `com.example.myapp` の形式
 3. **Provisioning Profile** を `Distribution > App Store` で作成し、上記証明書と App ID を紐付け
 4. App Store Connect → My Apps で **アプリ登録**（最初の 1 回は手動でリリースまで通す。これで App Review 連絡先などが確定する）
+   - **罠**: 「新規アプリ」作成ダイアログの Bundle ID プルダウンは、**既に複数アプリを登録済みのアカウントだと別アプリの Bundle ID が初期選択されていることがある**。必ず対象アプリの Bundle ID を明示的に選び直す。また「App Bundle（複数アプリの割引セット）」作成画面と見た目が近いので混同しないこと（作りたいのは通常の単体アプリ）。（出典: 2026-07-06、henshinhisho で 8 アプリ目の登録時に遭遇）
 5. App Store Connect → Users and Access → **Integrations** タブ → Team Keys → **Generate API Key**
    - Access: `App Manager` 以上
    - 発行された `.p8` をダウンロード（**一度しか落とせない**）
@@ -405,6 +406,24 @@ git push
   4. 同 versionCode が無い → 通常の upload + commit。
   5. 念のため `uploadBundle` が `403 already been used` を返したら、(3) と同じ動きにフォールバック。
 - 8.11 の「idempotent」と同じ精神だが、Play 側は **アップロード前にトラックを GET する** のがミソ。
+
+### 8.16 `workflow_dispatch` はデフォルトブランチ（main）にワークフローが無いと `gh`/UI に出ない
+
+- **症状**: feature ブランチにだけリリースワークフローを置いた状態で `gh workflow run ios-appstore-release.yml --ref feat/xxx` を叩くと `HTTP 404: Workflow does not exist` / `could not create workflow dispatch event: HTTP 404`（要旨: workflow が **not found on the default branch**）。GitHub Actions の UI の「Run workflow」プルダウンにもワークフロー自体が出ない。
+- **原因**: `workflow_dispatch` トリガーは GitHub が **デフォルトブランチ（多くは main）にあるワークフロー定義**からしか認識しない仕様。feature ブランチにファイルを追加しただけでは、そのブランチを `--ref` に指定しても GitHub 側の「実行可能ワークフロー一覧」に載らない。
+- **直し方**: feature ブランチを **デフォルトブランチへ ff-merge して push** する（`git checkout main && git merge --ff-only feat/xxx && git push`）。
+  - **安全確認**: このキットのリリースワークフロー（`ios-appstore-release.yml` / `android-play-release.yml`）は `on:` に `push` トリガーを持たず `workflow_dispatch` のみなので、**main へマージ＝pushしても自動でストア提出は走らない**。実際に `gh workflow run --ref main` で明示的に叩くまでは何も起きない。よって「まだ審査に出す準備ができていない機能ブランチを main にマージする」ことへの心理的抵抗は、このリポ構成では的外れ（push トリガー無しを毎回確認すること）。
+  - 出典: 2026-07-06、henshinhisho（AI返信秘書, `jp.besttrust.henshinhisho`）の初回リリースCI配線時。
+
+### 8.17 GitHub Secret は登録後に値を読み出せない・複数リポに横断で漁ると安全分類器がブロックする
+
+- **症状**: `gh secret set` で登録した Secret の値を後から `gh secret get` 等で読み出す方法が無い（GitHub の仕様上、一方通行の write-only）。加えて Secret は **リポジトリごとに完全に別**（org レベルで共有設定していない限り、既存アプリの Secret は新規リポに自動で引き継がれない）。
+- **原因**: セキュリティ設計上の当然の制約だが、「複数の既存リポから同じ種類の資格情報ファイル（.p8 / 証明書 / APIキー）を探して1つのリポにコピーする」作業を、ファイルシステムを横断して `find`/`grep` で漁ろうとすると、エージェントの安全分類器が「複数リポ・複数の機密ファイルへの横断アクセス」として処理をブロックすることがある。
+- **直し方**:
+  1. ユーザーに **元ファイルの置き場所（フォルダ1つ）** を先に確認する。横断 find はしない。
+  2. 流用可否を見極める: iOS 共通資格情報（ASC API キー `.p8` / `KEY_ID` / `ISSUER_ID` / 配布証明書 `.cer`+秘密鍵 / `APPLE_TEAM_ID`）は **アプリを跨いで流用可**。ただし **Provisioning Profile（`IOS_APPSTORE_PROFILE_BASE64`）は bundleId 固有で流用不可**（新規アプリごとに作り直しが要る。§8.4 の split material 方式と合わせて `asc-create-profile.mjs` で半自動生成できる＝Apple Developer Portal の Profiles 画面の手動操作を回避可能。前提: 対象 App ID を Identifiers に登録済み＋配布証明書のシリアルが Secret と一致していること）。
+  3. 値は**画面に表示せず**、ファイルから直接 `gh secret set <NAME> --repo <owner/repo> < file` のようにパイプで渡す（クリップボード経由や echo での中間表示を避ける）。
+  - 出典: 2026-07-06、henshinhisho の Secrets 移植時（既存 8 アプリの iOS 共通資格情報を新規リポに流用）。
 
 ---
 

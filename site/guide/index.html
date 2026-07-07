@@ -491,8 +491,44 @@
           <div class="step-body">
             <h3>サービスアカウント（SA）を作成する</h3>
             <p>自動でアプリを提出するために、Google Cloud ConsoleでサービスアカウントのJSONキーを発行します。<br>
-            このキーを GitHub Secrets に登録すると、git push だけで自動提出できるようになります。</p>
-            <span class="note">🔑 このテンプレートを使う場合は必須の作業です</span>
+            このキーを GitHub Secrets（<code>GOOGLE_PLAY_SA_JSON_BASE64</code>）に登録すると、git push だけで自動提出できるようになります。</p>
+            <span class="note">🔑 このテンプレートを使う場合は必須の作業です。<strong>1つ作れば複数アプリで使い回せます</strong>（各アプリに Play Console で招待するだけ）。</span>
+
+            <div class="note" style="margin-top:14px; background:#f0f7ff; border-left:4px solid #1565c0; padding:12px 16px;">
+              <strong>① Google Cloud でサービスアカウントを作る</strong>
+              <ol style="margin:8px 0 0; padding-left:20px; line-height:1.8;">
+                <li><a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:#1565c0;font-weight:700;">サービスアカウント画面</a>を開く</li>
+                <li>上部「プロジェクトの作成」→ 名前は汎用的に <code>play-publisher</code> 等（<strong>アプリ名を入れない＝使い回すため</strong>）→「作成」</li>
+                <li>作成したプロジェクトを選択した状態で「＋ サービスアカウントを作成」</li>
+                <li>名前を入力（例 <code>play-release</code>）→「作成して続行」→ <strong>ロールは空のままでOK</strong>（権限は Play Console 側で渡す）→「完了」</li>
+              </ol>
+            </div>
+
+            <div class="note" style="margin-top:10px; background:#f0f7ff; border-left:4px solid #1565c0; padding:12px 16px;">
+              <strong>② JSONキーを発行する</strong>
+              <ol style="margin:8px 0 0; padding-left:20px; line-height:1.8;">
+                <li>作った SA をクリック →「キー」タブ →「鍵を追加」→「新しい鍵を作成」→ <strong>JSON</strong> →「作成」</li>
+                <li>→ JSONファイルが自動ダウンロードされる（<strong>これが正本。無くさない</strong>）</li>
+              </ol>
+            </div>
+
+            <div class="note" style="margin-top:10px; background:#fff7ed; border-left:4px solid #ea580c; padding:12px 16px;">
+              <strong>③ Play Console でそのSAに権限を渡す</strong>
+              <ol style="margin:8px 0 0; padding-left:20px; line-height:1.8;">
+                <li><a href="https://play.google.com/console" target="_blank" rel="noopener" style="color:#ea580c;font-weight:700;">Play Console</a> →「ユーザーと権限」→「新しいユーザーを招待」</li>
+                <li>メール欄に、JSON内の <code>client_email</code>（<code>…@….iam.gserviceaccount.com</code>）を貼る</li>
+                <li>対象アプリに「リリースを管理」相当の権限を付与 →「招待」</li>
+                <li>さらに事前に <a href="https://console.cloud.google.com/apis/library/androidpublisher.googleapis.com" target="_blank" rel="noopener" style="color:#ea580c;font-weight:700;">Google Play Android Developer API</a> を、そのプロジェクトで「有効にする」</li>
+              </ol>
+            </div>
+
+            <div class="note" style="margin-top:10px; background:#f5f5f5; border-left:4px solid #555; padding:12px 16px;">
+              <strong>④ GitHub Secret に登録する</strong>（base64化して <code>GOOGLE_PLAY_SA_JSON_BASE64</code> へ）
+              <pre style="background:#1e1e1e;color:#eee;padding:10px;border-radius:6px;overflow-x:auto;margin:8px 0 0;"><code># PowerShell（ダウンロードしたJSONのパスに置き換え）
+$b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\to\service-account.json"))
+gh secret set GOOGLE_PLAY_SA_JSON_BASE64 -b $b64 -R &lt;owner&gt;/&lt;repo&gt;</code></pre>
+              <span style="display:block;margin-top:6px;">※ 同じSAを別アプリでも使う場合は、そのアプリのリポでも同じ <code>gh secret set</code> を実行＋Play Consoleで招待するだけ。</span>
+            </div>
           </div>
         </li>
       </ul>

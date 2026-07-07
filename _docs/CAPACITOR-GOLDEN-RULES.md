@@ -70,11 +70,14 @@
    **`android/`直下**を指す。CIの`Restore signing material`ステップはここ(`android/android-upload-key.jks`・
    `android/keystore.properties`)に書くこと。リポジトリルートに書くと`signReleaseBundle`が
    「file doesn't exist」で落ちる(2026-07-04 resend実戦で発見・修正)。
-10. **ワークフローが呼ぶスクリプトは、実装してから配線する**。`play-fill-data-safety.mjs`は
-    `play-fill-listing.mjs`の対として計画だけされ実装されないままワークフローから呼ばれ続けており、
+10. **金型から新規アプリへセットアップする際、ワークフローが参照する全スクリプトが実際にコピーされたか確認する**。
+    `play-fill-data-safety.mjs`(+ 対の`play-generate-data-safety-csv.mjs`・`lib/play-data-safety-template.json`)は
+    金型には実装済みなのに、resendのセットアップ時にコピーが漏れており、ワークフローだけが呼び続けて
     `MODULE_NOT_FOUND`でリリースパイプライン全体を毎回落としていた(2026-07-04 resend実戦で発見)。
-    未実装スクリプトを呼ぶステップは`if [ -f <script> ]`で存在チェックしてスキップ可能にし、
-    「呼ばれているが存在しない」状態を放置しない。
+    「未実装」ではなく「セットアップ時のコピー漏れ」だった点に注意 — 金型を見て真っ先に疑うべきは
+    実装の有無ではなくコピー漏れ。恒久対策として、ワークフロー側は`if [ -f <script> ]`で存在チェックして
+    スキップ可能にしてあるので、CSV運用を使わない(Data SafetyをPlay Console UIで手入力する)アプリは
+    このスクリプト群をコピーしなくても支障なく動く。CSV自動投入を使いたいアプリは3ファイルをコピーすること。
 
 ---
 
