@@ -21,6 +21,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = resolve(process.cwd());
 const SOURCE_EXT = /\.(js|mjs|ts|tsx|jsx)$/;
@@ -99,7 +100,10 @@ export function findUntrackedImports(files, trackedFiles) {
 
 // ---- I/O(直接実行時のみ) ------------------------------------------------------
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, ''));
+// process.argv[1] を file:// URL に正規化して比較する(node標準の url.pathToFileURL)。
+// 手作りのパス文字列比較(resolve + pathname置換)は Windows でスラッシュ方向/ドライブレターの
+// 大小差により一致せず isMain=false のまま exit 0 で抜ける偽陽性を生む(2026-07-06実測・ai-hub selftest fixtureで検出)。
+const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
 if (isMain) {
   const all = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
     .split('\n').map((s) => s.trim()).filter(Boolean);
