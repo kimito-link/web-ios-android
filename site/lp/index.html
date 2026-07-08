@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アプリストア審査を通す、最短ルート | App Launch Accelerator</title>
+<meta name="description" content="Webサービスをお持ちの事業者様向け。iOS/Androidアプリのストア提出・審査対応・継続運用をまとめて代行します。">
+<link rel="icon" type="image/png" href="../favicon.png">
+<style>
+  :root {
+    --ink: #17151a;
+    --paper: #faf8f3;
+    --navy: #12203f;
+    --navy-2: #1c325c;
+    --gold: #d4a441;
+    --gold-2: #eccb7d;
+    --line: #e4ddc9;
+    --good: #2f6b47;
+    --muted: #6b6455;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-weight: 700;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--navy);
+  }
+  p { line-height: 1.9; margin: 0; }
+  a { color: inherit; }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before { content: ""; width: 18px; height: 1px; background: var(--gold); }
+
+  /* ── header ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(250,248,243,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 880px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar img.logo { height: 30px; }
+  .topbar .cta-mini {
+    background: var(--navy); color: #fff;
+    padding: 9px 18px; border-radius: 6px;
+    font-size: 13px; font-weight: 700; text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* ── hero ── */
+  .hero {
+    background:
+      radial-gradient(900px 420px at 85% -10%, rgba(212,164,65,0.18), transparent 60%),
+      linear-gradient(175deg, var(--navy) 0%, #1c3260 100%);
+    color: #fff;
+    padding: 76px 0 64px;
+    position: relative;
+  }
+  .hero-inner { display: flex; align-items: center; gap: 40px; }
+  .hero-text { flex: 1; min-width: 0; }
+  .hero .eyebrow { color: var(--gold-2); }
+  .hero .eyebrow::before { background: var(--gold-2); }
+  .hero h1 {
+    color: #fff;
+    font-size: clamp(28px, 4.6vw, 42px);
+    line-height: 1.42;
+    margin-top: 16px;
+  }
+  .hero h1 em { color: var(--gold-2); font-style: normal; }
+  .hero .sub {
+    margin-top: 20px; max-width: 52ch;
+    font-size: 15.5px; color: #d9dfec; line-height: 1.9;
+  }
+  .hero-char { flex-shrink: 0; }
+  .hero-char img { width: 108px; display: block; }
+  .hero-ctas { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 14px 26px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    text-align: center;
+  }
+  .btn-primary { background: var(--gold); color: var(--navy); }
+  .btn-ghost { border: 1px solid rgba(255,255,255,0.4); color: #fff; }
+  .hero-note { margin-top: 14px; font-size: 12.5px; color: #a9b3c8; }
+
+  @media (max-width: 640px) {
+    .hero-inner { flex-direction: column; align-items: flex-start; }
+    .hero-char { align-self: center; }
+  }
+
+  /* ── section ── */
+  section { padding: 60px 0; }
+  section + section { border-top: 1px solid var(--line); }
+  .section-head { margin-bottom: 32px; }
+  .section-head h2 { font-size: clamp(22px, 3.2vw, 28px); margin-top: 10px; }
+  .section-head .lede { margin-top: 14px; font-size: 15px; color: var(--muted); max-width: 60ch; }
+
+  /* ── pain points ── */
+  .pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+  .pain-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 6px;
+    padding: 22px 20px;
+  }
+  .pain-card .icon { font-size: 22px; }
+  .pain-card .t { margin-top: 12px; font-weight: 700; font-size: 15px; color: var(--navy); }
+  .pain-card .d { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-height: 1.75; }
+  @media (max-width: 640px) { .pains { grid-template-columns: 1fr; } }
+
+  /* ── proof strip ── */
+  .proof {
+    background: var(--navy);
+    color: #fff;
+  }
+  .proof .section-head .eyebrow { color: var(--gold-2); }
+  .proof .section-head .eyebrow::before { background: var(--gold-2); }
+  .proof .section-head h2 { color: #fff; }
+  .proof-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 8px; }
+  .proof-item {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 6px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .proof-item .n { font-family: 'Hiragino Mincho ProN', serif; font-size: 26px; color: var(--gold-2); }
+  .proof-item .l { margin-top: 6px; font-size: 12px; color: #c3cbdc; letter-spacing: 0.02em; }
+  @media (max-width: 640px) { .proof-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── flow ── */
+  .flow { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+  .flow-step {
+    display: grid; grid-template-columns: 44px 1fr auto;
+    gap: 18px; align-items: start; padding: 18px 0;
+  }
+  .flow-step + .flow-step { border-top: 1px dashed var(--line); }
+  .flow-dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--navy); color: var(--gold-2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Hiragino Mincho ProN', serif; font-size: 17px;
+    font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+  .flow-text .t { font-weight: 700; color: var(--navy); font-size: 15px; }
+  .flow-text .d { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
+  .flow-money {
+    font-variant-numeric: tabular-nums; font-weight: 700;
+    color: var(--good); font-size: 14px; white-space: nowrap; align-self: center;
+  }
+  .flow-money.zero { color: var(--muted); }
+  @media (max-width: 560px) {
+    .flow-step { grid-template-columns: 34px 1fr; }
+    .flow-money { grid-column: 2; margin-top: 4px; }
+  }
+
+  /* ── pricing ── */
+  .price-table {
+    width: 100%; border-collapse: collapse; margin-top: 8px;
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  }
+  .price-table th, .price-table td {
+    padding: 14px 16px; text-align: left; font-size: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .price-table th {
+    background: var(--navy); color: #fff; font-weight: 700; font-size: 12.5px;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .price-table td:last-child, .price-table th:last-child { font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; color: var(--navy); }
+  .price-table tr:last-child td { border-bottom: none; }
+  .price-note { margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+
+  /* ── gate ── */
+  .gate-box {
+    background: #fffdf7; border: 1px solid var(--gold); border-radius: 6px;
+    padding: 28px 26px; margin-top: 8px;
+  }
+  .gate-box .t { font-weight: 700; color: var(--navy); font-size: 16px; }
+  .gate-list { margin-top: 16px; display: grid; gap: 10px; }
+  .gate-item { display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: 14px; color: var(--ink); }
+  .gate-item .m { color: var(--good); font-weight: 700; }
+
+  /* ── faq ── */
+  .faq { display: grid; gap: 10px; margin-top: 8px; }
+  .faq-item {
+    background: #fff; border: 1px solid var(--line); border-radius: 6px;
+    padding: 18px 20px;
+  }
+  .faq-item .q { font-weight: 700; color: var(--navy); font-size: 14.5px; }
+  .faq-item .a { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-height: 1.8; }
+
+  /* ── final cta ── */
+  .final-cta {
+    background: linear-gradient(175deg, var(--navy) 0%, #1c3260 100%);
+    color: #fff; text-align: center; padding: 72px 0;
+  }
+  .final-cta .eyebrow { color: var(--gold-2); justify-content: center; }
+  .final-cta .eyebrow::before { display: none; }
+  .final-cta h2 { color: #fff; font-size: clamp(24px, 3.6vw, 32px); margin-top: 14px; }
+  .final-cta .sub { margin: 18px auto 0; max-width: 50ch; color: #d9dfec; font-size: 14.5px; }
+  .final-cta .btn-primary { margin-top: 28px; padding: 16px 36px; font-size: 16px; }
+
+  footer {
+    padding: 34px 0 50px; text-align: center;
+    font-size: 12px; color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: underline; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(12px); animation: rise .6s ease forwards; }
+    @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="/"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+    <a class="cta-mini" href="mailto:info@best-trust.biz?subject=%E3%82%A2%E3%83%97%E3%83%AA%E5%8C%96%E7%84%A1%E6%96%99%E8%A8%BA%E6%96%AD%E5%B8%8C%E6%9C%9B&body=%E4%BB%A5%E4%B8%8B%E3%82%92%E3%81%94%E8%A8%98%E5%85%A5%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82%0A%0A%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9URL%EF%BC%9A%0A%E3%83%AD%E3%82%B0%E3%82%A4%E3%83%B3%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E8%AA%B2%E9%87%91%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E3%81%94%E5%B8%8C%E6%9C%9B%E3%81%AE%E3%82%B9%E3%83%88%E3%82%A2%EF%BC%88iOS%2FAndroid%2F%E4%B8%A1%E6%96%B9%EF%BC%89%EF%BC%9A">無料診断を依頼</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-text">
+      <span class="eyebrow">App Launch Accelerator</span>
+      <h1>Webサービスをお持ちなら、<br>アプリストアまで<em>最短距離</em>で。</h1>
+      <p class="sub">
+        iOS/Androidアプリの企画・開発は必要ありません。すでに動いているWebサービスを、
+        ストア審査の地雷を踏まずに、そのままアプリとして配信します。開発チームを持たない事業者様のための、
+        審査提出から継続運用までの伴走サービスです。
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="mailto:info@best-trust.biz?subject=%E3%82%A2%E3%83%97%E3%83%AA%E5%8C%96%E7%84%A1%E6%96%99%E8%A8%BA%E6%96%AD%E5%B8%8C%E6%9C%9B&body=%E4%BB%A5%E4%B8%8B%E3%82%92%E3%81%94%E8%A8%98%E5%85%A5%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82%0A%0A%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9URL%EF%BC%9A%0A%E3%83%AD%E3%82%B0%E3%82%A4%E3%83%B3%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E8%AA%B2%E9%87%91%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E3%81%94%E5%B8%8C%E6%9C%9B%E3%81%AE%E3%82%B9%E3%83%88%E3%82%A2%EF%BC%88iOS%2FAndroid%2F%E4%B8%A1%E6%96%B9%EF%BC%89%EF%BC%9A">60秒で無料一次診断を申し込む</a>
+        <a class="btn btn-ghost" href="#flow">流れを見る</a>
+      </div>
+      <div class="hero-note">診断は無料。適合しない場合は無理に受注せず、正直にお伝えします。</div>
+    </div>
+    <div class="hero-char">
+      <img src="../images/link-smile.png" alt="りんく">
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">こんなお悩みありませんか</span>
+      <h2>アプリを出したいのに、出せない理由はいつも同じ</h2>
+    </div>
+    <div class="pains">
+      <div class="pain-card">
+        <div class="icon">🧑‍💻</div>
+        <div class="t">ネイティブ開発者がいない</div>
+        <div class="d">Webは自社で作れても、iOS/Androidの開発者を新たに雇う・探すコストは重い。</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">📮</div>
+        <div class="t">審査で何度も落ちる</div>
+        <div class="d">やっと提出しても、理由が分かりにくい却下を繰り返し、公開予定が延び続ける。</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">🔧</div>
+        <div class="t">出した後の維持が不安</div>
+        <div class="d">OSやストア規約は年に何度も変わる。誰が追従してくれるのか決まっていない。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof reveal">
+    <div class="section-head">
+      <span class="eyebrow">実績</span>
+      <h2>同じ仕組みで、複数のWebサービスをアプリ化してきました</h2>
+      <p class="lede" style="color:#c3cbdc;">今回ご提供する仕組みは、自社サービスの実配信で磨き込んだものをそのまま使います。付け焼き刃のテンプレートではありません。</p>
+    </div>
+    <div class="proof-grid">
+      <div class="proof-item"><div class="n">4+</div><div class="l">配信実績のあるアプリ</div></div>
+      <div class="proof-item"><div class="n">2-3</div><div class="l">日で提出まで（金型があるから）</div></div>
+      <div class="proof-item"><div class="n">iOS/Android</div><div class="l">同時対応</div></div>
+      <div class="proof-item"><div class="n">3回</div><div class="l">まで却下再提出を構築費に込み</div></div>
+    </div>
+  </section>
+
+  <section id="flow" class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">ご利用の流れ</span>
+      <h2>お客様がやることは、3つだけ</h2>
+      <p class="lede">Developerアカウントの取得・設定シートの記入・招待。あとはこちらで審査提出まで進めます。</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot">0</div>
+        <div class="flow-text">
+          <div class="t">無料一次診断</div>
+          <div class="d">サービスURLと課金・ログイン方式をお送りいただくだけ。適合するかを確認してご連絡します。</div>
+        </div>
+        <div class="flow-money zero">¥0</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <div class="flow-text">
+          <div class="t">精密診断（60分）</div>
+          <div class="d">アカウント取得手順・提出までのスケジュールをレポートとして納品します。</div>
+        </div>
+        <div class="flow-money">¥30,000</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <div class="flow-text">
+          <div class="t">構築・ストア提出</div>
+          <div class="d">御社名義のDeveloperアカウントで、iOS/Android両方を審査提出します。</div>
+        </div>
+        <div class="flow-money">¥300,000〜</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <div class="flow-text">
+          <div class="t">配信開始</div>
+          <div class="d">却下があっても、実績のある返信で即対応（3回まで構築費に込み）。</div>
+        </div>
+        <div class="flow-money zero">構築費に込み</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">4</div>
+        <div class="flow-text">
+          <div class="t">継続運用サポート</div>
+          <div class="d">OS・ストア規約の変更対応、年次証明書更新、月1回の更新代行。</div>
+        </div>
+        <div class="flow-money">¥30,000 / 月</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">料金</span>
+      <h2>追加費用が読めない、ということがないように</h2>
+    </div>
+    <div class="table-scroll">
+      <table class="price-table">
+        <thead>
+          <tr><th>プラン</th><th>内容</th><th>価格</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>一次診断</td><td>適合可否の判定</td><td>無料</td></tr>
+          <tr><td>精密診断</td><td>60分ヒアリング＋レポート納品</td><td>¥30,000</td></tr>
+          <tr><td>構築・提出</td><td>iOS＋Android、審査提出まで</td><td>¥300,000〜</td></tr>
+          <tr><td>構築（アプリ内課金あり）</td><td>IAP設定を含む</td><td>+¥100,000</td></tr>
+          <tr><td>継続運用</td><td>変更追従・証明書更新・月次更新代行</td><td>¥30,000 / 月</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="price-note">※ 審査の「合格」自体はApple／Googleの専権事項のため保証はいたしません。却下時の再提出対応（3回まで）は構築費に含みます。</p>
+  </section>
+
+  <section class="reveal">
+    <div class="gate-box">
+      <div class="t">こんなWebサービスに向いています</div>
+      <div class="gate-list">
+        <div class="gate-item"><span class="m">✓</span><span>すでに本番稼働しているWebサービスをお持ちである</span></div>
+        <div class="gate-item"><span class="m">✓</span><span>ログインは標準的な方式（またはログイン機能なし）</span></div>
+        <div class="gate-item"><span class="m">✓</span><span>課金がある場合、サブスク型（アプリ内課金かWeb課金）である</span></div>
+        <div class="gate-item"><span class="m">✓</span><span>配信先はApp Store・Google Playのみでよい</span></div>
+        <div class="gate-item"><span class="m">✓</span><span>Bluetooth連携・常時位置情報取得など特殊なネイティブ機能を必要としない</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">よくあるご質問</span>
+      <h2>ご検討にあたって</h2>
+    </div>
+    <div class="faq">
+      <div class="faq-item">
+        <div class="q">Developerアカウントは誰の名義になりますか？</div>
+        <div class="a">御社名義で取得いただきます。取得手順はこちらでご案内します。第三者（弊社）名義での代理提出は行いません。アプリの著作権・アカウントとも御社に残ります。</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">署名鍵やパスワードを預ける必要はありますか？</div>
+        <div class="a">いいえ。御社のGitHub組織・Developerアカウント上で作業するため、鍵やパスワードを弊社側に集約することはありません。契約終了時はアクセス権を外すだけで完結します。</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">審査に落ちたらどうなりますか？</div>
+        <div class="a">構築費の範囲内で、3回まで再提出に対応します。それ以上の対応が必要な重大なケース（品質不足による長期審査停止など）は、事前にご相談のうえ個別対応とさせていただきます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Web側の不具合も対応してもらえますか？</div>
+        <div class="a">継続運用サポートの対象は「アプリの器」部分（OS対応・証明書更新など）で、Webサービス本体の開発・障害対応は対象外です。ご契約前に責任範囲をすり合わせます。</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="final-cta">
+  <div class="wrap">
+    <span class="eyebrow">まずは無料診断から</span>
+    <h2>アプリ化できるか、60秒で分かります。</h2>
+    <p class="sub">サービスURLをお送りいただくだけ。適合しない場合は無理にお勧めしません。</p>
+    <a class="btn btn-primary" href="mailto:info@best-trust.biz?subject=%E3%82%A2%E3%83%97%E3%83%AA%E5%8C%96%E7%84%A1%E6%96%99%E8%A8%BA%E6%96%AD%E5%B8%8C%E6%9C%9B&body=%E4%BB%A5%E4%B8%8B%E3%82%92%E3%81%94%E8%A8%98%E5%85%A5%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82%0A%0A%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9URL%EF%BC%9A%0A%E3%83%AD%E3%82%B0%E3%82%A4%E3%83%B3%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E8%AA%B2%E9%87%91%E6%A9%9F%E8%83%BD%E3%81%AE%E6%9C%89%E7%84%A1%EF%BC%9A%0A%E3%81%94%E5%B8%8C%E6%9C%9B%E3%81%AE%E3%82%B9%E3%83%88%E3%82%A2%EF%BC%88iOS%2FAndroid%2F%E4%B8%A1%E6%96%B9%EF%BC%89%EF%BC%9A">無料診断を依頼する</a>
+  </div>
+</div>
+
+<footer>
+  Kimito Link — App Launch Accelerator ／ お問い合わせ: <a href="mailto:info@best-trust.biz">info@best-trust.biz</a>
+</footer>
+
+</body>
+</html>
