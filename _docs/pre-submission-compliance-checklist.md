@@ -33,6 +33,7 @@
 | Android: AAB署名 | リリースWF（既存 android-patch-signing） | — | 高 | <!-- impl: templates/scripts/android-patch-signing.mjs -->
 | Android: Data Safety 整合 | **Data Safety CSV 自動生成→API送信**（kimito実装済み）| Play Data Safety | **高** | <!-- impl: templates/scripts/play-fill-data-safety.mjs -->
 | Android: 権限の最小化 | manifest grep / Google Checks | Play権限ポリシー | 中 |
+| 診断/測定系プロダクトの表示が実測範囲を超えて一般化・断定していないか（禁句リスト＋fail-closedな件数チェック） | プロダクト側に banned.ts/findings.ts 相当を実装する場合のみ（本キットには汎用実装なし） | §2.3 Accurate Metadata 相当 | 中（診断/測定/スコア表示系プロダクトのみ該当）| <!-- impl: none (プロダクト固有の測定ロジックに依存するため金型に汎用実装を持たない。横展開先の実装パターンは _docs/apple-reject-knowledge-base.md §2.3「診断/測定系プロダクトの『表示と実態の乖離』」参照。ai-health-check.link 2026-07-07由来) -->
 
 ### iOS プライバシーマニフェスト（薄殻の中核・見落とし注意）
 - Capacitor は Apple の[必須SDKリスト](https://developer.apple.com/support/third-party-SDK-requirements/)に明記。`@capacitor/filesystem`・`@capacitor/preferences` 等が Required Reason API を使う。
@@ -57,6 +58,7 @@
 | Android: クラッシュ/ANR/起動パフォーマンス | **Play pre-launch report**（実機Roboクロール） | — | 中（殻はクラッシュ/起動に偏る・WebロジックはWeb側でテスト）|
 | Android: アクセシビリティ（ラベル/タッチ/コントラスト） | pre-launch report | — | 中 |
 | Android: Familiesポリシー/なりすまし/最小機能 | Google Checks（セルフチェック・審査非共有）+ 手動 | Playポリシー | 中 |
+| 診断/測定系プロダクトの表示が「1モデル1時点の実測」を「全AI・相手一般」等に拡張していないか | store-guard 目視レビュー | §2.3相当 | 高（診断/測定/スコア表示系プロダクトのみ）|
 
 ---
 

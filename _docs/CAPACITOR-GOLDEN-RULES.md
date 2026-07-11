@@ -28,7 +28,7 @@
 
 ---
 
-## 守るべき6原則(AGENTS.md にも転記すること)
+## 守るべき10原則(AGENTS.md にも転記すること)
 
 1. **「作り分けない」を最優先する**。動く金型アプリ(リバースハック=`partnership_program_website`)と同型に保つ。アプリ独自の VC / UIWindow / AppDelegate 注入を **二度と入れない**。ネイティブ重装備は server.url リモート構成では過剰。
 

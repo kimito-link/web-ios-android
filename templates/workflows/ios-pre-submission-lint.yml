@@ -14,6 +14,9 @@
 #   4.8 + 3.1.3(f) — reviewer-notes テンプレに Apple 文言の逐語引用
 #   2.1(a) + 4.8 — iOS の Google 隠し3層 (fn + CSS + observer)
 #   meta     — package.json semver + bundle ID 整合
+#   工程ガード — 新規ファイルの git add 忘れ(tsuioku-no-kirameki.com 2026-07-06実戦。
+#                check-tracked-imports.mjs。ローカル検証は作業ツリー基準のため、
+#                この検査だけが git clone 直後 = CI/Vercel の実体を再現する)
 #
 # ── このテンプレの使い方 ──────────────────────────────────────────
 # 1. このファイルをアプリリポの `.github/workflows/ios-pre-submission-lint.yml` にコピー。
@@ -36,6 +39,7 @@ on:
       - "scripts/appstore-submit.mjs"
       - "scripts/asc-patch-review-detail.mjs"
       - "scripts/lint-pre-submission.mjs"
+      - "scripts/check-tracked-imports.mjs"
       - "release-notes/**"
       - "store-assets/appstore/**"
       - "capacitor.config.json"
@@ -48,6 +52,7 @@ on:
       - "scripts/appstore-submit.mjs"
       - "scripts/asc-patch-review-detail.mjs"
       - "scripts/lint-pre-submission.mjs"
+      - "scripts/check-tracked-imports.mjs"
       - "release-notes/**"
       - "store-assets/appstore/**"
       - "capacitor.config.json"
@@ -70,6 +75,9 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
+
+      - name: Check tracked imports (git clone 直後の import 解決を検証)
+        run: node scripts/check-tracked-imports.mjs
 
       - name: Run pre-submission lint
         run: node scripts/lint-pre-submission.mjs

@@ -151,6 +151,38 @@ Resolution Center notes でこのパターンを先に説明すれば reviewer �
 | **2.3.10** | "Android" "Google Play" "Material Design" 等 | iOS限定の表現に find/replace |
 | **2.3.1(a)** | reviewer notes に無い隠し機能 | 全機能を notes に列挙 |
 
+### 診断/測定系プロダクトの「表示と実態の乖離」— §2.3と同根の却下ベクタ(ai-health-check.link 2026-07-07)
+
+AI健康診断系プロダクト(ai-health-check.link・PR #1・commit `059f216`)で `store-guard` が
+提出前レビューで検出した blocking 3件。**Apple/Google の店頭審査には出ていないが、
+§2.3(Accurate Metadata＝誇大・不正確な表示)と同じ構造の却下ベクタ**なので、測定系・診断系・
+スコア表示系プロダクト全般とストア提出物のコピーに横展開する。
+
+**共通の教訓: 測定範囲(=1モデル・1時点・今回の質問)を超える一般化/断定/未測定主張を表示に
+出さない。禁句リストと件数チェックは fail-closed(不確かなら止める/控えめに言う)で設計する。**
+
+- **症状(B-2)**: 1回の実測を「相手には〜返る」と全AI・相手一般へ拡張して断定していた。
+  - 直し方: 「情報が見つからない」という答えが**返る**状態→**返りうる**状態、に言い換え(1モデル
+    1時点の実測を、確定でなく可能性として表示)。`src/kenshin/findings.ts` `key: "ai-blank"`。
+- **症状(B-1)**: 由来を測っていないのに「第三者由来の情報でできている状態が**観測されました**」
+  と、あたかも実測したかのように表示していた。
+  - 直し方: 実測は「そのまま表示を控えた文が複数あった」という事実だけ。由来(第三者かどうか)の
+    断定を落とし、「そのまま見せるのを控える内容だった」「公式情報が少ないと外部材料からも
+    組み立てられる」という**測った事実の範囲**の記述に修正。同ファイル `key: "external-narrative"`。
+- **症状(B-3/W-4)**: 禁句(banned words)リストに効果保証・引用実測を装う表現のガードが無く、
+  「改善しました」「参照されています」等が素通りしていた。件数(`negativeSuggestCount`)が
+  `undefined` でも「0件提示されている」という自己矛盾文が黙って出ていた(fail-closed でない)。
+  - 直し方: `src/kenshin/banned.ts` に効果保証(`改善(しま|されま)|保証(しま|され|付)`等)・
+    引用実測の示唆(`引用(され|元)|参照されてい`等)・判定語・幻の統計・医療語を拡充。
+    `src/kenshin/findings.ts` の所見3は `negativeSuggestCount === undefined` で `throw`
+    し、詰め忘れたまま自己矛盾文を出さないようにした(fail-closed)。
+  - 教訓: 禁句CIは正規表現の限界(「〜になります」等の未来助動詞・ユーザー入力の差し込み値は
+    網羅できない)を持つ。CIは補助であり、**store-guard の目視レビュー(景表法観点)を置き換えない**
+    と `banned.ts` 冒頭にコメントで明記した。
+- 横展開先: 測定系・診断系・スコア表示系プロダクト全般、およびストア提出物のコピー。
+  「1モデル1時点の実測」を「全AI・相手一般」に膨らませていないか、由来不明の主張を実測表現で
+  出していないか、を store-guard の提出前レビューのチェック項目に加える。
+
 ### v1.0.7 ケーススタディ — 認証付きスクショ撮影の落とし穴
 
 capture script は Playwright + Chromium + mobile-Safari UA で動く(**Capacitor bridge 内ではない**):
@@ -240,6 +272,29 @@ a[href*="twitter.com"]:not([href*="/status/"]) { display: none !important; }
 - 背の高い枠(実測857px)は `scrollIntoView({block:'start'})` だと実コンテンツがフォールド下 → `block:'center'`。
 - **fail-closed**: scrollToSelector 指定があるのに要素が無ければ**エラーで中断**(silent skip で空スクショ
   提出=2.3.3再発を防ぐ)。X API制限バナー(琥珀)や「取得できません」が出てる時間帯は撮影しない。
+
+#### 続報(2026-07-10・henshin-hisho) — email/PWログイン型の多段撮影4点
+
+email/PWログイン型(Clerk/X OAuth不要)アプリでは前述の「公開ページ方式」を使わず、
+`screenshot-plan.json` の `authTabs` でログイン後の実画面を直接撮れる。実践して踏んだ4点:
+
+- **(a) authTabs は順次クリックで状態が引き継がれる**: 各 tab エントリはブラウザ状態(ログイン後の
+  画面)を引き継いだまま次のクリックに進むため、「一覧アイテムをクリック→詳細画面が開く」の
+  **多段撮影**が1本の plan で組める。詳細画面への遷移に `scrollToSelector` 対応を
+  `capture-appstore-screenshots.mjs` に追加した(commit 8e2892b)。
+- **(b) 課金導線が写り込んだ状態のスクショは §3.1.3(f) と矛盾して見える**: 設定画面に
+  「Billing Portal準備中」のような**未実装の課金UI片鱗**が写ると、「アプリ内に課金を置かない」
+  方針(§3.1.3(f)を使う場合)と自己矛盾して見え、審査官の疑念を誘発しうる。**該当画面はスクショの
+  撮影対象から除外する**。
+- **(c) デモアカウントに現実的な受信データをAPI投入すると一石二鳥**: 空の受信箱のままスクショを
+  撮ると棚(shelf)が空写りし、審査官の実機体験でも「機能に到達できない」に見える(2.1却下の温床)。
+  デモアカウントへ**現実的なメッセージをAPIで事前投入**しておくと、スクショの見栄えと審査官の
+  実体験の両方が改善する。
+- **(d) frame-appstore-screenshots.mjs はワークフローに配線しないと生スクショのまま上がる**: 撮影
+  (`capture-appstore-screenshots.mjs`)とフレーム合成(`frame-appstore-screenshots.mjs`)は別スクリプトで、
+  CIワークフローに両方を明示配線しないと**フレーム無しの生スクショ**がそのままASCにアップロードされる。
+  配線時は出力先ディレクトリの向き先(例 `IOS_SCREENSHOTS_DIR=ios-screenshots-framed`)も
+  忘れず切り替える。
 
 **ASCアップロードは自動化できる／返信＋再提出は画面のみ:**
 - アップロード: `node scripts/app/appstore-upload-screenshots.mjs`(ASC API `/v1/appScreenshots`)。
@@ -351,6 +406,23 @@ Google を出すなら別経路(ASWebAuthenticationSession 等)が要る＝重�
 - **4A `@capacitor/browser`**: プラグイン追加(原則1に抵触なし)。だが「いつ Browser.open を呼ぶか」を
   `<SignIn/>` を触らずに実装する必要があり、`window.open` 横取りのブートストラップが要る(Clerk が
   `location.assign` で全画面遷移する場合は横取り不可)。
+
+  **4A-続. JSバンドルの読み込み順序（server.url連動型で @capacitor/browser 等を使う場合の見落としやすい新地雷）**
+  server.url でWebをそのまま読む構成では、`@capacitor/core`・`@capacitor/browser`・`@capacitor/app` 等の
+  プラグインのJS distをネイティブが自動では注入しない（ネイティブが注入するのは native-bridge のみ）。
+  `Capacitor.Plugins.*` を生やす `registerPlugin`(=coreのJS)と各プラグインのJSラッパーは、
+  **Web側で明示的に`<script>`読み込みしないと存在しない**。これをやらないと `Capacitor.Plugins.Browser` が
+  `undefined` のままになり、Browser.open を呼ぶボタンが**エラーも出さずに無反応**になる。通常のWebブラウザ
+  では問題が起きず、Capacitorアプリ内でのみ再現するため気づきにくい。
+  - **出典**: resend実戦 2026-07-10・commit `ccf7615`「Googleログインが無反応になる回帰」。
+    App Store 1.0.1(38) が Guideline 2.1 で再却下(iPad Air/iPadOS 26.5.2で「Googleログインを押しても
+    何も起こらない」)。前回の`@capacitor/browser`導入(4A)自体は正しかったが、JSバンドルを配置・読み込み
+    していなかったため、実質的に4Aの対策が無効化されていた。
+  - **対処**: `@capacitor/core`・`browser`・`app` の dist を `public/assets/capacitor/` 等に配置し、
+    利用側JS(app-oauth.js等)より**前**に`<script>`で読み込む(順序必須)。バンドラーでコード分割する
+    場合も、実行時にこの読み込み順が保証されるか確認すること。
+  - **横展開**: `@capacitor/browser` に限らず、`@capacitor/app`・`@capacitor/preferences` 等、
+    利用側JSから `Capacitor.Plugins.*` を直接参照するプラグイン全般に該当する。
 - **4B navigationDelegate(Swift)**: WKWebView の `decidePolicyForNavigationAction` で認可ドメインを
   `SFSafariViewController` に流す。**黒画面6原則の原則1「独自VC/AppDelegate注入しない」と正面衝突**＝
   キットの大原則を破る意思決定が要る(重い)。

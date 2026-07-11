@@ -49,6 +49,7 @@ on:
       - "package.json"
       - "app.config.json"
       - "scripts/appstore-submit.mjs"
+      - "scripts/verify-webdir-consistency.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # workflow's most fragile steps (capture/verify/screenshot-upload).
       # Without these in the path filter, fixes to these scripts won't
@@ -186,6 +187,9 @@ jobs:
           if [ ! -f dist/public/index.html ]; then
             echo "<!doctype html><html><head><meta charset=\"utf-8\"><title>${APP_NAME}</title></head><body>loading...</body></html>" > dist/public/index.html
           fi
+
+      - name: Verify webDir consistency (capacitor.config.ts vs Prepare webDir)
+        run: node scripts/verify-webdir-consistency.mjs --expected dist/public
 
       - name: Add/copy iOS platform
         run: |

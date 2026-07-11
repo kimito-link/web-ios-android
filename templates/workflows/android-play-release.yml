@@ -59,7 +59,9 @@ on:
       - "scripts/play-review-check.mjs"
       - "scripts/android-patch-signing.mjs"
       - "scripts/verify-android-signing-config.mjs"
+      - "scripts/verify-signing-material-path.mjs"
       - "scripts/verify-android-splash-not-default.mjs"
+      - "scripts/verify-webdir-consistency.mjs"
       - "scripts/generate-capacitor-splash.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # Play release. Same lesson as the iOS workflow path-filter fix:
@@ -145,6 +147,9 @@ jobs:
             echo "<!doctype html><html><head><meta charset=\"utf-8\"><title>${APP_NAME}</title></head><body>loading...</body></html>" > dist/public/index.html
           fi
 
+      - name: Verify webDir consistency (capacitor.config.ts vs Prepare webDir)
+        run: node scripts/verify-webdir-consistency.mjs --expected dist/public
+
       - name: Add/copy Android platform
         run: |
           if [ ! -d android/app ]; then
@@ -207,6 +212,9 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/android-upload-key.jks
           printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > android/keystore.properties
           ls -l android/android-upload-key.jks android/keystore.properties
+
+      - name: Verify signing material is at the path build.gradle expects
+        run: node scripts/verify-signing-material-path.mjs --gradle android/app/build.gradle --keystore ../android-upload-key.jks
 
       # 未署名 AAB 出荷事故ゲート: bundleRelease の「前」に signingConfig を注入・検証。
       # Capacitor の `cap add android` は signingConfig を生成しないため、無いと
