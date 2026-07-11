@@ -6,6 +6,105 @@
 <title>アプリストア審査を通す、最短ルート | App Launch Accelerator</title>
 <meta name="description" content="Webサービスをお持ちの事業者様向け。iOS/Androidアプリのストア提出・審査対応・継続運用をまとめて代行します。">
 <link rel="icon" type="image/png" href="../favicon.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "App Launch Accelerator",
+  "alternateName": "ALA",
+  "provider": {
+    "@type": "Organization",
+    "name": "Kimito Link",
+    "email": "info@best-trust.biz"
+  },
+  "areaServed": "JP",
+  "audience": {
+    "@type": "BusinessAudience",
+    "audienceType": "Webサービスを保有しiOS/Androidアプリ化を検討している事業者"
+  },
+  "description": "既存のWebサービスをiOS/Androidアプリとしてストア審査提出・継続運用まで代行するサービス。開発者が実際に審査ノウハウを機械的なチェックとして蓄積した仕組みを用いる。",
+  "serviceType": "モバイルアプリ化・ストア審査代行・継続運用保守",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "一次診断",
+      "price": "0",
+      "priceCurrency": "JPY",
+      "description": "Webサービスがアプリ化に適合するかの無料判定"
+    },
+    {
+      "@type": "Offer",
+      "name": "精密診断",
+      "price": "30000",
+      "priceCurrency": "JPY",
+      "description": "60分ヒアリングと提出スケジュールのレポート納品"
+    },
+    {
+      "@type": "Offer",
+      "name": "構築・提出",
+      "price": "300000",
+      "priceCurrency": "JPY",
+      "description": "iOS/Android両方のアプリ化とストア審査提出。アプリ内課金対応は追加10万円"
+    },
+    {
+      "@type": "Offer",
+      "name": "継続運用サポート",
+      "price": "30000",
+      "priceCurrency": "JPY",
+      "unitText": "月額",
+      "description": "OS/ストア規約変更への追従、証明書更新、月次更新代行"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Developerアカウントは誰の名義になりますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "顧客企業の名義で取得する。取得手順は提供元が案内する。第三者(提供元)名義での代理提出は行わない。アプリの著作権・アカウントとも顧客企業に残る。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "署名鍵やパスワードを預ける必要はありますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "預ける必要はない。顧客企業のGitHub組織・Developerアカウント上で作業するため、鍵やパスワードが提供元に集約されることはない。契約終了時はアクセス権を外すだけで完結する。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "審査に落ちたらどうなりますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "構築費の範囲内で3回まで再提出に対応する。審査の合格自体はApple/Googleの専権事項のため保証はしない。品質不足による長期審査停止など、それ以上の対応が必要な重大なケースは個別対応となる。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Web側の不具合も対応してもらえますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "継続運用サポートの対象は「アプリの器」部分(OS対応・証明書更新など)であり、Webサービス本体の開発・障害対応は対象外。契約前に責任範囲をすり合わせる。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "どうやって審査落ちを防いでいますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "過去に実際に審査を止めた原因(ビルド設定の不一致、署名鍵の配置ミスなど)を、提出前の自動チェックとして実装している。担当者の目視確認だけに頼らず、機械的に検知して赤信号で止める仕組みを持つ。"
+      }
+    }
+  ]
+}
+</script>
 <style>
   :root {
     --ink: #17151a;
@@ -307,6 +406,31 @@
       <div class="proof-item"><div class="n">2-3</div><div class="l">日で提出まで（金型があるから）</div></div>
       <div class="proof-item"><div class="n">iOS/Android</div><div class="l">同時対応</div></div>
       <div class="proof-item"><div class="n">3回</div><div class="l">まで却下再提出を構築費に込み</div></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">品質の担保</span>
+      <h2>「人が気をつける」ではなく、「機械が止める」仕組みです</h2>
+      <p class="lede">審査に落ちる原因の多くは、担当者の見落としから起きます。私たちは同じ間違いを二度と起こさないよう、過去に実際に踏んだ失敗をすべて自動チェックの仕組みに変えています。</p>
+    </div>
+    <div class="pains">
+      <div class="pain-card">
+        <div class="icon">🛑</div>
+        <div class="t">提出前に自動で赤信号</div>
+        <div class="d">「ビルド設定の値が食い違っている」「署名に使う鍵が正しい場所にない」といった、過去に実際に審査を止めた原因を、提出の手前で自動検知して止めます。気づかず提出してしまう事故を防ぎます。</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">📋</div>
+        <div class="t">失敗を知識として蓄積</div>
+        <div class="d">審査で指摘された内容は、担当者の記憶だけに頼らず、次のアプリにも自動で活きる形で記録しています。同じ会社の2本目・3本目のアプリほど、スムーズに進みます。</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">🔍</div>
+        <div class="t">説明とコードのズレも検知</div>
+        <div class="d">「対応済みと書いてあるのに実装されていない」というドキュメントと実態の食い違い自体も、機械的にチェックして防いでいます。</div>
+      </div>
     </div>
   </section>
 
