@@ -172,9 +172,16 @@ if (uploadOnly) {
 // アップロードは Google 側で非同期検証される（uploadState=IN_PROGRESS）。
 // 完了前に publish すると「現在の公開版より低い」と誤判定され 400 になるため、
 // uploadState=SUCCESS になるまでポーリングしてから提出する。
+//
+// 既知の不具合（2026-07-10 実機確認）: ?projection=DRAFT の GET が uploadState=NOT_FOUND を
+// 返し続けたまま SUCCESS に遷移しないことがある。このときサーバー側のアップロード自体は
+// 正しく処理済みで、publish を直接叩くと status=OK で通ることを確認済み。ポーリングAPIの
+// 応答だけを信頼して「失敗」と判定するのは誤り。ポーリングがタイムアウトしても即エラー
+// 終了せず、publish を試行し、その結果（成功 or Google が返す具体的なエラー）で最終判断する。
+// publish 自体が失敗すれば従来通りエラーで停止するので、不正な公開が起きるわけではない。
 console.log('  アップロードの検証完了を待っています（最大3分）...');
 const POLL_MAX = 36; // 5秒 × 36 = 180秒
-let uploadDone = false;
+let uploadConfirmedSuccess = false;
 for (let i = 0; i < POLL_MAX; i++) {
   await new Promise((r) => setTimeout(r, 5000));
   const pollRes = await request({
@@ -189,7 +196,7 @@ for (let i = 0; i < POLL_MAX; i++) {
   if (process.env.CWS_DEBUG) console.log(`  [debug] poll ${i + 1}: uploadState=${state} crxVersion=${pollJson.crxVersion}`);
   if (state === 'SUCCESS') {
     console.log(`  検証完了 (uploadState=SUCCESS, crxVersion=${pollJson.crxVersion})`);
-    uploadDone = true;
+    uploadConfirmedSuccess = true;
     break;
   }
   if (state === 'FAILURE') {
@@ -199,9 +206,9 @@ for (let i = 0; i < POLL_MAX; i++) {
   }
   process.stdout.write(`  待機中... (${(i + 1) * 5}秒, state=${state})\r`);
 }
-if (!uploadDone) {
-  console.error('\nERROR: 3分待っても検証が完了しませんでした。少し時間を置いて再実行するか、devconsole で状態を確認してください。');
-  process.exit(1);
+if (!uploadConfirmedSuccess) {
+  console.log('\n  ポーリングでは検証完了を確認できませんでした（既知の不具合の可能性）。');
+  console.log('  publish を直接試行し、その結果で判断します...');
 }
 
 // 3. 審査提出（POST items/{id}/publish）。publishTarget=default を明示（全公開）。

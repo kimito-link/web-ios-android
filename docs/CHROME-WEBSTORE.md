@@ -160,6 +160,24 @@ Node の `zlib`（外部依存なし）に置き換えた `build-zip-node.mjs` /
 > グローバル運用ルール（`AI_HARNESS_OPERATION.md`）の「Windows シェルは Git Bash 優先・PowerShell の
 > インライン実行を避ける」と同じ理由。**PowerShell に処理を投げる npm スクリプトは地雷**だと考える。
 
+### 罠⑥：アップロード検証ポーリングが `uploadState=NOT_FOUND` のまま SUCCESS に遷移しない★実際に踏んだ
+**症状**：`publish-cws-node.mjs` を実行すると、`[2/3] ZIP アップロード中...` で `uploadState=IN_PROGRESS`
+まで進むのに、直後のポーリング（`GET items/{id}?projection=DRAFT`）が5秒おきに `uploadState=NOT_FOUND`
+を返し続け、3分のタイムアウトで `ERROR: 3分待っても検証が完了しませんでした` になる。再アップロードしても同じ。
+
+**原因**：サーバー側のアップロード自体は正常に処理済みだが、`?projection=DRAFT` の GET エンドポイントが
+一時的に古い/存在しない状態を返す（Google API 側の不整合。再現条件は未特定）。`crxVersion` は
+正しいバージョンを指しているのに `uploadState` だけ `NOT_FOUND` になる。
+
+**確認方法（実機で踏んだ手順）**：ポーリングを諦めた後、`publish`（`POST items/{id}/publish`）を
+**ポーリングの成否に関わらず直接叩いてみる**と `status=OK` で審査提出が通った。つまりポーリングAPIの
+応答だけを信頼して「アップロード失敗」と判定するのは誤り。
+
+**対処（恒久・2026-07-10 実装済み）**：`publish-cws-node.mjs` はポーリングがタイムアウトしても
+`process.exit(1)` で止めず、そのまま publish を試行し、その結果（成功 or Google が返す具体的な
+エラーメッセージ）で最終判断するように変更した。publish 自体が失敗すれば従来通りエラーで停止するため、
+不正な公開にはならない。
+
 ---
 
 ## ✅ Chrome 公開チェックリスト
