@@ -108,7 +108,9 @@ if (errs > 0) {
 
 const { displayName, bundleId, productionDomain } = config.identity;
 const { playPackageName } = config.stores;
-const TOTAL = 4;
+const customDomain = config.web?.deploy?.customDomain;
+const wantsDomainConnect = customDomain && !isPlaceholder(customDomain);
+const TOTAL = wantsDomainConnect ? 5 : 4;
 
 // --- Step 2: 資産生成(キット同梱の node スクリプトを使う。Python不要) ---
 header('セットアップ手順');
@@ -150,7 +152,16 @@ console.log('    node scripts/bootstrap-secrets.mjs --apply    # 実際に gh se
 console.log('  必要なファイル名は `node scripts/bootstrap-secrets.mjs --help` で一覧。');
 console.log('  （APPLE_TEAM_ID は app.config.json から自動。鍵の作り方は release-pipeline-playbook §6）');
 
-step(4, TOTAL, '最後の手動GUI(自動化不可・審査側/人間)');
+if (wantsDomainConnect) {
+  step(4, TOTAL, `独自ドメイン接続(Cloudflare Pages) — ${customDomain}`);
+  console.log('  app.config.json の web.deploy.customDomain が設定されています。以下の順で接続します:');
+  console.log('    node scripts/cloudflare-auth.mjs        # 初回のみ・ブラウザでCloudflareにログイン');
+  console.log('    node scripts/deploy-cloudflare-pages.mjs --project <Pagesプロジェクト名>');
+  console.log('    node scripts/connect-domain.mjs          # ドメインを接続(冪等・再実行可)');
+  console.log('  詳細・トークン失効時の対処: _docs/cloudflare-workers-token-expiry-knowledge-base.md');
+}
+
+step(wantsDomainConnect ? 5 : 4, TOTAL, '最後の手動GUI(自動化不可・審査側/人間)');
 console.log('  - ASC: アプリ枠の新規作成(Apple API不可)→ ascAppId を app.config.json stores に記入');
 console.log('  - Play Console: 新アプリ作成 + 既存/新規 Service Account に権限付与');
 console.log('  - iOS「配信地域」設定 / Android「審査用に送信」ボタン(最後の一押しは人間)');

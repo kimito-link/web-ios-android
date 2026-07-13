@@ -102,6 +102,11 @@ function buildSpecs(config) {
       note: '審査用デモアカウントのユーザー名（必要なアプリのみ）。' },
     { name: 'IOS_REVIEW_DEMO_PASSWORD', file: ['IOS_REVIEW_DEMO_PASSWORD.txt'], encode: 'text', required: false,
       note: '審査用デモアカウントのパスワード（必要なアプリのみ）。' },
+    // Cloudflare Pages（独自ドメイン接続を使うアプリのみ・CI用）
+    { name: 'CLOUDFLARE_API_TOKEN', file: ['CLOUDFLARE_API_TOKEN.txt'], encode: 'text', required: false,
+      note: 'CI（GitHub Actions）でのCloudflare Pagesデプロイ・ドメイン接続用。ローカル初回セットアップは' +
+        ' wrangler login のOAuthを使うため不要（cloudflare-auth.mjs）。失効時は' +
+        ' _docs/cloudflare-workers-token-expiry-knowledge-base.md 参照。' },
   ];
 }
 

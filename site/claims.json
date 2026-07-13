@@ -1,0 +1,41 @@
+{
+  "_README": "LP(site/index.html)が訴求する各機能の唯一の正本。scripts/verify-claims-coverage.mjs がここを見て、level:auto の claim に対応するスクリプトが実在し --dry-run が緑であることを検証する。LPに機能を追記する前に、まずここに claim を足すこと。",
+  "claims": [
+    {
+      "id": "cloudflare-domain-connect",
+      "label": "独自ドメインをCloudflare Pagesへワンコマンドで接続",
+      "level": "auto",
+      "verify": "templates/scripts/connect-domain.mjs"
+    },
+    {
+      "id": "cloudflare-auth",
+      "label": "Cloudflareへのログインはブラウザでワンクリック（トークンのコピペ不要）",
+      "level": "auto",
+      "verify": "templates/scripts/cloudflare-auth.mjs"
+    },
+    {
+      "id": "store-submission",
+      "label": "iOS/Android/Chrome拡張のストア提出まで自動で進む（審査の合否・最後の一押しは人間）",
+      "level": "assisted",
+      "verify": null
+    },
+    {
+      "id": "apple-developer-registration",
+      "label": "Apple Developer Program登録（年会費・2FA）",
+      "level": "manual",
+      "verify": null
+    },
+    {
+      "id": "google-play-console-registration",
+      "label": "Google Play Console登録",
+      "level": "manual",
+      "verify": null
+    },
+    {
+      "id": "domain-purchase",
+      "label": "独自ドメインの購入（決済）",
+      "level": "manual",
+      "verify": null
+    }
+  ]
+}
