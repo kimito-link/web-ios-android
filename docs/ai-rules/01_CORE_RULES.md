@@ -29,6 +29,10 @@
 ## 5. セキュリティ原則
 
 - トークンやシークレットをソース・ログ・プロンプトに出力しない
+- 環境変数の中身を確認したいときも `grep`/`cat` で値そのものを出力しない。存在確認だけに留める
+  （例: `${VAR:+yes}` 形式）。新しい値を受け取ったら、それ以降のログ・コマンド出力に生の値を
+  極力残さない（Cloudflare/Vercel/GitHub/Stripe等どの認証トークンにも共通。実例は
+  [`_docs/cloudflare-workers-token-expiry-knowledge-base.md`](../../_docs/cloudflare-workers-token-expiry-knowledge-base.md)参照）
 - 入力値検証、XSS/SQLi/CSRF 対策を実装前提にする
 - 本番デバッグコードや不要ログを残さない
 
