@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; max-width: 100%; }
     body {
       font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
       background: #f7f7fb;
@@ -25,10 +26,19 @@
       top: 0;
       z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
     }
-    header a.logo-link { display: flex; align-items: center; }
+    header a.logo-link { display: flex; align-items: center; flex-shrink: 0; }
     header img.logo { height: 40px; }
-    header nav { margin-left: auto; display: flex; gap: 4px; }
+    header nav {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    header nav::-webkit-scrollbar { display: none; }
     header nav a {
       color: #555;
       text-decoration: none;
@@ -37,6 +47,7 @@
       padding: 7px 14px;
       border-radius: 8px;
       white-space: nowrap;
+      flex-shrink: 0;
       transition: background 0.15s, color 0.15s;
     }
     header nav a:hover { background: #f0f0ff; color: #667eea; }
@@ -500,6 +511,32 @@
     }
     footer a { color: #f6c90e; text-decoration: none; margin: 0 10px; }
 
+    /* ── ひとことで言うと（旧インラインstyle） ── */
+    .hint-box { max-width: 680px; margin: 0 auto 28px; padding: 18px 20px; background: #fffbe8; border: 2px solid #f6c90e; border-radius: 16px; }
+    .hint-head { text-align: center; font-size: 1.05rem; font-weight: 900; color: #1a1a2e; margin-bottom: 10px; }
+    .hint-row { display: flex; align-items: flex-start; gap: 12px; }
+    .hint-char { width: 52px; flex-shrink: 0; }
+    .hint-body { background: #fff; border-radius: 14px; padding: 12px 16px; font-size: 0.95rem; color: #333; line-height: 1.7; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .hint-body .accent { color: #c77800; }
+    .hint-body .note { font-size: 0.88rem; color: #666; }
+
+    /* ── ⑤⑥「おまけ・安心材料」の視覚区別 ── */
+    .steps-head-sub { text-align: center; font-size: 0.9rem; color: #8a7ab5; font-weight: 700; margin: 28px 0 12px; }
+    .step-bonus { border: 2px dashed #d8cdf0; }
+    .badge-bonus { display: inline-block; background: #f3ecfd; color: #7c5cbf; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-left: 8px; }
+
+    /* ── もっと知りたい：グループ見出し ── */
+    .more-group-head { font-size: 0.78rem; font-weight: 800; color: #999; margin: 4px 2px 2px; letter-spacing: 0.02em; }
+    .more-group-head:first-child { margin-top: 0; }
+
+    /* ── イラスト背景バリエーション（旧インラインstyle） ── */
+    .illust-col { flex-direction: column; gap: 12px; }
+    .illust-yellow { background: #fff8e1; flex-direction: column; align-items: stretch; gap: 10px; }
+    .illust-green  { background: #e8f5e9; }
+    .illust-blue   { background: #e3f2fd; flex-direction: column; gap: 10px; align-items: stretch; }
+    .illust-orange { background: #fff3e0; flex-direction: column; gap: 10px; align-items: stretch; }
+    .pill-mini { background: white; border-radius: 8px; padding: 5px 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
     /* ── レスポンシブ（タブレット以下） ── */
     @media (max-width: 900px) {
       .hero-inner { flex-direction: column; text-align: center; gap: 24px; }
@@ -575,15 +612,15 @@
 
 <!-- ステップ -->
 <div class="main-wrap">
-  <div style="max-width:680px; margin:0 auto 28px; padding:18px 20px; background:#fffbe8; border:2px solid #f6c90e; border-radius:16px;">
-    <div style="text-align:center; font-size:1.05rem; font-weight:900; color:#1a1a2e; margin-bottom:10px;">💡 ひとことで言うと？</div>
-    <div style="display:flex; align-items:flex-start; gap:12px;">
-      <img src="images/link-smile.png" alt="りんく" style="width:52px; flex-shrink:0;">
-      <div style="background:#fff; border-radius:14px; padding:12px 16px; font-size:0.95rem; color:#333; line-height:1.7; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+  <div class="hint-box">
+    <div class="hint-head">💡 ひとことで言うと？</div>
+    <div class="hint-row">
+      <img src="images/link-smile.png" alt="りんく" class="hint-char">
+      <div class="hint-body">
         りんく：「<strong>アプリを作るアプリ</strong>…じゃないよ！<br>
-        アプリを<strong style="color:#c77800;">お店（App Store とか）に出すときの、めんどくさい手続き</strong>を、
+        アプリを<strong class="accent">お店（App Store とか）に出すときの、めんどくさい手続き</strong>を、
         AIが代わりにやってくれる仕組みなんだ。<br>
-        <span style="font-size:0.88rem; color:#666;">きみは『どんなアプリにしたいか』を考えるだけ。手続きはほとんどおまかせ（最初の登録と、最後の送信ボタンだけ自分で）！</span>」
+        <span class="note">きみは『どんなアプリにしたいか』を考えるだけ。手続きはほとんどおまかせ（最初の登録と、最後の送信ボタンだけ自分で）！</span>」
       </div>
     </div>
   </div>
@@ -641,8 +678,8 @@
           <span>りんく</span>
         </div>
       </div>
-      <div class="illust" style="flex-direction:column; gap:12px;">
-        <a href="download/web-ios-android-template.zip" class="step-dl-btn">⬇ ZIPをダウンロード</a>
+      <div class="illust illust-col">
+        <a href="download/web-ios-android-template.zip" class="step-dl-btn">⬇ 上と同じZIPをここでもダウンロード</a>
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <div class="ill-box"><span class="ill-icon">📦</span>届く</div>
           <div class="ill-arr">→</div>
@@ -671,9 +708,9 @@
           <span>こん太</span>
         </div>
       </div>
-      <div class="illust" style="background:#fff8e1; flex-direction:column; align-items:stretch; gap:10px;">
+      <div class="illust illust-yellow">
         <div style="text-align:center; font-size:0.8rem; color:#888; font-weight:700;">📄 メモ帳で開いて書き換えるだけ</div>
-        <div style="background:white; border-radius:10px; padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.08); font-size:0.9rem; display:flex; align-items:center; gap:10px;">
+        <div class="pill-mini" style="font-size:0.9rem; display:flex; align-items:center; gap:10px;">
           <span style="font-size:1.4rem;">📱</span>
           <span style="color:#555;">アプリの名前</span>
           <span style="margin-left:auto; color:#e65100; font-weight:700;">✏️ 書く</span>
@@ -704,7 +741,7 @@
           <span>たぬ姉</span>
         </div>
       </div>
-      <div class="illust" style="background:#e8f5e9;">
+      <div class="illust illust-green">
         <div class="ill-chat">
           <div class="chat-title">🤖 こう言うだけ！</div>
           <div class="ill-msg user">このフォルダ、セットアップして！</div>
@@ -735,7 +772,7 @@
           <span>りんく</span>
         </div>
       </div>
-      <div class="illust" style="background:#e3f2fd; flex-direction:column; gap:10px; align-items:stretch;">
+      <div class="illust illust-blue">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
           <div class="fbox hi"><span class="fi">📤</span>送信</div>
           <div class="farr">→</div>
@@ -744,9 +781,9 @@
           <div class="fbox ok"><span class="fi">✅</span>完成！</div>
         </div>
         <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; font-size:0.78rem; color:#555;">
-          <span style="background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">🍎 iPhoneのお店へ</span>
-          <span style="background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">▶ Androidのお店へ</span>
-          <span style="background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">🌐 Webサイトへ</span>
+          <span class="pill-mini">🍎 iPhoneのお店へ</span>
+          <span class="pill-mini">▶ Androidのお店へ</span>
+          <span class="pill-mini">🌐 Webサイトへ</span>
         </div>
         <div style="text-align:center; font-size:0.75rem; color:#aaa;">4つぜんぶ、提出まで進みます</div>
       </div>
@@ -756,24 +793,29 @@
         iPhoneアプリ・Androidアプリ・Webサイト・Chrome拡張が<br>
         自動でつくられて、それぞれのお店に提出されます。
         <div class="tip">⏳ お店の人（審査員）が確認するのに数日かかります。OKが出たら公開。<br>
-        Androidの「審査用に送信」は人間のボタンが必要な場合があります。iOS の配信地域はキットが <b>175か国を API 自動設定</b>（任意で ASC 画面確認）。詳しくは <a href="walkthrough/ios/" style="color:#667eea; font-weight:700;">App Store 追体験</a> ／ <a href="troubleshooting/" style="color:#667eea; font-weight:700;">つまずいたら</a>。</div>
+        Androidの「審査用に送信」は人間のボタンが必要な場合があります。iOSの配信地域は、世界のほぼ全部の国・地域を自動で設定します（あとでApp Store Connectの画面で確認もできます）。詳しくは <a href="walkthrough/ios/" style="color:#667eea; font-weight:700;">App Store 追体験</a> ／ <a href="troubleshooting/" style="color:#667eea; font-weight:700;">つまずいたら</a>。</div>
       </div>
     </div>
 
-    <!-- ⑤ 却下されても自動で立て直す -->
-    <div class="step">
+    </div><!-- /steps-grid（①〜④） -->
+
+    <div class="steps-head-sub">※ここから先は「やらなくていいけど、知っておくと安心」な話です</div>
+    <div class="steps-grid">
+
+    <!-- ⑤ 却下されても自動で立て直す（おまけ） -->
+    <div class="step step-bonus">
       <div class="step-top">
-        <div class="step-circle">⑤</div>
+        <div class="step-circle">🛡️</div>
         <div class="step-main">
-          <h3>もし「却下」されても、自動で立て直す</h3>
+          <h3>もし「却下」されても、自動で立て直す<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
           <p class="one-line">却下理由をログから特定 → 直して → 再申請まで自動</p>
         </div>
         <div class="step-char">
-          <img src="images/link-smile.png" alt="りんく">
-          <span>りんく</span>
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
         </div>
       </div>
-      <div class="illust" style="background:#fff3e0; flex-direction:column; gap:10px; align-items:stretch;">
+      <div class="illust illust-orange">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
           <div class="fbox"><span class="fi">❌</span>却下</div>
           <div class="farr">→</div>
@@ -794,20 +836,20 @@
       </div>
     </div>
 
-    <!-- ⑥ アプリが自分でけんこう診断を出す(計器の思想) -->
-    <div class="step">
+    <!-- ⑥ アプリが自分でけんこう診断を出す（おまけ） -->
+    <div class="step step-bonus">
       <div class="step-top">
-        <div class="step-circle">⑥</div>
+        <div class="step-circle">🩺</div>
         <div class="step-main">
-          <h3>できたアプリは、自分で「けんこう診断」を出す</h3>
+          <h3>できたアプリは、自分で「けんこう診断」を出す<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
           <p class="one-line">調子が悪いとき、あなたが説明しなくてもAIが自分で調べて直せる</p>
         </div>
         <div class="step-char">
-          <img src="images/link-smile.png" alt="りんく">
-          <span>りんく</span>
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
         </div>
       </div>
-      <div class="illust" style="background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;">
+      <div class="illust illust-green" style="flex-direction:column; gap:10px; align-items:stretch;">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
           <div class="fbox"><span class="fi">🤒</span>なんか<br>おかしい</div>
           <div class="farr">→</div>
@@ -821,15 +863,15 @@
       </div>
       <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
       <div class="step-detail">
-        このキットで作るアプリには「計器」が入ります。<br>
+        このキットで作るアプリには「体調メモ」の仕組みが入ります。<br>
         アプリが自分の調子（何件処理した・何秒かかった・どこで失敗した）を<br>
         数字でメモしてくれるので、不具合のときあなたが状況を説明しなくても、<br>
         AIがそのメモを読んで原因を特定し、修正まで進められます。
-        <div class="tip">💡 実例：ある配信ツールで「診断画面が固まる」不具合を、計器の数字だけで原因特定→修正し、表示にかかる時間が <b>817秒 → 0.005秒</b> になりました。人間がやったのは最後の再読み込みボタン1回だけ。仕組みの正体は <code>docs/ai-rules/04_SELF_VERIFICATION.md</code>（AIが読む用）にあります。</div>
+        <div class="tip">💡 実例：ある配信ツールで「診断画面が固まる」不具合を、この体調メモの数字だけで原因特定。読み込みが817秒（約14分）もかかっていた原因を突き止め、0.005秒まで直した実績があります。人間がやったのは最後の再読み込みボタン1回だけ。仕組みの正体は <code>docs/ai-rules/04_SELF_VERIFICATION.md</code>（AIが読む用）にあります。</div>
       </div>
     </div>
 
-  </div><!-- /steps-grid -->
+  </div><!-- /steps-grid（⑤⑥） -->
 </div><!-- /main-wrap -->
 
 <!-- 下段：もっと知りたい ＋ 自動リスト -->
@@ -838,6 +880,7 @@
   <div>
     <div style="font-size:1rem; font-weight:900; margin-bottom:14px;">📚 もっと知りたい方へ</div>
     <div class="more-cards">
+      <div class="more-group-head">実際の画面で追体験する</div>
       <a href="walkthrough/" class="more-card">
         <div class="mc-icon">📷</div>
         <div>
@@ -866,11 +909,13 @@
           <p>OAuth 初回セットアップ → 以降 zip + publish の2コマンド。キャプチャ5枚付き</p>
         </div>
       </a>
-      <a href="learnings/" class="more-card">
-        <div class="mc-icon">📚</div>
+
+      <div class="more-group-head">始める前に読んでおく</div>
+      <a href="guide/" class="more-card">
+        <div class="mc-icon">📋</div>
         <div>
-          <h4>実証知見まとめ</h4>
-          <p>健康診断アプリで iOS/Android/Chrome 申請まで通した知見・Secrets 一覧</p>
+          <h4>はじめる前の準備</h4>
+          <p>Apple・Googleへの開発者登録のしかた</p>
         </div>
       </a>
       <a href="howto/" class="more-card">
@@ -880,13 +925,15 @@
           <p>GitHub・Vercel・ドメインって何？<br>画面つきでわかりやすく説明します</p>
         </div>
       </a>
-      <a href="guide/" class="more-card">
-        <div class="mc-icon">📋</div>
+      <a href="story/" class="more-card">
+        <div class="mc-icon">📖</div>
         <div>
-          <h4>はじめる前の準備</h4>
-          <p>Apple・Googleへの開発者登録のしかた</p>
+          <h4>完成ものがたり</h4>
+          <p>このキットが「5年後に楽できるレベル」になるまでの作り直し記録を、3人のゆっくりが追体験</p>
         </div>
       </a>
+
+      <div class="more-group-head">困ったとき・知っておくこと</div>
       <a href="troubleshooting/" class="more-card">
         <div class="mc-icon">🩹</div>
         <div>
@@ -898,7 +945,14 @@
         <div class="mc-icon">💴</div>
         <div>
           <h4>アプリ課金の税務手続き</h4>
-          <p>米国源泉徴収（W-8BEN）と銀行受取。30%→0%の正しいやり方</p>
+          <p>もし将来アプリ内課金や有料アプリで収益が出たら関係してくる話です。米国源泉徴収（W-8BEN）と銀行受取。30%→0%の正しいやり方</p>
+        </div>
+      </a>
+      <a href="learnings/" class="more-card">
+        <div class="mc-icon">📚</div>
+        <div>
+          <h4>実証知見まとめ</h4>
+          <p>健康診断アプリで iOS/Android/Chrome 申請まで通した知見・Secrets 一覧</p>
         </div>
       </a>
     </div>
