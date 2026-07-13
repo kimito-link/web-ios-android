@@ -81,6 +81,34 @@ if (isPlaceholder(packageName)) {
 // --- Chrome(参考表示のみ) ---
 console.log('  -    Chrome: 初回アイテム作成は API で存在確認不可(手動)。docs/CHROME-WEBSTORE.md 参照');
 
+// --- Cloudflare Pages 独自ドメイン接続(設定している場合のみ) ---
+const customDomain = cfg.web?.deploy?.customDomain;
+const cfProjectName = cfg.web?.deploy?.projectName;
+if (isPlaceholder(customDomain)) {
+  skip('Cloudflareドメイン接続: web.deploy.customDomain 未設定(独自ドメインを使わないアプリ)');
+} else if (!process.env.CLOUDFLARE_API_TOKEN) {
+  skip('Cloudflareドメイン接続: CLOUDFLARE_API_TOKEN が無い(ローカルはwrangler loginで代替)');
+} else if (isPlaceholder(cfProjectName)) {
+  bad('Cloudflareドメイン接続: customDomain はあるが web.deploy.projectName が未設定');
+} else {
+  try {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/pages/projects/${encodeURIComponent(cfProjectName)}/domains/${encodeURIComponent(customDomain)}`,
+      { headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` } },
+    );
+    const body = await res.json().catch(() => null);
+    if (res.ok && body?.result?.status === 'active') {
+      ok(`Cloudflareドメイン接続 実在・有効: ${customDomain}`);
+    } else if (res.ok) {
+      bad(`Cloudflareドメイン接続 未完了(状態: ${body?.result?.status || '不明'}): ${customDomain}。connect-domain.mjs を再実行`);
+    } else {
+      bad(`Cloudflareドメイン接続が見つからない (${customDomain})。connect-domain.mjs を実行してください`);
+    }
+  } catch (e) {
+    bad(`Cloudflareドメイン接続の確認でエラー: ${e.message}`);
+  }
+}
+
 console.log('');
 if (failed > 0) {
   console.error(`確認失敗: ${failed} 件。手動GUIタスクが未完の可能性があります。`);

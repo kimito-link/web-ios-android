@@ -121,6 +121,24 @@
       }
     },
 
+    "web": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Web公開に関する追加設定。省略可(Vercel Git連携デプロイのみで完結する場合は不要)",
+      "properties": {
+        "deploy": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "独自ドメインをCloudflare Pagesに接続する場合の設定。templates/scripts/connect-domain.mjs が読む",
+          "properties": {
+            "provider": { "type": "string", "enum": ["cloudflare-pages"] },
+            "projectName": { "type": "string", "description": "Cloudflare Pagesのプロジェクト名" },
+            "customDomain": { "type": ["string", "null"], "format": "hostname", "description": "接続する独自ドメイン。未設定ならnull" }
+          }
+        }
+      }
+    },
+
     "siblingServices": {
       "type": "array",
       "description": "同じブランド/オーナーが運営する姉妹サービス。各サイトに相互導線カードを出すための SSOT。方式A(Clerk インスタンス共有)で sharedAccount=true なら『同じアカウントでそのまま使える(登録不要)』を訴求できる",

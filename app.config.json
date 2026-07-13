@@ -66,5 +66,14 @@
     "githubRepo": "<このアプリのリポジトリ名>",
     "vercelTeamSlug": "<Vercelのチーム名>",
     "vercelProjectName": "<Vercelのプロジェクト名>"
+  },
+
+  "web": {
+    "_note": "独自ドメインをCloudflare Pagesに接続したい場合だけ書く。Vercel Git連携だけで公開するなら省略可。",
+    "deploy": {
+      "provider": "cloudflare-pages",
+      "projectName": "<Cloudflare Pagesのプロジェクト名>",
+      "customDomain": null
+    }
   }
 }

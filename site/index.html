@@ -525,6 +525,16 @@
     .step-bonus { border: 2px dashed #d8cdf0; }
     .badge-bonus { display: inline-block; background: #f3ecfd; color: #7c5cbf; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-left: 8px; }
 
+    /* ── できること表（claims.json由来） ── */
+    .claims-box { max-width: 680px; margin: 0 auto 0; background: white; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 20px 22px; }
+    .claims-title { text-align: center; font-size: 1.05rem; font-weight: 900; color: #1a1a2e; margin-bottom: 14px; }
+    .claim-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; margin-bottom: 5px; background: #fafafa; }
+    .claim-badge { font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; flex-shrink: 0; white-space: nowrap; }
+    .claim-badge-auto { background: #e8f5e9; color: #2e7d32; }
+    .claim-badge-assisted { background: #e3f2fd; color: #1565c0; }
+    .claim-badge-manual { background: #fff3e0; color: #e65100; }
+    .claim-label { font-size: 0.83rem; color: #333; }
+
     /* ── もっと知りたい：グループ見出し ── */
     .more-group-head { font-size: 0.78rem; font-weight: 800; color: #999; margin: 4px 2px 2px; letter-spacing: 0.02em; }
     .more-group-head:first-child { margin-top: 0; }
@@ -872,6 +882,34 @@
     </div>
 
   </div><!-- /steps-grid（⑤⑥） -->
+
+  <div class="claims-box">
+    <div class="claims-title">🔍 できること・できないこと（正直に）</div>
+    <div class="claim-row" data-claim="cloudflare-domain-connect">
+      <span class="claim-badge claim-badge-auto">✅ 自動</span>
+      <span class="claim-label">独自ドメインをCloudflare Pagesへワンコマンドで接続</span>
+    </div>
+    <div class="claim-row" data-claim="cloudflare-auth">
+      <span class="claim-badge claim-badge-auto">✅ 自動</span>
+      <span class="claim-label">Cloudflareへのログインはブラウザでワンクリック（トークンのコピペ不要）</span>
+    </div>
+    <div class="claim-row" data-claim="store-submission">
+      <span class="claim-badge claim-badge-assisted">🤝 一緒に</span>
+      <span class="claim-label">iOS/Android/Chrome拡張のストア提出まで自動で進む（審査の合否・最後の一押しは人間）</span>
+    </div>
+    <div class="claim-row" data-claim="apple-developer-registration">
+      <span class="claim-badge claim-badge-manual">✋ あなたの作業（初回のみ・目安10分）</span>
+      <span class="claim-label">Apple Developer Program登録（年会費・2FA）</span>
+    </div>
+    <div class="claim-row" data-claim="google-play-console-registration">
+      <span class="claim-badge claim-badge-manual">✋ あなたの作業（初回のみ・目安10分）</span>
+      <span class="claim-label">Google Play Console登録</span>
+    </div>
+    <div class="claim-row" data-claim="domain-purchase">
+      <span class="claim-badge claim-badge-manual">✋ あなたの作業（目安3分）</span>
+      <span class="claim-label">独自ドメインの購入（決済）</span>
+    </div>
+  </div>
 </div><!-- /main-wrap -->
 
 <!-- 下段：もっと知りたい ＋ 自動リスト -->

@@ -1,0 +1,61 @@
+# 【金型テンプレート】Cloudflare Pages 独自ドメイン接続ワークフロー（GitHub Actions 版）
+#
+# 移植元: なし（web-ios-android キット新規実装。設計: _docs/DESIGN-lp-first-domain-connect-2026-07-13.md）
+#
+# - `npm run build` の出力（既定 `dist/`）を Cloudflare Pages にデプロイし、
+#   app.config.json の web.deploy.customDomain が設定されていれば独自ドメインを接続する。
+# - このキットの既定Webデプロイ手段は Vercel（Git連携の自動デプロイ）。本ワークフローは
+#   Cloudflare Pages を選ぶ案件のみで使う（Vercel運用のアプリには不要・追加しない）。
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/deploy-web.yml` にコピー。
+# 2. 下の <...> プレースホルダを app.config.json の値で置換する:
+#      <BUILD_DIR>  = ビルド出力ディレクトリ（既定 dist。Next.js の静的出力等に合わせて変更）
+# 3. 下の「必要な Secrets」を登録（bootstrap-secrets.mjs 経由でも可）。
+# 4. app.config.json の web.deploy に provider/projectName/customDomain を設定。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   CLOUDFLARE_API_TOKEN   Cloudflare Pages編集権限のAPIトークン
+#                          （ローカル初回セットアップは wrangler login のOAuthを使うため不要。
+#                            CI用のみこのSecretsが要る）
+#
+# - トークン失効時の症状・再発行手順: _docs/cloudflare-workers-token-expiry-knowledge-base.md
+name: deploy-web
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify Cloudflare authentication
+        run: node scripts/cloudflare-auth.mjs --ci
+
+      - name: Deploy to Cloudflare Pages
+        run: node scripts/deploy-cloudflare-pages.mjs --dir "<BUILD_DIR>"
+
+      - name: Connect custom domain (if configured)
+        run: node scripts/connect-domain.mjs
