@@ -139,6 +139,20 @@
       }
     },
 
+    "lineBot": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "LINE公式アカウントでAI応答するbotの設定。省略可(LINE bot自体を作らないなら不要)。実体は templates/line-bot/",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "trueならLINE bot機能を有効化(templates/line-bot/を使う)" },
+        "botCharacterName": { "type": "string", "description": "LINE上で応答するキャラクター名(persona.mdに反映)" },
+        "cloudflareAccountId": { "type": ["string", "null"], "description": "wrangler.toml の account_id" },
+        "cloudflareD1DatabaseId": { "type": ["string", "null"], "description": "`wrangler d1 create` 後に控えるD1データベースID" },
+        "llmProvider": { "type": "string", "enum": ["groq"], "description": "現状groqのみ対応(無料枠優先・fail-closed設計)" },
+        "dailyCallBudget": { "type": "integer", "minimum": 1, "description": "LLM呼び出しの日次上限(無料枠監視)" }
+      }
+    },
+
     "siblingServices": {
       "type": "array",
       "description": "同じブランド/オーナーが運営する姉妹サービス。各サイトに相互導線カードを出すための SSOT。方式A(Clerk インスタンス共有)で sharedAccount=true なら『同じアカウントでそのまま使える(登録不要)』を訴求できる",

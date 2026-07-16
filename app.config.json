@@ -75,5 +75,15 @@
       "projectName": "<Cloudflare Pagesのプロジェクト名>",
       "customDomain": null
     }
+  },
+
+  "lineBot": {
+    "_note": "LINE公式アカウントでAI社員と会話できるbotを作る場合だけ書く。enabled:trueにして templates/line-bot/ をコピー。作らないなら省略可(enabled:false扱い)。",
+    "enabled": false,
+    "botCharacterName": "<LINE上で応答するキャラクター名 例: りんく>",
+    "cloudflareAccountId": null,
+    "cloudflareD1DatabaseId": null,
+    "llmProvider": "groq",
+    "dailyCallBudget": 800
   }
 }

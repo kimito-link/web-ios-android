@@ -24,6 +24,7 @@
 | `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
 | `web/` | **Web→アプリDL導線**(公式バッジ取得・UA出し分け・Smart App Banner・CSS)。詳細は [`web/README.md`](web/README.md) | `{{ascAppId}}`/`{{playPackageName}}`/`{{productionUrl}}`/`{{primaryColor}}`/`{{accentColor}}` を置換 |
 | `stripe-checkout-email/` | **Stripe決済→購入完了メール送信**(Cloudflare Pages Functions + Resend)。買い切り課金の物販/ツール系で使用。詳細は [`stripe-checkout-email/README.md`](stripe-checkout-email/README.md) | `{{downloadUrl}}`等多数を置換(README参照)。クロスセル導線はコメントアウトのオプションブロック |
+| `line-bot/` | **LINE公式アカウントでAI社員と会話できるbot**(Cloudflare Workers + D1、GROQ AI応答、fail-closed設計)。詳細は [`line-bot/README.md`](line-bot/README.md) | `{{shortName}}`/`{{cloudflareAccountId}}`/`{{cloudflareD1DatabaseId}}`等を置換。`knowledge-pack/persona.md`はキャラごとに書き換え。`app.config.json`の`lineBot.enabled`をtrueに |
 | `scripts/generate-privacy-page.mjs` | プライバシーポリシーHTML生成(健康/Play 審査で必須の公開URL)。API非依存・静的生成のため陳腐化しない | **無改変**(app.config.json 駆動) |
 | `scripts/asc-create-profile.mjs` | App Store 用 Provisioning Profile を ASC API で作成(Developer Portal 手動不要)。`CERT_SERIAL` で Secret の .cer に一致する証明書を選ぶ(複数証明書の不一致=Export IPA 失敗を防ぐ)。先頭ゼロ無視のシリアル比較 | **無改変**(env 駆動。詳細は `_docs/FIRST-SUBMISSION-blockers.md` B4) |
 | `scripts/asc-set-content-rights.mjs` | app の `contentRightsDeclaration` を API 設定(初回提出の必須・ASC UI では効かないことがある) | **無改変**(app.config.json `stores.contentRights` 駆動。同 B7) |

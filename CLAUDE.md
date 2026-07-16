@@ -56,6 +56,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **Web→アプリDL導線 知見KB** | `_docs/web-to-app-install-best-practices.md` | `Exosome`（ディープリサーチ確証分） |
 | **Clerk X OAuth ログイン無人E2E検証 KB** | `_docs/clerk-x-oauth-e2e-verification-playbook.md`（ログイン判定偽陽性・1タップ導線URL食い違い・タイムアウト時証跡収集・Windows spawn罠・Xレート制限、の5事故と直し方） | `surechigai-romi-link` 2026-07-04実戦 |
 | **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
+| **LINE公式アカウントAI社員bot** | `templates/line-bot/`（Cloudflare Workers + D1、GROQ AI応答。fail-closed設計・詳細は同梱README）。移植判断は [`_docs/LINE-BOT-EXTRACTION-NOTES.md`](_docs/LINE-BOT-EXTRACTION-NOTES.md) | `line-harness-oss`（ai-shain.link実運用分。CRM機能を除去し単一アプリ用に最小化） |
 | **知見の書き戻しルール** | [`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) — 却下対応・初見エラーの解決を、次のアプリのAIが読み返せる形でKBに追記する手順 | — |
 
 > ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。

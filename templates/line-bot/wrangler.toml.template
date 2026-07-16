@@ -1,0 +1,16 @@
+name = "{{shortName}}-line"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "{{cloudflareAccountId}}"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "{{shortName}}-line-db"
+database_id = "{{cloudflareD1DatabaseId}}"
+
+# ⚠️ [vars] はこのファイルに置かない。手動 `wrangler deploy` のたびに
+# 開発用プレースホルダーで本番を上書きする実障害が起きた(line-harness-oss実戦)。
+# LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET / GROQ_API_KEY は
+# 必ず `wrangler secret put` で投入し、デプロイは GitHub Actions 経由に統一する。

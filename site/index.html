@@ -914,7 +914,39 @@
       </div>
     </div>
 
-  </div><!-- /steps-grid（⑤⑥⑦） -->
+    <!-- ⑧ LINEでAI社員と会話できる（おまけ） -->
+    <div class="step step-bonus">
+      <div class="step-top">
+        <div class="step-circle">💬</div>
+        <div class="step-main">
+          <h3>LINEで、あなたのAI社員と会話できるようにする<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">ユーザーがLINEで話しかけると、キャラクターの人格でAIが自動で返信</p>
+        </div>
+        <div class="step-char">
+          <img src="images/link-smile.png" alt="りんく">
+          <span>りんく</span>
+        </div>
+      </div>
+      <div class="illust illust-green">
+        <div class="ill-chat">
+          <div class="chat-title">💬 LINEでこんな会話ができる</div>
+          <div class="ill-msg user">使い方教えて</div>
+          <div class="ill-msg ai">今日も1日お疲れさまでした！何かお手伝いできることがあれば教えてくださいね。</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        アプリに専用のLINE公式アカウントを持たせ、ユーザーが話しかけると
+        キャラクター（人格・トーンはあなたが決める）でAIが自動返信します。
+        よくある質問はキャッシュと定型応答で無料枠内に収め、答えられない相談は
+        「担当者確認が必要です」と正直に伝えて人間に引き継ぎます（誇張表現やできない約束はしません）。
+        <div class="tip">💡 エラーや予期しない不具合が起きても、絶対に無言のままにしない設計（fail-closed）。
+        「何を送っても反応がない」という一番気づきにくい壊れ方を防ぎます。実体は
+        <code>templates/line-bot/</code>（LINE公式アカウントの人格・応答ロジックの金型。CRM機能などの複雑な部分は含まない、会話に特化した最小構成）。</div>
+      </div>
+    </div>
+
+  </div><!-- /steps-grid（⑤⑥⑦⑧） -->
 
   <div class="claims-box">
     <div class="claims-title">🔍 できること・できないこと（正直に）</div>

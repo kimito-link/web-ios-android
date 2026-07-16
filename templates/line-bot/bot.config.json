@@ -1,0 +1,17 @@
+{
+  "llm": {
+    "provider": "groq",
+    "model": "llama-3.3-70b-versatile",
+    "maxOutputTokens": 500,
+    "timeoutMs": 10000,
+    "dailyCallBudget": 800
+  },
+  "cache": {
+    "enabled": true,
+    "ttlHours": 72
+  },
+  "retrieval": {
+    "topK": 3,
+    "minScore": 0.0
+  }
+}
