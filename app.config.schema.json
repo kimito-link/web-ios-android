@@ -148,7 +148,7 @@
         "botCharacterName": { "type": "string", "description": "LINE上で応答するキャラクター名(persona.mdに反映)" },
         "cloudflareAccountId": { "type": ["string", "null"], "description": "wrangler.toml の account_id" },
         "cloudflareD1DatabaseId": { "type": ["string", "null"], "description": "`wrangler d1 create` 後に控えるD1データベースID" },
-        "llmProvider": { "type": "string", "enum": ["groq"], "description": "現状groqのみ対応(無料枠優先・fail-closed設計)" },
+        "llmProvider": { "type": "string", "enum": ["groq"], "description": "1番手プロバイダ(無料枠優先・fail-closed設計)。実際はGroq→Gemini→Cloudflare Workers AIの3段フォールバックチェーン(templates/line-bot/bot.config.jsonのllm.chainで構成)" },
         "dailyCallBudget": { "type": "integer", "minimum": 1, "description": "LLM呼び出しの日次上限(無料枠監視)" }
       }
     },

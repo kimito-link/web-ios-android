@@ -32,4 +32,5 @@ jobs:
 #   npx wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
 #   npx wrangler secret put LINE_CHANNEL_SECRET
 #   npx wrangler secret put GROQ_API_KEY
+#   npx wrangler secret put GEMINI_API_KEY   # 無応答ゼロ化チェーンの2番手。任意だが強く推奨
 # GitHub Secrets に CLOUDFLARE_API_TOKEN を登録すること。

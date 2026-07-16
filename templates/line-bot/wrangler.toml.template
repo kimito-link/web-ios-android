@@ -10,7 +10,14 @@ binding = "DB"
 database_name = "{{shortName}}-line-db"
 database_id = "{{cloudflareD1DatabaseId}}"
 
+# 無応答ゼロ化チェーンの3番手（2026-07-17追加）。Worker内バインディングなので
+# 外部ネットワークegressが無く、Groq/Geminiの障害から独立している。
+[ai]
+binding = "AI"
+
 # ⚠️ [vars] はこのファイルに置かない。手動 `wrangler deploy` のたびに
 # 開発用プレースホルダーで本番を上書きする実障害が起きた(line-harness-oss実戦)。
-# LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET / GROQ_API_KEY は
+# LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET / GROQ_API_KEY / GEMINI_API_KEY は
 # 必ず `wrangler secret put` で投入し、デプロイは GitHub Actions 経由に統一する。
+# GEMINI_API_KEY は無応答ゼロ化チェーンの2番手（未設定でも動くが、Groq障害時の
+# フォールバックが効かなくなる。Google AI StudioでAPIキーを無料発行できる）。
