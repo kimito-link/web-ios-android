@@ -27,6 +27,13 @@
     .learn { display: block; margin-top: 24px; padding: 18px 20px; background: linear-gradient(135deg,#1976d2,#0d47a1); color: #fff; border-radius: 16px; text-decoration: none; text-align: center; }
     .learn b { display: block; font-size: 1.05em; margin-bottom: 4px; }
     .learn span { font-size: .88em; opacity: .92; }
+
+    /* サイト共通フッター（全ページどこからでも主要ページに1クリックで行ける） */
+    .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; }
+    .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+    .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
+    .site-footer-links a:hover { text-decoration: underline; }
+    .site-footer-copy { font-size: .78em; color: #9aa3b0; }
   </style>
 </head>
 <body>
@@ -60,6 +67,19 @@
       <b>📚 実証で得た知見まとめ</b>
       <span>App Privacy API 404・配信地域 175/175 自動化・Codex 並行・アイコン差し替え再提出 など</span>
     </a>
+
+    <footer class="site-footer">
+      <div class="site-footer-links">
+        <a href="../">🏠 トップ</a>
+        <a href="../howto/">🖼️ ゆっくり解説</a>
+        <a href="../story/">📖 完成ものがたり</a>
+        <a href="../guide/">📋 準備ガイド</a>
+        <a href="../troubleshooting/">🩹 つまずいたら</a>
+        <a href="../tax/">💴 課金の税務</a>
+        <a href="../line-bot/">💬 無応答ゼロ化</a>
+      </div>
+      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+    </footer>
   </div>
 </body>
 </html>

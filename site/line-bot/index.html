@@ -49,6 +49,13 @@
     .tag.provider1 { background: #eef1ff; color: #4a5ed6; }
     .tag.provider2 { background: #e8f5e9; color: #2e7d32; }
     .tag.provider3 { background: #f0f0f0; color: #555; }
+
+    /* サイト共通フッター（全ページどこからでも主要ページに1クリックで行ける） */
+    .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; }
+    .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+    .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
+    .site-footer-links a:hover { text-decoration: underline; }
+    .site-footer-copy { font-size: .78em; color: #9aa3b0; }
   </style>
 </head>
 <body>
@@ -173,14 +180,20 @@
       <p>くわしい手順は <code>templates/line-bot/README.md</code> を参照。</p>
     </div>
 
-    <h2>🔗 関連ページ</h2>
-    <div class="card">
-      <ul>
-        <li><a href="../troubleshooting/">🩹 つまずいたら</a> — 公開後によくある罠と直し方（ストア申請・配信全般）</li>
-        <li><a href="../learnings/">📚 実証知見まとめ</a> — 「1回で通す・止めない」という同じ思想をストア申請側に適用した記録</li>
-        <li><a href="../">🏠 トップにもどる</a></li>
-      </ul>
-    </div>
+    <footer class="site-footer">
+      <div class="site-footer-links">
+        <a href="../">🏠 トップ</a>
+        <a href="../howto/">🖼️ ゆっくり解説</a>
+        <a href="../story/">📖 完成ものがたり</a>
+        <a href="../guide/">📋 準備ガイド</a>
+        <a href="../troubleshooting/">🩹 つまずいたら</a>
+        <a href="../tax/">💴 課金の税務</a>
+        <a href="../walkthrough/">📷 追体験</a>
+        <a href="../learnings/">📚 実証知見まとめ</a>
+        <a href="./">💬 無応答ゼロ化</a>
+      </div>
+      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+    </footer>
   </div>
 </body>
 </html>

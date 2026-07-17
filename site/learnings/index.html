@@ -30,6 +30,13 @@
     th, td { border: 1px solid #e7eaf0; padding: 8px 10px; text-align: left; vertical-align: top; }
     th { background: #f3f6fa; }
     .char-icon { width: 26px; height: 26px; border-radius: 50%; vertical-align: middle; margin-right: 6px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+    /* サイト共通フッター（全ページどこからでも主要ページに1クリックで行ける） */
+    .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; }
+    .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+    .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
+    .site-footer-links a:hover { text-decoration: underline; }
+    .site-footer-copy { font-size: .78em; color: #9aa3b0; }
   </style>
 </head>
 <body>
@@ -127,7 +134,7 @@
         <li>再提出時は <code>playVersionCode</code> を必ず increment（例: 6→7）</li>
         <li>複数ブランド: <code>app.config.reverse-hack.json</code> + パッケージ別 assetlinks fingerprint</li>
       </ul>
-      <p>📷 画面付き手順 → <a href="walkthrough/ios/">iOS 追体験</a> ／ <a href="walkthrough/play/">Play 追体験</a></p>
+      <p>📷 画面付き手順 → <a href="../walkthrough/ios/">iOS 追体験</a> ／ <a href="../walkthrough/play/">Play 追体験</a></p>
       <div class="warn">
         <b>製品版だけの罠（2026-07 実証）</b>: 内部テストには無いが、<b>製品版（一般公開）を出すときは
         「配信国/地域」の選択が必須</b>。未選択だと赤字で「国または地域が選択されていません」と出て
@@ -148,7 +155,7 @@
         <li>以降: <code>build-zip.ps1</code> + <code>publish-cws.ps1</code> の2コマンド</li>
         <li>拡張は dns-osint リポ側で別管理（<code>chrome.enabled: false</code> パターン）</li>
       </ul>
-      <p>📷 手順 → <a href="walkthrough/chrome/">Chrome 追体験</a></p>
+      <p>📷 手順 → <a href="../walkthrough/chrome/">Chrome 追体験</a></p>
     </div>
 
     <h2>⚠️ 並行作業で起きたこと（Codex × Cursor）</h2>
@@ -227,11 +234,24 @@
 
     <h2>追体験ガイド</h2>
     <ul>
-      <li><a href="walkthrough/">追体験トップ（3プラットフォーム）</a></li>
-      <li><a href="walkthrough/ios/">iOS — 実画面キャプチャ付き</a></li>
-      <li><a href="walkthrough/play/">Android — 実画面キャプチャ付き</a></li>
-      <li><a href="walkthrough/chrome/">Chrome — 実画面キャプチャ付き</a></li>
+      <li><a href="../walkthrough/">追体験トップ（3プラットフォーム）</a></li>
+      <li><a href="../walkthrough/ios/">iOS — 実画面キャプチャ付き</a></li>
+      <li><a href="../walkthrough/play/">Android — 実画面キャプチャ付き</a></li>
+      <li><a href="../walkthrough/chrome/">Chrome — 実画面キャプチャ付き</a></li>
     </ul>
+
+    <footer class="site-footer">
+      <div class="site-footer-links">
+        <a href="../">🏠 トップ</a>
+        <a href="../howto/">🖼️ ゆっくり解説</a>
+        <a href="../story/">📖 完成ものがたり</a>
+        <a href="../guide/">📋 準備ガイド</a>
+        <a href="../troubleshooting/">🩹 つまずいたら</a>
+        <a href="../tax/">💴 課金の税務</a>
+        <a href="../line-bot/">💬 無応答ゼロ化</a>
+      </div>
+      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+    </footer>
   </div>
 </body>
 </html>
