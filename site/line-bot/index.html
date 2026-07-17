@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>無応答ゼロ化 — LINEのAI社員が「既読無視」しない仕組み | Kimito-Link</title>
+  <meta name="description" content="LINE公式アカウントのAI応答が1社の障害で無言化しないよう、Groq→Gemini→Cloudflare Workers AIの3段フォールバックで支え合う設計。実際に起きた障害と直し方を、人にもAIにも分かる形でまとめる。">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.85; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    h1 { font-size: 1.55em; color: #15222c; margin-bottom: 8px; }
+    .sub { color: #5a6573; font-size: .95em; margin-bottom: 24px; }
+    h2 { font-size: 1.15em; color: #15222c; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e7eaf0; }
+    h3 { font-size: 1em; color: #1565c0; margin: 18px 0 8px; }
+    p, li { font-size: .93em; }
+    ul, ol { margin: 8px 0 8px 1.2em; }
+    li { margin: 5px 0; }
+    .card { background: #fff; border: 1px solid #e7eaf0; border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .warn { background: #fcf4dd; border-left: 4px solid #f0a500; padding: 12px 14px; margin: 12px 0; font-size: .9em; border-radius: 0 10px 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .88em; margin: 12px 0; }
+    th, td { border: 1px solid #e7eaf0; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f3f6fa; }
+
+    /* キャラクター会話バブル（トップページと共通の見た目） */
+    .illust { background: #e8f5e9; border-radius: 14px; padding: 14px 16px; margin: 14px 0; }
+    .ill-chat { display: flex; flex-direction: column; gap: 8px; }
+    .chat-title { font-size: 0.72rem; color: #888; margin-bottom: 4px; font-weight: 700; }
+    .ill-msg { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; max-width: 88%; }
+    .ill-msg.user { background: #667eea; color: white; margin-left: 16px; align-self: flex-end; }
+    .ill-msg.ai   { background: #fff; color: #333; margin-right: 16px; align-self: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .char-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .char-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+    .char-name { font-size: 0.85rem; font-weight: 700; color: #444; }
+
+    /* フォールバックの流れ図（横並びボックス） */
+    .flow { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+    .fbox { background: #fff; border: 1px solid #e7eaf0; border-radius: 10px; padding: 10px 14px; font-size: .82rem; text-align: center; min-width: 88px; }
+    .fbox .fi { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+    .fbox.primary { border-color: #667eea; background: #f0f1ff; }
+    .fbox.reserve { border-color: #43a047; background: #f1f9f1; }
+    .fbox.reserve2 { border-color: #999; background: #f5f5f5; }
+    .farr { color: #bbb; font-weight: 700; }
+
+    .tag { display: inline-block; font-size: .7em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-right: 6px; }
+    .tag.provider1 { background: #eef1ff; color: #4a5ed6; }
+    .tag.provider2 { background: #e8f5e9; color: #2e7d32; }
+    .tag.provider3 { background: #f0f0f0; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-link" href="../">← トップにもどる</a>
+    <h1>無応答ゼロ化 — LINEのAI社員が「既読無視」しない仕組み</h1>
+    <p class="sub">実体: <code>templates/line-bot/</code>（このキットのLINE公式アカウントAI社員bot金型）<br>
+      実証: <code>line-harness-oss</code>（ai-shain.link で実運用中の「りんく」）</p>
+
+    <h2>💬 まず、りんくに聞いてみる（人向け・やさしい説明）</h2>
+    <div class="card">
+      <div class="char-row">
+        <img class="char-icon" src="../images/link-smile.png" alt="りんく">
+        <span class="char-name">りんく</span>
+      </div>
+      <div class="illust">
+        <div class="ill-chat">
+          <div class="chat-title">💬 ある日、こんなことがありました</div>
+          <div class="ill-msg user">今日は財布なくして何処にもなくて疲れた</div>
+          <div class="ill-msg ai">財布なくして大変でしたね。今日はゆっくり休んでくださいね。財布を見つけるのを手伝うことや、他のことをお手伝いできることがあればお知らせください。</div>
+        </div>
+      </div>
+      <p>
+        りんくは、ふだんは1番手のAI（Groq）が答えています。とても速くて、無料で、たいていの会話はこれで十分です。<br>
+        でも、AIサービスにも「混んでいて返事が遅い」「一時的に調子が悪い」という日があります。
+        もし1番手が答えられなかったら、りんくは黙り込むのではなく、
+        <b>こっそり2番手（Gemini）、それでもダメなら3番手（Cloudflare Workers AI）</b>に聞きに行きます。
+        ユーザーからは「誰が答えたか」は見えません。見えるのは「ちゃんと返事が来た」ということだけです。
+      </p>
+      <div class="warn">
+        <b>なぜこれが大事なのか</b>: LINEでAIが無言のままだと、ユーザーには「壊れている」「無視された」としか見えません。
+        エラーメッセージも出ないので、運営側も気づくのが遅れがちです。1つのAI会社に全部を任せず、
+        「誰かが答えられなければ、他の誰かが答える」という体制にしておくことで、この一番気づきにくい壊れ方を防ぎます。
+      </div>
+    </div>
+
+    <h2>🛠️ 仕組み（AI向け・技術的な説明）</h2>
+    <div class="card">
+      <h3>3段フォールバックチェーン</h3>
+      <p><code>bot.config.json</code> の <code>llm.chain</code> に定義された順に試し、最初に成功した段の応答を採用する。全滅時のみ定型お詫び文言まで落ちる。</p>
+      <div class="flow">
+        <div class="fbox primary"><span class="fi">⚡</span>Groq<br>llama-3.3-70b<br>8秒</div>
+        <div class="farr">→ 失敗なら →</div>
+        <div class="fbox reserve"><span class="fi">🔷</span>Gemini<br>2.5-flash-lite<br>10秒</div>
+        <div class="farr">→ 失敗なら →</div>
+        <div class="fbox reserve2"><span class="fi">☁️</span>Workers AI<br>llama-3.3-70b-fp8<br>8秒</div>
+      </div>
+      <table>
+        <tr><th>段</th><th>役割</th><th>特徴</th></tr>
+        <tr><td><span class="tag provider1">1番手</span>Groq</td><td>ふだんの主力</td><td>最速。既存キャラプロンプトの調律先</td></tr>
+        <tr><td><span class="tag provider2">2番手</span>Gemini</td><td>安定担当</td><td>無料枠が寛大・可用性が高い。未設定でも自動スキップ</td></tr>
+        <tr><td><span class="tag provider3">3番手</span>Workers AI</td><td>最終防波堤</td><td>Worker内バインディング経由＝外部ネットワーク障害の影響を受けない</td></tr>
+      </table>
+
+      <h3>replyToken失効（約60秒）への対策</h3>
+      <p>
+        LINEの返信トークンは発行から約60秒で失効する。各段には個別のタイムアウトがあり、
+        「残り時間が足りない段は丸ごとスキップして次へ」という<b>残り時間駆動</b>で動く。
+        前段の処理（友だち情報の取得・DB検索等）が想定外に遅延しても、必ずどこかの段か
+        定型文の床まで到達する。
+      </p>
+      <p>
+        送信側にも保険があり、<code>replyMessage</code>（返信トークン方式）が失敗した場合は、
+        自動で<code>pushMessage</code>（トークン不要、いつでも送れる）に切り替える。
+        これが効くのは、従来なら「例外を握りつぶして完全に無言化」していたはずの経路。
+      </p>
+
+      <h3>コスト</h3>
+      <p>
+        既定<b>¥0/月</b>。Gemini・Workers AIはGroq障害時にしか呼ばれないため、
+        通常運用では無料枠の範囲に収まる。全プロバイダが同時に不調な月でも、
+        従量課金化した場合の見積りは数百円規模にとどまる。
+      </p>
+
+      <h3>関連ファイル</h3>
+      <ul>
+        <li><code>templates/line-bot/worker/src/services/llm-providers.ts</code> — Groq/Gemini/Workers AIの共通呼び出し層</li>
+        <li><code>templates/line-bot/worker/src/services/llm-chain.ts</code> — 3段を順に試すフォールバックチェーン</li>
+        <li><code>templates/line-bot/worker/src/routes/webhook.ts</code> — <code>safeSendText</code>（送信保険）の実装箇所</li>
+        <li><code>templates/line-bot/bot.config.json</code> — <code>llm.chain</code> でチェーン構成を編集</li>
+      </ul>
+    </div>
+
+    <h2>📚 実例（実際に起きた障害と直し方）</h2>
+    <div class="card">
+      <h3>事例: URLを含むメッセージの後、AI応答が完全に止まった</h3>
+      <p>
+        LINE公式アカウント「りんく」で、ユーザーが際どい話題を含むメッセージを送った直後から、
+        そのユーザー宛の返信が一切来なくなった。ログを見ると、受信は記録されているのに送信ログが1件も無い状態だった。
+      </p>
+      <h3>調べたこと（消去法）</h3>
+      <ol>
+        <li>LINE公式アカウント管理画面の「応答メッセージ」設定 → 正常（OFF）。原因ではない</li>
+        <li>キーワード自動返信ルール → このユーザーのアカウントには1件も登録なし。原因ではない</li>
+        <li><code>ai_reply_mode</code>（担当者引き継ぎフラグ）が<code>human</code>のまま固定されていないか → 確認したが<code>bot</code>のまま。原因ではない</li>
+        <li>コードを読み直すと、AIがエスカレーション判定（担当者に確認が必要、という判定）を返したときに
+          本文が空だと<b>無言のまま担当者引き継ぎモードに切り替わるだけ</b>というパスが実際に存在した</li>
+      </ol>
+      <div class="warn">
+        <b>直したこと</b>: エスカレーション時は本文が空でも「ちょっと待っててね、中の人につなぐね」という
+        一言を必ず返すよう修正。あわせてエスカレーション条件そのものも、「専門的だから」という理由だけでは
+        発動しないよう絞り込んだ（AIはまず自分で調べて答え切ることを優先する）。
+      </div>
+      <p>
+        <b>その上で今回の無応答ゼロ化チェーンを実装</b>。今後同種の問題（1社のAPI障害・タイムアウト・
+        コンテンツフィルタの不可解な挙動）が起きても、自動で次のAIに切り替わるため、
+        「気づいたら数日間ずっと無言だった」という事態を構造的に防げる。
+      </p>
+      <p>出典: <code>_docs/LINE-BOT-EXTRACTION-NOTES.md</code>（移植判断の記録）／
+        <code>line-harness-oss</code> 実運用ログ（2026-07-16〜17）。</p>
+    </div>
+
+    <h2>🚀 自分のアプリで使う</h2>
+    <div class="card">
+      <ol>
+        <li><code>app.config.json</code> の <code>lineBot</code> セクションを埋めて <code>enabled: true</code> に</li>
+        <li><code>templates/line-bot/</code> をアプリの <code>line-bot/</code> にコピーし、<code>{{...}}</code> を置換</li>
+        <li>Secretsを投入: <code>LINE_CHANNEL_ACCESS_TOKEN</code> / <code>LINE_CHANNEL_SECRET</code> / <code>GROQ_API_KEY</code></li>
+        <li>（強く推奨）<code>GEMINI_API_KEY</code> も投入する。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>で無料発行できる。未設定でもGroq→Workers AIの2段構成として動く</li>
+        <li><code>wrangler.toml</code> の <code>[ai]</code> バインディングはテンプレートに同梱済み。追加設定は不要</li>
+      </ol>
+      <p>くわしい手順は <code>templates/line-bot/README.md</code> を参照。</p>
+    </div>
+  </div>
+</body>
+</html>
