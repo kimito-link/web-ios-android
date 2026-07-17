@@ -8,7 +8,20 @@
   <link rel="icon" type="image/png" href="../../favicon.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; max-width: 100%; }
     body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.8; }
+
+    /* ── サイト共通ヘッダー（トップページと同一） ── */
+    header { background: white; border-bottom: 2px solid #eee; padding: 0 24px; display: flex; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+    header a.logo-link { display: flex; align-items: center; flex-shrink: 0; }
+    header img.logo { height: 40px; }
+    header nav { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    header nav::-webkit-scrollbar { display: none; }
+    header nav a { color: #555; text-decoration: none; font-size: 0.85rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+    header nav a:hover { background: #f0f0ff; color: #667eea; }
+    header nav a.active { background: #667eea; color: white; }
+    @media (max-width: 640px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
+
     .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
     .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
     .hero { text-align: center; padding: 28px 16px 8px; }
@@ -47,6 +60,20 @@
   </style>
 </head>
 <body>
+<header>
+  <a class="logo-link" href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../howto/">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../" class="active">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
   <div class="wrap">
     <a class="top-link" href="../">← 追体験トップ</a>
 
