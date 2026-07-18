@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEP3: 独自ドメインを取る | ゆっくり解説 | web-ios-android</title>
+  <meta name="description" content="「自分だけのURL」であるドメインを購入し、Cloudflareへつなぐ準備をするまでの手順を画面つきで説明します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/howto/domain/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="STEP3: 独自ドメインを取る | ゆっくり解説 | web-ios-android">
+  <meta property="og:description" content="「自分だけのURL」であるドメインを購入し、Cloudflareへつなぐ準備をするまでの手順を画面つきで説明します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/howto/domain/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "STEP3: 独自ドメインを取る",
+        "description": "「自分だけのURL」であるドメインを購入し、Cloudflareへつなぐ準備をするまでの手順。",
+        "totalTime": "PT10M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Xserverドメインで検索する",
+            "text": "xserver.ne.jp/domain を開いて欲しいドメイン名を入力し「検索」を押す。",
+            "url": "https://web-ios-android.vercel.app/howto/domain/#search" },
+          { "@type": "HowToStep", "position": 2, "name": "ネームサーバーをCloudflareに変える準備をする",
+            "text": "ドメインを買ったらネームサーバーの設定を変える必要がある。次のSTEPでコピペする値を確認する。",
+            "url": "https://web-ios-android.vercel.app/howto/domain/#nameserver" }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "セットアップ手順", "item": "https://web-ios-android.vercel.app/howto/" },
+          { "@type": "ListItem", "position": 3, "name": "STEP3 ドメイン取得" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px 56px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; line-height: 1.4; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    /* ドメイン モックアップ */
+    .domain-search { background: #fff; border-radius: 8px; padding: 12px; display: flex; gap: 8px; margin-bottom: 12px; }
+    .domain-search input { flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px; font-size: 0.88rem; }
+    .domain-search button { background: #0066cc; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 0.85rem; }
+    .domain-result { background: #f0fff4; border: 2px solid #22c55e; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .domain-result .domain-name { font-weight: 700; font-size: 0.95rem; color: #15803d; }
+    .domain-result .domain-price { color: #166534; font-size: 0.85rem; }
+    .domain-result button { background: #22c55e; color: white; border: none; border-radius: 6px; padding: 6px 14px; font-weight: 700; font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../" class="active">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../../images/konta-smile.png" alt="こん太">
+    <img src="../../images/link-smile.png" alt="りんく">
+    <img src="../../images/tanunee-smile.png" alt="たぬ姉">
+  </div>
+  <h1>STEP3<br><span>ドメイン取得</span></h1>
+  <p>「自分だけのURL」を買う（例：my-app.com）</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../../">ホーム</a> ＞ <a href="../">セットアップ手順</a> ＞ STEP3 ドメイン取得
+</nav>
+
+<div class="chapter" id="domain">
+  <div class="chapter-header">
+    <div class="ch-num">3</div>
+    <div>
+      <h2>🌐 ドメインとは？</h2>
+      <div class="ch-sub">「自分だけのURL」を買う（例：my-app.com）</div>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="koma">
+      <div class="koma-talk">
+        <img src="../../images/konta-smile.png" alt="こん太">
+        <div class="talk-bubble">
+          ドメインは <strong>インターネット上の「住所」</strong> みたいなもの。<br>
+          「.com」や「.jp」で終わる文字列のことだよ。<br>
+          年間1,000〜2,000円くらいで買えるよ！
+        </div>
+      </div>
+      <div class="char-name">こん太</div>
+    </div>
+
+    <div class="koma" id="search">
+      <div class="step-badge">① Xserverドメインで検索する</div>
+      <div class="koma-talk">
+        <img src="../../images/tanunee-normal.png" alt="たぬ姉">
+        <div class="talk-bubble">
+          <span class="hl">xserver.ne.jp/domain</span> を開いて、<br>
+          欲しいドメイン名を入力して「検索」を押してね。<br>
+          使えるかどうかすぐわかるよ！
+        </div>
+      </div>
+      <div class="char-name">たぬ姉</div>
+
+      <div class="mockup" style="background:#fff;">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">xserver.ne.jp/domain</span>
+        </div>
+        <div class="mockup-body" style="background:white;">
+          <div style="text-align:center; margin-bottom:16px;">
+            <div style="font-size:1.1rem; font-weight:900; color:#1a1a1a; margin-bottom:4px;">Xserverドメイン</div>
+            <div style="color:#666; font-size:0.82rem;">国内最大級のドメイン登録サービス</div>
+          </div>
+          <div class="domain-search">
+            <input type="text" value="my-awesome-app" style="pointer-events:none;">
+            <button>検索する</button>
+          </div>
+          <div class="domain-result">
+            <div>
+              <div class="domain-name">my-awesome-app.com ✅ 取得可能</div>
+              <div class="domain-price">初年度 1,628円 / 次年度〜 1,628円/年</div>
+            </div>
+            <button>カートに追加</button>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">好きな名前を入力 →「検索する」→「カートに追加」→ 購入手続きへ</div>
+    </div>
+
+    <div class="koma" id="nameserver">
+      <div class="step-badge">② ネームサーバーをCloudflareに変える</div>
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          ドメインを買ったら、<strong>「ネームサーバー」の設定を変える</strong>必要があるよ。<br>
+          むずかしそうだけど、コピペするだけ！ 次のSTEPでやり方を説明するね。
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+
+      <div class="mockup" style="background:#fff;">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">xserver.ne.jp / domain / settings</span>
+        </div>
+        <div class="mockup-body" style="background:white;">
+          <div style="font-weight:700; color:#1a1a1a; margin-bottom:12px;">ドメイン管理 ＞ my-awesome-app.com</div>
+          <div style="background:#f5f5f5; border-radius:8px; padding:14px; margin-bottom:8px;">
+            <div style="font-size:0.82rem; color:#333; font-weight:700; margin-bottom:8px;">ネームサーバーの設定</div>
+            <div style="font-size:0.78rem; color:#666; margin-bottom:8px;">現在の設定：</div>
+            <div style="font-family:monospace; font-size:0.78rem; color:#1a1a1a; margin-bottom:4px;">ns1.xserver.ne.jp</div>
+            <div style="font-family:monospace; font-size:0.78rem; color:#1a1a1a; margin-bottom:12px;">ns2.xserver.ne.jp</div>
+            <div style="font-size:0.78rem; color:#e74c3c; font-weight:700;">↓ これをCloudflareのネームサーバーに変更する</div>
+          </div>
+          <div style="background:#fff3cd; border-radius:8px; padding:12px; font-size:0.8rem; color:#856404;">
+            📋 Cloudflareから届く2行の文字列をここに貼り付ける（次STEPで説明）
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="step-nav" aria-label="前後のステップ">
+  <a href="../vercel/"><span class="nav-label">← 前のステップ</span>STEP2 Vercel</a>
+  <a class="next" href="../cloudflare/"><span class="nav-label">次のステップ →</span>STEP4 Cloudflare</a>
+</nav>
+
+<footer>
+  <div>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見まとめ</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEP4: Cloudflareでドメインをつなぐ | ゆっくり解説 | web-ios-android</title>
+  <meta name="description" content="ドメインとVercelをCloudflareでつなぎ、独自ドメインでサイトが公開されるまでの手順を画面つきで説明します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/howto/cloudflare/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="STEP4: Cloudflareでドメインをつなぐ | ゆっくり解説 | web-ios-android">
+  <meta property="og:description" content="ドメインとVercelをCloudflareでつなぎ、独自ドメインでサイトが公開されるまでの手順を画面つきで説明します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/howto/cloudflare/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "STEP4: Cloudflareでドメインをつなぐ",
+        "description": "ドメインとVercelをCloudflareでつなぎ、独自ドメインでサイトが公開されるまでの手順。",
+        "totalTime": "PT15M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Cloudflareに登録してドメインを追加",
+            "text": "cloudflare.comでアカウントを作り、Add a Siteから買ったドメインを入れる。プランはFreeでOK。",
+            "url": "https://web-ios-android.vercel.app/howto/cloudflare/#signup" },
+          { "@type": "HowToStep", "position": 2, "name": "ネームサーバーをコピーしてXserverに貼る",
+            "text": "Cloudflareが教えてくれる2行の文字列をコピーし、Xserverの管理画面に貼り付ける。",
+            "url": "https://web-ios-android.vercel.app/howto/cloudflare/#nameserver" },
+          { "@type": "HowToStep", "position": 3, "name": "VercelとドメインをDNSでつなぐ",
+            "text": "CloudflareのDNS画面でVercelのIPアドレスを登録する。",
+            "url": "https://web-ios-android.vercel.app/howto/cloudflare/#dns" },
+          { "@type": "HowToStep", "position": 4, "name": "完成を確認する",
+            "text": "数時間待つと独自ドメインでサイトが見られるようになる。HTTPSも自動で設定される。",
+            "url": "https://web-ios-android.vercel.app/howto/cloudflare/#done" }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "セットアップ手順", "item": "https://web-ios-android.vercel.app/howto/" },
+          { "@type": "ListItem", "position": 3, "name": "STEP4 Cloudflare" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px 56px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; line-height: 1.4; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    /* Cloudflare モックアップ */
+    .cf-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; color: white; }
+    .cf-logo { font-size: 1.2rem; font-weight: 900; color: #f48120; }
+    .cf-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .cf-table th { background: #2a2a3e; color: #aaa; padding: 8px 10px; text-align: left; }
+    .cf-table td { padding: 8px 10px; border-bottom: 1px solid #2a2a3e; color: #c9d1d9; }
+    .cf-table tr:last-child td { border-bottom: none; }
+    .cf-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .cf-tag.cname { background: #1a3a5c; color: #60a5fa; }
+    .cf-tag.a { background: #1a3a1a; color: #4ade80; }
+    .gh-input { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; color: #e6edf3; font-size: 0.82rem; width: 100%; margin-bottom: 8px; }
+    .gh-btn { display: inline-block; padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .gh-btn.green { background: #238636; color: white; }
+    .vc-success { background: #0a2a1a; border: 1px solid #1a5c36; border-radius: 10px; padding: 16px; text-align: center; }
+    .vc-success .check { font-size: 2rem; }
+    .vc-success h4 { color: #4ade80; font-size: 0.95rem; font-weight: 700; margin: 8px 0 4px; }
+    .vc-success p { color: #86efac; font-size: 0.82rem; }
+
+    /* 完成イメージ */
+    .complete-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+    .flow-node {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: center;
+      color: white;
+      font-size: 0.82rem;
+    }
+    .flow-node .fn-icon { font-size: 1.5rem; margin-bottom: 4px; }
+    .flow-node.done { background: rgba(246,201,14,0.15); border-color: #f6c90e; }
+    .flow-arr { color: rgba(255,255,255,0.4); font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../" class="active">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../../images/konta-smile.png" alt="こん太">
+    <img src="../../images/link-smile.png" alt="りんく">
+    <img src="../../images/tanunee-smile.png" alt="たぬ姉">
+  </div>
+  <h1>STEP4<br><span>Cloudflare（クラウドフレア）</span></h1>
+  <p>ドメインとVercelをつなぐ「交換台」。速く・安全にしてくれる無料サービス</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../../">ホーム</a> ＞ <a href="../">セットアップ手順</a> ＞ STEP4 Cloudflare
+</nav>
+
+<div class="chapter" id="cloudflare">
+  <div class="chapter-header">
+    <div class="ch-num">4</div>
+    <div>
+      <h2>🟠 Cloudflare（クラウドフレア）とは？</h2>
+      <div class="ch-sub">ドメインとVercelをつなぐ「交換台」。速く・安全にしてくれる無料サービス</div>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="koma">
+      <div class="koma-talk">
+        <img src="../../images/tanunee-normal.png" alt="たぬ姉">
+        <div class="talk-bubble">
+          Cloudflareは「ドメイン」と「Vercelのサイト」を<strong>つなぐ橋</strong>みたいなもの。<br>
+          悪い人からの攻撃を防いでくれたり、サイトを速くしてくれたりもするよ。無料！
+        </div>
+      </div>
+      <div class="char-name">たぬ姉</div>
+    </div>
+
+    <div class="koma" id="signup">
+      <div class="step-badge">① Cloudflareに登録してドメインを追加</div>
+      <div class="koma-talk">
+        <img src="../../images/konta-smile.png" alt="こん太">
+        <div class="talk-bubble">
+          <span class="hl">cloudflare.com</span> でアカウントを作って、<br>
+          「Add a Site（サイトを追加）」から買ったドメインを入れてね。<br>
+          プランは <strong>Free（無料）</strong> でOK！
+        </div>
+      </div>
+      <div class="char-name">こん太</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">dash.cloudflare.com</span>
+        </div>
+        <div class="mockup-body">
+          <div class="cf-header">
+            <span class="cf-logo">☁ Cloudflare</span>
+          </div>
+          <div style="background:#111827; border-radius:8px; padding:16px; margin-bottom:12px;">
+            <div style="color:#9ca3af; font-size:0.82rem; margin-bottom:8px;">サイトを追加する</div>
+            <div style="display:flex; gap:8px;">
+              <div class="gh-input" style="flex:1; margin-bottom:0; color:#e6edf3;">my-awesome-app.com</div>
+              <div class="gh-btn green" style="white-space:nowrap;">追加 →</div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+            <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:12px; text-align:center; opacity:0.5;">
+              <div style="color:white; font-weight:700; font-size:0.85rem;">Pro</div>
+              <div style="color:#f6c90e; font-size:0.75rem;">$20/月</div>
+            </div>
+            <div style="background:#111827; border:2px solid #f6c90e; border-radius:8px; padding:12px; text-align:center;">
+              <div style="color:white; font-weight:700; font-size:0.85rem;">Free ← これ！</div>
+              <div style="color:#4ade80; font-size:0.75rem;">$0 / 無料</div>
+            </div>
+            <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:12px; text-align:center; opacity:0.5;">
+              <div style="color:white; font-weight:700; font-size:0.85rem;">Business</div>
+              <div style="color:#f6c90e; font-size:0.75rem;">$200/月</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">ドメインを入力 →「追加」→ プランは「Free」を選んで「Continue」</div>
+    </div>
+
+    <div class="koma" id="nameserver">
+      <div class="step-badge">② ネームサーバーをコピーしてXserverに貼る</div>
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          Cloudflareが <span class="hl">2行の文字列（ネームサーバー）</span> を教えてくれるよ。<br>
+          それをコピーして、Xserverの管理画面に貼り付けるだけ！<br>
+          反映に最大24時間かかるけど、だいたい数時間でOKになるよ。
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">dash.cloudflare.com / ネームサーバーを変更</span>
+        </div>
+        <div class="mockup-body">
+          <div style="color:#9ca3af; font-size:0.85rem; margin-bottom:12px;">📋 このネームサーバーをコピーしてXserverに貼る</div>
+          <div style="background:#0d1117; border:1px solid #f6c90e; border-radius:8px; padding:14px; margin-bottom:8px;">
+            <div style="color:#f6c90e; font-size:0.72rem; margin-bottom:6px;">ネームサーバー 1</div>
+            <div style="font-family:monospace; color:#e6edf3; font-size:0.88rem;">vida.ns.cloudflare.com</div>
+          </div>
+          <div style="background:#0d1117; border:1px solid #f6c90e; border-radius:8px; padding:14px;">
+            <div style="color:#f6c90e; font-size:0.72rem; margin-bottom:6px;">ネームサーバー 2</div>
+            <div style="font-family:monospace; color:#e6edf3; font-size:0.88rem;">walt.ns.cloudflare.com</div>
+          </div>
+          <div style="color:#6b7280; font-size:0.78rem; margin-top:12px;">※ 実際の文字列はあなたのドメインによって異なります</div>
+        </div>
+      </div>
+      <div class="pointer">この2行をコピー → Xserverの「ネームサーバー設定」に貼り付け → 保存</div>
+    </div>
+
+    <div class="koma" id="dns">
+      <div class="step-badge">③ VercelとドメインをDNSでつなぐ</div>
+      <div class="koma-talk reverse">
+        <img src="../../images/konta-smile.png" alt="こん太">
+        <div class="talk-bubble">
+          Cloudflareの「DNS」という画面で、<br>
+          Vercelの「76.76.21.21」というIPアドレスを登録するよ。<br>
+          Vercelの設定画面に「Add this record」って書いてあるから、それを見ながら入力してね！
+        </div>
+      </div>
+      <div class="char-name">こん太</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">dash.cloudflare.com / DNS / レコード</span>
+        </div>
+        <div class="mockup-body">
+          <div class="cf-header">
+            <span class="cf-logo">☁ DNS レコード</span>
+          </div>
+          <table class="cf-table">
+            <tr>
+              <th>タイプ</th>
+              <th>名前</th>
+              <th>内容（Value）</th>
+            </tr>
+            <tr>
+              <td><span class="cf-tag a">A</span></td>
+              <td style="font-family:monospace;">@</td>
+              <td style="font-family:monospace; font-size:0.75rem;">76.76.21.21</td>
+            </tr>
+            <tr>
+              <td><span class="cf-tag cname">CNAME</span></td>
+              <td style="font-family:monospace;">www</td>
+              <td style="font-family:monospace; font-size:0.75rem;">cname.vercel-dns.com</td>
+            </tr>
+          </table>
+          <div style="margin-top:12px; color:#6b7280; font-size:0.78rem;">
+            ↑ この2行を追加する。Vercelの管理画面にコピペ用の値が表示されます。
+          </div>
+        </div>
+      </div>
+      <div class="pointer">Vercelの「Domains」設定 → DNSレコードの値をCloudflareに入力 → 保存</div>
+    </div>
+
+    <div class="koma" id="done">
+      <div class="step-badge">④ 完成！独自ドメインでサイトが見える</div>
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          数時間待つと <span class="hl">https://my-awesome-app.com</span> で<br>
+          あなたのサイトが見られるようになるよ！<br>
+          <strong>🔒 鍵マーク（HTTPS）</strong> もCloudflareが自動でつけてくれるから安全！
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+
+      <div class="mockup" style="background:#000;">
+        <div class="mockup-bar" style="background:#111;">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url" style="color:#4ade80;">🔒 https://my-awesome-app.com</span>
+        </div>
+        <div class="mockup-body">
+          <div class="vc-success">
+            <div class="check">🎉</div>
+            <h4>独自ドメインで公開完了！</h4>
+            <p>https://my-awesome-app.com でサイトが見えます</p>
+            <p style="margin-top:6px; color:#86efac; font-size:0.78rem;">🔒 SSL証明書も自動で設定済み</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="chapter">
+  <div class="complete-flow">
+    <div class="flow-node done">
+      <div class="fn-icon">🐙</div>
+      <div>GitHub<br><span style="font-size:0.72rem; opacity:0.7;">コードを保存</span></div>
+    </div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node done">
+      <div class="fn-icon">▲</div>
+      <div>Vercel<br><span style="font-size:0.72rem; opacity:0.7;">自動で公開</span></div>
+    </div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node done">
+      <div class="fn-icon">🌐</div>
+      <div>ドメイン取得<br><span style="font-size:0.72rem; opacity:0.7;">自分のURL</span></div>
+    </div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node done">
+      <div class="fn-icon">🟠</div>
+      <div>Cloudflare<br><span style="font-size:0.72rem; opacity:0.7;">つなぐ＋守る</span></div>
+    </div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node" style="background:rgba(246,201,14,0.2); border-color:#f6c90e;">
+      <div class="fn-icon">🎉</div>
+      <div style="color:#f6c90e; font-weight:800;">公開完了！</div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:32px;">
+    <div class="koma-talk" style="justify-content:center; margin-bottom:0;">
+      <img src="../../images/tanunee-normal.png" alt="たぬ姉" style="width:60px;">
+      <div class="talk-bubble" style="max-width:400px;">
+        わからなくなったら、<strong>エラー画面のスクショを撮ってAIに貼るだけ</strong>で解決できるよ！<br>
+        Claude・Cursor・ChatGPTなど何でもOK 🤖
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="step-nav" aria-label="前後のステップ">
+  <a href="../domain/"><span class="nav-label">← 前のステップ</span>STEP3 ドメイン取得</a>
+  <a class="next" href="../">← ゆっくり解説トップへもどる</a>
+</nav>
+
+<footer>
+  <div>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見まとめ</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+/* common.css — サイト全体で使う共通スタイル
+ * 設計: _docs/DESIGN-site-page-split-ai-discoverability-2026-07-17.md §D
+ *
+ * 「共通は外部・固有はインラインのまま」の二層構成。
+ * ここに入れるのは複数ページで再出現するパターンのみ。ページ固有の見た目
+ * （ヒーローのグラデーション、各STEP専用モックアップの配色等）は各ページの
+ * <style>に残す。ビルドツールなしの静的HTMLサイトのため、キャッシュバストは
+ * クエリ文字列（common.css?v=1）を手動更新する運用。
+ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  color: #1a1a1a;
+  line-height: 1.8;
+}
+
+/* ── ヘッダー ── */
+header {
+  background: white;
+  border-bottom: 3px solid #eee;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+header img.logo { height: 40px; }
+header nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+header nav a {
+  color: #555;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+header nav a:hover { background: #f0f0ff; color: #667eea; }
+header nav a.active { background: #667eea; color: white; }
+
+/* ── コマ（吹き出し＋画面）── howto系ページ共通 */
+.koma { margin-bottom: 36px; }
+.koma:last-child { margin-bottom: 0; }
+.koma-talk { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.koma-talk.reverse { flex-direction: row-reverse; }
+.koma-talk img { width: 60px; flex-shrink: 0; }
+.talk-bubble {
+  background: #f0f0ff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  position: relative;
+  max-width: 500px;
+}
+.koma-talk:not(.reverse) .talk-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 16px;
+  border: 8px solid transparent;
+  border-right-color: #f0f0ff;
+  border-left: 0;
+}
+.koma-talk.reverse .talk-bubble { background: #e8f5e9; }
+.koma-talk.reverse .talk-bubble::after {
+  content: '';
+  position: absolute;
+  right: -8px; top: 16px;
+  border: 8px solid transparent;
+  border-left-color: #e8f5e9;
+  border-right: 0;
+}
+.talk-bubble strong { color: #667eea; }
+.talk-bubble .hl { background: #fff3cd; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+.char-name { font-size: 0.7rem; color: #aaa; text-align: center; margin-top: 4px; }
+
+/* ── モックアップ画面の共通枠 ── */
+.mockup {
+  background: #1e1e2e;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 0 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+.mockup-bar {
+  background: #2a2a3e;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mockup-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+.mockup-bar .dot.r { background: #ff5f57; }
+.mockup-bar .dot.y { background: #febc2e; }
+.mockup-bar .dot.g { background: #28c840; }
+.mockup-bar .url {
+  background: #3a3a50;
+  border-radius: 6px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-left: 8px;
+  flex: 1;
+}
+.mockup-body { padding: 20px; }
+
+/* ── 矢印ポインター ── */
+.pointer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3cd;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #856404;
+  margin-top: 8px;
+}
+.pointer::before { content: '👆'; font-size: 1.1rem; }
+
+/* ── ステップバッジ ── */
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+/* ── セクション共通（chapterカード）── */
+.chapter { max-width: 720px; margin: 0 auto 64px; padding: 0 24px; }
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+  color: white;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 28px;
+  margin-bottom: 0;
+}
+.chapter-header .ch-num {
+  background: #f6c90e;
+  color: #1a1a2e;
+  font-weight: 900;
+  font-size: 1.1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.chapter-header h2 { font-size: 1.2rem; font-weight: 900; }
+.chapter-header .ch-sub { font-size: 0.82rem; opacity: 0.75; margin-top: 2px; }
+.chapter-body {
+  background: white;
+  border-radius: 0 0 20px 20px;
+  padding: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* ── パンくず（新規: ページ分割で追加） ── */
+.breadcrumb {
+  max-width: 720px;
+  margin: 16px auto 0;
+  padding: 0 24px;
+  font-size: 0.8rem;
+  color: #888;
+}
+.breadcrumb a { color: #667eea; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* ── 前後ナビ（新規: ページ分割で追加） ── */
+.step-nav {
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.step-nav a {
+  flex: 1;
+  min-width: 140px;
+  background: white;
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: #1a1a1a;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.step-nav a.next { text-align: right; }
+.step-nav a:hover { transform: translateY(-2px); }
+.step-nav .nav-label { display: block; font-size: 0.7rem; color: #888; font-weight: 400; margin-bottom: 2px; }
+
+/* ── フッター ── */
+footer {
+  background: #1a1a2e;
+  color: #aaa;
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 0.85rem;
+}
+footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82em; display: inline-block; }
+
+@media (max-width: 500px) {
+  .koma-talk { flex-direction: column; align-items: flex-start; }
+  .koma-talk.reverse { flex-direction: column; }
+  .koma-talk .talk-bubble::before,
+  .koma-talk.reverse .talk-bubble::after { display: none; }
+}
