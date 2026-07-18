@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>このテンプレートで作ったアプリ一覧 | web-ios-android</title>
+  <meta name="description" content="web-ios-androidキットで実際にストア公開まで通ったアプリの実例一覧です。Web・iPhone・Androidへの展開実績を紹介します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/showcase/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="このテンプレートで作ったアプリ一覧 | web-ios-android">
+  <meta property="og:description" content="web-ios-androidキットで実際にストア公開まで通ったアプリの実例一覧です。Web・iPhone・Androidへの展開実績を紹介します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/showcase/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "name": "このテンプレートで作ったアプリ一覧",
+        "description": "web-ios-androidキットで実際にストア公開まで通ったアプリの実例一覧。"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "作ったアプリ一覧" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 40px 24px 48px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    .showcase-wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px 48px; }
+    .showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .showcase-grid { grid-template-columns: 1fr; } }
+    .sc-card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .sc-card img { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; object-fit: cover; }
+    .sc-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; }
+    .sc-card p { font-size: 0.82rem; color: #666; margin-bottom: 9px; line-height: 1.6; }
+    .sc-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sc-links a { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
+    .lk-web { background: #667eea; color: white; }
+    .lk-ios { background: #1a1a2e; color: white; }
+    .lk-pend { background: #eee; color: #aaa; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../">🏠 トップ</a>
+    <a href="../howto/">🖼️ ゆっくり解説</a>
+    <a href="../story/">📖 完成ものがたり</a>
+    <a href="../guide/">📋 準備ガイド</a>
+    <a href="../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../tax/">💴 課金の税務</a>
+    <a href="../walkthrough/">📷 追体験</a>
+    <a href="../learnings/">📚 実証知見</a>
+    <a href="../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h1>📱 このテンプレートで作ったアプリ</h1>
+  <p>実際にストア公開まで通った実例です</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../">ホーム</a> ＞ 作ったアプリ一覧
+</nav>
+
+<div class="showcase-wrap">
+  <div class="showcase-grid">
+
+    <div class="sc-card">
+      <img src="../images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
+      <div>
+        <h3>ゆっくりエクソソーム</h3>
+        <p>毎日のセルフケアを習慣化するアプリ。Web・iPhone・Android を同時リリース。</p>
+        <div class="sc-links">
+          <a href="https://yukkuri-exosome.link/" class="lk-web" target="_blank" rel="noopener">🌐 Web</a>
+          <a href="https://apps.apple.com/jp/app/id6775201794" class="lk-ios" target="_blank" rel="noopener">🍎 App Store</a>
+          <a class="lk-pend">▶ 審査中</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-card">
+      <img src="../images/fujisan-icon.png" alt="富士山コンパス">
+      <div>
+        <h3>富士山コンパス</h3>
+        <p>今いる場所から富士山の方角をリアルタイムで表示するコンパスアプリ。</p>
+        <div class="sc-links">
+          <a href="https://fujisan01.com/" class="lk-web" target="_blank" rel="noopener">🌐 Web</a>
+          <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="lk-ios" target="_blank" rel="noopener">🍎 App Store</a>
+          <a class="lk-pend">▶ 準備中</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div>
+    <a href="../">🏠 トップ</a>
+    <a href="../story/">📖 完成ものがたり</a>
+    <a href="../guide/">📋 準備ガイド</a>
+    <a href="../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../tax/">💴 課金の税務</a>
+    <a href="../walkthrough/">📷 追体験</a>
+    <a href="../learnings/">📚 実証知見まとめ</a>
+    <a href="../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

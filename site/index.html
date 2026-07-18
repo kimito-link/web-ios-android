@@ -879,14 +879,7 @@
         </div>
         <div style="text-align:center; font-size:0.75rem; color:#aaa;">「見てきて」「押してみて」の往復ナシで直ります</div>
       </div>
-      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
-      <div class="step-detail">
-        このキットで作るアプリには「体調メモ」の仕組みが入ります。<br>
-        アプリが自分の調子（何件処理した・何秒かかった・どこで失敗した）を<br>
-        数字でメモしてくれるので、不具合のときあなたが状況を説明しなくても、<br>
-        AIがそのメモを読んで原因を特定し、修正まで進められます。
-        <div class="tip">💡 実例：ある配信ツールで「診断画面が固まる」不具合を、この体調メモの数字だけで原因特定。読み込みが817秒（約14分）もかかっていた原因を突き止め、0.005秒まで直した実績があります。人間がやったのは最後の再読み込みボタン1回だけ。仕組みの正体は <code>docs/ai-rules/04_SELF_VERIFICATION.md</code>（AIが読む用）にあります。</div>
-      </div>
+      <div class="tip" style="margin:14px 20px 0;">💡 仕組みと実例のくわしい説明は <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。</div>
     </div>
 
     <!-- ⑦ 知見を書き戻して、次はもっと早くなる（おまけ） -->
@@ -918,7 +911,7 @@
         審査の却下対応や、初めて見るエラーの解決は、症状・原因・直し方のセットで
         キット内の知見ファイルに書き戻されます。次に別のアプリを同じキットで作るとき、
         AIは着手する前にその記録を読み、同じ調査を一からやり直しません。
-        <div class="tip">💡 実例：あるアプリの初回提出で踏んだ8個の詰まり（署名鍵・必須項目不足など）を「初回提出ブロッカー全リスト」として記録。次の新規アプリでは、そのリストを上から潰すだけで、リトライ回数が大きく減りました。書き戻しルールの正体は <code>_docs/KNOWLEDGE-CARRYOVER-RULES.md</code>（AIが読む用）にあります。</div>
+        <div class="tip">💡 実例：あるアプリの初回提出で踏んだ8個の詰まり（署名鍵・必須項目不足など）を「初回提出ブロッカー全リスト」として記録。次の新規アプリでは、そのリストを上から潰すだけで、リトライ回数が大きく減りました。書き戻しルールの正体はキットに入っている説明書（AIが読む用）にあります。くわしい実証知見は <a href="learnings/" style="color:#667eea; font-weight:700;">実証知見まとめ</a> へ。</div>
       </div>
     </div>
 
@@ -1109,7 +1102,7 @@
 
 <!-- ショーケース -->
 <div class="showcase-wrap">
-  <div class="showcase-title">📱 このテンプレートで作ったアプリ</div>
+  <div class="showcase-title">📱 このテンプレートで作ったアプリ <a href="showcase/" style="font-size:0.7rem; font-weight:700; color:#667eea; margin-left:8px;">一覧を見る →</a></div>
   <div class="showcase-grid">
 
     <div class="sc-card">
