@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEP2: Vercelにサイトを公開する | ゆっくり解説 | web-ios-android</title>
+  <meta name="description" content="GitHubに置いたテンプレートをVercelに接続し、Webサイトとして公開するまでの手順を画面つきで説明します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/howto/vercel/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="STEP2: Vercelにサイトを公開する | ゆっくり解説 | web-ios-android">
+  <meta property="og:description" content="GitHubに置いたテンプレートをVercelに接続し、Webサイトとして公開するまでの手順を画面つきで説明します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/howto/vercel/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "STEP2: Vercelにサイトを公開する",
+        "description": "GitHubに置いたテンプレートをVercelに接続し、Webサイトとして公開するまでの手順。",
+        "totalTime": "PT10M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Vercelに登録する",
+            "text": "vercel.com を開いて「Continue with GitHub」をクリックする。",
+            "url": "https://web-ios-android.vercel.app/howto/vercel/#signup" },
+          { "@type": "HowToStep", "position": 2, "name": "GitHubのリポジトリを選ぶ",
+            "text": "Add New Project からさっき作ったリポジトリを選んで「Import」を押す。",
+            "url": "https://web-ios-android.vercel.app/howto/vercel/#import" },
+          { "@type": "HowToStep", "position": 3, "name": "公開完了を確認する",
+            "text": "1〜2分待つとyourname.vercel.appというURLでWebサイトが公開される。",
+            "url": "https://web-ios-android.vercel.app/howto/vercel/#done" }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "セットアップ手順", "item": "https://web-ios-android.vercel.app/howto/" },
+          { "@type": "ListItem", "position": 3, "name": "STEP2 Vercel" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px 56px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; line-height: 1.4; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    /* Vercel モックアップ */
+    .vc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: white; }
+    .vc-logo { font-weight: 900; font-size: 1.1rem; }
+    .vc-card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+    .vc-card h4 { color: white; font-size: 0.88rem; margin-bottom: 6px; }
+    .vc-card p { color: #888; font-size: 0.78rem; }
+    .vc-btn { background: white; color: black; font-weight: 700; font-size: 0.82rem; padding: 8px 18px; border-radius: 6px; display: inline-block; margin-top: 8px; }
+    .vc-success { background: #0a2a1a; border: 1px solid #1a5c36; border-radius: 10px; padding: 16px; text-align: center; }
+    .vc-success .check { font-size: 2rem; }
+    .vc-success h4 { color: #4ade80; font-size: 0.95rem; font-weight: 700; margin: 8px 0 4px; }
+    .vc-success p { color: #86efac; font-size: 0.82rem; }
+    .vc-url { color: #60a5fa; font-size: 0.85rem; text-decoration: underline; margin-top: 6px; display: block; }
+    .gh-repo-name { color: #58a6ff; font-size: 0.95rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../" class="active">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../../images/konta-smile.png" alt="こん太">
+    <img src="../../images/link-smile.png" alt="りんく">
+    <img src="../../images/tanunee-smile.png" alt="たぬ姉">
+  </div>
+  <h1>STEP2<br><span>Vercel（バーセル）</span></h1>
+  <p>GitHubと連携してWebサイトを自動で公開してくれる無料サービス</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../../">ホーム</a> ＞ <a href="../">セットアップ手順</a> ＞ STEP2 Vercel
+</nav>
+
+<div class="chapter" id="vercel">
+  <div class="chapter-header">
+    <div class="ch-num">2</div>
+    <div>
+      <h2>▲ Vercel（バーセル）とは？</h2>
+      <div class="ch-sub">GitHubと連携してWebサイトを自動で公開してくれる無料サービス</div>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="koma">
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          Vercelはね、GitHubにファイルを置くと<strong>自動でWebサイトを公開</strong>してくれるサービスだよ。<br>
+          個人利用は無料！ むずかしい設定はほぼなし！
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+    </div>
+
+    <div class="koma" id="signup">
+      <div class="step-badge">① Vercelに登録する（GitHubアカウントでOK）</div>
+      <div class="koma-talk">
+        <img src="../../images/konta-smile.png" alt="こん太">
+        <div class="talk-bubble">
+          <span class="hl">vercel.com</span> を開いて、<strong>「Continue with GitHub」</strong>をクリックするだけ！<br>
+          GitHubのアカウントで自動でログインできるよ。新しいパスワードは不要！
+        </div>
+      </div>
+      <div class="char-name">こん太</div>
+
+      <div class="mockup" style="background:#000;">
+        <div class="mockup-bar" style="background:#111;">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">vercel.com</span>
+        </div>
+        <div class="mockup-body" style="text-align:center; padding:28px;">
+          <div style="font-size:2rem; font-weight:900; color:white; margin-bottom:4px;">▲ Vercel</div>
+          <div style="color:#888; font-size:0.85rem; margin-bottom:24px;">Deploy your project in seconds</div>
+          <div style="background:#333; border:1px solid #555; border-radius:8px; padding:12px 20px; display:inline-flex; align-items:center; gap:10px; color:white; font-weight:700; font-size:0.9rem; cursor:pointer;">
+            🐙 Continue with GitHub
+          </div>
+          <div style="color:#555; font-size:0.78rem; margin-top:12px;">GitHubのアカウントで続ける（新規登録不要）</div>
+        </div>
+      </div>
+      <div class="pointer">「Continue with GitHub」をクリック → GitHubの許可画面が出たら「Authorize」をクリック</div>
+    </div>
+
+    <div class="koma" id="import">
+      <div class="step-badge">② GitHubのリポジトリを選ぶ</div>
+      <div class="koma-talk">
+        <img src="../../images/tanunee-normal.png" alt="たぬ姉">
+        <div class="talk-bubble">
+          ログインすると「Add New Project」という画面が出るよ。<br>
+          さっき作ったリポジトリを選んで <span class="hl">「Import」</span> を押すだけ！
+        </div>
+      </div>
+      <div class="char-name">たぬ姉</div>
+
+      <div class="mockup" style="background:#000;">
+        <div class="mockup-bar" style="background:#111;">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">vercel.com / new</span>
+        </div>
+        <div class="mockup-body">
+          <div class="vc-header">
+            <span class="vc-logo">▲ Vercel</span>
+            <span style="color:#888; font-size:0.85rem; margin-left:auto;">新しいプロジェクト</span>
+          </div>
+          <div style="color:#888; font-size:0.82rem; margin-bottom:12px;">GitHubのリポジトリをインポート</div>
+          <div class="vc-card">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:1.1rem;">📁</span>
+              <div>
+                <div class="gh-repo-name" style="font-size:0.88rem;">yourname / my-awesome-app</div>
+                <div style="color:#555; font-size:0.75rem;">更新: たった今</div>
+              </div>
+              <div class="vc-btn" style="margin-left:auto; margin-top:0;">Import</div>
+            </div>
+          </div>
+          <div style="color:#888; font-size:0.82rem; margin-bottom:12px; margin-top:16px;">設定はそのままでOK</div>
+          <div style="text-align:center; margin-top:8px;">
+            <div class="vc-btn" style="background:#0070f3; color:white; padding:10px 32px; font-size:0.9rem;">🚀 Deploy</div>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">リポジトリの「Import」→ そのまま「Deploy」をクリック</div>
+    </div>
+
+    <div class="koma" id="done">
+      <div class="step-badge">③ 公開完了！</div>
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          1〜2分待つと公開完了！<br>
+          <strong>yourname.vercel.app</strong> というURLでWebサイトが見られるよ。<br>
+          次はこれを自分のドメインにつなごう！
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+
+      <div class="mockup" style="background:#000;">
+        <div class="mockup-bar" style="background:#111;">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">vercel.com / dashboard</span>
+        </div>
+        <div class="mockup-body">
+          <div class="vc-success">
+            <div class="check">🎉</div>
+            <h4>デプロイ成功！</h4>
+            <p>あなたのWebサイトが公開されました</p>
+            <span class="vc-url">https://my-awesome-app.vercel.app</span>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">このURLをブラウザで開くとサイトが見える！</div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="step-nav" aria-label="前後のステップ">
+  <a href="../github/"><span class="nav-label">← 前のステップ</span>STEP1 GitHub</a>
+  <a class="next" href="../domain/"><span class="nav-label">次のステップ →</span>STEP3 ドメイン取得</a>
+</nav>
+
+<footer>
+  <div>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見まとめ</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

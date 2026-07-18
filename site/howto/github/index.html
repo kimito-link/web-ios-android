@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEP1: GitHubにコードを置く | ゆっくり解説 | web-ios-android</title>
+  <meta name="description" content="GitHub（コードを保存する無料の倉庫）にアカウントを作り、テンプレートを自分のリポジトリに置くまでの手順を画面つきで説明します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/howto/github/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="STEP1: GitHubにコードを置く | ゆっくり解説 | web-ios-android">
+  <meta property="og:description" content="GitHub（コードを保存する無料の倉庫）にアカウントを作り、テンプレートを自分のリポジトリに置くまでの手順を画面つきで説明します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/howto/github/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "STEP1: GitHubにコードを置く",
+        "description": "GitHubにアカウントを作り、テンプレートを自分のリポジトリに置くまでの手順。",
+        "totalTime": "PT5M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "GitHubにアカウントを作る",
+            "text": "github.com を開いて「Sign up」ボタンを押し、メールアドレスとパスワードを入れる。",
+            "url": "https://web-ios-android.vercel.app/howto/github/#signup" },
+          { "@type": "HowToStep", "position": 2, "name": "テンプレートをダウンロードする",
+            "text": "トップページの「ダウンロードする」ボタンを押し、ZIPファイルを右クリック→「すべて展開」で開く。",
+            "url": "https://web-ios-android.vercel.app/howto/github/#download" },
+          { "@type": "HowToStep", "position": 3, "name": "リポジトリ名をつけて登録する",
+            "text": "解凍したフォルダを自分のGitHubリポジトリに置く。Repository nameはアプリの名前、Privateを選ぶ。",
+            "url": "https://web-ios-android.vercel.app/howto/github/#repo" }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "セットアップ手順", "item": "https://web-ios-android.vercel.app/howto/" },
+          { "@type": "ListItem", "position": 3, "name": "STEP1 GitHub" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+
+    /* ── ヒーロー ── */
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px 56px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; line-height: 1.4; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    /* GitHub モックアップ */
+    .gh-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .gh-logo { font-size: 1.4rem; }
+    .gh-nav { display: flex; gap: 16px; font-size: 0.78rem; color: #ccc; }
+    .gh-btn { display: inline-block; padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .gh-btn.green { background: #238636; color: white; }
+    .gh-btn.gray { background: #30363d; color: #ccc; border: 1px solid #444; }
+    .gh-input {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+      padding: 6px 12px; color: #e6edf3; font-size: 0.82rem; width: 100%; margin-bottom: 8px;
+    }
+    .gh-label { font-size: 0.78rem; color: #8b949e; margin-bottom: 4px; }
+    .gh-repo-name { color: #58a6ff; font-size: 0.95rem; font-weight: 700; }
+    .gh-private-badge {
+      display: inline-block; border: 1px solid #30363d; border-radius: 999px;
+      padding: 2px 10px; font-size: 0.72rem; color: #8b949e; margin-left: 8px;
+    }
+    .gh-file-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 0;
+      border-bottom: 1px solid #21262d; font-size: 0.82rem; color: #c9d1d9;
+    }
+    .gh-file-icon { color: #8b949e; }
+    .gh-arrow { color: #8b949e; font-size: 0.8rem; }
+    .gh-signup-form {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+      padding: 24px; max-width: 340px; margin: 0 auto;
+    }
+    .gh-signup-title { color: #e6edf3; font-size: 1.1rem; font-weight: 700; text-align: center; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../" class="active">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../../images/konta-smile.png" alt="こん太">
+    <img src="../../images/link-smile.png" alt="りんく">
+    <img src="../../images/tanunee-smile.png" alt="たぬ姉">
+  </div>
+  <h1>STEP1<br><span>GitHub（ギットハブ）</span></h1>
+  <p>コードを保存する「無料の倉庫」です</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../../">ホーム</a> ＞ <a href="../">セットアップ手順</a> ＞ STEP1 GitHub
+</nav>
+
+<div class="chapter" id="github">
+  <div class="chapter-header">
+    <div class="ch-num">1</div>
+    <div>
+      <h2>🐙 GitHub（ギットハブ）とは？</h2>
+      <div class="ch-sub">コードを保存する「無料の倉庫」です</div>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="koma">
+      <div class="koma-talk">
+        <img src="../../images/link-smile.png" alt="りんく">
+        <div class="talk-bubble">
+          GitHubはね、<strong>プログラムのファイルをインターネット上に保存しておける場所</strong>だよ。<br>
+          無料で使えて、ここにファイルを置くだけでアプリが自動で公開されるんだ！
+        </div>
+      </div>
+      <div class="char-name">りんく</div>
+    </div>
+
+    <div class="koma" id="signup">
+      <div class="step-badge">① アカウントを作る（無料・5分）</div>
+      <div class="koma-talk">
+        <img src="../../images/tanunee-normal.png" alt="たぬ姉">
+        <div class="talk-bubble">
+          まず <span class="hl">github.com</span> を開いて、「Sign up」ボタンを押してね。<br>
+          メールアドレスとパスワードを入れるだけ！
+        </div>
+      </div>
+      <div class="char-name">たぬ姉</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">github.com</span>
+        </div>
+        <div class="mockup-body">
+          <div class="gh-header">
+            <span class="gh-logo">🐙 GitHub</span>
+            <div style="margin-left:auto; display:flex; gap:8px;">
+              <span class="gh-btn gray">Sign in</span>
+              <span class="gh-btn green">Sign up</span>
+            </div>
+          </div>
+          <div style="text-align:center; padding: 12px 0 8px;">
+            <div style="font-size:1.3rem; font-weight:900; color:white; margin-bottom:4px;">Build and ship software</div>
+            <div style="color:#8b949e; font-size:0.85rem;">Join over 100 million developers</div>
+          </div>
+          <div class="gh-signup-form">
+            <div class="gh-signup-title">GitHubに登録する</div>
+            <div class="gh-label">メールアドレス</div>
+            <div class="gh-input" style="color:#8b949e;">yourname@example.com</div>
+            <div class="gh-label">パスワード</div>
+            <div class="gh-input" style="color:#8b949e;">••••••••••••</div>
+            <div class="gh-label">ユーザー名（好きな名前）</div>
+            <div class="gh-input" style="color:#8b949e;">yourname</div>
+            <div style="margin-top:12px; text-align:center;">
+              <span class="gh-btn green" style="padding:10px 32px; font-size:0.9rem;">Continue →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">「Sign up」→ メール・パスワード・名前を入れて「Continue」をクリック</div>
+    </div>
+
+    <div class="koma" id="download">
+      <div class="step-badge">② テンプレートをダウンロードする</div>
+      <div class="koma-talk">
+        <img src="../../images/konta-smile.png" alt="こん太">
+        <div class="talk-bubble">
+          トップページの <span class="hl">「ダウンロードする」</span> ボタンを押してね。<br>
+          ZIPファイルが届くから、<span class="hl">右クリック →「すべて展開」</span> で開くだけ！
+        </div>
+      </div>
+      <div class="char-name">こん太</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">📁 ダウンロード / web-ios-android-template</span>
+        </div>
+        <div class="mockup-body">
+          <div style="margin-bottom:12px;">
+            <span class="gh-repo-name">web-ios-android-template</span>
+            <span class="gh-private-badge">解凍したフォルダ</span>
+          </div>
+          <div class="gh-file-row"><span class="gh-file-icon">📄</span> START-HERE.md <span class="gh-arrow" style="margin-left:auto;">← まずこれを読む</span></div>
+          <div class="gh-file-row"><span class="gh-file-icon">📄</span> app.config.json <span class="gh-arrow" style="margin-left:auto;">← ここだけ変える</span></div>
+          <div class="gh-file-row"><span class="gh-file-icon">📄</span> CLAUDE.md <span class="gh-arrow" style="margin-left:auto;">AI向け説明書</span></div>
+          <div class="gh-file-row"><span class="gh-file-icon">📁</span> docs <span class="gh-arrow" style="margin-left:auto;">手順書・困ったとき</span></div>
+          <div class="gh-file-row"><span class="gh-file-icon">📁</span> site <span class="gh-arrow" style="margin-left:auto;">紹介ページ</span></div>
+        </div>
+      </div>
+      <div class="pointer">ZIPを解凍したら、このフォルダごと AI に渡せばOK</div>
+    </div>
+
+    <div class="koma" id="repo">
+      <div class="koma-talk reverse">
+        <img src="../../images/tanunee-normal.png" alt="たぬ姉">
+        <div class="talk-bubble">
+          解凍したフォルダは、<strong>あなた自身のGitHubリポジトリ</strong>に置くの。<br>
+          そうすると、git push するだけで自動でアプリが作られる仕組みが動くのよ。<br>
+          「Repository name」はアプリの名前に。<strong>Private（非公開）</strong>でOK。<br>
+          （自分のコードだから、非公開のまま自動化できるわ）
+        </div>
+      </div>
+      <div class="char-name">たぬ姉</div>
+
+      <div class="mockup">
+        <div class="mockup-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">github.com / new</span>
+        </div>
+        <div class="mockup-body">
+          <div style="color:white; font-size:1rem; font-weight:700; margin-bottom:16px;">新しいリポジトリを作る</div>
+          <div class="gh-label">オーナー</div>
+          <div class="gh-input" style="color:#e6edf3; margin-bottom:12px;">yourname ▾</div>
+          <div class="gh-label">リポジトリ名（アプリの名前）</div>
+          <div class="gh-input" style="color:#e6edf3; margin-bottom:16px;">my-awesome-app</div>
+          <div style="display:flex; gap:16px; margin-bottom:16px;">
+            <label style="color:#c9d1d9; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+              <span style="width:16px; height:16px; border-radius:50%; border: 2px solid #8b949e; display:inline-block;"></span>
+              🌍 Public（公開）
+            </label>
+            <label style="color:#c9d1d9; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+              <span style="width:16px; height:16px; border-radius:50%; border: 2px solid #58a6ff; background:#58a6ff; display:inline-block;"></span>
+              🔒 <strong style="color:white;">Private（非公開）← おすすめ</strong>
+            </label>
+          </div>
+          <div style="text-align:right;">
+            <span class="gh-btn green" style="padding:10px 24px; font-size:0.88rem;">Create repository</span>
+          </div>
+        </div>
+      </div>
+      <div class="pointer">名前を入れて「Private」を選び、「Create repository」をクリック</div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="step-nav" aria-label="前後のステップ">
+  <span></span>
+  <a class="next" href="../vercel/"><span class="nav-label">次のステップ →</span>STEP2 Vercel</a>
+</nav>
+
+<footer>
+  <div>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見まとめ</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

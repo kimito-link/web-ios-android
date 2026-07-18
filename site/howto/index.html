@@ -4,44 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ゆっくり解説 — GitHub・Vercel・ドメイン・Cloudflare | web-ios-android</title>
+  <meta name="description" content="GitHub・Vercel・ドメイン・Cloudflareの使い方を、画面つきで①から④まで順番に説明する「ゆっくり解説」です。小学生から還暦まで一緒にやってみましょう。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/howto/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ゆっくり解説 — GitHub・Vercel・ドメイン・Cloudflare | web-ios-android">
+  <meta property="og:description" content="GitHub・Vercel・ドメイン・Cloudflareの使い方を、画面つきで①から④まで順番に説明する「ゆっくり解説」です。小学生から還暦まで一緒にやってみましょう。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/howto/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "ゆっくり解説 — GitHub・Vercel・ドメイン・Cloudflare",
+        "description": "アプリを公開するまでに必要な4つの準備（GitHub・Vercel・ドメイン・Cloudflare）を順番に説明します。",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "STEP1 GitHub", "url": "https://web-ios-android.vercel.app/howto/github/" },
+          { "@type": "HowToStep", "position": 2, "name": "STEP2 Vercel", "url": "https://web-ios-android.vercel.app/howto/vercel/" },
+          { "@type": "HowToStep", "position": 3, "name": "STEP3 ドメイン取得", "url": "https://web-ios-android.vercel.app/howto/domain/" },
+          { "@type": "HowToStep", "position": 4, "name": "STEP4 Cloudflare", "url": "https://web-ios-android.vercel.app/howto/cloudflare/" }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "セットアップ手順" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <script>
+    // 旧アンカー(#github等)からの互換リダイレクト。JS無効環境向けに下の
+    // 目次カードにも同idの空アンカーを残す(フラグメントはHTTPリクエストに
+    // 乗らずサーバー側リダイレクトでは対応不能なため)。
+    (function () {
+      var map = { github: 'github/', vercel: 'vercel/', domain: 'domain/', cloudflare: 'cloudflare/' };
+      var h = location.hash.replace('#', '');
+      if (map[h]) location.replace(map[h]);
+    })();
+  </script>
   <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="../assets/css/common.css?v=1">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: #f5f5f7;
-      color: #1a1a1a;
-      line-height: 1.8;
-    }
-
-    /* ── ヘッダー ── */
-    header {
-      background: white;
-      border-bottom: 3px solid #eee;
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      height: 60px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    header img.logo { height: 40px; }
-    header nav { margin-left: auto; display: flex; gap: 4px; }
-    header nav a {
-      color: #555;
-      text-decoration: none;
-      font-size: 0.82rem;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-    header nav a:hover { background: #f0f0ff; color: #667eea; }
-    header nav a.active { background: #667eea; color: white; }
+    body { background: #f5f5f7; }
 
     /* ── ヒーロー ── */
     .hero {
@@ -56,17 +65,9 @@
     .hero h1 span { color: #f6c90e; }
     .hero p { opacity: 0.85; font-size: 0.92rem; }
 
-    /* ── 目次 ── */
-    .toc {
-      max-width: 720px;
-      margin: 32px auto;
-      padding: 0 24px;
-    }
-    .toc-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-    }
+    /* ── 目次カード ── */
+    .toc { max-width: 720px; margin: 32px auto; padding: 0 24px; }
+    .toc-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .toc-item {
       background: white;
       border-radius: 14px;
@@ -82,366 +83,6 @@
     .toc-item .toc-icon { font-size: 1.8rem; margin-bottom: 6px; }
     .toc-item .toc-num { font-size: 0.72rem; color: #888; }
     .toc-item .toc-label { font-size: 0.9rem; font-weight: 800; }
-
-    /* ── セクション共通 ── */
-    .chapter {
-      max-width: 720px;
-      margin: 0 auto 64px;
-      padding: 0 24px;
-    }
-    .chapter-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: linear-gradient(135deg, #1a1a2e, #0f3460);
-      color: white;
-      border-radius: 20px 20px 0 0;
-      padding: 20px 28px;
-      margin-bottom: 0;
-    }
-    .chapter-header .ch-num {
-      background: #f6c90e;
-      color: #1a1a2e;
-      font-weight: 900;
-      font-size: 1.1rem;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .chapter-header h2 { font-size: 1.2rem; font-weight: 900; }
-    .chapter-header .ch-sub { font-size: 0.82rem; opacity: 0.75; margin-top: 2px; }
-    .chapter-body {
-      background: white;
-      border-radius: 0 0 20px 20px;
-      padding: 28px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    }
-
-    /* ── コマ（吹き出し＋画面） ── */
-    .koma {
-      margin-bottom: 36px;
-    }
-    .koma:last-child { margin-bottom: 0; }
-    .koma-talk {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .koma-talk.reverse { flex-direction: row-reverse; }
-    .koma-talk img { width: 60px; flex-shrink: 0; }
-    .talk-bubble {
-      background: #f0f0ff;
-      border-radius: 16px;
-      padding: 12px 16px;
-      font-size: 0.9rem;
-      line-height: 1.75;
-      position: relative;
-      max-width: 500px;
-    }
-    .koma-talk:not(.reverse) .talk-bubble::before {
-      content: '';
-      position: absolute;
-      left: -8px; top: 16px;
-      border: 8px solid transparent;
-      border-right-color: #f0f0ff;
-      border-left: 0;
-    }
-    .koma-talk.reverse .talk-bubble {
-      background: #e8f5e9;
-    }
-    .koma-talk.reverse .talk-bubble::after {
-      content: '';
-      position: absolute;
-      right: -8px; top: 16px;
-      border: 8px solid transparent;
-      border-left-color: #e8f5e9;
-      border-right: 0;
-    }
-    .talk-bubble strong { color: #667eea; }
-    .talk-bubble .hl { background: #fff3cd; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
-    .char-name { font-size: 0.7rem; color: #aaa; text-align: center; margin-top: 4px; }
-
-    /* ── モックアップ画面 ── */
-    .mockup {
-      background: #1e1e2e;
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 0 0 8px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
-    }
-    .mockup-bar {
-      background: #2a2a3e;
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .mockup-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .mockup-bar .dot.r { background: #ff5f57; }
-    .mockup-bar .dot.y { background: #febc2e; }
-    .mockup-bar .dot.g { background: #28c840; }
-    .mockup-bar .url {
-      background: #3a3a50;
-      border-radius: 6px;
-      padding: 3px 12px;
-      font-size: 0.75rem;
-      color: #aaa;
-      margin-left: 8px;
-      flex: 1;
-    }
-    .mockup-body { padding: 20px; }
-
-    /* GitHub モックアップ */
-    .gh-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .gh-logo { font-size: 1.4rem; }
-    .gh-nav { display: flex; gap: 16px; font-size: 0.78rem; color: #ccc; }
-    .gh-btn {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .gh-btn.green { background: #238636; color: white; }
-    .gh-btn.gray { background: #30363d; color: #ccc; border: 1px solid #444; }
-    .gh-btn.big {
-      background: #238636;
-      color: white;
-      font-size: 0.9rem;
-      padding: 10px 20px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .gh-input {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 6px 12px;
-      color: #e6edf3;
-      font-size: 0.82rem;
-      width: 100%;
-      margin-bottom: 8px;
-    }
-    .gh-label { font-size: 0.78rem; color: #8b949e; margin-bottom: 4px; }
-    .gh-repo-name { color: #58a6ff; font-size: 0.95rem; font-weight: 700; }
-    .gh-private-badge {
-      display: inline-block;
-      border: 1px solid #30363d;
-      border-radius: 999px;
-      padding: 2px 10px;
-      font-size: 0.72rem;
-      color: #8b949e;
-      margin-left: 8px;
-    }
-    .gh-file-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid #21262d;
-      font-size: 0.82rem;
-      color: #c9d1d9;
-    }
-    .gh-file-icon { color: #8b949e; }
-    .gh-arrow { color: #8b949e; font-size: 0.8rem; }
-    .gh-signup-form {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 340px;
-      margin: 0 auto;
-    }
-    .gh-signup-title { color: #e6edf3; font-size: 1.1rem; font-weight: 700; text-align: center; margin-bottom: 16px; }
-
-    /* 矢印ポインター */
-    .pointer {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff3cd;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #856404;
-      margin-top: 8px;
-    }
-    .pointer::before { content: '👆'; font-size: 1.1rem; }
-
-    /* Vercel モックアップ */
-    .vc-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      color: white;
-    }
-    .vc-logo { font-weight: 900; font-size: 1.1rem; }
-    .vc-card {
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 10px;
-    }
-    .vc-card h4 { color: white; font-size: 0.88rem; margin-bottom: 6px; }
-    .vc-card p { color: #888; font-size: 0.78rem; }
-    .vc-btn {
-      background: white;
-      color: black;
-      font-weight: 700;
-      font-size: 0.82rem;
-      padding: 8px 18px;
-      border-radius: 6px;
-      display: inline-block;
-      margin-top: 8px;
-    }
-    .vc-success {
-      background: #0a2a1a;
-      border: 1px solid #1a5c36;
-      border-radius: 10px;
-      padding: 16px;
-      text-align: center;
-    }
-    .vc-success .check { font-size: 2rem; }
-    .vc-success h4 { color: #4ade80; font-size: 0.95rem; font-weight: 700; margin: 8px 0 4px; }
-    .vc-success p { color: #86efac; font-size: 0.82rem; }
-    .vc-url { color: #60a5fa; font-size: 0.85rem; text-decoration: underline; margin-top: 6px; display: block; }
-
-    /* ドメイン モックアップ */
-    .domain-search {
-      background: #fff;
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .domain-search input {
-      flex: 1;
-      border: 2px solid #0066cc;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 0.88rem;
-    }
-    .domain-search button {
-      background: #0066cc;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-    .domain-result {
-      background: #f0fff4;
-      border: 2px solid #22c55e;
-      border-radius: 8px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .domain-result .domain-name { font-weight: 700; font-size: 0.95rem; color: #15803d; }
-    .domain-result .domain-price { color: #166534; font-size: 0.85rem; }
-    .domain-result button {
-      background: #22c55e;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 14px;
-      font-weight: 700;
-      font-size: 0.82rem;
-    }
-
-    /* Cloudflare モックアップ */
-    .cf-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      color: white;
-    }
-    .cf-logo { font-size: 1.2rem; font-weight: 900; color: #f48120; }
-    .cf-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    .cf-table th { background: #2a2a3e; color: #aaa; padding: 8px 10px; text-align: left; }
-    .cf-table td { padding: 8px 10px; border-bottom: 1px solid #2a2a3e; color: #c9d1d9; }
-    .cf-table tr:last-child td { border-bottom: none; }
-    .cf-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
-    .cf-tag.cname { background: #1a3a5c; color: #60a5fa; }
-    .cf-tag.a { background: #1a3a1a; color: #4ade80; }
-    .cf-status { display: inline-flex; align-items: center; gap: 4px; }
-    .cf-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
-
-    /* ステップバッジ */
-    .step-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      font-weight: 800;
-      font-size: 0.8rem;
-      padding: 4px 12px;
-      border-radius: 999px;
-      margin-bottom: 12px;
-    }
-
-    /* 完成イメージ */
-    .complete-flow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      background: linear-gradient(135deg, #1a1a2e, #0f3460);
-      border-radius: 16px;
-      padding: 24px;
-      margin-top: 32px;
-    }
-    .flow-node {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      padding: 12px 16px;
-      text-align: center;
-      color: white;
-      font-size: 0.82rem;
-    }
-    .flow-node .fn-icon { font-size: 1.5rem; margin-bottom: 4px; }
-    .flow-node.done { background: rgba(246,201,14,0.15); border-color: #f6c90e; }
-    .flow-arr { color: rgba(255,255,255,0.4); font-size: 1.4rem; }
-
-    /* フッター */
-    footer {
-      background: #1a1a2e;
-      color: #aaa;
-      text-align: center;
-      padding: 32px 24px;
-      font-size: 0.85rem;
-    }
-    footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82em; display: inline-block; }
-
-    @media (max-width: 500px) {
-      .koma-talk { flex-direction: column; align-items: flex-start; }
-      .koma-talk.reverse { flex-direction: column; }
-      .koma-talk .talk-bubble::before,
-      .koma-talk.reverse .talk-bubble::after { display: none; }
-    }
   </style>
 </head>
 <body>
@@ -472,630 +113,44 @@
   <p>小学生から還暦まで！ 画面を見ながら一緒にやってみよう</p>
 </div>
 
-<!-- 目次 -->
-<div class="toc">
+<!-- 目次ハブ -->
+<nav class="toc" aria-label="セットアップ手順の一覧">
   <div class="toc-list">
-    <a href="#github" class="toc-item">
+    <a href="github/" class="toc-item" id="github">
       <div class="toc-icon">🐙</div>
-      <div class="toc-num">STEP 1</div>
+      <div class="toc-num">STEP 1・5分</div>
       <div class="toc-label">GitHub</div>
     </a>
-    <a href="#vercel" class="toc-item">
+    <a href="vercel/" class="toc-item" id="vercel">
       <div class="toc-icon">▲</div>
-      <div class="toc-num">STEP 2</div>
+      <div class="toc-num">STEP 2・10分</div>
       <div class="toc-label">Vercel</div>
     </a>
-    <a href="#domain" class="toc-item">
+    <a href="domain/" class="toc-item" id="domain">
       <div class="toc-icon">🌐</div>
-      <div class="toc-num">STEP 3</div>
+      <div class="toc-num">STEP 3・10分</div>
       <div class="toc-label">ドメイン取得</div>
     </a>
-    <a href="#cloudflare" class="toc-item">
+    <a href="cloudflare/" class="toc-item" id="cloudflare">
       <div class="toc-icon">🟠</div>
-      <div class="toc-num">STEP 4</div>
+      <div class="toc-num">STEP 4・15分</div>
       <div class="toc-label">Cloudflare</div>
     </a>
   </div>
-</div>
+</nav>
 
-<!-- ══════════════════════════════
-     STEP 1: GitHub
-══════════════════════════════ -->
-<div class="chapter" id="github">
-  <div class="chapter-header">
-    <div class="ch-num">1</div>
-    <div>
-      <h2>🐙 GitHub（ギットハブ）とは？</h2>
-      <div class="ch-sub">コードを保存する「無料の倉庫」です</div>
-    </div>
-  </div>
-  <div class="chapter-body">
-
-    <!-- コマ1 -->
-    <div class="koma">
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          GitHubはね、<strong>プログラムのファイルをインターネット上に保存しておける場所</strong>だよ。<br>
-          無料で使えて、ここにファイルを置くだけでアプリが自動で公開されるんだ！
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-    </div>
-
-    <!-- コマ2: アカウント作成 -->
-    <div class="koma">
-      <div class="step-badge">① アカウントを作る（無料・5分）</div>
-      <div class="koma-talk">
-        <img src="../images/tanunee-normal.png" alt="たぬ姉">
-        <div class="talk-bubble">
-          まず <span class="hl">github.com</span> を開いて、「Sign up」ボタンを押してね。<br>
-          メールアドレスとパスワードを入れるだけ！
-        </div>
-      </div>
-      <div class="char-name">たぬ姉</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">github.com</span>
-        </div>
-        <div class="mockup-body">
-          <div class="gh-header">
-            <span class="gh-logo">🐙 GitHub</span>
-            <div style="margin-left:auto; display:flex; gap:8px;">
-              <span class="gh-btn gray">Sign in</span>
-              <span class="gh-btn green">Sign up</span>
-            </div>
-          </div>
-          <div style="text-align:center; padding: 12px 0 8px;">
-            <div style="font-size:1.3rem; font-weight:900; color:white; margin-bottom:4px;">Build and ship software</div>
-            <div style="color:#8b949e; font-size:0.85rem;">Join over 100 million developers</div>
-          </div>
-          <div class="gh-signup-form">
-            <div class="gh-signup-title">GitHubに登録する</div>
-            <div class="gh-label">メールアドレス</div>
-            <div class="gh-input" style="color:#8b949e;">yourname@example.com</div>
-            <div class="gh-label">パスワード</div>
-            <div class="gh-input" style="color:#8b949e;">••••••••••••</div>
-            <div class="gh-label">ユーザー名（好きな名前）</div>
-            <div class="gh-input" style="color:#8b949e;">yourname</div>
-            <div style="margin-top:12px; text-align:center;">
-              <span class="gh-btn green" style="padding:10px 32px; font-size:0.9rem;">Continue →</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">「Sign up」→ メール・パスワード・名前を入れて「Continue」をクリック</div>
-    </div>
-
-    <!-- コマ3: テンプレートをダウンロード -->
-    <div class="koma">
-      <div class="step-badge">② テンプレートをダウンロードする</div>
-      <div class="koma-talk">
-        <img src="../images/konta-smile.png" alt="こん太">
-        <div class="talk-bubble">
-          トップページの <span class="hl">「ダウンロードする」</span> ボタンを押してね。<br>
-          ZIPファイルが届くから、<span class="hl">右クリック →「すべて展開」</span> で開くだけ！
-        </div>
-      </div>
-      <div class="char-name">こん太</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">📁 ダウンロード / web-ios-android-template</span>
-        </div>
-        <div class="mockup-body">
-          <div style="margin-bottom:12px;">
-            <span class="gh-repo-name">web-ios-android-template</span>
-            <span class="gh-private-badge">解凍したフォルダ</span>
-          </div>
-          <div class="gh-file-row"><span class="gh-file-icon">📄</span> START-HERE.md <span class="gh-arrow" style="margin-left:auto;">← まずこれを読む</span></div>
-          <div class="gh-file-row"><span class="gh-file-icon">📄</span> app.config.json <span class="gh-arrow" style="margin-left:auto;">← ここだけ変える</span></div>
-          <div class="gh-file-row"><span class="gh-file-icon">📄</span> CLAUDE.md <span class="gh-arrow" style="margin-left:auto;">AI向け説明書</span></div>
-          <div class="gh-file-row"><span class="gh-file-icon">📁</span> docs <span class="gh-arrow" style="margin-left:auto;">手順書・困ったとき</span></div>
-          <div class="gh-file-row"><span class="gh-file-icon">📁</span> site <span class="gh-arrow" style="margin-left:auto;">紹介ページ</span></div>
-        </div>
-      </div>
-      <div class="pointer">ZIPを解凍したら、このフォルダごと AI に渡せばOK</div>
-    </div>
-
-    <!-- コマ4: リポジトリ名をつける -->
-    <div class="koma">
-      <div class="koma-talk reverse">
-        <img src="../images/tanunee-normal.png" alt="たぬ姉">
-        <div class="talk-bubble">
-          解凍したフォルダは、<strong>あなた自身のGitHubリポジトリ</strong>に置くの。<br>
-          そうすると、git push するだけで自動でアプリが作られる仕組みが動くのよ。<br>
-          「Repository name」はアプリの名前に。<strong>Private（非公開）</strong>でOK。<br>
-          （自分のコードだから、非公開のまま自動化できるわ）
-        </div>
-      </div>
-      <div class="char-name">たぬ姉</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">github.com / new</span>
-        </div>
-        <div class="mockup-body">
-          <div style="color:white; font-size:1rem; font-weight:700; margin-bottom:16px;">新しいリポジトリを作る</div>
-          <div class="gh-label">オーナー</div>
-          <div class="gh-input" style="color:#e6edf3; margin-bottom:12px;">yourname ▾</div>
-          <div class="gh-label">リポジトリ名（アプリの名前）</div>
-          <div class="gh-input" style="color:#e6edf3; margin-bottom:16px;">my-awesome-app</div>
-          <div style="display:flex; gap:16px; margin-bottom:16px;">
-            <label style="color:#c9d1d9; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
-              <span style="width:16px; height:16px; border-radius:50%; border: 2px solid #8b949e; display:inline-block;"></span>
-              🌍 Public（公開）
-            </label>
-            <label style="color:#c9d1d9; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
-              <span style="width:16px; height:16px; border-radius:50%; border: 2px solid #58a6ff; background:#58a6ff; display:inline-block;"></span>
-              🔒 <strong style="color:white;">Private（非公開）← おすすめ</strong>
-            </label>
-          </div>
-          <div style="text-align:right;">
-            <span class="gh-btn green" style="padding:10px 24px; font-size:0.88rem;">Create repository</span>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">名前を入れて「Private」を選び、「Create repository」をクリック</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════
-     STEP 2: Vercel
-══════════════════════════════ -->
-<div class="chapter" id="vercel">
-  <div class="chapter-header">
-    <div class="ch-num">2</div>
-    <div>
-      <h2>▲ Vercel（バーセル）とは？</h2>
-      <div class="ch-sub">GitHubと連携してWebサイトを自動で公開してくれる無料サービス</div>
-    </div>
-  </div>
-  <div class="chapter-body">
-
-    <div class="koma">
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          Vercelはね、GitHubにファイルを置くと<strong>自動でWebサイトを公開</strong>してくれるサービスだよ。<br>
-          個人利用は無料！ むずかしい設定はほぼなし！
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-    </div>
-
-    <!-- コマ: Vercel登録 -->
-    <div class="koma">
-      <div class="step-badge">① Vercelに登録する（GitHubアカウントでOK）</div>
-      <div class="koma-talk">
-        <img src="../images/konta-smile.png" alt="こん太">
-        <div class="talk-bubble">
-          <span class="hl">vercel.com</span> を開いて、<strong>「Continue with GitHub」</strong>をクリックするだけ！<br>
-          GitHubのアカウントで自動でログインできるよ。新しいパスワードは不要！
-        </div>
-      </div>
-      <div class="char-name">こん太</div>
-
-      <div class="mockup" style="background:#000;">
-        <div class="mockup-bar" style="background:#111;">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">vercel.com</span>
-        </div>
-        <div class="mockup-body" style="text-align:center; padding:28px;">
-          <div style="font-size:2rem; font-weight:900; color:white; margin-bottom:4px;">▲ Vercel</div>
-          <div style="color:#888; font-size:0.85rem; margin-bottom:24px;">Deploy your project in seconds</div>
-          <div style="background:#333; border:1px solid #555; border-radius:8px; padding:12px 20px; display:inline-flex; align-items:center; gap:10px; color:white; font-weight:700; font-size:0.9rem; cursor:pointer;">
-            🐙 Continue with GitHub
-          </div>
-          <div style="color:#555; font-size:0.78rem; margin-top:12px;">GitHubのアカウントで続ける（新規登録不要）</div>
-        </div>
-      </div>
-      <div class="pointer">「Continue with GitHub」をクリック → GitHubの許可画面が出たら「Authorize」をクリック</div>
-    </div>
-
-    <!-- コマ: プロジェクト追加 -->
-    <div class="koma">
-      <div class="step-badge">② GitHubのリポジトリを選ぶ</div>
-      <div class="koma-talk">
-        <img src="../images/tanunee-normal.png" alt="たぬ姉">
-        <div class="talk-bubble">
-          ログインすると「Add New Project」という画面が出るよ。<br>
-          さっき作ったリポジトリを選んで <span class="hl">「Import」</span> を押すだけ！
-        </div>
-      </div>
-      <div class="char-name">たぬ姉</div>
-
-      <div class="mockup" style="background:#000;">
-        <div class="mockup-bar" style="background:#111;">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">vercel.com / new</span>
-        </div>
-        <div class="mockup-body">
-          <div class="vc-header">
-            <span class="vc-logo">▲ Vercel</span>
-            <span style="color:#888; font-size:0.85rem; margin-left:auto;">新しいプロジェクト</span>
-          </div>
-          <div style="color:#888; font-size:0.82rem; margin-bottom:12px;">GitHubのリポジトリをインポート</div>
-          <div class="vc-card">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-size:1.1rem;">📁</span>
-              <div>
-                <div class="gh-repo-name" style="font-size:0.88rem;">yourname / my-awesome-app</div>
-                <div style="color:#555; font-size:0.75rem;">更新: たった今</div>
-              </div>
-              <div class="vc-btn" style="margin-left:auto; margin-top:0;">Import</div>
-            </div>
-          </div>
-          <div style="color:#888; font-size:0.82rem; margin-bottom:12px; margin-top:16px;">設定はそのままでOK</div>
-          <div style="text-align:center; margin-top:8px;">
-            <div class="vc-btn" style="background:#0070f3; color:white; padding:10px 32px; font-size:0.9rem;">🚀 Deploy</div>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">リポジトリの「Import」→ そのまま「Deploy」をクリック</div>
-    </div>
-
-    <!-- コマ: 公開完了 -->
-    <div class="koma">
-      <div class="step-badge">③ 公開完了！</div>
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          1〜2分待つと公開完了！<br>
-          <strong>yourname.vercel.app</strong> というURLでWebサイトが見られるよ。<br>
-          次はこれを自分のドメインにつなごう！
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-
-      <div class="mockup" style="background:#000;">
-        <div class="mockup-bar" style="background:#111;">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">vercel.com / dashboard</span>
-        </div>
-        <div class="mockup-body">
-          <div class="vc-success">
-            <div class="check">🎉</div>
-            <h4>デプロイ成功！</h4>
-            <p>あなたのWebサイトが公開されました</p>
-            <span class="vc-url">https://my-awesome-app.vercel.app</span>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">このURLをブラウザで開くとサイトが見える！</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════
-     STEP 3: ドメイン取得
-══════════════════════════════ -->
-<div class="chapter" id="domain">
-  <div class="chapter-header">
-    <div class="ch-num">3</div>
-    <div>
-      <h2>🌐 ドメインとは？</h2>
-      <div class="ch-sub">「自分だけのURL」を買う（例：my-app.com）</div>
-    </div>
-  </div>
-  <div class="chapter-body">
-
-    <div class="koma">
-      <div class="koma-talk">
-        <img src="../images/konta-smile.png" alt="こん太">
-        <div class="talk-bubble">
-          ドメインは <strong>インターネット上の「住所」</strong> みたいなもの。<br>
-          「.com」や「.jp」で終わる文字列のことだよ。<br>
-          年間1,000〜2,000円くらいで買えるよ！
-        </div>
-      </div>
-      <div class="char-name">こん太</div>
-    </div>
-
-    <!-- コマ: Xserverでドメイン取得 -->
-    <div class="koma">
-      <div class="step-badge">① Xserverドメインで検索する</div>
-      <div class="koma-talk">
-        <img src="../images/tanunee-normal.png" alt="たぬ姉">
-        <div class="talk-bubble">
-          <span class="hl">xserver.ne.jp/domain</span> を開いて、<br>
-          欲しいドメイン名を入力して「検索」を押してね。<br>
-          使えるかどうかすぐわかるよ！
-        </div>
-      </div>
-      <div class="char-name">たぬ姉</div>
-
-      <div class="mockup" style="background:#fff;">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">xserver.ne.jp/domain</span>
-        </div>
-        <div class="mockup-body" style="background:white;">
-          <div style="text-align:center; margin-bottom:16px;">
-            <div style="font-size:1.1rem; font-weight:900; color:#1a1a1a; margin-bottom:4px;">Xserverドメイン</div>
-            <div style="color:#666; font-size:0.82rem;">国内最大級のドメイン登録サービス</div>
-          </div>
-          <div class="domain-search">
-            <input type="text" value="my-awesome-app" style="pointer-events:none;">
-            <button>検索する</button>
-          </div>
-          <div class="domain-result">
-            <div>
-              <div class="domain-name">my-awesome-app.com ✅ 取得可能</div>
-              <div class="domain-price">初年度 1,628円 / 次年度〜 1,628円/年</div>
-            </div>
-            <button>カートに追加</button>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">好きな名前を入力 →「検索する」→「カートに追加」→ 購入手続きへ</div>
-    </div>
-
-    <!-- コマ: ネームサーバー変更 -->
-    <div class="koma">
-      <div class="step-badge">② ネームサーバーをCloudflareに変える</div>
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          ドメインを買ったら、<strong>「ネームサーバー」の設定を変える</strong>必要があるよ。<br>
-          むずかしそうだけど、コピペするだけ！ 次のSTEPでやり方を説明するね。
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-
-      <div class="mockup" style="background:#fff;">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">xserver.ne.jp / domain / settings</span>
-        </div>
-        <div class="mockup-body" style="background:white;">
-          <div style="font-weight:700; color:#1a1a1a; margin-bottom:12px;">ドメイン管理 ＞ my-awesome-app.com</div>
-          <div style="background:#f5f5f5; border-radius:8px; padding:14px; margin-bottom:8px;">
-            <div style="font-size:0.82rem; color:#333; font-weight:700; margin-bottom:8px;">ネームサーバーの設定</div>
-            <div style="font-size:0.78rem; color:#666; margin-bottom:8px;">現在の設定：</div>
-            <div style="font-family:monospace; font-size:0.78rem; color:#1a1a1a; margin-bottom:4px;">ns1.xserver.ne.jp</div>
-            <div style="font-family:monospace; font-size:0.78rem; color:#1a1a1a; margin-bottom:12px;">ns2.xserver.ne.jp</div>
-            <div style="font-size:0.78rem; color:#e74c3c; font-weight:700;">↓ これをCloudflareのネームサーバーに変更する</div>
-          </div>
-          <div style="background:#fff3cd; border-radius:8px; padding:12px; font-size:0.8rem; color:#856404;">
-            📋 Cloudflareから届く2行の文字列をここに貼り付ける（次STEPで説明）
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════
-     STEP 4: Cloudflare
-══════════════════════════════ -->
-<div class="chapter" id="cloudflare">
-  <div class="chapter-header">
-    <div class="ch-num">4</div>
-    <div>
-      <h2>🟠 Cloudflare（クラウドフレア）とは？</h2>
-      <div class="ch-sub">ドメインとVercelをつなぐ「交換台」。速く・安全にしてくれる無料サービス</div>
-    </div>
-  </div>
-  <div class="chapter-body">
-
-    <div class="koma">
-      <div class="koma-talk">
-        <img src="../images/tanunee-normal.png" alt="たぬ姉">
-        <div class="talk-bubble">
-          Cloudflareは「ドメイン」と「Vercelのサイト」を<strong>つなぐ橋</strong>みたいなもの。<br>
-          悪い人からの攻撃を防いでくれたり、サイトを速くしてくれたりもするよ。無料！
-        </div>
-      </div>
-      <div class="char-name">たぬ姉</div>
-    </div>
-
-    <!-- コマ: Cloudflare登録 -->
-    <div class="koma">
-      <div class="step-badge">① Cloudflareに登録してドメインを追加</div>
-      <div class="koma-talk">
-        <img src="../images/konta-smile.png" alt="こん太">
-        <div class="talk-bubble">
-          <span class="hl">cloudflare.com</span> でアカウントを作って、<br>
-          「Add a Site（サイトを追加）」から買ったドメインを入れてね。<br>
-          プランは <strong>Free（無料）</strong> でOK！
-        </div>
-      </div>
-      <div class="char-name">こん太</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">dash.cloudflare.com</span>
-        </div>
-        <div class="mockup-body">
-          <div class="cf-header">
-            <span class="cf-logo">☁ Cloudflare</span>
-          </div>
-          <div style="background:#111827; border-radius:8px; padding:16px; margin-bottom:12px;">
-            <div style="color:#9ca3af; font-size:0.82rem; margin-bottom:8px;">サイトを追加する</div>
-            <div style="display:flex; gap:8px;">
-              <div class="gh-input" style="flex:1; margin-bottom:0; color:#e6edf3;">my-awesome-app.com</div>
-              <div class="gh-btn green" style="white-space:nowrap;">追加 →</div>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-            <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:12px; text-align:center; opacity:0.5;">
-              <div style="color:white; font-weight:700; font-size:0.85rem;">Pro</div>
-              <div style="color:#f6c90e; font-size:0.75rem;">$20/月</div>
-            </div>
-            <div style="background:#111827; border:2px solid #f6c90e; border-radius:8px; padding:12px; text-align:center;">
-              <div style="color:white; font-weight:700; font-size:0.85rem;">Free ← これ！</div>
-              <div style="color:#4ade80; font-size:0.75rem;">$0 / 無料</div>
-            </div>
-            <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:12px; text-align:center; opacity:0.5;">
-              <div style="color:white; font-weight:700; font-size:0.85rem;">Business</div>
-              <div style="color:#f6c90e; font-size:0.75rem;">$200/月</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pointer">ドメインを入力 →「追加」→ プランは「Free」を選んで「Continue」</div>
-    </div>
-
-    <!-- コマ: ネームサーバーコピー -->
-    <div class="koma">
-      <div class="step-badge">② ネームサーバーをコピーしてXserverに貼る</div>
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          Cloudflareが <span class="hl">2行の文字列（ネームサーバー）</span> を教えてくれるよ。<br>
-          それをコピーして、Xserverの管理画面に貼り付けるだけ！<br>
-          反映に最大24時間かかるけど、だいたい数時間でOKになるよ。
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">dash.cloudflare.com / ネームサーバーを変更</span>
-        </div>
-        <div class="mockup-body">
-          <div style="color:#9ca3af; font-size:0.85rem; margin-bottom:12px;">📋 このネームサーバーをコピーしてXserverに貼る</div>
-          <div style="background:#0d1117; border:1px solid #f6c90e; border-radius:8px; padding:14px; margin-bottom:8px;">
-            <div style="color:#f6c90e; font-size:0.72rem; margin-bottom:6px;">ネームサーバー 1</div>
-            <div style="font-family:monospace; color:#e6edf3; font-size:0.88rem;">vida.ns.cloudflare.com</div>
-          </div>
-          <div style="background:#0d1117; border:1px solid #f6c90e; border-radius:8px; padding:14px;">
-            <div style="color:#f6c90e; font-size:0.72rem; margin-bottom:6px;">ネームサーバー 2</div>
-            <div style="font-family:monospace; color:#e6edf3; font-size:0.88rem;">walt.ns.cloudflare.com</div>
-          </div>
-          <div style="color:#6b7280; font-size:0.78rem; margin-top:12px;">※ 実際の文字列はあなたのドメインによって異なります</div>
-        </div>
-      </div>
-      <div class="pointer">この2行をコピー → Xserverの「ネームサーバー設定」に貼り付け → 保存</div>
-    </div>
-
-    <!-- コマ: DNSレコード設定 -->
-    <div class="koma">
-      <div class="step-badge">③ VercelとドメインをDNSでつなぐ</div>
-      <div class="koma-talk reverse">
-        <img src="../images/konta-smile.png" alt="こん太">
-        <div class="talk-bubble">
-          Cloudflareの「DNS」という画面で、<br>
-          Vercelの「76.76.21.21」というIPアドレスを登録するよ。<br>
-          Vercelの設定画面に「Add this record」って書いてあるから、それを見ながら入力してね！
-        </div>
-      </div>
-      <div class="char-name">こん太</div>
-
-      <div class="mockup">
-        <div class="mockup-bar">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">dash.cloudflare.com / DNS / レコード</span>
-        </div>
-        <div class="mockup-body">
-          <div class="cf-header">
-            <span class="cf-logo">☁ DNS レコード</span>
-          </div>
-          <table class="cf-table">
-            <tr>
-              <th>タイプ</th>
-              <th>名前</th>
-              <th>内容（Value）</th>
-            </tr>
-            <tr>
-              <td><span class="cf-tag a">A</span></td>
-              <td style="font-family:monospace;">@</td>
-              <td style="font-family:monospace; font-size:0.75rem;">76.76.21.21</td>
-            </tr>
-            <tr>
-              <td><span class="cf-tag cname">CNAME</span></td>
-              <td style="font-family:monospace;">www</td>
-              <td style="font-family:monospace; font-size:0.75rem;">cname.vercel-dns.com</td>
-            </tr>
-          </table>
-          <div style="margin-top:12px; color:#6b7280; font-size:0.78rem;">
-            ↑ この2行を追加する。Vercelの管理画面にコピペ用の値が表示されます。
-          </div>
-        </div>
-      </div>
-      <div class="pointer">Vercelの「Domains」設定 → DNSレコードの値をCloudflareに入力 → 保存</div>
-    </div>
-
-    <!-- コマ: 完成 -->
-    <div class="koma">
-      <div class="step-badge">④ 完成！独自ドメインでサイトが見える</div>
-      <div class="koma-talk">
-        <img src="../images/link-smile.png" alt="りんく">
-        <div class="talk-bubble">
-          数時間待つと <span class="hl">https://my-awesome-app.com</span> で<br>
-          あなたのサイトが見られるようになるよ！<br>
-          <strong>🔒 鍵マーク（HTTPS）</strong> もCloudflareが自動でつけてくれるから安全！
-        </div>
-      </div>
-      <div class="char-name">りんく</div>
-
-      <div class="mockup" style="background:#000;">
-        <div class="mockup-bar" style="background:#111;">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url" style="color:#4ade80;">🔒 https://my-awesome-app.com</span>
-        </div>
-        <div class="mockup-body">
-          <div class="vc-success">
-            <div class="check">🎉</div>
-            <h4>独自ドメインで公開完了！</h4>
-            <p>https://my-awesome-app.com でサイトが見えます</p>
-            <p style="margin-top:6px; color:#86efac; font-size:0.78rem;">🔒 SSL証明書も自動で設定済み</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- 全体フロー -->
 <div class="chapter">
-  <div class="complete-flow">
-    <div class="flow-node done">
-      <div class="fn-icon">🐙</div>
-      <div>GitHub<br><span style="font-size:0.72rem; opacity:0.7;">コードを保存</span></div>
-    </div>
-    <div class="flow-arr">→</div>
-    <div class="flow-node done">
-      <div class="fn-icon">▲</div>
-      <div>Vercel<br><span style="font-size:0.72rem; opacity:0.7;">自動で公開</span></div>
-    </div>
-    <div class="flow-arr">→</div>
-    <div class="flow-node done">
-      <div class="fn-icon">🌐</div>
-      <div>ドメイン取得<br><span style="font-size:0.72rem; opacity:0.7;">自分のURL</span></div>
-    </div>
-    <div class="flow-arr">→</div>
-    <div class="flow-node done">
-      <div class="fn-icon">🟠</div>
-      <div>Cloudflare<br><span style="font-size:0.72rem; opacity:0.7;">つなぐ＋守る</span></div>
-    </div>
-    <div class="flow-arr">→</div>
-    <div class="flow-node" style="background:rgba(246,201,14,0.2); border-color:#f6c90e;">
-      <div class="fn-icon">🎉</div>
-      <div style="color:#f6c90e; font-weight:800;">公開完了！</div>
-    </div>
-  </div>
-
-  <div style="text-align:center; margin-top:32px;">
-    <div class="koma-talk" style="justify-content:center; margin-bottom:0;">
-      <img src="../images/tanunee-normal.png" alt="たぬ姉" style="width:60px;">
-      <div class="talk-bubble" style="max-width:400px;">
-        わからなくなったら、<strong>エラー画面のスクショを撮ってAIに貼るだけ</strong>で解決できるよ！<br>
-        Claude・Cursor・ChatGPTなど何でもOK 🤖
-      </div>
-    </div>
+  <div class="chapter-body" style="box-shadow: 0 4px 24px rgba(0,0,0,0.08); border-radius: 20px;">
+    <p style="font-size:0.92rem; color:#444; line-height:1.9;">
+      アプリを公開するまでに必要な4つの準備を、それぞれ画面つきで説明する専用ページにまとめました。
+      上から順に①→②→③→④と進めれば、迷わず独自ドメインでの公開まで辿り着けます。
+    </p>
+    <ul style="margin-top:16px; padding-left:20px; font-size:0.9rem; line-height:2.0; color:#333;">
+      <li><a href="github/" style="color:#667eea; font-weight:700;">STEP1 GitHub</a> — コードを保存する「無料の倉庫」にテンプレートを置く</li>
+      <li><a href="vercel/" style="color:#667eea; font-weight:700;">STEP2 Vercel</a> — GitHubと連携してWebサイトを自動で公開する</li>
+      <li><a href="domain/" style="color:#667eea; font-weight:700;">STEP3 ドメイン取得</a> — 「自分だけのURL」を購入する</li>
+      <li><a href="cloudflare/" style="color:#667eea; font-weight:700;">STEP4 Cloudflare</a> — ドメインとVercelをつなぎ、独自ドメインで公開する</li>
+    </ul>
   </div>
 </div>
 
