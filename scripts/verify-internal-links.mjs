@@ -166,6 +166,32 @@ if (fs.existsSync(howtoIndexPath)) {
 }
 
 // ---------------------------------------------------------------------------
+// RULE 4 — walkthrough/play/ のstep予約id
+// JSON-LDのHowToStep url（絶対URL・LINK_RE対象外）が #step-N を指すため、
+// idが消えると機械可読の工程リンクが黙って死ぬ。fail-closedで保証する。
+// ---------------------------------------------------------------------------
+const playIndexPath = path.join(SITE_DIR, 'walkthrough', 'play', 'index.html');
+const RESERVED_PLAY_STEP_IDS = [
+  'step-0', 'step-1', 'step-2', 'step-3', 'step-4',
+  'step-5', 'step-6', 'step-7', 'step-help',
+];
+if (fs.existsSync(playIndexPath)) {
+  const ids = getIdsFor(playIndexPath);
+  for (const id of RESERVED_PLAY_STEP_IDS) {
+    if (!ids.has(id)) {
+      fail(
+        'site/walkthrough/play/index.html',
+        `HowToStep/roadmapの予約id "${id}" が無い。JSON-LDの工程URLと外部アンカーが着地先を失う`,
+      );
+    } else {
+      ok(`walkthrough/play/ 予約id "${id}" 実在`);
+    }
+  }
+} else {
+  console.log(`${ANSI_DIM}- site/walkthrough/play/index.html が無い(RULE 4 skip)${ANSI_RESET}`);
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 console.log('');
