@@ -13,6 +13,22 @@
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="../../favicon.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "追体験ガイド", "item": "https://web-ios-android.vercel.app/walkthrough/" },
+          { "@type": "ListItem", "position": 3, "name": "App Store Connect" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; overflow-x: hidden; }
@@ -235,6 +251,9 @@
 </header>
   <div class="wrap">
     <a class="top-link" href="../">← 追体験トップ</a>
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+      <a href="../../">ホーム</a> ＞ <a href="../">追体験ガイド</a> ＞ App Store Connect
+    </nav>
 
     <div class="hero">
       <h1>App Store 追体験<br>― ゆっくり解説・実画面つき ―</h1>
