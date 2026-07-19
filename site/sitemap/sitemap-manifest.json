@@ -1,9 +1,10 @@
 {
-  "$comment": "href は /sitemap/ からの相対（外部は https:// の絶対URL）。external: true または http(s) で新しいタブ・noopener。srcPath は内部リンクの実在ファイル用メモ。",
+  "$comment": "href は /sitemap/ からの相対（外部は https:// の絶対URL）。external: true または http(s) で新しいタブ・noopener。srcPath は内部リンクの実在ファイル用メモ。slug は各ページのパンくずが飛ぶアンカーID（#slug）。",
   "pageTitle": "サイトマップ",
   "sections": [
     {
       "title": "🚀 はじめに読むページ",
+      "slug": "start",
       "links": [
         { "label": "🏠 トップ", "href": "../", "srcPath": "index.html" },
         { "label": "📋 準備ガイド", "href": "../guide/", "srcPath": "guide/index.html" },
@@ -12,6 +13,7 @@
     },
     {
       "title": "🖼️ ゆっくり解説（STEP順）",
+      "slug": "howto",
       "links": [
         { "label": "ゆっくり解説 一覧", "href": "../howto/", "srcPath": "howto/index.html" },
         { "label": "① GitHub — コードを保存する無料の倉庫にアカウントを作る", "href": "../howto/github/", "srcPath": "howto/github/index.html" },
@@ -22,6 +24,7 @@
     },
     {
       "title": "📷 ストア申請の追体験",
+      "slug": "walkthrough",
       "links": [
         { "label": "追体験 一覧", "href": "../walkthrough/", "srcPath": "walkthrough/index.html" },
         { "label": "🍎 App Store Connect — iOS申請の実画面つき追体験", "href": "../walkthrough/ios/", "srcPath": "walkthrough/ios/index.html" },
@@ -31,6 +34,7 @@
     },
     {
       "title": "💬 LINE公式アカウント（AI社員）",
+      "slug": "line-bot",
       "links": [
         { "label": "無応答ゼロ化 — 既読無視しない仕組み", "href": "../line-bot/", "srcPath": "line-bot/index.html" },
         { "label": "画像・動画・音声認識 — 人格の学習・調整も解説", "href": "../line-bot-features/", "srcPath": "line-bot-features/index.html" }
@@ -38,6 +42,7 @@
     },
     {
       "title": "🩹 困ったとき",
+      "slug": "troubleshooting",
       "links": [
         { "label": "つまずいたら — よくある罠と直し方", "href": "../troubleshooting/", "srcPath": "troubleshooting/index.html" },
         { "label": "課金の税務 — 米国源泉徴収（W-8BEN）", "href": "../tax/", "srcPath": "tax/index.html" }
@@ -45,6 +50,7 @@
     },
     {
       "title": "📚 応用・実績",
+      "slug": "showcase",
       "links": [
         { "label": "アプリ一覧 — このキットで実際に公開できたアプリ", "href": "../showcase/", "srcPath": "showcase/index.html" },
         { "label": "実証知見まとめ — 申請まで通した知見", "href": "../learnings/", "srcPath": "learnings/index.html" },
@@ -54,6 +60,7 @@
     },
     {
       "title": "🗺️ サイト案内",
+      "slug": "guide-nav",
       "links": [
         { "label": "サイトマップ", "href": "./", "srcPath": "sitemap/index.html" }
       ]

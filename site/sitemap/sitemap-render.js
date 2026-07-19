@@ -46,6 +46,7 @@
       var sec = sections[i];
       var section = document.createElement('section');
       section.className = 'sitemap-page__section';
+      if (sec.slug) section.id = sec.slug;
 
       var h2 = document.createElement('h2');
       h2.className = 'sitemap-page__section-title';
