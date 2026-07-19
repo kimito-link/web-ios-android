@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サイトマップ | Kimito-Link</title>
+  <meta name="description" content="web-ios-androidキットのサイト内にある全ページの一覧です。何から読めばいいか迷ったら、まずここを見てください。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/sitemap/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="サイトマップ | Kimito-Link">
+  <meta property="og:description" content="web-ios-androidキットのサイト内にある全ページの一覧です。何から読めばいいか迷ったら、まずここを見てください。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/sitemap/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "サイトマップ" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css?v=1">
+  <link rel="stylesheet" href="./sitemap-page.css?v=1">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; max-width: 100%; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.85; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+  </style>
+</head>
+<body>
+<header>
+  <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
+    <a href="../">🏠 トップ</a>
+    <a href="../howto/">🖼️ ゆっくり解説</a>
+    <a href="../story/">📖 完成ものがたり</a>
+    <a href="../guide/">📋 準備ガイド</a>
+    <a href="../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../tax/">💴 課金の税務</a>
+    <a href="../walkthrough/">📷 追体験</a>
+    <a href="../learnings/">📚 実証知見</a>
+    <a href="../line-bot/">💬 無応答ゼロ化</a>
+    <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="./" class="active">🗺️ サイトマップ</a>
+  </nav>
+</header>
+  <div class="wrap">
+    <a class="top-link" href="../">← トップにもどる</a>
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+      <a href="../">ホーム</a> ＞ サイトマップ
+    </nav>
+
+    <main class="sitemap-page">
+      <h1 class="sitemap-page__title">🗺️ サイトマップ</h1>
+      <p class="sitemap-page__lead">このサイトにある全ページの一覧です。上から順に読む必要はありません。今の自分に近いところから読んでください。</p>
+      <div id="sitemap-mount" aria-live="polite"></div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-links">
+        <a href="../">🏠 トップ</a>
+        <a href="../howto/">🖼️ ゆっくり解説</a>
+        <a href="../story/">📖 完成ものがたり</a>
+        <a href="../guide/">📋 準備ガイド</a>
+        <a href="../troubleshooting/">🩹 つまずいたら</a>
+        <a href="../tax/">💴 課金の税務</a>
+        <a href="../walkthrough/">📷 追体験</a>
+        <a href="../learnings/">📚 実証知見まとめ</a>
+        <a href="../line-bot/">💬 無応答ゼロ化</a>
+        <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+        <a href="./">🗺️ サイトマップ</a>
+      </div>
+      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+    </footer>
+  </div>
+  <script src="../scripts/nav.js"></script>
+  <script src="./sitemap-render.js?v=1"></script>
+</body>
+</html>

@@ -42,7 +42,7 @@
     header nav a { color: #555; text-decoration: none; font-size: 0.85rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
     header nav a:hover { background: #f0f0ff; color: #667eea; }
     header nav a.active { background: #667eea; color: white; }
-    @media (max-width: 640px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
+    @media (min-width: 641px) and (max-width: 768px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
 
     .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
     .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
@@ -91,12 +91,19 @@
     .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
     .site-footer-links a:hover { text-decoration: underline; }
     .site-footer-copy { font-size: .78em; color: #9aa3b0; }
+
+    .char-row { flex-wrap: wrap; }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.3em; }
+      .kind-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 <header>
   <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
-  <nav>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
     <a href="../">🏠 トップ</a>
     <a href="../howto/">🖼️ ゆっくり解説</a>
     <a href="../story/">📖 完成ものがたり</a>
@@ -107,6 +114,7 @@
     <a href="../learnings/">📚 実証知見</a>
     <a href="../line-bot/">💬 無応答ゼロ化</a>
     <a href="./" class="active">🖼️ 画像・動画・音声</a>
+    <a href="../sitemap/">🗺️ サイトマップ</a>
   </nav>
 </header>
   <div class="wrap">
@@ -253,6 +261,46 @@
       </ul>
     </div>
 
+    <h2>🎭 人格は文章で作る（1つ書けば、画像・動画・音声にも反映される）</h2>
+    <div class="card">
+      <p>
+        「りんくらしい返事」は、AIに何かをアップロードして学習させているわけではない。
+        <code>knowledge-pack/persona.md</code> という1枚のテキストファイルに、口調や性格を
+        文章で書いているだけ。書き換えて再デプロイすれば、その場で反映される。
+      </p>
+      <p>
+        ポイントは、<b>この1枚のファイルが、テキストの会話だけでなく画像・動画・音声への反応にも
+        そのまま使われる</b>ということ。仕組みは前述の「2段方式」の通りで、①AIが客観的に内容を
+        説明する部分には人格が入らず、②その説明を受け取って反応を作る部分でだけ<code>persona.md</code>
+        が使われる。つまり①と②が分かれているおかげで、<b>persona.mdを1つ調整するだけで、
+        テキスト・画像・動画・音声のすべての返信の口調が同時に揃う</b>。「音声用の人格」「動画用の人格」を
+        別々に用意する必要はない。
+      </p>
+      <div class="illust">
+        <div class="ill-chat">
+          <div class="chat-title">💬 例: persona.mdに「一人称は僕、文末は〜だね」と書いた場合（仮のキャラクター「たろう社長」）</div>
+          <div class="ill-msg user">（猫の写真を送信）</div>
+          <div class="ill-msg ai">お、いい写真だね🐱 このコ、もう登録してある？</div>
+          <div class="ill-msg user">（声のメモ「使い方が分からない」を送信）</div>
+          <div class="ill-msg ai">それは焦るよね、大丈夫、一緒に見てみよう。右上の「？」ボタンから使い方ガイドに飛べるよ。</div>
+        </div>
+      </div>
+      <p>
+        画像への反応も、声のメモへの反応も、同じ「僕」「〜だね」口調になっている。
+        これは<code>persona.md</code>に書いた性格が両方の経路で同じように使われているから。
+      </p>
+      <h3>書き方の型</h3>
+      <p>
+        <code>persona.md</code>には次の4つを書く。①役割の一文、②話し方の一般原則（既定のひな形を流用可）、
+        ③キャラクターの個性（一人称・文末・絵文字の使い方など）、④よくある質問への案内。
+        1つの長文で説明しようとせず、③のように短い箇条書きに分けて書くほど、AIが安定して守りやすい。
+      </p>
+      <p>
+        詳しい書き方の事例（サンプルの人格丸ごと1つ）と調整のコツは
+        <code>templates/line-bot/README.md</code> の「人格を作る・調整する」の章にまとめてある。
+      </p>
+    </div>
+
     <h2>📚 実例（実際に起きた不具合と直し方）</h2>
     <div class="card">
       <h3>事例: 音声メッセージにだけ、りんくが一切反応しない</h3>
@@ -310,9 +358,11 @@
         <a href="../learnings/">📚 実証知見まとめ</a>
         <a href="../line-bot/">💬 無応答ゼロ化</a>
         <a href="./">🖼️ 画像・動画・音声</a>
+        <a href="../sitemap/">🗺️ サイトマップ</a>
       </div>
       <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
     </footer>
   </div>
+  <script src="../scripts/nav.js"></script>
 </body>
 </html>

@@ -71,10 +71,11 @@
 <body>
 
 <header>
-  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
-  <nav>
+  <a class="logo-link" href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
     <a href="../../">🏠 トップ</a>
-    <a href="../" class="active">🖼️ ゆっくり解説</a>
+    <a href="../">🖼️ ゆっくり解説</a>
     <a href="../../story/">📖 完成ものがたり</a>
     <a href="../../guide/">📋 準備ガイド</a>
     <a href="../../troubleshooting/">🩹 つまずいたら</a>
@@ -82,6 +83,8 @@
     <a href="../../walkthrough/">📷 追体験</a>
     <a href="../../learnings/">📚 実証知見</a>
     <a href="../../line-bot/">💬 無応答ゼロ化</a>
+    <a href="../../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="../../sitemap/">🗺️ サイトマップ</a>
   </nav>
 </header>
 
@@ -199,9 +202,10 @@
   <a class="next" href="../cloudflare/"><span class="nav-label">次のステップ →</span>STEP4 Cloudflare</a>
 </nav>
 
-<footer>
-  <div>
+<footer class="site-footer">
+  <div class="site-footer-links">
     <a href="../../">🏠 トップ</a>
+    <a href="../">🖼️ ゆっくり解説</a>
     <a href="../../story/">📖 完成ものがたり</a>
     <a href="../../guide/">📋 準備ガイド</a>
     <a href="../../troubleshooting/">🩹 つまずいたら</a>
@@ -209,9 +213,11 @@
     <a href="../../walkthrough/">📷 追体験</a>
     <a href="../../learnings/">📚 実証知見まとめ</a>
     <a href="../../line-bot/">💬 無応答ゼロ化</a>
+    <a href="../../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="../../sitemap/">🗺️ サイトマップ</a>
   </div>
-  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
 </footer>
-
+<script src="../../scripts/nav.js"></script>
 </body>
 </html>

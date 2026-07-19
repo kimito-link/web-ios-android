@@ -222,9 +222,10 @@
     }
     footer a { color: #f6c90e; text-decoration: none; margin: 0 10px; }
 
+    @media (min-width: 641px) and (max-width: 768px) { header nav a { font-size: 0.74rem; padding: 5px 8px; } }
+
     @media (max-width: 480px) {
       .hero h1 { font-size: 1.3rem; }
-      header nav a { font-size: 0.74rem; padding: 5px 8px; }
       .wrap { padding: 28px 14px 40px; }
       .card { padding: 20px 18px; }
     }
@@ -234,8 +235,9 @@
 
 <!-- ヘッダー -->
 <header>
-  <a href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
-  <nav>
+  <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
     <a href="../">🏠 トップ</a>
     <a href="../howto/">🖼️ ゆっくり解説</a>
     <a href="../story/">📖 完成ものがたり</a>
@@ -245,6 +247,8 @@
     <a href="../walkthrough/">📷 追体験</a>
     <a href="../learnings/">📚 実証知見</a>
     <a href="../line-bot/">💬 無応答ゼロ化</a>
+    <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="../sitemap/">🗺️ サイトマップ</a>
   </nav>
 </header>
 
@@ -414,19 +418,23 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256</pre>
 </div>
 
 <!-- フッター -->
-<footer>
-  <div style="margin-bottom:10px;">
+<footer class="site-footer">
+  <div class="site-footer-links">
     <a href="../">🏠 トップ</a>
     <a href="../howto/">🖼️ ゆっくり解説</a>
     <a href="../story/">📖 完成ものがたり</a>
     <a href="../guide/">📋 準備ガイド</a>
+    <a href="./">🩹 つまずいたら</a>
     <a href="../tax/">💴 課金の税務</a>
     <a href="../walkthrough/">📷 追体験</a>
     <a href="../learnings/">📚 実証知見まとめ</a>
     <a href="../line-bot/">💬 無応答ゼロ化</a>
+    <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="../sitemap/">🗺️ サイトマップ</a>
   </div>
-  Kimito Link — クリエイター支援テンプレート
+  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
 </footer>
 
+<script src="../scripts/nav.js"></script>
 </body>
 </html>

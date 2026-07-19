@@ -510,14 +510,17 @@
     .lk-pend { background: #eee; color: #aaa; }
 
     /* フッター */
-    footer {
+    .site-footer {
       background: #1a1a2e;
       color: #888;
       text-align: center;
       padding: 28px 24px;
       font-size: 0.82rem;
+      max-width: none;
     }
-    footer a { color: #f6c90e; text-decoration: none; margin: 0 10px; }
+    .site-footer-links { justify-content: center; }
+    .site-footer-links a { color: #f6c90e; margin: 0 10px; font-size: 1em; font-weight: 400; }
+    .site-footer-copy { color: #888; }
 
     /* ── ひとことで言うと（旧インラインstyle） ── */
     .hint-box { max-width: 680px; margin: 0 auto 28px; padding: 18px 20px; background: #fffbe8; border: 2px solid #f6c90e; border-radius: 16px; }
@@ -577,7 +580,8 @@
 <!-- ヘッダー -->
 <header>
   <a class="logo-link" href="/"><img class="logo" src="images/logo.png" alt="Kimito-Link"></a>
-  <nav>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
     <a href="/" class="active">🏠 トップ</a>
     <a href="howto/">🖼️ ゆっくり解説</a>
     <a href="story/">📖 完成ものがたり</a>
@@ -585,6 +589,10 @@
     <a href="troubleshooting/">🩹 つまずいたら</a>
     <a href="tax/">💴 課金の税務</a>
     <a href="walkthrough/">📷 追体験</a>
+    <a href="learnings/">📚 実証知見</a>
+    <a href="line-bot/">💬 無応答ゼロ化</a>
+    <a href="line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="sitemap/">🗺️ サイトマップ</a>
   </nav>
 </header>
 
@@ -1146,15 +1154,21 @@
 </div>
 
 <!-- フッター -->
-<footer>
-  <div style="margin-bottom:10px;">
-    <a href="/">トップ</a>
-    <a href="howto/">ゆっくり解説</a>
-    <a href="guide/">準備ガイド</a>
-    <a href="troubleshooting/">つまずいたら</a>
-    <a href="tax/">課金の税務</a>
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="/">🏠 トップ</a>
+    <a href="howto/">🖼️ ゆっくり解説</a>
+    <a href="story/">📖 完成ものがたり</a>
+    <a href="guide/">📋 準備ガイド</a>
+    <a href="troubleshooting/">🩹 つまずいたら</a>
+    <a href="tax/">💴 課金の税務</a>
+    <a href="walkthrough/">📷 追体験</a>
+    <a href="learnings/">📚 実証知見まとめ</a>
+    <a href="line-bot/">💬 無応答ゼロ化</a>
+    <a href="line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="sitemap/">🗺️ サイトマップ</a>
   </div>
-  Kimito Link — クリエイター支援テンプレート
+  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
 </footer>
 
 <script>
@@ -1164,6 +1178,7 @@ function toggle(btn) {
   btn.textContent = isOpen ? '▲ 閉じる' : '▼ くわしく見る';
 }
 </script>
+<script src="scripts/nav.js"></script>
 
 </body>
 </html>

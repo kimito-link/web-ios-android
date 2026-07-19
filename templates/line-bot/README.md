@@ -81,19 +81,203 @@ Gemini無料枠を使うには`GEMINI_API_KEY`（Google AI Studioで無料発行
   これが未対応だと全件`unsupported content-type`でfail-closedし、**音声にだけ一切反応しない**という
   分かりにくい不具合になる（`media-describe.ts`の`CONTENT_TYPE_TO_AUDIO_FORMAT`で対応済み）。
 
-## 使い方（新しいアプリにLINE botを追加する）
+## 使い方（新しいアプリにLINE botを追加する） — やることこれだけ
 
-1. `app.config.json` の `lineBot` セクションを埋める（`enabled: true`にする。下記スキーマ参照）。
-2. このディレクトリ一式を新リポの `line-bot/` にコピーし、`{{...}}` を `app.config.json` の値に置換する
-   （`.template`拡張子のファイルは拡張子を外してコピー: `wrangler.toml.template` → `wrangler.toml`）。
-3. `knowledge-pack/persona.md` と `guardrails.md` を、アプリのキャラクター・導入手順に合わせて書き換える。
-4. LINE Developersコンソールで新規チャネル（Messaging API）を作成し、Channel Secret / Access Tokenを控える。
-5. Cloudflareで D1データベースを作成: `npx wrangler d1 create {{shortName}}-line-db`。IDを`wrangler.toml`に反映。
-6. Secretsを投入: `wrangler secret put LINE_CHANNEL_ACCESS_TOKEN` / `LINE_CHANNEL_SECRET` / `GROQ_API_KEY` /
-   `GEMINI_API_KEY`（無応答ゼロ化チェーンの2番手。任意だが強く推奨。Google AI Studioで無料発行）。
-   GitHub Secretsに`CLOUDFLARE_API_TOKEN`も登録する。
-7. `workflow.yml.template`を`.github/workflows/deploy-line-bot.yml`としてコピーし、pushしてデプロイ。
-8. LINE Developersコンソールで Webhook URL を `https://{{shortName}}-line.<account>.workers.dev/webhook` に設定し「検証」。
+前提知識ゼロでもこの順番通りに進めれば完走できます。Cloudflare・LINE Developers・GitHubの
+アカウントを触ったことがなくても、各ステップにリンクと具体的な操作を書いています。
+
+### STEP 0. 前提アカウントを用意する（初回のみ）
+
+- **[Cloudflareアカウント](https://dash.cloudflare.com/sign-up)**（無料）を作る。
+- ローカルに [Node.js](https://nodejs.org/)（v18以上）が入っていること。
+- ターミナルで次を実行し、ブラウザが開いたらCloudflareアカウントでログインする（Wrangler CLIはこのテンプレの
+  `package.json.template` に依存として入っているので別途インストール不要。初回だけログインが必要）:
+  ```
+  npx wrangler login
+  ```
+- **[LINE Developersコンソール](https://developers.line.biz/console/)** にLINEアカウントでログインし、
+  プロバイダー（無ければ「作成」で新規に1つ作る。会社名や個人名でよい）を作っておく。
+
+### STEP 1. `app.config.json` を埋める
+
+リポジトリ直下の `app.config.json` の `lineBot` セクションを開き、`enabled: true` にして
+`botCharacterName`（キャラクター名。例: `りんく`）を書く。`cloudflareAccountId` と
+`cloudflareD1DatabaseId` は後のSTEPで値が分かってから埋めるので、今は `null` のままでよい。
+（スキーマの全項目は `app.config.schema.json` の `lineBot` を参照。`llmProvider` と
+`dailyCallBudget` は既定値のままで通常問題ない）
+
+### STEP 2. テンプレートをコピーして変数を置換する
+
+1. このディレクトリ（`templates/line-bot/`）一式を新リポジトリの `line-bot/` にコピーする。
+2. `.template` 拡張子のファイルは拡張子を外してコピーする: `wrangler.toml.template` → `wrangler.toml`、
+   `package.json.template` → `package.json`、`workflow.yml.template` は後述STEP6で使う。
+3. コピーしたファイル内の `{{...}}` を、下の対応表の通りに実際の値へ置換する（テキストエディタの
+   「検索して置換」機能で1つずつでよい。自動置換スクリプトは無いので手作業）。
+
+   | 変数 | 置換する値 | 出てくるファイル |
+   | --- | --- | --- |
+   | `{{shortName}}` | `app.config.json` の `identity.shortName`（例: `NekoDiary`） | `wrangler.toml`, `workflow.yml`, `package.json` |
+   | `{{cloudflareAccountId}}` | STEP4で作るD1データベースのコマンド実行時に表示されるアカウントID（[Cloudflareダッシュボード](https://dash.cloudflare.com/)右側にも表示） | `wrangler.toml` |
+   | `{{cloudflareD1DatabaseId}}` | STEP4で `wrangler d1 create` 実行後に表示されるID | `wrangler.toml` |
+   | `{{botCharacterName}}` | `app.config.json` の `lineBot.botCharacterName`（例: `りんく`） | `knowledge-pack/persona.md`, `knowledge-pack/canned/greeting.txt` |
+   | `{{appDisplayName}}` | `app.config.json` の `identity.displayName`（例: `ねこ日記`） | `knowledge-pack/persona.md` |
+
+### STEP 3. 人格（`persona.md`）を書く
+
+`knowledge-pack/persona.md` を開き、STEP2の変数置換をした後、11行目のコメント
+`<!-- ここにアプリ固有の導入手順・よくある質問への案内を書き足す -->` の場所に、
+そのアプリ特有の使い方・よくある質問の案内文を書き足す。**この人格説明の書き方の詳しい事例・
+コツ、および画像・動画・音声にも同じ人格が反映される仕組みは、下記「[人格を作る・調整する](#人格を作る調整する)」を参照。**
+
+### STEP 4. LINE公式アカウントを作る
+
+1. [LINE Developersコンソール](https://developers.line.biz/console/) で、STEP0で作ったプロバイダーを開き、
+   「チャネルを作成」→「Messaging API」を選ぶ。チャネル名・説明・カテゴリを入力して作成する
+   （チャネル名がLINE上でのbotの表示名になる）。
+2. 作成したチャネルの「Messaging API設定」タブで「チャネルアクセストークン（長期）」を発行し控える。
+3. 「チャネル基本設定」タブで「チャネルシークレット」を控える。
+4. **⚠️ この時点で必ず「LINE Official Account Manager」（[manager.line.biz](https://manager.line.biz/)）
+   を開き、対象アカウントの「応答設定」で「応答メッセージ」と「AIチャットボット(β)」を両方OFFにする。**
+   ONのままだとLINE標準の定型文がwebhookより先に割り込み、bot側の返信が届かない
+   （後述「⚠️ 必ず守ること」2番の実障害。ここで設定を忘れるのが最も気づきにくいトラブルの原因）。
+
+### STEP 5. Cloudflareのデータベースを作る
+
+1. `line-bot/` ディレクトリ内で次を実行しD1データベースを作る:
+   ```
+   npx wrangler d1 create {{shortName}}-line-db
+   ```
+   実行結果に表示される `database_id` の値をSTEP2の `{{cloudflareD1DatabaseId}}` として `wrangler.toml`
+   に反映する（まだ反映していなければ今ここで書く）。
+2. マイグレーションを適用する:
+   ```
+   npx wrangler d1 execute {{shortName}}-line-db --remote --file=migrations/001_init.sql
+   ```
+
+### STEP 6. APIキーとSecretsを投入する
+
+必要なAPIキーを発行する:
+
+- **Groq API Key**（1番手・必須）: [console.groq.com/keys](https://console.groq.com/keys) でログインし
+  「Create API Key」。
+- **Gemini API Key**（2番手・強く推奨。無応答ゼロ化と画像・動画・音声認識の両方で使う）:
+  [Google AI Studio](https://aistudio.google.com/apikey) で「Create API key」。未設定でも動くが、
+  Gemini関連の機能（2番手フォールバック、動画・音声認識）だけ静かにスキップされる。
+
+`line-bot/` ディレクトリで、Cloudflare Workersに直接Secretsを投入する（値を聞かれたら貼り付けてEnter）:
+```
+npx wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
+npx wrangler secret put LINE_CHANNEL_SECRET
+npx wrangler secret put GROQ_API_KEY
+npx wrangler secret put GEMINI_API_KEY
+```
+
+さらに、GitHub Actions経由でデプロイするために、GitHubリポジトリの
+「Settings → Secrets and variables → Actions」で `CLOUDFLARE_API_TOKEN` を登録する
+（Cloudflareダッシュボードの「My Profile → API Tokens → Create Token」で
+「Edit Cloudflare Workers」テンプレートを選んで発行した値を貼る）。
+
+### STEP 7. デプロイする
+
+1. `workflow.yml.template` を `.github/workflows/deploy-line-bot.yml` としてコピーする
+   （このファイルがpush時に自動でCloudflare Workersへデプロイする）。
+2. **⚠️ `wrangler deploy` をローカルから手動実行しない。** 必ずこのGitHub Actionsワークフロー経由で
+   デプロイする（理由は後述「⚠️ 必ず守ること」1番）。
+3. 変更をコミットしてpushする。GitHubの「Actions」タブでワークフローが成功したことを確認する。
+
+### STEP 8. Webhookを設定して疎通確認する
+
+1. [LINE Developersコンソール](https://developers.line.biz/console/) のチャネル設定「Messaging API設定」タブで、
+   Webhook URLに `https://{{shortName}}-line.<account>.workers.dev/webhook` を入力し「検証」を押す
+   （`<account>`はCloudflareのアカウント名。STEP7のデプロイ結果に表示されるURLをそのまま使うのが確実）。
+   「成功」と表示されればOK。
+2. 「Webhookの利用」がONになっていることを確認する。
+3. 実際にそのLINE公式アカウントを友だち追加し、メッセージを送って返信が来ることを確認する。
+
+### STEP 9（任意）. 画像・動画・音声認識を有効にする
+
+テキストでの応答ができたら、必要に応じて画像・動画・音声への対応を追加する
+（詳しい仕組みは前述「[画像・動画・音声認識](#画像動画音声認識2026-07-1719追加line-harness-oss本体からの移植)」を参照）。
+
+1. `npx wrangler r2 bucket create {{shortName}}-line-images` でR2バケットを作成する。
+2. `wrangler.toml` の `[[r2_buckets]]` が正しいバケット名を指しているか確認する
+   （STEP2の変数置換で自動的に揃っているはず）。
+3. STEP6で `GEMINI_API_KEY` を投入済みなら、追加設定は不要（画像は自動的にGroq→Geminiの
+   2段フォールバックで動き、動画・音声はGeminiのみで動く）。再度pushしてデプロイすれば有効になる。
+
+## 人格を作る・調整する
+
+このbotの「人格」は、ファインチューニングやAIへのアップロード機能ではなく、
+**`knowledge-pack/persona.md` というテキストファイルに文章を書くだけ**で作る。
+書き換えて再デプロイすれば、その場でLINE上の応答に反映される。
+
+### 仕組み: なぜ音声・動画にも同じ人格が反映されるのか
+
+`persona.md`（＋禁止事項を書く`guardrails.md`）は、テキスト・画像・動画・音声のどの入力でも
+**必ず同じ1つの経路**を通る。
+
+1. ユーザーが画像・動画・音声を送ると、まずGroq/Geminiが「これは何が写っているか・映っているか・
+   話されているか」を**人格を挟まず客観的に**説明する文章を作る（`media-describe.ts`）。
+2. その客観的な説明文は、「（画像を送ってきました。内容は次の通りです: ○○です）この画像を見て、
+   あなたらしく反応してください」という一文に組み込まれ、**通常のテキストメッセージと全く同じ
+   パイプライン**に渡される。
+3. そのパイプラインが読むシステムプロンプトは、常に `persona.md` + `guardrails.md` （＋RAG検索結果）。
+
+つまり `persona.md` を書き換えることは、テキスト応答の人格を変えるだけでなく、
+**画像・動画・音声への反応の人格も同時に変わる**。認識結果（①）と人格（③）が別レイヤーなので、
+「音声用の人格」「動画用の人格」を別に用意する必要はない。1つのファイルで全チャネルが揃う。
+
+### 書き方の型
+
+`persona.md` は次の4パーツで構成する（1〜9行目は既存のひな形、10行目以降がアプリ固有の書き足し部分）:
+
+1. **役割の一文**（3行目）— 「あなたは『{{botCharacterName}}』、{{appDisplayName}}の…」
+2. **トーンの箇条書き**（5〜9行目）— 話し方の一般原則。既存のひな形をそのまま使ってよい。
+3. **キャラクターの個性**（書き足し）— 口調・語尾・好きな言い回し・絵文字の使い方など。
+4. **アプリ固有の案内**（書き足し）— よくある質問への案内、導入手順の要約など。
+
+### 事例（仮データ）: 「ゆるふわ社長キャラ」を作る
+
+「かっちりした敬語ではなく、社長自身がゆるく相談に乗ってくれる雰囲気にしたい」という
+アプリ（仮に「ねこ日記」というアプリだとする）を例に、実際に書き足す文章を示す。
+
+```markdown
+# 人格・トーン
+
+あなたは「たろう社長」、ねこ日記のLINE公式アカウント上のサポート担当です。丁寧な日本語で答えてください。
+
+- 専門用語は避け、短い文で説明する
+- 煽らない。即日・完全自動・ワンクリック等の誇張表現は使わない
+- 分からないことは正直に伝え、必要なら担当者へ引き継ぐ
+- ユーザーを責めない。「よくある原因です」「一緒に確認しましょう」のトーン
+- 返信は簡潔に。長文の羅列は避ける
+
+<!-- ここから書き足し -->
+
+## キャラクターの個性（たろう社長）
+
+- 一人称は「僕」。文末は「〜だね」「〜だよ」など、社長自らチャットしているようなくだけた敬語。
+  ただし雑にはしない（「〜っす」「〜だぜ」のような崩しすぎた口調は使わない）。
+- 困っているユーザーには「それは焦るよね、大丈夫、一緒に見てみよう」のように一度共感してから案内する。
+- 絵文字は1メッセージに1つまで（🐱 か 👍 のどちらか）。多用しない。
+- ユーザーが写真・動画・音声を送ってきたときも、上記と同じ口調で反応する
+  （例: 猫の写真が送られてきたら「お、いい写真だね🐱 このコ、ねこ日記にもう登録してある？」）。
+
+## よくある質問への案内
+
+- 「使い方が分からない」→ アプリ内の右上「？」ボタンから使い方ガイドに飛べることを案内する。
+- 「データが消えた」→ まず「同期は完了しているか（設定→同期状況）」を確認してもらい、
+  それでも直らなければエスカレーション対象として引き継ぐ。
+```
+
+この例では「たろう社長」という個性を1箇所（キャラクターの個性セクション）に書くだけで、
+テキストでの通常会話だけでなく、猫の写真を送ったときの反応（画像認識結果への反応）も、
+声のメモを送ったときの反応（音声認識結果への反応）も、同じ「僕」「〜だね」口調に自動的に揃う。
+
+**調整のコツ**: 一度デプロイして実際にLINEで数パターン試し、口調が想定と違ったら
+「キャラクターの個性」の箇条書きを増やす・言い回しの例を追加する、を繰り返すのが早い。
+一文で全部を説明しようとせず、上記のように「一人称」「文末」「絵文字の使い方」「感情表現の型」を
+それぞれ短い箇条書きに分けて書くと、LLMが安定して守りやすい。
 
 ## ⚠️ 必ず守ること（実障害から得た地雷）
 

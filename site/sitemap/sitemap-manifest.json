@@ -1,0 +1,62 @@
+{
+  "$comment": "href は /sitemap/ からの相対（外部は https:// の絶対URL）。external: true または http(s) で新しいタブ・noopener。srcPath は内部リンクの実在ファイル用メモ。",
+  "pageTitle": "サイトマップ",
+  "sections": [
+    {
+      "title": "🚀 はじめに読むページ",
+      "links": [
+        { "label": "🏠 トップ", "href": "../", "srcPath": "index.html" },
+        { "label": "📋 準備ガイド", "href": "../guide/", "srcPath": "guide/index.html" },
+        { "label": "📖 完成ものがたり", "href": "../story/", "srcPath": "story/index.html" }
+      ]
+    },
+    {
+      "title": "🖼️ ゆっくり解説（STEP順）",
+      "links": [
+        { "label": "ゆっくり解説 一覧", "href": "../howto/", "srcPath": "howto/index.html" },
+        { "label": "① GitHub — コードを保存する無料の倉庫にアカウントを作る", "href": "../howto/github/", "srcPath": "howto/github/index.html" },
+        { "label": "② Vercel — Webサイトとして公開する", "href": "../howto/vercel/", "srcPath": "howto/vercel/index.html" },
+        { "label": "③ ドメイン — 自分だけのURLを買う", "href": "../howto/domain/", "srcPath": "howto/domain/index.html" },
+        { "label": "④ Cloudflare — ドメインとVercelをつなぐ", "href": "../howto/cloudflare/", "srcPath": "howto/cloudflare/index.html" }
+      ]
+    },
+    {
+      "title": "📷 ストア申請の追体験",
+      "links": [
+        { "label": "追体験 一覧", "href": "../walkthrough/", "srcPath": "walkthrough/index.html" },
+        { "label": "🍎 App Store Connect — iOS申請の実画面つき追体験", "href": "../walkthrough/ios/", "srcPath": "walkthrough/ios/index.html" },
+        { "label": "🤖 Google Play Console — Android申請の実画面つき追体験", "href": "../walkthrough/play/", "srcPath": "walkthrough/play/index.html" },
+        { "label": "🧩 Chrome Web Store — Chrome拡張申請の実画面つき追体験", "href": "../walkthrough/chrome/", "srcPath": "walkthrough/chrome/index.html" }
+      ]
+    },
+    {
+      "title": "💬 LINE公式アカウント（AI社員）",
+      "links": [
+        { "label": "無応答ゼロ化 — 既読無視しない仕組み", "href": "../line-bot/", "srcPath": "line-bot/index.html" },
+        { "label": "画像・動画・音声認識 — 人格の学習・調整も解説", "href": "../line-bot-features/", "srcPath": "line-bot-features/index.html" }
+      ]
+    },
+    {
+      "title": "🩹 困ったとき",
+      "links": [
+        { "label": "つまずいたら — よくある罠と直し方", "href": "../troubleshooting/", "srcPath": "troubleshooting/index.html" },
+        { "label": "課金の税務 — 米国源泉徴収（W-8BEN）", "href": "../tax/", "srcPath": "tax/index.html" }
+      ]
+    },
+    {
+      "title": "📚 応用・実績",
+      "links": [
+        { "label": "アプリ一覧 — このキットで実際に公開できたアプリ", "href": "../showcase/", "srcPath": "showcase/index.html" },
+        { "label": "実証知見まとめ — 申請まで通した知見", "href": "../learnings/", "srcPath": "learnings/index.html" },
+        { "label": "けんこう診断 — アプリが自分で不具合の原因を教えてくれる仕組み", "href": "../features/health-check/", "srcPath": "features/health-check/index.html" },
+        { "label": "汎用診断キット — どんなJS/TSプログラムにも使える診断ツール", "href": "../features/diagnostics/", "srcPath": "features/diagnostics/index.html" }
+      ]
+    },
+    {
+      "title": "🗺️ サイト案内",
+      "links": [
+        { "label": "サイトマップ", "href": "./", "srcPath": "sitemap/index.html" }
+      ]
+    }
+  ]
+}

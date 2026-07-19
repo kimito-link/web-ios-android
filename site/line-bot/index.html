@@ -42,7 +42,7 @@
     header nav a { color: #555; text-decoration: none; font-size: 0.85rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
     header nav a:hover { background: #f0f0ff; color: #667eea; }
     header nav a.active { background: #667eea; color: white; }
-    @media (max-width: 640px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
+    @media (min-width: 641px) and (max-width: 768px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
 
     .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
     .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
@@ -96,7 +96,8 @@
 <body>
 <header>
   <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
-  <nav>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
     <a href="../">🏠 トップ</a>
     <a href="../howto/">🖼️ ゆっくり解説</a>
     <a href="../story/">📖 完成ものがたり</a>
@@ -107,6 +108,7 @@
     <a href="../learnings/">📚 実証知見</a>
     <a href="./" class="active">💬 無応答ゼロ化</a>
     <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+    <a href="../sitemap/">🗺️ サイトマップ</a>
   </nav>
 </header>
   <div class="wrap">
@@ -245,9 +247,11 @@
         <a href="../learnings/">📚 実証知見まとめ</a>
         <a href="./">💬 無応答ゼロ化</a>
         <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
+        <a href="../sitemap/">🗺️ サイトマップ</a>
       </div>
       <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
     </footer>
   </div>
+  <script src="../scripts/nav.js"></script>
 </body>
 </html>

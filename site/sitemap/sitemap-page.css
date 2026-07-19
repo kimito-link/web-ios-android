@@ -1,0 +1,125 @@
+/* サイトマップページ（/sitemap/）— kimito-link の sitemap-page.css を
+   web-ios-androidの明るいトーンに合わせて移植。構造・レスポンシブ挙動は同じ。 */
+
+.sitemap-page {
+  --sitemap-border: #e7eaf0;
+  --sitemap-surface: #fff;
+  --sitemap-title: #15222c;
+  --sitemap-body: #5a6573;
+  --sitemap-link: #1a1a1a;
+  --sitemap-link-hover: #667eea;
+  --sitemap-accent: #667eea;
+  --sitemap-focus: #f6c90e;
+  padding: 0;
+  color: var(--sitemap-body);
+}
+
+.sitemap-page__title {
+  font-size: 1.55em;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--sitemap-title);
+  line-height: 1.25;
+}
+
+.sitemap-page__lead {
+  margin: 0 0 24px;
+  font-size: .95em;
+  line-height: 1.75;
+  color: var(--sitemap-body);
+}
+
+#sitemap-mount { min-width: 0; }
+.sitemap-page__nav { min-width: 0; }
+
+.sitemap-page__section {
+  margin-bottom: 16px;
+  padding: 14px 16px 6px;
+  border-radius: 14px;
+  border: 1px solid var(--sitemap-border);
+  background: var(--sitemap-surface);
+}
+
+.sitemap-page__section-title {
+  font-size: 1.05em;
+  font-weight: 700;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--sitemap-border);
+  color: var(--sitemap-title);
+}
+
+.sitemap-page__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sitemap-page__item a {
+  display: block;
+  max-width: 100%;
+  padding: 10px 6px;
+  border-radius: 8px;
+  color: var(--sitemap-link);
+  font-weight: 700;
+  font-size: .93em;
+  text-decoration: none;
+  overflow-wrap: break-word;
+  line-height: 1.5;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.sitemap-page__item a:hover {
+  background: #f0f1ff;
+  color: var(--sitemap-link-hover);
+}
+
+.sitemap-page__item a:focus-visible {
+  outline: 2px solid var(--sitemap-focus);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* 外部URL（manifest の http(s) または external: true） */
+.sitemap-page__item a.sitemap-page__link--external {
+  color: #1565c0;
+}
+
+.sitemap-page__item a.sitemap-page__link--external:hover {
+  color: #0d47a1;
+}
+
+.sitemap-page__item a.sitemap-page__link--external::after {
+  content: ' \2197';
+  font-size: 0.88em;
+  font-weight: 700;
+  opacity: 0.8;
+  display: inline-block;
+}
+
+.sitemap-page__error {
+  text-align: center;
+  color: #c0392b;
+  padding: 24px 16px;
+}
+
+@media (min-width: 768px) {
+  .sitemap-page__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  .sitemap-page__section {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sitemap-page__section-title { font-size: 1em; }
+  .sitemap-page__item a { font-size: .9em; padding-top: 12px; padding-bottom: 12px; }
+}
