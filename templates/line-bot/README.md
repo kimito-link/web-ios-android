@@ -16,8 +16,12 @@ LLM生成段は**Groq→Gemini→Cloudflare Workers AIの3プロバイダをフ�
 | パス | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
 | `worker/src/` | Cloudflare Workers本体（Hono）。webhook受信→署名検証→LLMチェーン→LINE返信 | 無改変 |
-| `worker/src/services/llm-providers.ts` | Groq/Gemini/Workers AI 3プロバイダの共通呼び出し層 | 無改変 |
+| `worker/src/services/llm-providers.ts` | Groq/Gemini/Workers AI 3プロバイダの共通呼び出し層＋vision/video/audio呼び出し | 無改変 |
 | `worker/src/services/llm-chain.ts` | 3プロバイダを順に試すフォールバックチェーン（残り時間駆動） | 無改変 |
+| `worker/src/services/vision-describe.ts` | 画像→客観描写（Groq/Geminiのvisionチェーン） | 無改変 |
+| `worker/src/services/media-describe.ts` | 動画・音声→客観描写（Geminiのみ対応） | 無改変 |
+| `worker/src/services/incoming-image.ts` / `incoming-media.ts` | LINE Content APIから受信メディアを取得しR2に保存 | 無改変 |
+| `worker/src/routes/images.ts` | 保存済みメディアの配信ルート（`GET /images/:key`） | 無改変 |
 | `migrations/001_init.sql` | 最小スキーマ（friends/messages_log/llm_response_cache/kb_articles/groq_usage_daily） | 無改変 |
 | `bot.config.json` | モデル名・チェーン構成・日次予算・キャッシュ設定 | アプリごとに調整可（`dailyCallBudget`・`llm.chain`等） |
 | `knowledge-pack/persona.md` | キャラの人格・トーン | **アプリ固有**。`{{botCharacterName}}`/`{{appDisplayName}}`を置換し、導入手順等を書き足す |
@@ -43,6 +47,39 @@ LLM生成段は**Groq→Gemini→Cloudflare Workers AIの3プロバイダをフ�
 **コストは既定¥0/月**。Gemini・Workers AIはGroq障害時にしか呼ばれないため、無料枠の範囲で収まる想定。
 Gemini無料枠を使うには`GEMINI_API_KEY`（Google AI Studioで無料発行）を設定するだけでよい。
 未設定でもGroq→Workers AIの2段チェーンとして動く（Geminiだけ静かにスキップされる）。
+
+## 画像・動画・音声認識（2026-07-17/19追加、line-harness-oss本体からの移植）
+
+ユーザーが画像・動画・音声を送ると、①客観的な説明文（describe）を生成 → ②その説明文を
+「あなたらしく反応してください」という指示付きでテキストパイプラインに渡し、キャラクターの
+人格で反応する、という2段構成で動く。
+
+| 種類 | 使うモデル | 方式 |
+| --- | --- | --- |
+| 画像 | Groq (`qwen/qwen3.6-27b`) → Gemini (`gemini-2.5-flash-lite`) の2段フォールバック | OpenAI互換`chat/completions`の`image_url` content type |
+| 動画 | Gemini (`gemini-2.5-flash-lite`) のみ | ネイティブ`generateContent` APIの`inline_data`（**OpenAI互換の`video_url`は実機検証でGemini側に拒否されることを確認済み**なので使えない） |
+| 音声 | Gemini (`gemini-2.5-flash-lite`) のみ | OpenAI互換`chat/completions`の`input_audio` content type |
+
+動画・音声がGeminiのみなのは、Groq/Cloudflare Workers AIがこれらの入力形式に対応していないため
+（画像のみ複数プロバイダでフォールバックできる）。`GEMINI_API_KEY`が未設定の場合、動画・音声認識は
+静かにスキップされる（テキスト・画像のAI応答には影響しない）。
+
+**サイズ上限は既定15MB**（`bot.config.json`の`llm.video.maxInputBytes`/`llm.audio.maxInputBytes`で調整可）。
+超過した動画・音声は説明文を諦め、`[動画]`/`[音声]`ラベルのみを記録して**無言のまま**終わる
+（fail-closed設計。返信が来ないこと自体は「未対応」の正常な挙動）。
+
+セットアップに必要な追加作業:
+1. `npx wrangler r2 bucket create {{shortName}}-line-images` でR2バケットを作成
+2. `wrangler.toml`の`[[r2_buckets]]`が正しいバケット名を指しているか確認（プレースホルダー置換で自動的に揃うはず）
+3. `GEMINI_API_KEY`を設定（Groq→Gemini→Workers AIチェーンの2番手と共用。Google AI Studioで無料発行）
+
+**実機検証で判明した罠**（動画・音声固有。画像には無い）:
+- LINEの動画・音声メッセージには「トランスコード準備状態」があり、webhook受信直後はまだ
+  `processing`（未完了）で`getMessageContent`が失敗することがある。`incoming-media.ts`は
+  `/content/transcoding`で状態を確認してから本体取得する（最大約9秒ポーリング）。
+- LINEアプリの音声メッセージは実測で`audio/x-m4a`というcontent-typeを返す（`audio/mp4`ではない）。
+  これが未対応だと全件`unsupported content-type`でfail-closedし、**音声にだけ一切反応しない**という
+  分かりにくい不具合になる（`media-describe.ts`の`CONTENT_TYPE_TO_AUDIO_FORMAT`で対応済み）。
 
 ## 使い方（新しいアプリにLINE botを追加する）
 

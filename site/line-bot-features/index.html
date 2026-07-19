@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像・動画・音声認識 — LINEのAI社員が写真も動画も聞いた話も分かる仕組み | Kimito-Link</title>
+  <meta name="description" content="LINE公式アカウントのAI社員が、画像・動画・音声を送られたときに何が起きるかを人にもAIにも分かる形でまとめる。どのAIモデルが何を担当しているか、対応モデル一覧を詳細に掲載。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/line-bot-features/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="画像・動画・音声認識 — LINEのAI社員が写真も動画も聞いた話も分かる仕組み | Kimito-Link">
+  <meta property="og:description" content="LINE公式アカウントのAI社員が、画像・動画・音声を送られたときに何が起きるかを人にもAIにも分かる形でまとめる。どのAIモデルが何を担当しているか、対応モデル一覧を詳細に掲載。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/line-bot-features/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "画像・動画・音声認識" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css?v=1">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; max-width: 100%; }
+    body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f7f7fb; color: #1a1a1a; line-height: 1.85; }
+
+    /* ── サイト共通ヘッダー（トップページと同一） ── */
+    header { background: white; border-bottom: 2px solid #eee; padding: 0 24px; display: flex; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+    header a.logo-link { display: flex; align-items: center; flex-shrink: 0; }
+    header img.logo { height: 40px; }
+    header nav { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    header nav::-webkit-scrollbar { display: none; }
+    header nav a { color: #555; text-decoration: none; font-size: 0.85rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+    header nav a:hover { background: #f0f0ff; color: #667eea; }
+    header nav a.active { background: #667eea; color: white; }
+    @media (max-width: 640px) { header nav a { font-size: 0.75rem; padding: 5px 8px; } }
+
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+    .top-link { display: inline-block; margin-bottom: 18px; color: #1565c0; text-decoration: none; font-weight: 700; font-size: .9em; }
+    h1 { font-size: 1.55em; color: #15222c; margin-bottom: 8px; }
+    .sub { color: #5a6573; font-size: .95em; margin-bottom: 24px; }
+    h2 { font-size: 1.15em; color: #15222c; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e7eaf0; }
+    h3 { font-size: 1em; color: #1565c0; margin: 18px 0 8px; }
+    p, li { font-size: .93em; }
+    ul, ol { margin: 8px 0 8px 1.2em; }
+    li { margin: 5px 0; }
+    .card { background: #fff; border: 1px solid #e7eaf0; border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+    code { background: #eef1f6; border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+    .warn { background: #fcf4dd; border-left: 4px solid #f0a500; padding: 12px 14px; margin: 12px 0; font-size: .9em; border-radius: 0 10px 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .88em; margin: 12px 0; }
+    th, td { border: 1px solid #e7eaf0; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f3f6fa; }
+    table.model-table td, table.model-table th { font-size: .85em; }
+
+    /* キャラクター会話バブル（トップページと共通の見た目） */
+    .illust { background: #e8f5e9; border-radius: 14px; padding: 14px 16px; margin: 14px 0; }
+    .ill-chat { display: flex; flex-direction: column; gap: 8px; }
+    .chat-title { font-size: 0.72rem; color: #888; margin-bottom: 4px; font-weight: 700; }
+    .ill-msg { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; max-width: 88%; }
+    .ill-msg.user { background: #667eea; color: white; margin-left: 16px; align-self: flex-end; }
+    .ill-msg.ai   { background: #fff; color: #333; margin-right: 16px; align-self: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .char-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .char-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+    .char-name { font-size: 0.85rem; font-weight: 700; color: #444; }
+
+    /* 種類別カード（画像/動画/音声） */
+    .kind-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+    .kind-card { background: #fff; border: 1px solid #e7eaf0; border-radius: 12px; padding: 14px; text-align: center; }
+    .kind-card .ki { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .kind-card .kt { font-weight: 800; font-size: .9em; margin-bottom: 4px; }
+    .kind-card .kd { font-size: .78em; color: #667; }
+
+    .tag { display: inline-block; font-size: .7em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-right: 6px; }
+    .tag.provider1 { background: #eef1ff; color: #4a5ed6; }
+    .tag.provider2 { background: #e8f5e9; color: #2e7d32; }
+    .tag.provider3 { background: #f0f0f0; color: #555; }
+    .tag.geminionly { background: #fff3e0; color: #e65100; }
+
+    /* サイト共通フッター（全ページどこからでも主要ページに1クリックで行ける） */
+    .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; }
+    .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+    .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
+    .site-footer-links a:hover { text-decoration: underline; }
+    .site-footer-copy { font-size: .78em; color: #9aa3b0; }
+  </style>
+</head>
+<body>
+<header>
+  <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../">🏠 トップ</a>
+    <a href="../howto/">🖼️ ゆっくり解説</a>
+    <a href="../story/">📖 完成ものがたり</a>
+    <a href="../guide/">📋 準備ガイド</a>
+    <a href="../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../tax/">💴 課金の税務</a>
+    <a href="../walkthrough/">📷 追体験</a>
+    <a href="../learnings/">📚 実証知見</a>
+    <a href="../line-bot/">💬 無応答ゼロ化</a>
+    <a href="./" class="active">🖼️ 画像・動画・音声</a>
+  </nav>
+</header>
+  <div class="wrap">
+    <a class="top-link" href="../">← トップにもどる</a>
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+      <a href="../">ホーム</a> ＞ 画像・動画・音声認識
+    </nav>
+    <h1>画像・動画・音声認識 — 写真も動画も、聞いた話も分かる</h1>
+    <p class="sub">実体: <code>templates/line-bot/</code>（このキットのLINE公式アカウントAI社員bot金型）<br>
+      実証: <code>line-harness-oss</code>（ai-shain.link で実運用中の「りんく」）</p>
+
+    <h2>💬 まず、りんくに聞いてみる（人向け・やさしい説明）</h2>
+    <div class="card">
+      <div class="char-row">
+        <img class="char-icon" src="../images/link-smile.png" alt="りんく">
+        <span class="char-name">りんく</span>
+      </div>
+      <div class="illust">
+        <div class="ill-chat">
+          <div class="chat-title">💬 猫の動画を送ってみました</div>
+          <div class="ill-msg user">（動画: 黒猫が道を歩いている15秒の動画）</div>
+          <div class="ill-msg ai">すごい！この黒猫、かわいいですね！目がとってもきれい！立ち上がって、車の横を通り過ぎていく様子も、猫の動きが自然で可愛らしいですね！</div>
+        </div>
+      </div>
+      <p>
+        りんくは、写真だけでなく<b>動画</b>や<b>音声メッセージ</b>を送っても、中身をちゃんと見て・聞いて反応します。
+        単に「動画が届きました」で終わらず、映っている内容・聞こえた話の内容をふまえて、
+        りんくらしい言葉で返事をします。
+      </p>
+      <div class="kind-grid">
+        <div class="kind-card">
+          <span class="ki">🖼️</span>
+          <div class="kt">画像</div>
+          <div class="kd">写真・スクリーンショット・イラストなど</div>
+        </div>
+        <div class="kind-card">
+          <span class="ki">🎬</span>
+          <div class="kt">動画</div>
+          <div class="kd">15MBまでの短い動画</div>
+        </div>
+        <div class="kind-card">
+          <span class="ki">🎤</span>
+          <div class="kt">音声</div>
+          <div class="kd">LINEの音声メッセージ（15MBまで）</div>
+        </div>
+      </div>
+      <div class="warn">
+        <b>正直にお伝えすると</b>: 15MBを超える大きな動画・音声は、内容の理解を諦めて「動画が届いた」ことだけを
+        記録し、<b>返信はしません</b>（誤った内容で答えるより、答えないほうが誠実だという判断）。
+        大きなファイルを送ってりんくが黙っていたら、それが理由です。
+      </div>
+    </div>
+
+    <h2>🛠️ 仕組み・対応モデル一覧（AI向け・技術的な説明）</h2>
+    <div class="card">
+      <h3>2段方式: 客観描写 → 人格で反応</h3>
+      <p>
+        画像・動画・音声を受け取ると、まず①AIモデルに「内容を客観的に説明して」とだけ頼み、
+        人格を含まない説明文を得る。その説明文を②「あなたらしく反応してください」という指示付きで
+        通常の会話パイプラインに渡し、りんくの人格・KB・会話履歴・エスカレーション判定をそのまま使って返信を作る。
+        この2段構成にすることで、「AIが淡々とした説明文をそのまま返してしまう」事故を防いでいる。
+      </p>
+
+      <h3>対応モデル一覧</h3>
+      <table class="model-table">
+        <tr><th>種類</th><th>使うモデル</th><th>方式</th><th>フォールバック</th></tr>
+        <tr>
+          <td>🖼️ 画像</td>
+          <td><span class="tag provider1">1番手</span>Groq <code>qwen/qwen3.6-27b</code><br><span class="tag provider2">2番手</span>Gemini <code>gemini-2.5-flash-lite</code></td>
+          <td>OpenAI互換 <code>chat/completions</code> の <code>image_url</code></td>
+          <td>あり（2段）</td>
+        </tr>
+        <tr>
+          <td>🎬 動画</td>
+          <td><span class="tag geminionly">Geminiのみ</span><code>gemini-2.5-flash-lite</code></td>
+          <td>ネイティブ <code>generateContent</code> APIの <code>inline_data</code></td>
+          <td>なし</td>
+        </tr>
+        <tr>
+          <td>🎤 音声</td>
+          <td><span class="tag geminionly">Geminiのみ</span><code>gemini-2.5-flash-lite</code></td>
+          <td>OpenAI互換 <code>chat/completions</code> の <code>input_audio</code></td>
+          <td>なし</td>
+        </tr>
+      </table>
+      <p>
+        画像だけGroq→Geminiの2段フォールバックがあり、動画・音声はGeminiのみという非対称な構成になっている。
+        これは仕様の手抜きではなく、<b>実機検証で確定した技術的な制約</b>による。
+      </p>
+
+      <h3>なぜ動画・音声はGeminiだけなのか</h3>
+      <p>
+        Groq・Cloudflare Workers AIは、現時点で動画・音声を直接受け取れるAPIを持っていない
+        （画像のみ両プロバイダとも対応）。Gemini側も一枚岩ではなく、実際にAPIを叩いて検証した結果、
+        次のことが分かった。
+      </p>
+      <ul>
+        <li><b>動画</b>: OpenAI互換の <code>chat/completions</code> に <code>video_url</code> というcontent typeで
+          動画を渡そうとすると、Gemini側から<code>400 Invalid content part type</code>ではっきり拒否される。
+          動画はGoogleのネイティブ <code>generateContent</code> APIの <code>inline_data</code> 形式でしか受け付けない
+          （レスポンス形式もOpenAI互換とは異なるため、専用のパーサーを別途実装している）。</li>
+        <li><b>音声</b>: OpenAI互換の <code>chat/completions</code> に <code>input_audio</code> というcontent typeで
+          渡すと、こちらは正しく受理される（クォータ超過時は<code>429</code>が返るが、フォーマット自体は
+          <code>400</code>にならないことを確認済み）。ただし提供元をGeminiに揃える設計にしている。</li>
+      </ul>
+
+      <h3>実機検証で判明した罠（動画・音声固有）</h3>
+      <p>
+        画像には無い、動画・音声特有の落とし穴が2つあった。どちらも「原因を推測せず、実際にAPIを叩いて
+        実測値を確認する」ことで初めて特定できたもの。
+      </p>
+      <ol>
+        <li>
+          <b>トランスコード待ち</b>: LINEの動画・音声メッセージには「準備状態
+          （<code>processing</code> → <code>succeeded</code> / <code>failed</code>）」という仕組みがあり、
+          webhookを受け取った直後はまだ変換処理中で、コンテンツの取得に失敗することがある。
+          対策として <code>/content/transcoding</code> エンドポイントで状態を確認してから本体を取得するよう変更し、
+          <code>processing</code>中は最大約9秒ポーリングして待つ。
+        </li>
+        <li>
+          <b>音声のcontent-type</b>: LINEアプリの音声メッセージは、実機で送って調べたところ
+          <code>audio/x-m4a</code> というcontent-typeで届くことが分かった（<code>audio/mp4</code>ではない）。
+          この値が対応表から漏れていたため、<b>音声メッセージにだけ一切反応しない</b>という
+          分かりにくい不具合が実際に発生した。今は対応表に追加済みで解消している。
+        </li>
+      </ol>
+
+      <h3>サイズ上限とfail-closed設計</h3>
+      <p>
+        動画・音声は既定で<b>15MB</b>を上限としている（<code>bot.config.json</code>の
+        <code>llm.video.maxInputBytes</code> / <code>llm.audio.maxInputBytes</code>で調整可）。
+        超過した場合は理解を諦め、<code>[動画]</code>/<code>[音声]</code>ラベルのみを記録して
+        <b>返信をしない</b>（誤った内容で答えるくらいなら黙るという、無応答ゼロ化チェーンとは逆方向の
+        安全側の判断。テキスト・画像の応答自体には影響しない）。
+      </p>
+
+      <h3>関連ファイル</h3>
+      <ul>
+        <li><code>templates/line-bot/worker/src/services/vision-describe.ts</code> — 画像の客観描写生成</li>
+        <li><code>templates/line-bot/worker/src/services/media-describe.ts</code> — 動画・音声の客観描写生成、音声のcontent-type対応表</li>
+        <li><code>templates/line-bot/worker/src/services/incoming-image.ts</code> / <code>incoming-media.ts</code> — LINE Content APIからの取得・R2保存・トランスコード待ち</li>
+        <li><code>templates/line-bot/worker/src/services/llm-providers.ts</code> — <code>callGeminiVideo</code> / <code>callGeminiAudio</code> の実装箇所</li>
+        <li><code>templates/line-bot/bot.config.json</code> — <code>llm.vision</code> / <code>llm.video</code> / <code>llm.audio</code> でモデル・上限を調整</li>
+      </ul>
+    </div>
+
+    <h2>📚 実例（実際に起きた不具合と直し方）</h2>
+    <div class="card">
+      <h3>事例: 音声メッセージにだけ、りんくが一切反応しない</h3>
+      <p>
+        画像・動画は問題なく反応するのに、音声メッセージだけ送っても既読になるだけで返信が来ない、
+        という報告があった。ログだけでは分からなかったため、D1（会話履歴データベース）を直接確認したところ、
+        音声メッセージの保存自体（R2へのファイル保存）は成功していたが、その先の「客観描写を作る」処理が
+        毎回無言で失敗していることが分かった。
+      </p>
+      <h3>調べたこと（推測せず実測する）</h3>
+      <ol>
+        <li>保存済みの音声ファイルに実際にHTTPリクエストを送り、<code>Content-Type</code>ヘッダーを直接確認</li>
+        <li>返ってきたのは <code>audio/x-m4a</code>。事前に用意していた対応表には <code>audio/mp4</code> しか
+          入れておらず、この値が抜けていた</li>
+        <li>対応表に無いcontent-typeは「未対応」として静かに処理を打ち切る設計（fail-closed）になっていたため、
+          エラーは出るが返信もされない、という一番気づきにくい壊れ方をしていた</li>
+      </ol>
+      <div class="warn">
+        <b>直したこと</b>: <code>audio/x-m4a</code> を対応表に追加。あわせて、原因調査用に
+        「未対応のcontent-typeだった場合、その実測値を会話ログに残す」という仕組みも入れて、
+        次に似た問題が起きてもログイン不要のデータベース確認だけで即座に特定できるようにした。
+      </div>
+      <p>
+        <b>教訓</b>: 「たぶんこの値だろう」という推測でcontent-typeの対応表を書くと、実機の挙動と
+        ズレたまま気づかないことがある。実際にAPIを叩いて返ってきた値を確認してから対応表を作るのが安全。
+      </p>
+    </div>
+
+    <h2>🚀 自分のアプリで使う</h2>
+    <div class="card">
+      <ol>
+        <li><code>app.config.json</code> の <code>lineBot</code> セクションを埋めて <code>enabled: true</code> に</li>
+        <li><code>templates/line-bot/</code> をアプリの <code>line-bot/</code> にコピーし、<code>{{...}}</code> を置換</li>
+        <li><code>npx wrangler r2 bucket create {{shortName}}-line-images</code> でR2バケットを作成
+          （画像・動画・音声の保存先。作成しなくてもテキストのAI応答には影響しない）</li>
+        <li>Secretsを投入: <code>LINE_CHANNEL_ACCESS_TOKEN</code> / <code>LINE_CHANNEL_SECRET</code> / <code>GROQ_API_KEY</code></li>
+        <li>（動画・音声認識に必須）<code>GEMINI_API_KEY</code> を投入する。
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>で無料発行できる。
+          未設定だと動画・音声認識は静かにスキップされる（テキスト・画像の応答には影響しない）</li>
+        <li><code>wrangler.toml</code> の <code>[[r2_buckets]]</code> バインディングはテンプレートに同梱済み。
+          バケット名の置換だけ確認する</li>
+      </ol>
+      <p>くわしい手順は <code>templates/line-bot/README.md</code> の「画像・動画・音声認識」の章を参照。</p>
+    </div>
+
+    <footer class="site-footer">
+      <div class="site-footer-links">
+        <a href="../">🏠 トップ</a>
+        <a href="../howto/">🖼️ ゆっくり解説</a>
+        <a href="../story/">📖 完成ものがたり</a>
+        <a href="../guide/">📋 準備ガイド</a>
+        <a href="../troubleshooting/">🩹 つまずいたら</a>
+        <a href="../tax/">💴 課金の税務</a>
+        <a href="../walkthrough/">📷 追体験</a>
+        <a href="../learnings/">📚 実証知見まとめ</a>
+        <a href="../line-bot/">💬 無応答ゼロ化</a>
+        <a href="./">🖼️ 画像・動画・音声</a>
+      </div>
+      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+    </footer>
+  </div>
+</body>
+</html>

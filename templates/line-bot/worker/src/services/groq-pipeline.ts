@@ -22,6 +22,19 @@ export interface GroqPipelineParams {
   receivedAt: number;
   friendId: string;
   incomingText: string;
+  /**
+   * 'skip'指定でlookupCachedAnswer/saveCachedAnswerの両方を無効化する。画像/動画/音声の
+   * describe結果は1回性が高く、誤ってキャッシュされると「別の画像/動画/音声の答えを返す」
+   * 事故になるため（line-harness-oss本体からの移植）。
+   */
+  cachePolicy?: 'normal' | 'skip';
+  /**
+   * 呼び出し元が本メッセージを処理する前にmessages_logへ既にINSERT/UPDATE済みの
+   * 「今回自身の行」のid。buildGroqHistoryに渡して履歴から除外し、incomingTextと
+   * 履歴末尾の内容が食い違ったまま履歴側が優先される事故を防ぐ（line-harness-oss
+   * 2026-07-19実障害の修正を移植）。
+   */
+  excludeLogId?: string;
 }
 
 /**
@@ -31,14 +44,15 @@ export interface GroqPipelineParams {
  * 変更（line-harness-oss本体からの移植。Fable設計「無応答ゼロ化アーキテクチャ」）。
  */
 export async function runGroqSupportPipeline(params: GroqPipelineParams): Promise<GroqPipelineResult> {
-  const { db, apiKey, geminiApiKey, workersAi, receivedAt, friendId, incomingText } = params;
+  const { db, apiKey, geminiApiKey, workersAi, receivedAt, friendId, incomingText, cachePolicy = 'normal', excludeLogId } = params;
+  const cacheSkip = cachePolicy === 'skip';
 
   if (await isGroqBudgetExceeded(db)) {
     await incrementGroqUsage(db, 'escalations');
     return { kind: 'fail_closed', escalationText: getFailClosedEscalationText() };
   }
 
-  const cached = await lookupCachedAnswer(db, incomingText);
+  const cached = cacheSkip ? null : await lookupCachedAnswer(db, incomingText);
   if (cached) {
     await incrementGroqUsage(db, 'cache_hits');
     return { kind: 'canned', text: cached, source: 'cache' };
@@ -46,7 +60,7 @@ export async function runGroqSupportPipeline(params: GroqPipelineParams): Promis
 
   const canned = matchCannedResponse(incomingText);
   if (canned) {
-    if (isCacheableQuestion(incomingText)) {
+    if (!cacheSkip && isCacheableQuestion(incomingText)) {
       await saveCachedAnswer(db, incomingText, canned);
     }
     return { kind: 'canned', text: canned, source: 'canned' };
@@ -55,7 +69,7 @@ export async function runGroqSupportPipeline(params: GroqPipelineParams): Promis
   const kbHits = await searchKbArticles(db, incomingText);
   const kbContext = formatKbContext(kbHits);
   const systemPrompt = buildSystemPrompt(kbContext);
-  const history = await buildGroqHistory(db, friendId);
+  const history = await buildGroqHistory(db, friendId, excludeLogId);
 
   await incrementGroqUsage(db, 'groq_calls');
 
@@ -80,7 +94,7 @@ export async function runGroqSupportPipeline(params: GroqPipelineParams): Promis
   }
 
   const text = groqResult.text!;
-  if (isCacheableQuestion(incomingText)) {
+  if (!cacheSkip && isCacheableQuestion(incomingText)) {
     await saveCachedAnswer(db, incomingText, text);
   }
 

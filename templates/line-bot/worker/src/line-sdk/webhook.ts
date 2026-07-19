@@ -33,7 +33,8 @@ export interface WebhookEvent {
   type: string;
   replyToken?: string;
   source: { type: string; userId?: string };
-  message?: { type: string; text?: string };
+  // idはLINE Content API（画像・動画・音声のバイナリ取得）に必須（2026-07-17/19追加）。
+  message?: { type: string; text?: string; id?: string };
 }
 
 export interface WebhookRequestBody {

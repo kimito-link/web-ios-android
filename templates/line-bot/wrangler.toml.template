@@ -15,6 +15,14 @@ database_id = "{{cloudflareD1DatabaseId}}"
 [ai]
 binding = "AI"
 
+# 画像・動画・音声認識機能（2026-07-17/19追加）。受信メディアの保存とvision/describe用
+# 公開URLの発行に使う。事前に `npx wrangler r2 bucket create {{shortName}}-line-images` で
+# バケットを作成しておくこと。未設定でもテキストのAI応答は問題なく動く（メディア認識のみ
+# 静かにスキップされる、fail-closed設計）。
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "{{shortName}}-line-images"
+
 # ⚠️ [vars] はこのファイルに置かない。手動 `wrangler deploy` のたびに
 # 開発用プレースホルダーで本番を上書きする実障害が起きた(line-harness-oss実戦)。
 # LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET / GROQ_API_KEY / GEMINI_API_KEY は

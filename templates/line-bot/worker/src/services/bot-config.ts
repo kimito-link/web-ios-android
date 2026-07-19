@@ -6,6 +6,35 @@ export interface BotLlmChainStage {
   timeoutMs: number;
 }
 
+/** visionチェーンはgroq/geminiのみ許可（Workers AIのvisionモデルは品質・提供状況の理由で使用禁止）。 */
+export interface BotVisionChainStage {
+  provider: 'groq' | 'gemini';
+  model: string;
+  timeoutMs: number;
+}
+
+export interface BotVisionConfig {
+  enabled: boolean;
+  chain: BotVisionChainStage[];
+  maxDescriptionTokens: number;
+}
+
+/**
+ * 動画・音声の説明文生成設定（line-harness-oss本体からの移植、2026-07-19追加）。
+ * visionと違いGeminiのみ対応（動画: OpenAI互換chat/completionsはvideo_url content
+ * typeを受け付けず、ネイティブgenerateContent APIのinline_dataでのみ動作することを
+ * 実機検証で確認。音声: OpenAI互換のinput_audio content typeで動作するが、提供元を
+ * Geminiに揃える）。Groq/Workers AIは動画・音声inputに対応していないためチェーン化しない。
+ */
+export interface BotMediaConfig {
+  enabled: boolean;
+  model: string;
+  timeoutMs: number;
+  maxDescriptionTokens: number;
+  /** この値(バイト)を超える動画・音声はdescribeを諦め、[動画]/[音声]ラベルのみ保存する（fail-closed）。 */
+  maxInputBytes: number;
+}
+
 export interface BotLlmConfig {
   provider: 'groq';
   model: string;
@@ -19,6 +48,12 @@ export interface BotLlmConfig {
    * bot.config.json をそのまま使っているアプリの後方互換を壊さない。
    */
   chain: BotLlmChainStage[];
+  /** 画像認識のvisionチェーン設定（2026-07-17追加）。未指定時はdisabled（後方互換）。 */
+  vision?: BotVisionConfig;
+  /** 動画の説明文生成設定（2026-07-19追加）。未指定時はdisabled（後方互換）。 */
+  video?: BotMediaConfig;
+  /** 音声の説明文生成設定（2026-07-19追加）。未指定時はdisabled（後方互換）。 */
+  audio?: BotMediaConfig;
 }
 
 export interface BotCacheConfig {
@@ -37,7 +72,12 @@ export interface BotConfig {
   retrieval: BotRetrievalConfig;
 }
 
-type RawBotLlmConfig = Omit<BotLlmConfig, 'chain'> & { chain?: BotLlmChainStage[] };
+type RawBotLlmConfig = Omit<BotLlmConfig, 'chain' | 'vision' | 'video' | 'audio'> & {
+  chain?: BotLlmChainStage[];
+  vision?: Partial<BotVisionConfig>;
+  video?: Partial<BotMediaConfig>;
+  audio?: Partial<BotMediaConfig>;
+};
 
 type RawBotConfig = {
   llm: RawBotLlmConfig;
@@ -55,8 +95,29 @@ export function getBotConfig(): BotConfig {
     { provider: raw.llm.provider, model: raw.llm.model, timeoutMs: raw.llm.timeoutMs },
   ];
 
+  // vision/video/audio未指定時はdisabled（既存bot.config.jsonの後方互換）。
+  const vision: BotVisionConfig = {
+    enabled: raw.llm.vision?.enabled ?? false,
+    chain: raw.llm.vision?.chain ?? [],
+    maxDescriptionTokens: raw.llm.vision?.maxDescriptionTokens ?? 250,
+  };
+  const video: BotMediaConfig = {
+    enabled: raw.llm.video?.enabled ?? false,
+    model: raw.llm.video?.model ?? 'gemini-2.5-flash-lite',
+    timeoutMs: raw.llm.video?.timeoutMs ?? 15000,
+    maxDescriptionTokens: raw.llm.video?.maxDescriptionTokens ?? 250,
+    maxInputBytes: raw.llm.video?.maxInputBytes ?? 15 * 1024 * 1024,
+  };
+  const audio: BotMediaConfig = {
+    enabled: raw.llm.audio?.enabled ?? false,
+    model: raw.llm.audio?.model ?? 'gemini-2.5-flash-lite',
+    timeoutMs: raw.llm.audio?.timeoutMs ?? 15000,
+    maxDescriptionTokens: raw.llm.audio?.maxDescriptionTokens ?? 250,
+    maxInputBytes: raw.llm.audio?.maxInputBytes ?? 15 * 1024 * 1024,
+  };
+
   return {
-    llm: { ...raw.llm, chain },
+    llm: { ...raw.llm, chain, vision, video, audio },
     cache: {
       enabled: raw.cache?.enabled ?? true,
       ttlHours: raw.cache?.ttlHours ?? 72,
