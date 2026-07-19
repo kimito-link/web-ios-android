@@ -69,6 +69,10 @@
       })
       .then(function (data) {
         render(data, mount);
+        if (location.hash) {
+          var target = document.getElementById(location.hash.slice(1));
+          if (target) target.scrollIntoView();
+        }
       })
       .catch(function () {
         mount.innerHTML =

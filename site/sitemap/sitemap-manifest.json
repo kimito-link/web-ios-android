@@ -36,6 +36,7 @@
       "title": "💬 LINE公式アカウント（AI社員）",
       "slug": "line-bot",
       "links": [
+        { "label": "LINE公式アカウント 一覧", "href": "../line-bot-hub/", "srcPath": "line-bot-hub/index.html" },
         { "label": "無応答ゼロ化 — 既読無視しない仕組み", "href": "../line-bot/", "srcPath": "line-bot/index.html" },
         { "label": "画像・動画・音声認識 — 人格の学習・調整も解説", "href": "../line-bot-features/", "srcPath": "line-bot-features/index.html" }
       ]
@@ -44,6 +45,7 @@
       "title": "🩹 困ったとき",
       "slug": "troubleshooting",
       "links": [
+        { "label": "困ったとき 一覧", "href": "../help/", "srcPath": "help/index.html" },
         { "label": "つまずいたら — よくある罠と直し方", "href": "../troubleshooting/", "srcPath": "troubleshooting/index.html" },
         { "label": "課金の税務 — 米国源泉徴収（W-8BEN）", "href": "../tax/", "srcPath": "tax/index.html" }
       ]
@@ -52,6 +54,7 @@
       "title": "📚 応用・実績",
       "slug": "showcase",
       "links": [
+        { "label": "応用・実績 一覧", "href": "../apps/", "srcPath": "apps/index.html" },
         { "label": "アプリ一覧 — このキットで実際に公開できたアプリ", "href": "../showcase/", "srcPath": "showcase/index.html" },
         { "label": "実証知見まとめ — 申請まで通した知見", "href": "../learnings/", "srcPath": "learnings/index.html" },
         { "label": "けんこう診断 — アプリが自分で不具合の原因を教えてくれる仕組み", "href": "../features/health-check/", "srcPath": "features/health-check/index.html" },
