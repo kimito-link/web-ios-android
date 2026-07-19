@@ -48,6 +48,21 @@
     .card.media .tag { background: #fff3e0; color: #e65100; }
     .note { background: #eef5ff; border: 1px solid #cfe0fb; border-radius: 12px; padding: 14px 16px; margin: 20px 0; font-size: .9em; color: #1a3a5c; }
 
+    /* ── LINEトーク風の事例（ダミー会話） ── */
+    h2.section-title { font-size: 1.05em; color: #15222c; margin: 32px 0 14px; }
+    .line-mock { background: #7a95a8; border-radius: 16px; padding: 14px; margin: 12px 0 20px; }
+    .line-mock-title { display: flex; align-items: center; gap: 8px; color: #fff; font-size: .82em; font-weight: 700; margin-bottom: 10px; padding: 0 4px; }
+    .line-mock-title .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+    .line-thread { display: flex; flex-direction: column; gap: 8px; }
+    .line-row { display: flex; gap: 8px; max-width: 88%; }
+    .line-row.me { align-self: flex-end; flex-direction: row-reverse; }
+    .line-row img.avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 2px solid #fff; }
+    .line-bubble { background: #fff; border-radius: 4px 14px 14px 14px; padding: 9px 13px; font-size: .84em; line-height: 1.55; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    .line-row.me .line-bubble { background: #a4e57e; border-radius: 14px 4px 14px 14px; }
+    .line-bubble img.media { display: block; max-width: 100%; border-radius: 10px; margin-bottom: 4px; }
+    .line-bubble .media-tag { display: inline-block; background: #f0f0f0; color: #667; font-size: .78em; padding: 6px 10px; border-radius: 8px; }
+    .line-caption { text-align: center; color: #9aa3b0; font-size: .74em; margin: 20px 0 4px; }
+
     .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; }
     .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
     .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
@@ -85,6 +100,64 @@
     <div class="note">
       🤖 実体は <code>templates/line-bot/</code>。実証は <code>line-harness-oss</code>（ai-shain.link で実運用中の「りんく」）。
     </div>
+
+    <h2 class="section-title">💬 実際のトーク画面（イメージ・ダミー内容）</h2>
+
+    <div class="line-mock">
+      <div class="line-mock-title"><span class="dot"></span>ゆっくりサポートAI社員りんく</div>
+      <div class="line-thread">
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">
+            <span class="media-tag">🎬 動画（15秒・黒猫が道を歩いている）</span>
+          </div>
+        </div>
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">すごい！この黒猫、かわいいですね！目がとってもきれい！立ち上がって、車の横を通り過ぎていく様子も、猫の動きが自然で可愛らしいですね！</div>
+        </div>
+      </div>
+      <p class="line-caption">動画を送るだけで、内容を見て・キャラクターの口調で反応する</p>
+    </div>
+
+    <div class="line-mock">
+      <div class="line-mock-title"><span class="dot"></span>ゆっくりサポートAI社員りんく</div>
+      <div class="line-thread">
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">
+            <span class="media-tag">🍮 画像（パフェの写真）</span>
+          </div>
+        </div>
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">すごい！このデザート、見た目も美味しそうです！グラスに入ったデザートは、カスタードクリームやフルーツ、アイスクリームなどが層状に重ねられています。盛り付けまでこだわってますね！</div>
+        </div>
+      </div>
+      <p class="line-caption">写真も同じ。中身を客観的に見た上で、キャラクターらしく感想を言う</p>
+    </div>
+
+    <div class="line-mock">
+      <div class="line-mock-title"><span class="dot"></span>ゆっくりサポートAI社員りんく</div>
+      <div class="line-thread">
+        <div class="line-row me">
+          <div class="line-bubble">かなり頑張ってアプリ作ってるけど、なかなか使ってくれないよ</div>
+        </div>
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">よくあることですね。アプリを作るのは大変な作業です。どんなアプリを作ったんですか？どんな機能があって、どんな人に使ってもらいたいと思っているんですか？一緒に確認してみましょう。</div>
+        </div>
+        <div class="line-row me">
+          <div class="line-bubble">世界中の全人類に使ってもらいたいです</div>
+        </div>
+        <div class="line-row">
+          <img class="avatar" src="../images/link-smile.png" alt="りんく">
+          <div class="line-bubble">すごい目標ですね！世界中の全人類に使ってもらうのは大変な挑戦です。どんなアプリを作ったんですか？そのアプリの特徴や利点を知ると、ユーザーにアピールする方法を一緒に考えられます。</div>
+        </div>
+      </div>
+      <p class="line-caption">悩み相談のような普通のテキスト会話にも、キャラクターの人格で寄り添って返す</p>
+    </div>
+
     <div class="cards">
       <a class="card" href="../line-bot/">
         <h2>💬 無応答ゼロ化</h2>
