@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+// run.mjs — 汎用診断キット(diagnostics/)のランナー。対象リポジトリの種類を問わず、
+//   4本のチェックを順に実行し結果をまとめて報告する。
+//
+// このキットの思想: ../../docs/ai-rules/04_SELF_VERIFICATION.md §5「工程ガード」の具体化。
+//   「ローカルで動く」と「git clone直後(CI/Vercel/ストアビルド)でも動く」は別物、という原則を、
+//   Node.js/JS/TSプロジェクトなら何にでも(このキット外のプロジェクトにも)適用できる形にした。
+//
+// 対応チェック(すべて依存ゼロ・Node標準API のみ):
+//   1. check-tracked-imports    — git未追跡ファイルへのimportが無いか(../scripts/の正本を参照)
+//   2. check-lockfile-sync      — package.jsonとlockfileの依存が一致しているか
+//   3. check-secrets-not-tracked — .env等の秘密情報ファイルが誤って追跡されていないか
+//   4. check-large-tracked-files — 巨大ファイルが誤って追跡されていないか
+//
+// 使い方:
+//   node diagnostics/run.mjs [対象ディレクトリ]   # 省略時はcwd
+//   個別に1本だけ実行したい場合は各スクリプトを直接呼ぶ(例: node diagnostics/check-lockfile-sync.mjs)。
+//
+// 出力: 各チェックの結果を1行ずつ集計し、1件でも失敗があれば exit 1(fail-closed)。
+
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const TARGET_DIR = resolve(process.argv[2] || process.cwd());
+
+const CHECKS = [
+  { name: 'check-tracked-imports', path: join(__dirname, '..', 'scripts', 'check-tracked-imports.mjs') },
+  { name: 'check-lockfile-sync', path: join(__dirname, 'check-lockfile-sync.mjs') },
+  { name: 'check-secrets-not-tracked', path: join(__dirname, 'check-secrets-not-tracked.mjs') },
+  { name: 'check-large-tracked-files', path: join(__dirname, 'check-large-tracked-files.mjs') },
+];
+
+console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
+console.log('');
+
+const results = [];
+for (const check of CHECKS) {
+  if (!existsSync(check.path)) {
+    console.log(`- ${check.name}: SKIP(スクリプトが見つからない: ${check.path})`);
+    results.push({ name: check.name, status: 'skip' });
+    continue;
+  }
+  try {
+    // check-tracked-imports.mjs は引数を取らず process.cwd() 基準で動く契約(正本の既存仕様)。
+    // 自作3本は引数(対象ディレクトリ)も見るが、cwd をTARGET_DIRに揃えれば両方が正しく動く。
+    const output = execFileSync('node', [check.path, TARGET_DIR], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
+    process.stdout.write(output);
+    const status = /\(skip\)/.test(output) ? 'skip' : 'pass';
+    results.push({ name: check.name, status });
+  } catch (err) {
+    if (err.stdout) process.stdout.write(err.stdout);
+    if (err.stderr) process.stderr.write(err.stderr);
+    results.push({ name: check.name, status: 'fail' });
+  }
+  console.log('');
+}
+
+const failed = results.filter((r) => r.status === 'fail');
+const skipped = results.filter((r) => r.status === 'skip');
+console.log('--- 診断結果まとめ ---');
+for (const r of results) {
+  const mark = r.status === 'pass' ? '✓' : r.status === 'skip' ? '-' : '✗';
+  console.log(`${mark} ${r.name}: ${r.status}`);
+}
+console.log('');
+
+if (failed.length > 0) {
+  console.error(`[diagnostics] ${failed.length}件のチェックで問題を検出。上記の対処を確認してください。`);
+  process.exit(1);
+}
+console.log(`[diagnostics] 全チェック緑(実行${results.length - skipped.length}件・skip${skipped.length}件)。`);

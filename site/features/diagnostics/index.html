@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>どんなプログラムにも使える「診断キット」 | web-ios-android</title>
+  <meta name="description" content="このキットには、開発中のどんなJS/TSプログラムにも使える汎用診断ツールが入っています。git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミットを、コマンド1つで機械的に検出します。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/features/diagnostics/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="どんなプログラムにも使える「診断キット」 | web-ios-android">
+  <meta property="og:description" content="このキットには、開発中のどんなJS/TSプログラムにも使える汎用診断ツールが入っています。git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミットを、コマンド1つで機械的に検出します。">
+  <meta property="og:url" content="https://web-ios-android.vercel.app/features/diagnostics/">
+  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../../favicon.png">
+  <link rel="stylesheet" href="../../assets/css/common.css?v=1">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "name": "どんなプログラムにも使える「診断キット」",
+        "description": "このキットには、開発中のどんなJS/TSプログラムにも使える汎用診断ツールが入っています。git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミットを、コマンド1つで機械的に検出します。"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "診断キットの仕組み" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 48px 24px 56px;
+      text-align: center;
+    }
+    .hero-chars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .hero-chars img { width: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .hero h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; line-height: 1.5; }
+    .hero h1 span { color: #f6c90e; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    .fbox {
+      background: white;
+      border-radius: 8px;
+      padding: 7px 9px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .fbox .fi { font-size: 1.2rem; display: block; }
+    .fbox.ok { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
+    .farr { color: #aaa; font-size: 0.9rem; }
+    .illust { border-radius: 12px; padding: 14px 12px; margin: 14px 0; }
+    .illust-green { background: #e8f5e9; }
+    .tip { background: #f5f5ff; border-left: 3px solid #667eea; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-top: 14px; font-size: 0.85rem; color: #555; }
+
+    .check-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.88rem; }
+    .check-table th, .check-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e7eaf0; vertical-align: top; }
+    .check-table th { color: #667eea; font-weight: 800; white-space: nowrap; }
+    .check-table code { background: #eef0ff; padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+
+    .code-block {
+      background: #1a1a2e; color: #e8e8f0; border-radius: 10px;
+      padding: 14px 16px; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.82rem; overflow-x: auto; margin: 14px 0;
+    }
+    .code-block .cmt { color: #8888aa; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
+  <nav>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../howto/">🖼️ ゆっくり解説</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="../../images/konta-smile.png" alt="こん太">
+  </div>
+  <h1>どんなプログラムにも使える<br><span>「診断キット」</span></h1>
+  <p>git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイル誤コミットを、コマンド1つで検出</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../../">ホーム</a> ＞ 診断キットの仕組み
+</nav>
+
+<div class="chapter">
+  <div class="chapter-body" style="box-shadow: 0 4px 24px rgba(0,0,0,0.08); border-radius: 20px;">
+
+    <div class="illust illust-green">
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+        <div class="fbox"><span class="fi">📁</span>好きな<br>プログラム</div>
+        <div class="farr">→</div>
+        <div class="fbox"><span class="fi">🩺</span>コマンド<br>1つで診断</div>
+        <div class="farr">→</div>
+        <div class="fbox ok"><span class="fi">✅</span>出荷事故を<br>未然に防ぐ</div>
+      </div>
+      <div style="text-align:center; font-size:0.75rem; color:#aaa; margin-top:8px;">このキット専用ではなく、どのJS/TSプロジェクトにも使えます</div>
+    </div>
+
+    <p style="font-size:0.95rem; color:#333; line-height:1.9; margin-top:16px;">
+      「ローカルではちゃんと動いていたのに、本番デプロイやストア提出だけ失敗する」——
+      これはたいてい、<b>ローカルの作業フォルダ</b>と<b>git clone直後の状態</b>（CI・Vercel・ストアビルドが見る実体）が
+      ズレていることが原因です。診断キットは、このズレを人間の目視なしでコマンド1つで見つけます。
+    </p>
+
+    <table class="check-table">
+      <tr><th>チェック</th><th>見つけること</th></tr>
+      <tr>
+        <td><code>check-tracked-imports</code></td>
+        <td>新しく作ったファイルを<code>git add</code>し忘れたまま使っている箇所。ローカルではディスクにあるので動いてしまうが、git clone直後（CI/Vercel）だけ「解決できません」と失敗する</td>
+      </tr>
+      <tr>
+        <td><code>check-lockfile-sync</code></td>
+        <td><code>package.json</code>に足したパッケージが<code>package-lock.json</code>に反映されていない（<code>npm install</code>後のコミット忘れ）</td>
+      </tr>
+      <tr>
+        <td><code>check-secrets-not-tracked</code></td>
+        <td><code>.env</code>や秘密鍵ファイルが、意図せずgitに追跡（コミット）されてしまっている</td>
+      </tr>
+      <tr>
+        <td><code>check-large-tracked-files</code></td>
+        <td>ビルド成果物や動画など、サイズの大きいファイルの誤コミット（リポジトリ肥大化の原因）</td>
+      </tr>
+    </table>
+
+    <div class="code-block">
+      <span class="cmt"># 4つまとめて診断（対象フォルダを指定）</span><br>
+      node templates/diagnostics/run.mjs /path/to/your-project
+    </div>
+
+    <div class="tip">
+      💡 このキット専用の仕組みではありません。<code>node</code>が動く環境なら、
+      このリポジトリの外にある<b>どんなプログラムのフォルダに対しても</b>そのまま実行できます。
+      追加インストールも不要（Node標準機能だけで動きます）。
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div>
+    <a href="../../">🏠 トップ</a>
+    <a href="../../story/">📖 完成ものがたり</a>
+    <a href="../../guide/">📋 準備ガイド</a>
+    <a href="../../troubleshooting/">🩹 つまずいたら</a>
+    <a href="../../tax/">💴 課金の税務</a>
+    <a href="../../walkthrough/">📷 追体験</a>
+    <a href="../../learnings/">📚 実証知見まとめ</a>
+    <a href="../../line-bot/">💬 無応答ゼロ化</a>
+  </div>
+  <div style="margin-top:12px; font-size:0.8rem;">Kimito Link — クリエイター支援テンプレート</div>
+</footer>
+
+</body>
+</html>

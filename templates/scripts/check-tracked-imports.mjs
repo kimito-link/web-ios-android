@@ -105,8 +105,14 @@ export function findUntrackedImports(files, trackedFiles) {
 // 大小差により一致せず isMain=false のまま exit 0 で抜ける偽陽性を生む(2026-07-06実測・ai-hub selftest fixtureで検出)。
 const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
 if (isMain) {
-  const all = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-    .split('\n').map((s) => s.trim()).filter(Boolean);
+  let all;
+  try {
+    all = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+      .split('\n').map((s) => s.trim()).filter(Boolean);
+  } catch {
+    console.log('[check-tracked-imports] gitリポジトリでない(skip)。');
+    process.exit(0);
+  }
   const trackedSet = new Set(all);
   const roots = String(process.env.TRACKED_IMPORT_ROOTS || '').split(',').map((s) => s.trim()).filter(Boolean);
   const inRoots = (p) => roots.length === 0 || roots.some((r) => p.startsWith(`${r}/`) || p === r);

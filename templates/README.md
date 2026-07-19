@@ -33,6 +33,7 @@
 | `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・iOS版(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
 | `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/check-tracked-imports.mjs` | **新規ファイルの `git add` 忘れ検出ゲート**。git 追跡ファイルだけで相対 import が全解決するか静的検査= git clone 直後(CI/Vercel/ストアビルド)の実体を再現。ローカル検証は作業ツリー基準なので原理的に検出できない穴を塞ぐ。思想は [`../docs/ai-rules/04_SELF_VERIFICATION.md`](../docs/ai-rules/04_SELF_VERIFICATION.md) §5 | **無改変**(`TRACKED_IMPORT_ROOTS` env で対象限定可。CI の build 直後と pre-push に置く) |
+| `diagnostics/`(**汎用診断キット**) | **どんなJS/TSリポにも使える出荷事故ゲート4本＋ランナー**。`node diagnostics/run.mjs <対象ディレクトリ>` で import未追跡・lockfile不一致・秘密情報の追跡漏れ・巨大ファイル追跡をまとめて検査。詳細は [`diagnostics/README.md`](diagnostics/README.md) | **無改変**(依存ゼロ。web-ios-androidキット外の任意リポにも `node <このキットのパス>/diagnostics/run.mjs .` でそのまま使える) |
 | `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
 | `scripts/setup-clerk-x-oauth.mjs` | **Clerk + X OAuth セットアップ補助**。app.config.json(+ブランドプリセット)を読んでチェックリスト表示 / `.env.local` ひな形追記 / Vercel 一括登録。`--write-env` / `--write-vercel` フラグで動作変更。`pk_test_` から開発用 Callback を自動デコード | **無改変**(app.config.json 駆動) |
 | `auth/brand-preset.schema.json` | **ブランド認証プリセットの JSON Schema**。1ブランド分の Clerk + X OAuth 設定の構造定義(秘密は env 名参照のみ) | 無改変 |
