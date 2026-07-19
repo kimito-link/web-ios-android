@@ -54,7 +54,8 @@ header nav a {
 header nav a:hover { background: #f0f0ff; color: #667eea; }
 header nav a.active { background: #667eea; color: white; }
 
-/* ── ハンバーガーメニュー（幅768px以下でnavを折りたたむ） ── */
+/* ── ハンバーガーメニュー（幅1600px以下でnavを折りたたむ。11項目のフルナビは
+   横1600px未満だと収まらないため、実質デスクトップでも既定でハンバーガー） ── */
 .nav-toggle {
   display: none;
   margin-left: auto;
@@ -92,7 +93,7 @@ header nav a.active { background: #667eea; color: white; }
 .nav-toggle[aria-expanded="true"] span::before { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span::after { transform: translateY(-7px) rotate(-45deg); }
 
-@media (max-width: 768px) {
+@media (max-width: 1600px) {
   .nav-toggle { display: flex; }
   header nav {
     display: none;
