@@ -24,6 +24,7 @@
 |---|---|
 | App Store 却下 | `_docs/apple-reject-knowledge-base.md` |
 | Google Play 却下・審査詰まり | `_docs/google-play-submission-playbook.md` |
+| Chrome 拡張（CWS）の提出・却下・自動化 | `_docs/chrome-web-store-submission-playbook.md` |
 | 新規アプリの「初回だけ」出るブロッカー | `_docs/FIRST-SUBMISSION-blockers.md` |
 | CI/リリースパイプラインの詰まり | `_docs/release-pipeline-playbook.md` |
 | 上記に当てはまらない新種の知見 | 新規ファイルを `_docs/` に作成し、`CLAUDE.md` の表に1行追加してリンクする |

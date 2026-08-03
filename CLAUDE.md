@@ -55,9 +55,10 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **初回提出ブロッカー全リスト** | `_docs/FIRST-SUBMISSION-blockers.md`（新アプリの「最初の1回」だけ順番に踏むiOS/Android詰まり8個＋ASC UI手動項目。症状=CIログ文言・原因・直し方） | `malwarecheck.site`（iOS初回提出 2026-07 実戦） |
 | **Web→アプリDL導線 知見KB** | `_docs/web-to-app-install-best-practices.md` | `Exosome`（ディープリサーチ確証分） |
 | **Clerk X OAuth ログイン無人E2E検証 KB** | `_docs/clerk-x-oauth-e2e-verification-playbook.md`（ログイン判定偽陽性・1タップ導線URL食い違い・タイムアウト時証跡収集・Windows spawn罠・Xレート制限、の5事故と直し方） | `surechigai-romi-link` 2026-07-04実戦 |
-| **Chrome 申請自動化** | （このフォルダ内）`scripts/chrome/` | `build-zip.ps1`, `publish-cws.ps1` |
+| **Chrome 申請自動化（★審査送信まで全自動）** | （このフォルダ内）`scripts/chrome/`（`build-zip.ps1` / `publish-cws.ps1` / Node版 `*-node.mjs`）。**正本KB = [`_docs/chrome-web-store-submission-playbook.md`](_docs/chrome-web-store-submission-playbook.md)**。★**CWSの提出は「人間がダッシュボードで押すしかない」は誤り**＝管理画面はブラウザ自動操作が全面ブロックされるが、公式 Publish API があるので `--publish` で審査送信まで自動。**Playとは境界が逆**（Playは掲載情報まで自動だが審査送信だけUI必須／CWSは審査送信が自動で掲載文だけ手動）。2026-08-03にAIがこれを誤解しuserに3回「できません」と言った事故あり | `dns-osint-pro`（ps1実運用）／`tsuioku-no-kirameki.com`（Node版 `scripts/cws-publish.mjs`・v0.1.1244 提出実証） |
 | **LINE公式アカウントAI社員bot** | `templates/line-bot/`（Cloudflare Workers + D1、GROQ AI応答。fail-closed設計・詳細は同梱README）。移植判断は [`_docs/LINE-BOT-EXTRACTION-NOTES.md`](_docs/LINE-BOT-EXTRACTION-NOTES.md) | `line-harness-oss`（ai-shain.link実運用分。CRM機能を除去し単一アプリ用に最小化） |
 | **知見の書き戻しルール** | [`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) — 却下対応・初見エラーの解決を、次のアプリのAIが読み返せる形でKBに追記する手順 | — |
+| **「直したのに変わらない」調査KB** | [`_docs/runtime-truth-verification-knowledge-base.md`](_docs/runtime-truth-verification-knowledge-base.md) — コードを読んだ推論で原因を3回誤特定し、`fetch`ラップの実測1回で解決した実戦。①送信中身を丸ごと捕獲②入力と出力を並べて後処理の書き換えを見る③定数の重複定義を疑う。「上位モデルに変える」「読み込みを丁寧にする」が効かなかった記録も含む | `reply-copilot-openrouter-v2` 2026-07-30実戦 |
 | **ネイティブ(Expo/EAS)版の設計 ※実装未着手・進行中** | このキットはこれまでWeb/Capacitor/TWA前提の知見のみ。初のネイティブiOS実装(WebView非依存)の設計を `surechigai-romi-link` 側で検討中。設計書は [`surechigai-romi.link/docs/native-ios-app-DESIGN.md`](../surechigai-romi.link/docs/native-ios-app-DESIGN.md)。審査通過後に `templates/expo-native/` として型化予定（今はまだ作らない＝金型が無い段階でのテンプレ化を避ける） | `surechigai-romi-link` 2026-07-16設計（Fable設計・司令塔裏取り） |
 
 > ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。
