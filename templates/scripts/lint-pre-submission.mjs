@@ -66,7 +66,29 @@ function* walkDir(dir) {
 
 const appConfig = readJson('app.config.json');
 const pkg = readJson('package.json');
-const cap = readJson('capacitor.config.json');
+
+/**
+ * capacitor の appId を取り出す。
+ *
+ * ★`.json` 決め打ちで読むと、capacitor.config.ts を使うプロジェクトでは cap が常に null になり、
+ *   **CHECK 2 が skip 表示すら出さずに丸ごと消滅する**（kimitolink-linktree で実際に発生・
+ *   2026-08-05 発見。CHECK 9 は `.ts` フォールバック済みで CHECK 2 だけ取り残されていた）。
+ *   ゲートは「見ていないこと」が見えなくなるのが最も危険なので、両形式を読む。
+ */
+function readCapacitorAppId() {
+  const capJson = readJson('capacitor.config.json');
+  if (capJson) return { appId: capJson.appId ?? null, source: 'capacitor.config.json' };
+
+  const capTs = readFile('capacitor.config.ts');
+  if (capTs != null) {
+    // `appId: 'com.example.app'` / "..." / バッククォート を許容する。
+    const m = capTs.match(/appId:\s*['"`]([^'"`]+)['"`]/);
+    return { appId: m ? m[1] : null, source: 'capacitor.config.ts' };
+  }
+  return null;
+}
+
+const cap = readCapacitorAppId();
 
 // ----------------------------------------------------------------------------
 // CHECK 1 — version が semver X.Y.Z(meta)
@@ -84,14 +106,17 @@ if (!marketingVersion) {
 // CHECK 2 — Bundle ID 整合(capacitor.config.json appId == app.config bundleId)
 // ----------------------------------------------------------------------------
 const bundleId = appConfig?.identity?.bundleId;
-if (cap && bundleId && !String(bundleId).startsWith('<')) {
-  if (cap.appId !== bundleId) {
-    fail('bundle-id-consistency', 'meta', `capacitor.config.json appId="${cap.appId}" != app.config bundleId="${bundleId}"`);
-  } else {
-    ok('bundle-id-consistency', cap.appId);
-  }
-} else if (cap) {
-  skip('bundle-id-consistency', 'app.config bundleId が未設定 or capacitor.config 無し');
+// どの分岐に落ちても必ず ok/fail/skip のいずれかを出す（沈黙させない）。
+if (!cap) {
+  skip('bundle-id-consistency', 'capacitor.config.json / .ts のどちらも読めない');
+} else if (!cap.appId) {
+  skip('bundle-id-consistency', `${cap.source} から appId を読み取れない`);
+} else if (!bundleId || String(bundleId).startsWith('<')) {
+  skip('bundle-id-consistency', 'app.config identity.bundleId が未設定（プレースホルダのまま）');
+} else if (cap.appId !== bundleId) {
+  fail('bundle-id-consistency', 'meta', `${cap.source} appId="${cap.appId}" != app.config bundleId="${bundleId}"`);
+} else {
+  ok('bundle-id-consistency', cap.appId);
 }
 
 // ----------------------------------------------------------------------------
