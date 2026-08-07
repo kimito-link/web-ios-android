@@ -81,8 +81,17 @@ function readCapacitorAppId() {
 
   const capTs = readFile('capacitor.config.ts');
   if (capTs != null) {
-    // `appId: 'com.example.app'` / "..." / バッククォート を許容する。
-    const m = capTs.match(/appId:\s*['"`]([^'"`]+)['"`]/);
+    // ★コメントを除いてから、**トップレベル**の appId だけを拾う。
+    //   素朴に `match(/appId:.../)` すると最初の1件しか見ないため、
+    //   「旧IDをコメントで残す」「plugins の中に appId を持つプラグインがある」という
+    //   ごく普通の編集で**誤った値を拾う**（実測で3パターン確認）。
+    //   誤検出は fail なら気付けるが、逆に誤一致で緑になると出荷ゲートが素通りする。
+    const noComment = capTs
+      .replace(/\/\*[\s\S]*?\*\//g, '')        // ブロックコメント
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');     // 行コメント（URL の // を壊さない）
+    // `appId: 'com.example.app'` / "..." / バッククォート を許容。
+    // 行頭インデント2以下＝トップレベル定義に限定（ネストしたプラグイン設定を拾わない）。
+    const m = noComment.match(/^\s{0,2}appId:\s*['"`]([^'"`]+)['"`]/m);
     return { appId: m ? m[1] : null, source: 'capacitor.config.ts' };
   }
   return null;
