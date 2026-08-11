@@ -14,6 +14,7 @@
 | `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→Android初期化案内(Capacitor優先/IAP不要ならTWAも可)→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
 | `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
+| [`expo-native/`](expo-native/README.md) | **React Native(Expo) をネイティブのまま両ストアに出す金型**(WebView 非依存)。iOS/Android のリリース CI + 署名注入 + Play グラフィック生成 + 資産名衝突テスト。**方式の選び分け(TWA/Capacitor/Expo)と地雷4件を README に集約** | `<PLAY_PACKAGE_NAME>`/`<APP_BUNDLE_ID>`/`<PRODUCTION_DOMAIN>` を置換。`*.mjs` は無改変 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
 | `workflows/ios-shell-guardrail.yml` | 独自ネイティブ注入の再混入を CI で赤にするガード | 無改変(禁止パターンはアプリ非依存に一般化済み) |
 | `scripts/lint-pre-submission.mjs` | 審査前 lint(実証済み Apple 却下ベクタを CI で検出) | **無改変**(app.config.json + env 駆動。無いファイルは skip) |

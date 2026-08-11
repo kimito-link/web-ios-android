@@ -1,0 +1,323 @@
+# Template: Google Play release pipeline (GitHub Actions)
+# Origin: partnership_program_website/.github/workflows/android-play-release.yml
+#
+# - Builds the TWA in android-twa/ with bundleRelease, then uploads the AAB
+#   to Play Console with a Service Account.
+# - When PLAY_TRACK is production, changesNotSentForReview=false so Google
+#   starts the review automatically.
+#
+# Setup:
+#   1. Copy this file to .github/workflows/android-play-release.yml
+#      <PLAY_PACKAGE_NAME> = stores.playPackageName (or identity.bundleId)
+#      SCREENSHOT_URL      = "https://" + identity.productionDomain
+#   2. Set PLAY_TRACK (internal for testing, production for release)
+#   3. Register the secrets below
+#
+# Required GitHub Secrets:
+#   ANDROID_KEYSTORE_BASE64             upload-key .jks (base64)
+#   ANDROID_KEYSTORE_PROPERTIES         keystore.properties contents
+#   GOOGLE_PLAY_SA_JSON_BASE64          Service Account JSON (base64)
+#   GOOGLE_PLAY_DATA_SAFETY_CSV         Data Safety CSV (raw)
+#   GOOGLE_PLAY_DATA_SAFETY_CSV_BASE64  Data Safety CSV (base64)
+#   IOS_REVIEW_DEMO_USERNAME            demo account for review (optional)
+#   IOS_REVIEW_DEMO_PASSWORD            demo account password (optional)
+#
+# Release notes: release-notes/CURRENT-ja.txt (max 500 chars)
+#
+# ── このリポでの調整点(2026-08-08) ──────────────────────────────────
+# 1. `name:` を復活させた。ecbaabb98 の文字化けで消えており、f5e7216d8 で UTF-8 は
+#    直ったが name: 行は戻っていなかった。GitHub は name: を読めないとワークフローを
+#    **ファイルパス表示**にする(`gh workflow list` が
+#    ".github/workflows/android-play-release.yml" と出る)ため、
+#    一覧でも Actions の UI でも識別できなくなっていた。
+# 2. PLAY_PACKAGE_NAME がテンプレートの <PLAY_PACKAGE_NAME> のまま放置されていたので
+#    app.config.json stores.playPackageName の実値に置換。
+# 3. push トリガを外した。Play 系 Secrets(GOOGLE_PLAY_SA_JSON_BASE64 等)が
+#    **1つも未登録**(gh secret list で確認。Apple 系3点は登録済み)なので、
+#    自動起動すると "Validate required secrets" で必ず赤くなる。
+#    「壊れて赤い」を「意図して手動」に変える。Play 申請を始めるときに
+#    Secrets を登録し、下の push ブロックを復活させること。
+name: android-play-release
+
+on:
+  workflow_dispatch: {}
+  # Play 系 Secrets 登録後に復活させる（上のコメント3参照）。
+  # paths には「このワークフローが実際に run: で叩くスクリプト」を必ず全部載せる
+  # (iOS 側の path-filter 修正と同じ教訓。載っていないとそのスクリプトを直しても
+  #  ビルドが再トリガされない)。
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - ".github/workflows/android-play-release.yml"
+  #     - "android-twa/app/build.gradle"
+  #     - "release-notes/CURRENT-ja.txt"
+  #     - "scripts/play-publish.mjs"
+  #     - "scripts/play-fill-listing.mjs"
+  #     - "scripts/play-fill-data-safety.mjs"
+  #     - "scripts/play-review-check.mjs"
+  #     - "scripts/generate-release-notes.mjs"
+  #     - "scripts/verify-android-signing-config.mjs"
+  #     - "scripts/capture-play-screenshots.mjs"
+  #     - "scripts/lib/play-api.mjs"
+  #     - "store-assets/play/**"
+  #     - "app.config.json"
+
+concurrency:
+  group: android-play-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # From app.config.json (stores.playPackageName)
+      PLAY_PACKAGE_NAME: <PLAY_PACKAGE_NAME>
+      # internal = testing track. production starts Google review automatically.
+      PLAY_TRACK: internal
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate required secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+          GOOGLE_PLAY_SA_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SA_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PROPERTIES GOOGLE_PLAY_SA_JSON_BASE64; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      # Playwright + pnpm only needed for the capture-play-screenshots
+      # step further down. The earlier Play scripts (publish, fill-listing,
+      # fill-data-safety) use only Node built-ins + scripts/lib/play-api.mjs.
+      - name: Setup pnpm
+        # Don't pass 'version:' — package.json#packageManager pins the pnpm version
+        # version and pnpm/action-setup@v6 errors on multi-version specification.
+        uses: pnpm/action-setup@v6
+      - name: Install Node dependencies (for Playwright capture)
+        run: pnpm install --frozen-lockfile
+
+      # iOS と同じく Expo prebuild でネイティブ側を生成する。
+      # ⚠️ 旧構成(TWA / bubblewrap の android-twa/)は**もう存在しない**。
+      #    2026-08 に Expo prebuild へ移行済みで、android/ は .gitignore 済みの生成物。
+      #    このステップを消すとビルド対象が無くなる。
+      - name: Generate native Android project (expo prebuild)
+        run: |
+          set -euo pipefail
+          # 既存の生成物が残っていると構成が混ざるので作り直す
+          rm -rf android
+          npx expo prebuild --platform android --no-install
+
+          test -f android/gradlew || { echo "::error::android/gradlew が生成されていない"; exit 1; }
+          test -f android/app/build.gradle || { echo "::error::android/app/build.gradle が生成されていない"; exit 1; }
+
+      # versionCode / versionName を採番して build.gradle に焼き込む。
+      #
+      # ⚠️ prebuild は毎回 `versionCode 1` を書く（上で rm -rf android しているので
+      #    手で直しても消える）。放置すると初回は通るが **2回目で Play が
+      #    「versionCode 1 は既に使用済み」で拒否**する。
+      #
+      # ⚠️ iOS で同型の事故がある（ios-appstore-release.yml L298-305）:
+      #    「注入したはず」の値が生成物に入らず 5 連続で審査提出に失敗した。
+      #    そのため **書き込んだ後に必ず読み返して検証**し、違えば exit 1 にする。
+      - name: Set Android versionCode / versionName
+        run: |
+          set -euo pipefail
+          GRADLE=android/app/build.gradle
+
+          # run_number は同一ワークフローで単調増加する。1 以下なら時刻で代替
+          VC="${GITHUB_RUN_NUMBER:-0}"
+          if [ "$VC" -le 1 ]; then
+            VC="$(date +%s)"
+          fi
+          VN="$(node -p "require('./package.json').version")"
+
+          sed -i -E "s/versionCode [0-9]+/versionCode ${VC}/" "$GRADLE"
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"${VN}\"/" "$GRADLE"
+
+          GOT_VC="$(grep -oE 'versionCode [0-9]+' "$GRADLE" | head -1 | awk '{print $2}')"
+          GOT_VN="$(grep -oE 'versionName "[^"]*"' "$GRADLE" | head -1 | sed -E 's/versionName "(.*)"/\1/')"
+          echo "versionCode=${GOT_VC} versionName=${GOT_VN}"
+
+          if [ "$GOT_VC" != "$VC" ]; then
+            echo "::error::versionCode の書き込みに失敗（期待 ${VC} / 実際 ${GOT_VC}）"
+            exit 1
+          fi
+          if [ "$GOT_VN" != "$VN" ]; then
+            echo "::error::versionName の書き込みに失敗（期待 ${VN} / 実際 ${GOT_VN}）"
+            exit 1
+          fi
+
+      - name: Restore signing material
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/android-upload-key.jks
+          printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" > android/keystore.properties
+          ls -l android/android-upload-key.jks android/keystore.properties
+
+      # prebuild が生成する build.gradle は debug 署名のままなので、
+      # release に upload key の signingConfig を差し込む。
+      - name: Patch release signing config
+        run: node scripts/android-patch-signing.mjs --gradle android/app/build.gradle
+
+      # Fail early if the AAB would be signed with the wrong config.
+      - name: Verify Android signing config
+        run: node scripts/verify-android-signing-config.mjs --gradle android/app/build.gradle
+
+      - name: Build release AAB
+        working-directory: android
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew --no-daemon bundleRelease
+          ls -l app/build/outputs/bundle/release/
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Restore Service Account JSON
+        env:
+          GOOGLE_PLAY_SA_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SA_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p .secrets
+          printf '%s' "$GOOGLE_PLAY_SA_JSON_BASE64" | base64 -d > .secrets/google-play-sa.json
+          # Sanity check (don't print contents).
+          node -e "JSON.parse(require('fs').readFileSync('.secrets/google-play-sa.json','utf8')); console.log('SA JSON parsed OK')"
+
+      # Regenerate release-notes/CURRENT-ja.txt from conventional-style
+      # commit messages since the last v* tag. No-op if nothing
+      # user-facing changed since the last release.
+      - name: Regenerate ja release notes from commit messages
+        env:
+          PLAY_KEEP_RELEASE_NOTES: ${{ vars.PLAY_KEEP_RELEASE_NOTES }}
+        run: |
+          # ⚠️ v* タグが無いと HEAD~30..HEAD の feat:/fix: コミットから箇条書きを生成し、
+          #    **手書きのリリースノートを上書きする**。初回リリースの「はじめまして。…」は
+          #    これで消える。保持したいときは repo variable PLAY_KEEP_RELEASE_NOTES=1。
+          if [ "${PLAY_KEEP_RELEASE_NOTES:-}" = "1" ]; then
+            echo "PLAY_KEEP_RELEASE_NOTES=1 のため、手書きのリリースノートを保持します"
+          else
+            # Need full history for `git describe --tags`; checkout was shallow
+            git fetch --tags --depth=0 origin || git fetch --tags --depth=100 origin || true
+            node scripts/generate-release-notes.mjs --write || true
+          fi
+          echo '--- current release notes ---'
+          cat release-notes/CURRENT-ja.txt
+          echo '--- end ---'
+          # Play は 500 文字上限。超えると publish で落ちるので、ここで先に検知する
+          node -e "
+            const t=require('fs').readFileSync('release-notes/CURRENT-ja.txt','utf8').trim();
+            const n=[...t].length;
+            console.log('release notes: '+n+' 文字');
+            if(n>500){console.error('::error::リリースノートが500文字を超えています ('+n+')');process.exit(1);}
+            if(n===0){console.error('::error::リリースノートが空です');process.exit(1);}
+          "
+
+      # Capture authenticated dashboard screenshots before the listing
+      # upload step picks them up. Mirrors the iOS authenticated-capture
+      # fix so Google reviewers see the post-login dashboard, not the
+      # unauthenticated public LP. Hard-fails (exit 1) if reviewer creds
+      # are missing for login-required apps.
+      - name: Capture Play screenshots from prod URL (authenticated as reviewer)
+        env:
+          # "https://" + identity.productionDomain
+          SCREENSHOT_URL: https://<PRODUCTION_DOMAIN>
+          IOS_REVIEW_DEMO_USERNAME: ${{ secrets.IOS_REVIEW_DEMO_USERNAME }}
+          IOS_REVIEW_DEMO_PASSWORD: ${{ secrets.IOS_REVIEW_DEMO_PASSWORD }}
+        run: |
+          set -euo pipefail
+          pnpm exec playwright install --with-deps chromium || npx --yes playwright@1.49 install --with-deps chromium
+          node scripts/capture-play-screenshots.mjs
+          ls -la store-assets/play/screenshots
+
+          # ⚠️ capture-play-screenshots.mjs は各ページの失敗を catch で warn 止まりにする。
+          #    全ページ失敗しても 0 枚のまま exit 0 で通り、play-fill-listing.mjs 側は
+          #    「no local files; skipping」で**無言でスクショ無し**のまま公開まで進む。
+          #    ここで枚数を数えて止める。
+          N=$(find store-assets/play/screenshots -name '*.png' -type f | wc -l)
+          echo "screenshots: ${N} 枚"
+          if [ "$N" -lt 2 ]; then
+            echo "::error::スクリーンショットが ${N} 枚しか撮れていません（本番URLが落ちている可能性）"
+            exit 1
+          fi
+
+      # アイコン512とフィーチャーグラフィックを生成する。
+      # どちらも Play の必須項目で、無いと審査に出せない。
+      # sharp は未導入なので、E2E で既に入っている Playwright で描画する。
+      - name: Generate Play store graphics (icon-512 / feature-graphic)
+        run: |
+          set -euo pipefail
+          node scripts/generate-play-graphics.mjs
+          node scripts/generate-play-graphics.mjs --check
+
+      # Push store listing, developer contact, and store graphics into Play
+      # Console via Android Publisher API. This is idempotent and runs before
+      # the AAB publish step so Google reviewers see the correct metadata.
+      - name: Pre-fill Play listing + developer contact + graphics
+        env:
+          GOOGLE_PLAY_SA_JSON_PATH: .secrets/google-play-sa.json
+          PLAY_PREFILL_ALLOW_PERMISSION_SKIP: "1"
+        run: node scripts/play-fill-listing.mjs
+
+      - name: Pre-fill Play Data Safety from CSV (if provided)
+        env:
+          GOOGLE_PLAY_SA_JSON_PATH: .secrets/google-play-sa.json
+          PLAY_DATA_SAFETY_CSV: ${{ secrets.GOOGLE_PLAY_DATA_SAFETY_CSV }}
+          PLAY_DATA_SAFETY_CSV_BASE64: ${{ secrets.GOOGLE_PLAY_DATA_SAFETY_CSV_BASE64 }}
+          # Soft-fail on 403 (SA missing "Manage store presence") so the
+          # release pipeline keeps building during the one-time UI grant.
+          PLAY_PREFILL_ALLOW_PERMISSION_SKIP: "1"
+        run: node scripts/play-fill-data-safety.mjs --optional
+
+      - name: Publish to Play Console (uses $PLAY_TRACK)
+        env:
+          GOOGLE_PLAY_SA_JSON_PATH: .secrets/google-play-sa.json
+          # ⚠️ Expo prebuild の出力先。旧 TWA の android-twa/ ではない。
+          #    ここだけ旧パスのまま残っていて、ビルドとメタデータ投入を
+          #    やり切った最後の1歩で "AAB not found" で落ちる状態だった。
+          PLAY_AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
+        run: node scripts/play-publish.mjs
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f .secrets/google-play-sa.json
+          rm -f android/android-upload-key.jks
+          rm -f android/keystore.properties

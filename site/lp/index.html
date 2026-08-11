@@ -451,6 +451,34 @@
     </div>
   </section>
 
+  <section class="reveal" data-claim="native-vs-webview-choice">
+    <div class="section-head">
+      <span class="eyebrow">つくり方の選択</span>
+      <h2>「とりあえずWebを包む」で始めると、ログインで詰むことがあります</h2>
+      <p class="lede">アプリの作り方は大きく2通りあります。Webサイトをアプリの殻で包む方法と、ネイティブとして作る方法です。どちらが良いかは、そのアプリが何をするかで決まります。弊社は両方に対応しており、最初の相談時に用途をうかがってから決めます。</p>
+    </div>
+    <div class="table-scroll">
+      <table class="price-table">
+        <thead>
+          <tr><th>つくり方</th><th>Webを包む（TWA / Capacitor）</th><th>ネイティブ（Expo）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>画面の中身</td><td>Webサイトをそのまま表示</td><td><b>ネイティブの部品で描画</b></td></tr>
+          <tr><td>起動の速さ</td><td>Web の読み込みが必要</td><td><b>速い</b></td></tr>
+          <tr><td>Google / Apple でログイン</td><td><b>使えない場合がある</b></td><td>問題なし</td></tr>
+          <tr><td>アプリ内課金</td><td>TWA では<b>組み込めない</b></td><td>可能</td></tr>
+          <tr><td>制作の手間</td><td><b>軽い</b></td><td>やや重い</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:18px" data-claim="native-app-build">
+      とくに注意が必要なのがログインです。Google は現在、アプリに埋め込まれたブラウザからのログインを拒否します。Apple も iOS 17 以降、同じ方式での「Appleでサインイン」を塞ぎました。弊社も実際にこれで App Store の審査に落ち、作り方をネイティブへ切り替えることで解決しています。<b>ソーシャルログインを使うご予定があるなら、最初からネイティブで作るほうが確実です。</b>
+    </p>
+    <p class="lede" style="margin-top:12px">
+      逆に、既存のWebサイトをそのまま届けたいだけで、ログインも課金も不要であれば、Webを包む方法のほうが短期間・低コストで出せます。<b>高いほうを勧めることはしません。</b>用途にあわせて、必要のない作り込みは省きます。
+    </p>
+  </section>
+
   <section id="flow" class="reveal">
     <div class="section-head">
       <span class="eyebrow">ご利用の流れ</span>

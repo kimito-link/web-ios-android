@@ -20,6 +20,18 @@
       "verify": null
     },
     {
+      "id": "native-app-build",
+      "label": "WebView に頼らないネイティブアプリ（Expo prebuild）でも両ストアに出せる",
+      "level": "assisted",
+      "verify": null
+    },
+    {
+      "id": "native-vs-webview-choice",
+      "label": "TWA・Capacitor・ネイティブの選び分けを、実際に踏んだ地雷つきで示す",
+      "level": "assisted",
+      "verify": null
+    },
+    {
       "id": "apple-developer-registration",
       "label": "Apple Developer Program登録（年会費・2FA）",
       "level": "manual",
