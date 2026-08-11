@@ -128,6 +128,28 @@ Play Console でアプリを作るとき、デフォルト言語が `en-US` の�
 
 ---
 
+## Play Console 側で、どこまで自動化できるか（2026-08-11 実測）
+
+「API が無い」と諦める前に、`../scripts/` を見ること。手作業だと思われている項目のうち、
+**データセーフティは完全自動化できる**。
+
+| 項目 | 手段 |
+|---|---|
+| ストア掲載情報・グラフィック・スクショ | `play-fill-listing.mjs` |
+| AAB アップロード・トラック投入 | `play-publish.mjs` |
+| **データセーフティ（約50問）** | **`play-generate-data-safety-csv.mjs` → `play-fill-data-safety.mjs`** |
+| コンテンツレーティング(IARC) / 対象年齢 / アプリのコンテンツ / 審査送信 | **Play Console の UI**（下記） |
+
+`androidpublisher` の `contentRating` / `targetAudience` / `appContent` は
+**実際に叩くと全て HTTP 404**。Google がエンドポイントを公開していない。
+ここだけは UI で埋める（11項目の実例は `../../_docs/google-play-submission-playbook.md` §2）。
+
+> ⚠️ `play-generate-data-safety-csv.mjs` の `ANSWERS` は**アプリごとに書き直す**。
+> 移植元の回答をそのまま使うと**虚偽申告になる**。スキーマを実測して、
+> 収集している列だけを TRUE にすること。
+
+---
+
 ## 使い方
 
 1. このディレクトリの `*.yml` を `.github/workflows/` にコピーし、`<...>` を実値に置換
