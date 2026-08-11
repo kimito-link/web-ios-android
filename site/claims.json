@@ -21,7 +21,7 @@
     },
     {
       "id": "native-app-build",
-      "label": "WebView に頼らないネイティブアプリ（Expo prebuild）でも両ストアに出せる",
+      "label": "起動の速さが要るなら、Webを包まずネイティブ（Expo prebuild）で両ストアに出せる",
       "level": "assisted",
       "verify": null
     },

@@ -59,7 +59,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **LINE公式アカウントAI社員bot** | `templates/line-bot/`（Cloudflare Workers + D1、GROQ AI応答。fail-closed設計・詳細は同梱README）。移植判断は [`_docs/LINE-BOT-EXTRACTION-NOTES.md`](_docs/LINE-BOT-EXTRACTION-NOTES.md) | `line-harness-oss`（ai-shain.link実運用分。CRM機能を除去し単一アプリ用に最小化） |
 | **知見の書き戻しルール** | [`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) — 却下対応・初見エラーの解決を、次のアプリのAIが読み返せる形でKBに追記する手順 | — |
 | **「直したのに変わらない」調査KB** | [`_docs/runtime-truth-verification-knowledge-base.md`](_docs/runtime-truth-verification-knowledge-base.md) — コードを読んだ推論で原因を3回誤特定し、`fetch`ラップの実測1回で解決した実戦。①送信中身を丸ごと捕獲②入力と出力を並べて後処理の書き換えを見る③定数の重複定義を疑う。「上位モデルに変える」「読み込みを丁寧にする」が効かなかった記録も含む | `reply-copilot-openrouter-v2` 2026-07-30実戦 |
-| **ネイティブ(Expo prebuild)版** | [`templates/expo-native/`](templates/expo-native/README.md) — WebView に頼らずネイティブとして両ストアに出す金型。**TWA / Capacitor / Expo prebuild の選び分け**と、踏んだ地雷4件（versionCode 固定・署名判定の正規表現誤検知・拡張子違いの同名画像・Play のストア言語）を README に集約。Google は WebView からの OAuth を拒否し Apple も iOS17 で塞いだため、ソーシャルログインを使うなら WebView 方式は構造的に詰む | `surechigai-romi-link` iOS 2026-08-07 移行 / Android 2026-08-11 内部テスト配信 |
+| **ネイティブ(Expo prebuild)版** | [`templates/expo-native/`](templates/expo-native/README.md) — WebView に頼らずネイティブとして両ストアに出す金型。**選ぶ理由の第一は「軽さ」**（WebView は JS を実行時パースするので Capacitor↔ネイティブの差は秒の世界。Hermes の事前コンパイルで構造的に消える）。副次的に OAuth の制約（Google の WebView 拒否・Apple の iOS17 封鎖）も解ける。**TWA / Capacitor / Expo の選び分け**と踏んだ地雷4件（versionCode 固定・署名判定の正規表現誤検知・拡張子違いの同名画像・Play のストア言語）を README に集約 | `surechigai-romi-link` iOS 2026-08-07 移行 / Android 2026-08-11 内部テスト配信 |
 
 > ※ 「出典」は金型の元になった実プロジェクト（読み取り専用・触らない）。
 > キットを使うときは出典を見に行く必要はない。`templates/` のファイルをコピーして使う。

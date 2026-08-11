@@ -13,25 +13,46 @@
 
 | | TWA (`../android-twa/`) | Capacitor (`../capacitor/`) | **Expo prebuild（これ）** |
 |---|---|---|---|
+| **起動の速さ** | **JSの実行時パースが要る** | **同左** | **Hermes の事前コンパイル済みバイトコード** |
 | 画面の中身 | Web を Chrome で表示 | Web を WebView で表示 | **ネイティブUI**（DOM が無い） |
+| スクロール・タップ | ブラウザ合成（DOM 再レイアウトが残る） | 同左 | **OS ネイティブの慣性・応答** |
 | 元になるコード | Web サイト | Web サイト | **React Native のコード** |
-| 起動の速さ | Web 資産の取得・描画が要る | 同左 | **速い**（JSバンドルのみ） |
 | アプリ内課金 | **組み込めない** | 可能 | 可能 |
 | OAuth ログイン | 制約あり（下記） | **制約あり（下記）** | `ASWebAuthenticationSession` で解決 |
 | 作る手間 | 軽い | 中 | 重い（ネイティブ設定が要る） |
 
-### OAuth の制約は「好み」ではなく構造的な問題
+### 一番の理由は「軽さ」。WebView 方式では構造的に届かない
 
-WebView 方式は、ソーシャルログインで詰む場面がある。
+`surechigai-romi.link` がネイティブへ移った動機はこれ。
+Loop Habit Tracker のような**ネイティブアプリの軽さ**を目標にしたが、
+Capacitor で包む方式では**正面から応えられない**という結論だった。
+
+差の本体は2つ:
+
+1. **UI がネイティブビューであること**
+2. **Web 資産のダウンロード / パース / レイアウトが無いこと**
+
+WebView 方式は JS を**実行時にパース**する（設計時の調査で挙がった
+「1MB で 13 秒」はこれ）。Expo prebuild は Hermes が事前コンパイルした
+バイトコードを実行するので、この工程自体が存在しない。
+
+> **Capacitor ↔ ネイティブの差は「秒」の世界。**
+> ちなみに SwiftUI とのさらなる差は「ミリ秒〜数百ミリ秒」で桁が違うため、
+> React Native のコードベースを持っているなら SwiftUI 移行のリターンは無い
+> （`surechigai-romi.link/docs/native-ios-app-DESIGN.md` で検討し却下済み）。
+
+### 副次的に、OAuth の制約も解ける
+
+WebView 方式は、ソーシャルログインでも詰む場面がある。
 
 - **Google** は WebView からの OAuth を `disallowed_useragent` で拒否する
 - **Apple** は iOS 17 以降、WKWebView での Sign in with Apple を塞いだ
 
-`surechigai-romi.link` はこれで App Store の **Guideline 4 却下**を受け、
-Capacitor から Expo prebuild へ移行した。prebuild なら OS 標準の
-`ASWebAuthenticationSession` が使われるので、**構造的に解消する**。
+`surechigai-romi.link` はこれで App Store の **Guideline 4 却下**も受けている。
+prebuild なら OS 標準の `ASWebAuthenticationSession` が使われるので構造的に解消する。
 
-> ログインに Google / Apple を使うなら、WebView 方式は最初から避けたほうがいい。
+> これは「WebView 依存が残る」ではなく「OS の認証標準に乗る」。
+> 認証シートは数秒だけ現れて消えるもので、**アプリのレンダリング面ではない**。
 
 ---
 
