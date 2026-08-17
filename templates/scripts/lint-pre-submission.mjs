@@ -598,9 +598,15 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
     // ソース配下から「外部購入っぽい URL」と「ネイティブ判定」を数える。
     const SRC_DIRS = ['src', 'app', 'client/src', 'apps/web', 'components', 'lib'];
     const exts = new Set(['.ts', '.tsx', '.js', '.jsx', '.vue', '.svelte', '.html']);
-    /** 外部購入導線とみなす URL パターン（決済・申込ページ） */
+    /**
+     * 外部購入導線とみなすパターン（決済・申込）。
+     * ★URL 直書きとは限らない。tRPC/RPC 経由で Checkout を起動する実装
+     *   （`trpc.monitor.createCheckout` 等）は URL パターンに掛からず**検出ゼロ**になる。
+     *   partnership_program_website で実測して発見（今日いちばん危なかった
+     *   /monitor がまさにこの形だった）。「決済を開始する呼び出し」も含める。
+     */
     const PURCHASE_URL =
-      /(buy\.stripe\.com|checkout\.stripe\.com|\/checkout|payment[-_]?link|paymentLinks\.create)/i;
+      /(buy\.stripe\.com|checkout\.stripe\.com|\/checkout|payment[-_]?link|paymentLinks\.create|createCheckout|redirectToCheckout|stripe\.checkout)/i;
     /** ネイティブ判定の実装（呼び名は各リポで違うので広めに取る） */
     const NATIVE_GUARD = /window\.Capacitor|isNativePlatform|isNativeApp|isCapacitorNative/;
 
