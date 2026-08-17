@@ -178,6 +178,28 @@ async function captureDevice(browser, dev) {
   });
   await ctx.addInitScript(
     ({ css, onboardingKey }) => {
+      /**
+       * ★window.Capacitor を注入して「実機と同じ表示」で撮る（2026-08-17 追加）。
+       *
+       * server.url 型の薄殻アプリは、課金導線を `window.Capacitor` の有無で
+       * 出し分けている。ヘッドレスブラウザにはこれが無いため、
+       * **アプリ内では消えている料金・購入CTAがスクショにだけ写る**という事故が起きる。
+       * malwarecheck.site で実際に発生し、_docs/appstore-screenshot-pricing-leak.md に
+       * 「アプリ内の見た目だけ確認して対応完了としない」と記録されている。
+       *
+       * Apple 3.1.1 も Google Play も**スクリーンショットを含むメタデータ**を
+       * 審査対象にするため、ここを撮り分けないと片方だけ直しても却下されうる。
+       *
+       * ★プラグイン（Capacitor.Plugins.*）は生やさない。
+       *   server.url 型の実機も native-bridge だけが注入される状態なので、
+       *   実機より多機能に見せると逆に実態とズレる。
+       */
+      if (!window.Capacitor) {
+        window.Capacitor = {
+          isNativePlatform: () => true,
+          getPlatform: () => 'ios',
+        };
+      }
       try {
         window.localStorage.setItem(onboardingKey, 'true');
       } catch {

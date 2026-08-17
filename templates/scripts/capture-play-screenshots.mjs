@@ -165,6 +165,26 @@ try {
   });
   await ctx.addInitScript(
     ({ css, onboardingKey }) => {
+      /**
+       * ★window.Capacitor を注入して「実機と同じ表示」で撮る（2026-08-17 追加）。
+       *
+       * server.url 型の薄殻アプリは課金導線を `window.Capacitor` の有無で出し分ける。
+       * ヘッドレスブラウザにはこれが無いため、**アプリ内では消えている
+       * 料金・購入CTAがスクショにだけ写る**（malwarecheck.site で実際に発生。
+       * _docs/appstore-screenshot-pricing-leak.md）。
+       *
+       * ★Google Play のお支払いポリシーは誘導の禁止範囲に
+       *   「ボタン・リンク・**メッセージ**・広告」を明記しており、Apple より広い。
+       *   ストア掲載画像に価格や外部購入への導線が写るのは避ける。
+       *
+       * getPlatform は 'android'（Play 用の撮影なので実態に合わせる）。
+       */
+      if (!window.Capacitor) {
+        window.Capacitor = {
+          isNativePlatform: () => true,
+          getPlatform: () => 'android',
+        };
+      }
       try {
         window.localStorage.setItem(onboardingKey, 'true');
       } catch {
