@@ -144,6 +144,12 @@ for (const dir of scanDirs) {
   scannedAny = true;
   for (const f of walkDir(abs)) {
     if (!/\.(txt|md|json)$/i.test(f)) continue;
+    // ★README / CONTRIBUTING は Apple に送信されない「書き方ガイド」であり、
+    //   その性質上「`Android` や `Google Play` という語を入れないこと」という
+    //   **禁止事項の説明として禁止語が出てくる**。これを 2.3.10 違反として
+    //   fail にすると、ガイドを書けば書くほど落ちる不条理になる（実測で誤検知を確認）。
+    //   実際に送信されるのは同ディレクトリの本文ファイル（CURRENT-*.txt 等）の方。
+    if (/(^|[\\/])(README|CONTRIBUTING)\.md$/i.test(f)) continue;
     const c = fs.readFileSync(f, 'utf8');
     const hits = banned.filter((w) => c.toLowerCase().includes(w.toLowerCase()));
     if (hits.length > 0) {
