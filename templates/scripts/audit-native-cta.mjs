@@ -13,10 +13,26 @@
  *     そこにネイティブ判定があるかを突合する。**
  * 判定が無いファイルは「要確認」として出す。誤検知は許容し、見落としを潰す。
  *
+ * 【★9回目の検証で判明した、より深い取りこぼしの型（2026-08-17）】
+ * 「リンク元のCTAを隠す」だけでは足りない。**遷移先のルート自体**を塞ぐ必要がある。
+ *   Capacitor が server.url + allowNavigation: ['example.com', '*.example.com'] の
+ *   リモート読込型だと、**ドメイン全体がアプリ内で到達可能**。
+ *   リンクを隠してもURL直打ち・内部遷移・外部からの戻りで開けてしまう。
+ *   実例: /contact（受注フォーム）と /monitor/connect（申込フォーム）が
+ *         8回の修正すべてで対象外のまま残っていた。
+ *
+ * → components だけでなく **app/ 配下のルート定義も必ず走査対象に含める**こと。
+ *   さらに「そのページは丸ごと購入・受注導線ではないか」を目で確認する。
+ *   ページ自体が導線なら、CTAを隠すのではなく**ルートごと塞ぐ**
+ *   （deny-list 方式の実例: partnership_program_website の
+ *    client/src/lib/authRoutes.ts の NATIVE_AUTH_PRIVATE_PREFIXES）。
+ *
  * 使い方:
  *   node audit-native-cta.mjs <対象ディレクトリ...>
  * 例:
- *   node audit-native-cta.mjs apps/web/components apps/web/app
+ *   node audit-native-cta.mjs apps/web/components apps/web/app apps/web/lib
+ *
+ * ★引数を渡し忘れると exit 2 で落ちる（0件の偽の緑を防ぐため）。
  */
 
 import fs from 'node:fs';
@@ -83,7 +99,38 @@ function walk(dir) {
   }
 }
 
-for (const root of process.argv.slice(2)) walk(root);
+const roots = process.argv.slice(2);
+
+// ★引数ゼロで「0件＝緑」に見える罠を塞ぐ（2026-08-17 に実際に踏んだ）。
+// 走査対象を渡し忘れると何も歩かず「✅ 0件 / ⚠️ 0件」と出て、
+// **審査対策が終わったように見えてしまう**。件数0の緑こそ最も危険。
+if (roots.length === 0) {
+  console.error(
+    `\n❌ 走査対象のディレクトリが指定されていません。\n` +
+      `   引数なしでは何も検査せず「0件」と表示され、緑と誤読されます。\n\n` +
+      `   例: node audit-native-cta.mjs apps/web/components apps/web/app apps/web/lib\n`,
+  );
+  process.exit(2);
+}
+
+let walked = 0;
+for (const root of roots) {
+  if (!fs.existsSync(root)) {
+    console.error(`❌ 指定されたパスが存在しません: ${root}`);
+    process.exit(2);
+  }
+  walk(root);
+  walked += 1;
+}
+
+// 対象は在るのに1ファイルも読めていない場合も緑にしない。
+if (guarded.length === 0 && flagged.length === 0) {
+  console.error(
+    `\n❌ ${walked} 個のパスを走査しましたが、対象ファイル(.ts/.tsx/.js/.jsx)を1件も検出できませんでした。` +
+      `\n   パスの指定ミスの可能性があります。「0件だから安全」と読まないでください。\n`,
+  );
+  process.exit(2);
+}
 
 console.log(`\n✅ ガードあり: ${guarded.length} ファイル`);
 for (const g of guarded) console.log(`   ${g}`);
