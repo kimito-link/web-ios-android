@@ -545,6 +545,133 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
 }
 
 // ----------------------------------------------------------------------------
+// CHECK 18 — 3.1.1 アプリ外購入への導線がネイティブで素通しになっていないか
+//
+// 【なぜ要るか】2026-08-17 追加
+//   malwarecheck.site が 2026-08-01 に Guideline 3.1.1 で**実際に却下**された。
+//   しかし CHECK 1〜17 に課金導線の検査は1つも無く、**lint が緑のまま素通り**した。
+//   さらに却下対応後も「LINE 相談 CTA 10箇所」「監視サブスク CTA 2箇所」が
+//   残っていたことが後日の実測で判明している（名前で探すと漏れる）。
+//
+// 【何を見るか】
+//   server.url 型の Capacitor アプリは Web をそのまま WKWebView に出すため、
+//   Web の課金導線がアプリ内にも出る。これを防ぐには
+//   「ネイティブ判定（window.Capacitor）で描画を止める」実装が要る。
+//   ここでは **外部購入 URL を持つのに、その判定がコードのどこにも無い** 状態を検出する。
+//
+// 【fail でなく warn にした理由】
+//   「どの導線が課金でどれがサポート窓口か」は機械判定できない。
+//   （例: 問い合わせ用 LINE は隠すべきでない。隠すと 1.5 側で不利になる）
+//   誤検知で提出を止めると、この lint 自体が信用されなくなる。
+//   ★ただし「外部購入 URL があるのに判定が1つも無い」は構造的に危険なので fail にする。
+// ----------------------------------------------------------------------------
+{
+  // ★配置はリポジトリごとに違う（ルート直下 / apps/mobile/ 等）。
+  //   ルートだけ見ると malwarecheck.site(apps/mobile/) が skip され、
+  //   **実際に 3.1.1 で却下されたリポジトリで鳴らない**という本末転倒になる（実測で発見）。
+  //   android/.../assets/ 配下はビルド生成物なので探索対象から外す。
+  const CAP_CFG_CANDIDATES = [
+    'capacitor.config.ts',
+    'capacitor.config.js',
+    'capacitor.config.json',
+    'apps/mobile/capacitor.config.ts',
+    'apps/mobile/capacitor.config.js',
+    'apps/mobile/capacitor.config.json',
+    'mobile/capacitor.config.ts',
+    'mobile/capacitor.config.json',
+  ];
+  let capCfg = null;
+  for (const rel of CAP_CFG_CANDIDATES) {
+    capCfg = readFile(rel);
+    if (capCfg != null) break;
+  }
+
+  if (capCfg == null) {
+    skip('external-purchase-cta', 'capacitor.config が無い(ネイティブ配布しないなら可)');
+    // ★キーが引用符付きの JSON 形式（"server": { "url": ... }）にも当てること。
+    //   引用符を許さない正規表現だと capacitor.config.json のアプリが丸ごと
+    //   skip され、検査したい対象が検査されない（partnership で実測して発見）。
+  } else if (!/["']?server["']?\s*:\s*\{[\s\S]*?["']?url["']?\s*:/.test(capCfg)) {
+    // ローカルバンドル型は Web と作り分けられるため、この検査の前提が違う
+    skip('external-purchase-cta', 'server.url 型ではない(ローカルバンドル型)');
+  } else {
+    // ソース配下から「外部購入っぽい URL」と「ネイティブ判定」を数える。
+    const SRC_DIRS = ['src', 'app', 'client/src', 'apps/web', 'components', 'lib'];
+    const exts = new Set(['.ts', '.tsx', '.js', '.jsx', '.vue', '.svelte', '.html']);
+    /** 外部購入導線とみなす URL パターン（決済・申込ページ） */
+    const PURCHASE_URL =
+      /(buy\.stripe\.com|checkout\.stripe\.com|\/checkout|payment[-_]?link|paymentLinks\.create)/i;
+    /** ネイティブ判定の実装（呼び名は各リポで違うので広めに取る） */
+    const NATIVE_GUARD = /window\.Capacitor|isNativePlatform|isNativeApp|isCapacitorNative/;
+
+    const hits = [];
+    let guardCount = 0;
+
+    const walk = (dir) => {
+      let entries;
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const e of entries) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          if (
+            e.name === 'node_modules' ||
+            e.name === '.next' ||
+            e.name === 'dist' ||
+            e.name === 'build' ||
+            e.name === '.vercel' ||
+            e.name === '.claude'
+          )
+            continue;
+          walk(full);
+        } else if (exts.has(path.extname(e.name))) {
+          let body;
+          try {
+            body = fs.readFileSync(full, 'utf8');
+          } catch {
+            continue;
+          }
+          if (NATIVE_GUARD.test(body)) guardCount += 1;
+          if (PURCHASE_URL.test(body)) {
+            hits.push(path.relative(ROOT, full).split(path.sep).join('/'));
+          }
+        }
+      }
+    };
+    for (const d of SRC_DIRS) {
+      const abs = path.join(ROOT, d);
+      if (fs.existsSync(abs)) walk(abs);
+    }
+
+    if (hits.length === 0) {
+      ok('external-purchase-cta', '外部購入 URL をソース内に検出せず');
+    } else if (guardCount === 0) {
+      fail(
+        'external-purchase-cta',
+        '3.1.1',
+        `外部購入 URL を ${hits.length} ファイルで検出したが、ネイティブ判定(window.Capacitor 等)が` +
+          `**コード全体に1つも無い**。server.url 型は Web の課金導線がそのままアプリ内に出るため、` +
+          `このまま提出すると 3.1.1 で却下される可能性が高い。該当: ${hits.slice(0, 5).join(', ')}` +
+          `${hits.length > 5 ? ` ほか${hits.length - 5}件` : ''}`,
+      );
+    } else {
+      warn(
+        'external-purchase-cta',
+        '3.1.1',
+        `外部購入 URL が ${hits.length} ファイルにあり、ネイティブ判定は ${guardCount} ファイルに存在する。` +
+          `**判定漏れが無いかは機械では判定できない**ので、提出前に実機相当で目視すること` +
+          `（window.Capacitor.isNativePlatform=()=>true を注入して残存を数えるのが確実）。` +
+          `★「LINE」等の名前で探すと漏れる。基準は「アプリ外購入への導線」。` +
+          `該当: ${hits.slice(0, 5).join(', ')}${hits.length > 5 ? ` ほか${hits.length - 5}件` : ''}`,
+      );
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Output
 // ----------------------------------------------------------------------------
 console.log('');
