@@ -16,6 +16,11 @@ WKWebView でWebアプリを包んだ「ハイブリッドアプリ」を Apple 
 > (identity.displayName / identity.productionDomain / ownership.organization / businessModel)を
 > 当てはめる。認証基盤は実例では Clerk だが、自前ユーザーテーブルでも論理は同じ。
 
+> **更新履歴**: 2026-08-19 に kimitolink-linktree 側のコピー(英語版)へ 2026-08-18 に
+> 追記されていた却下ベクタ3件を、この正本へ日本語で取り込んだ
+> (デモ垢ゲートの環境取り違え / 3.1.3(e)と(f)の混同 / 緑のゲートが見ていない問題)。
+> **コピーではなくこのファイルが正本**。store-guard エージェントもここを読む。
+
 > **使い方**: 却下が来たら (1) Apple メールの Guideline 番号を確認 → (2) 下の該当節へ →
 > (3) **Reviewer message** が一致するか照合 → (4) **Fix recipes** を適用 → (5) Resolution Center
 > 返信には各節の **verbatim quote**(Apple自身のガイドライン引用)を使う。Apple のレビュアーは
@@ -38,7 +43,8 @@ WKWebView でWebアプリを包んだ「ハイブリッドアプリ」を Apple 
 11. [§4.8 Login Services / Sign in with Apple](#48-login-services--sign-in-with-apple)
 12. [§5.1 Privacy / アカウント削除](#51-privacy--アカウント削除)
 13. [実際に通った Resolution Center 返信文(テンプレ)](#実際に通った-resolution-center-返信文)
-14. [審査前チェックリスト](#審査前チェックリスト)
+14. [★緑のゲートは「ゲートが見ている」ことを意味しない](#緑のゲートはゲートが見ていることを意味しないkimito-2026-08-18)
+15. [審査前チェックリスト](#審査前チェックリスト)
 
 ---
 
@@ -122,6 +128,21 @@ Capacitor + Vite + 認証SaaS でWebアプリを包んだ構成で最も刺さ�
    notes は *現在の*build を反映し *現在の*質問に逐語で答える。
    - **同型バグの第2波(v1.0.6)**: 同じ `pick()` precedence が `demoAccountName` /
      `demoAccountPassword` でも起きた。env(secret)を `pick()` より優先させて根治。
+10. **★デモ垢ゲートが「別インスタンス」を見て誤判定する(kimito 2026-08-18)**。
+    `verify-reviewer-account.mjs` が「デモアカウント @*** が Clerk に存在しません」で
+    fail-closed したが、**アカウントは実在した**。真因は CI の `CLERK_SECRET_KEY` が
+    ci.yml / playwright-smoke.yml と共有で **development インスタンス(`sk_test_`)** を
+    指していたのに、審査員デモ垢は **production** に居たこと。ユーザーテーブルが別なので
+    「そこには最初から居ない」。dev 側を数えたら probe_* の残骸4件しか無かった。
+    - **併発する罠**: X OAuth の Clerk ユーザーは `username === null` のことがある。
+      真の情報源は `externalAccounts` 内の X provider の `username`。
+      `username` だけを見るゲートは正しいアカウントも見落とす。
+    - 直し方: `CLERK_SECRET_KEY_PROD` があれば優先、`externalAccounts` も併せて照合、
+      dev 鍵しか無いのに見つからない場合は **fail ではなく warn して継続**
+      （そこに無いのは「探す場所が違う」であって「存在しない」ではない）。
+    - **一般化**: ログイン/アカウント系のゲートが複数環境(dev/prod の Clerk、
+      staging/prod の DB)をまたぐときは、**その CI ジョブが実際どの環境の資格情報を
+      使っているか**を確かめてから "not found" を信じること。
 
 ### Built-in demo mode(法務/セキュリティで実デモ垢を共有できない時)
 
@@ -337,6 +358,26 @@ email/PWログイン型(Clerk/X OAuth不要)アプリでは前述の「公開ペ
 
 その他: §3.1.3(c) Enterprise Services / §3.1.3(e) Goods and Services Outside of the App。
 §3.1.3(a) Reader Apps は B2B ダッシュボードには **適用されない**。
+
+#### ★(e) は「支払い方法の免除」だけ。外部CTAの可否は (f) が別に規定する(kimito 2026-08-18)
+
+**危うく出荷しかけた誤った理屈**: 「このアプリの商材は NFC グッズ＝アプリ外で消費する
+物理商品だから 3.1.3(e) が効く → ネイティブ内に『価格表を見る』の外部リンクを置いてよい」。
+
+**なぜ誤りか**: 3.1.3(e) が免除するのは **支払い方法**だけ（アプリ外で消費する商品なら
+IAP でなく通常のカード決済でよい）。**CTA ボタンをアプリ内に置いてよいか**は
+3.1.3(f) が別途規定する。逐語で *"provided there is no purchasing inside the app,
+**or calls to action for purchase outside of the app**"*。「価格を見る」「ご注文はこちら」は
+まさに *call to action for purchase outside the app* で、(e) が適用される商材であっても
+(f) 違反になる。**2つの副条項は別の問いに答えている。(e)を満たしても(f)は満たさない。**
+
+実例: 提出時点でネイティブ殻に6本の外部CTAが生きていた（`/goods` に2本、
+ダッシュボードの QrCodeCard に4本）。同系の `malwarecheck.site` が 3.1.1 で2度
+却下されたのと**同じ構造の誤り**——隣接する免除条項を「全面許可」と読み替えてしまう。
+
+**一般化**: ガイドラインの副条項を根拠に設計判断をするときは、**その UI 要素を
+支配している条項そのもの**を読み直すこと（支払い方法と CTA の可否は、同じ番号の中でも別条項）。
+「(e)がこの商材をカバーする」を「だからこの商材に関する UI は何でもよい」に滑らせない。
 
 ### "Information Needed" — Apple のビジネスモデル質問(実例は7問)
 
@@ -717,6 +758,25 @@ Thank you for your patience.
    「reviewer notes が読まれない可能性に対し、レビュー記録に答えを残す」ための保険。
 
 ---
+
+## ★緑のゲートは「ゲートが見ている」ことを意味しない(kimito 2026-08-18)
+
+`check-native-visible.mjs` は対象ページ一覧に `/goods` を含んでいて**通っていた**が、
+上の 3.1.3(f) 違反に対しては**構造的に盲目**だった。
+- `BAD_TEXT` に価格系の語(価格表/価格を見る/活用事例/ご注文/注文する)が**1件も無かった**
+- アンカーの正規表現が `lin.ee|line.me|stripe` しか見ておらず、`kimito-link.com` を
+  外部リンクとして**数えていなかった**
+
+**ページが検査対象に入っていることと、そのゲートが目的の違反を検出できることは別**。
+ガイドライン対応でゲートを持っているなら、**いま起きている違反に対して
+実際にどの文字列/正規表現が当たるのか**を毎回読み直すこと。ファイルが
+「監視対象一覧に載っている」だけで安心しない。
+
+> 同型の実例(surechigai 2026-08-17): 起動プローブが「判定を出力するだけで
+> ジョブの成否に反映していない」ため、CRASHED でも緑だった。さらに審査機と
+> 違う機種を選び、スクショを kill 後に撮っていたので毎回ホーム画面が写り
+> 「描画されている」と誤判定していた。**判定ロジックを自作したら、
+> 判定自体を両側(通るケース/落ちるケース)で検証する。**
 
 ## 審査前チェックリスト
 
