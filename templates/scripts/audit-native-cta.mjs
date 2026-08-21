@@ -99,6 +99,47 @@ function walk(dir) {
   }
 }
 
+/*
+ * ★--selftest: 検知器に毒を食わせ、赤が出ることを確認する。
+ *
+ * ■ なぜ要るか
+ *   このスクリプトは「見落としを潰す」ためのものだが、
+ *   ★**検知器自身が壊れると、静かに全部通す**(0件＝緑に見える)。
+ *   2026-08-17 に踏んだ「引数なしの偽の緑」と同じ型で、
+ *   今度は**正規表現が効かなくなる**形で起きうる。そのときは誰も気づけない。
+ *
+ * ■ 何を確かめるか
+ *   1. 導線の痕跡を★検知できるか(できなければ検知器が死んでいる)
+ *   2. ネイティブ判定を★認識できるか(できないと全部が「要確認」になり読まれなくなる)
+ *
+ * ★毒はメモリ上の文字列だけ。ファイルを触らないので原状復帰が要らない
+ *   (原状復帰の要る毒は、失敗時に本体を壊す危険がある)。
+ */
+if (process.argv.includes('--selftest')) {
+  const fails = [];
+  // (1) 検知できるべきもの: CTA_SIGNS のどれかに当たること
+  const shouldFlag = '相談する はこちら / 月額 3,000円';
+  if (!CTA_SIGNS.some((re) => re.test(shouldFlag))) {
+    fails.push('導線の痕跡を検知できない(CTA_SIGNS が効いていない)');
+  }
+  // (2) ネイティブ判定を認識できること
+  const nativeLine = 'const native = window.Capacitor?.isNativePlatform?.();';
+  if (!GUARD.test(nativeLine)) {
+    fails.push('ネイティブ判定を認識できない(GUARD が効いていない)');
+  }
+  // (3) 無関係な文字列を拾わないこと(誤検知だらけだと読まれなくなる)
+  if (CTA_SIGNS.some((re) => re.test('export function formatDate(d) { return d; }'))) {
+    fails.push('無関係なコードを導線として誤検知している');
+  }
+  if (fails.length) {
+    console.error('\n❌ selftest 失敗(検知器が効いていません):');
+    for (const f of fails) console.error('   - ' + f);
+    process.exit(1);
+  }
+  console.log('✅ selftest OK(痕跡を検知する / ネイティブ判定を認識する / 誤検知しない)');
+  process.exit(0);
+}
+
 const roots = process.argv.slice(2);
 
 // ★引数ゼロで「0件＝緑」に見える罠を塞ぐ（2026-08-17 に実際に踏んだ）。
