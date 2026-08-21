@@ -77,3 +77,15 @@
 - 計器のためにデータ本体(Blob等)を読む → 件数だけなら count() 系で。**計器は軽くなければ計器でない**。
 - タイムアウトで表面だけ次に進む(Promise.race)→ 裏で操作が生き続けて多重競合。in-flight ガード(前回未解決中は再発行しない)を併用する。
 - 検証に人間の目視・操作を組み込む → 「反映して」「押してみて」の往復が積もると開発が止まる。人間に残してよいのは(a)最終リロード等の権限操作 (b)音・体感など機械化不能な官能評価、の2つだけ。
+
+---
+
+## ★実物のコードはこちら（2026-08-21 追記）
+
+この文書は**思想**です。★動く実装はキットに同梱済み:
+
+- 使い方の手順書 … [`_docs/instruments/HANDOFF-new-app.md`](../../_docs/instruments/HANDOFF-new-app.md)
+- 共通土台      … [`templates/scripts/lib/instrument-core.mjs`](../../templates/scripts/lib/instrument-core.mjs)
+- 掟と往復の記録 … [`_docs/instruments/README.md`](../../_docs/instruments/README.md)
+
+★2026-08-21 まで、この文書から実物への導線が**1本もありませんでした**（配ったのに届いていなかった）。
