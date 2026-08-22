@@ -19,7 +19,7 @@
 // 出力: 各チェックの結果を1行ずつ集計し、1件でも失敗があれば exit 1(fail-closed)。
 
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -58,10 +58,30 @@ for (const check of CHECKS) {
     // check-tracked-imports.mjs は引数を取らず process.cwd() 基準で動く契約(正本の既存仕様)。
     // 自作3本は引数(対象ディレクトリ)も見るが、cwd をTARGET_DIRに揃えれば両方が正しく動く。
     // ★selfTarget=この diagnostics 自身 / kitRoot=キットのルート(site/ を見るため)
+    // ★対象リポが diagnostics.json で自分の検査置き場を宣言していれば、
+    //   selftest網羅はそちらを見る(宣言が無ければ従来どおりキット自身)。
+    //   ★これが無いと、対象リポのゲートが何本あっても一度も測られない。
+    let declaredChecks = '';
+    let declaredPattern = '';
+    try {
+      const dp = join(TARGET_DIR, 'diagnostics.json');
+      if (existsSync(dp)) {
+        const dj = JSON.parse(readFileSync(dp, 'utf8'));
+        if (dj && typeof dj.checks === 'string' && dj.checks.trim()) {
+          declaredChecks = join(TARGET_DIR, dj.checks.trim());
+        }
+        if (dj && typeof dj.checkPattern === 'string' && dj.checkPattern.trim()) {
+          declaredPattern = dj.checkPattern.trim();
+        }
+      }
+    } catch { declaredChecks = ''; }
+
     const scanDir = check.kitRoot
       ? join(__dirname, '..', '..')
-      : check.selfTarget ? __dirname : TARGET_DIR;
-    const output = execFileSync('node', [check.path, scanDir], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
+      : check.selfTarget ? (declaredChecks || __dirname) : TARGET_DIR;
+    const extraArgs = (check.selfTarget && declaredChecks && declaredPattern)
+      ? ['--pattern', declaredPattern] : [];
+    const output = execFileSync('node', [check.path, scanDir, ...extraArgs], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
     process.stdout.write(output);
     const status = /\(skip\)/.test(output) ? 'skip' : 'pass';
     results.push({ name: check.name, status });

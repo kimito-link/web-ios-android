@@ -83,7 +83,18 @@ export function normalizeSignature(s) {
  */
 export function extractSymptomIds(src) {
   const s = String(src || '');
+  // ① JS/TS の定義: { id: 'panel-black' }
   const ids = [...s.matchAll(/\bid:\s*'([a-z0-9][a-z0-9-]*)'/g)].map((m) => m[1]);
+
+  // ② ★Markdown の見出し: "## SS-01 一覧が真っ白" / "## panel-black ..."
+  //   なぜ足すか: 症状の一覧を【文書】で持つ製品がある(AutoHotkeyなど、
+  //   そもそもJSのソースが無い)。見出しだけを拾い、本文中の言及は拾わない
+  //   ★本文で触れただけで「定義した」ことになると、索引が
+  //     中身の無い相互参照に化ける。
+  //   ★大文字のID(SS-01)も許す。正規化は normalizeSignature が両側でやる。
+  for (const m of s.matchAll(/^#{2,3}\s+([A-Za-z][A-Za-z0-9]*-[A-Za-z0-9-]+)\b/gm)) {
+    ids.push(m[1]);
+  }
   return [...new Set(ids)];
 }
 
@@ -157,6 +168,32 @@ function runSelftest() {
   const src = "const A={id:'panel-black'};const B={id:'status-slow'};";
   if (extractSymptomIds(src).length !== 2) fails.push('★症状IDを拾えない');
 
+  // ②-b ★Markdown の見出しからも拾えること(JS以外の製品のため)
+  const md = '# 索引\n\n## SS-01 一覧が真っ白\n本文で SS-99 に言及しても定義ではない。\n\n### SS-02 別の症状\n';
+  const mdIds = extractSymptomIds(md);
+  if (!mdIds.includes('SS-01') || !mdIds.includes('SS-02')) {
+    fails.push('★Markdownの見出しから症状IDを拾えない: ' + mdIds.join());
+  }
+  // ★本文中の言及を定義と数えないこと(数えると索引が空の相互参照に化ける)
+  if (mdIds.includes('SS-99')) fails.push('★本文の言及を定義として拾っている');
+
+  // ②-c ★宣言(diagnostics.json)が壊れていても診断を止めないこと。
+  //   案内板が汚れていることを理由に診断を落としてはいけない。
+  const badDir = mkdtempSync(join(tmpdir(), 'nl-decl-broken-'));
+  writeFileSync(join(badDir, 'diagnostics.json'), '{ this is not json');
+  const d1 = readDeclaration(badDir);
+  if (d1.symptoms !== '' || d1.index !== '') fails.push('★壊れた宣言を読んでしまった');
+  // ★宣言が正しければ読めること(負の対照だけだと「常に空を返す関数」が受かる)
+  const okDir = mkdtempSync(join(tmpdir(), 'nl-decl-ok-'));
+  writeFileSync(join(okDir, 'diagnostics.json'), JSON.stringify({ symptoms: '_docs/S.md', index: '../x/i.json' }));
+  const d2 = readDeclaration(okDir);
+  if (d2.symptoms !== '_docs/S.md' || d2.index !== '../x/i.json') {
+    fails.push('★正しい宣言を読めていない: ' + JSON.stringify(d2));
+  }
+  // ★宣言が無いリポで壊れないこと
+  const noneDir = mkdtempSync(join(tmpdir(), 'nl-decl-none-'));
+  if (readDeclaration(noneDir).symptoms !== '') fails.push('★宣言が無いのに何か読んでいる');
+
   // ③ ★索引に有る/無いを正しく分けること
   const idx = { entries: [{ triggers: ['Panel Black'] }] };
   const v = judgeSymptomIndex({ symptomSrc: src, indexJson: idx });
@@ -204,16 +241,67 @@ function runSelftest() {
  * @param {string} targetDir
  * @returns {{ symptoms: string, index: string }}
  */
+/**
+ * 対象リポの宣言(diagnostics.json)を読む。
+ *
+ * ★壊れていても診断を止めない。宣言が読めなければ「宣言が無い」に倒し、
+ *   従来どおり既定の置き場所を探しに行く。
+ *   ★理由: これは案内板であって関門ではない。案内板が汚れていることを理由に
+ *   診断そのものを落とすと、100年のうちに必ず「JSONの書き間違いで
+ *   全社の診断が止まる日」が来る。壊れた宣言は【無視して先へ進む】。
+ *
+ * @param {string} base 対象リポのルート
+ * @returns {{ symptoms: string, index: string }}
+ */
+export function readDeclaration(base) {
+  const empty = { symptoms: '', index: '' };
+  try {
+    const p = join(String(base || ''), 'diagnostics.json');
+    if (!existsSync(p)) return empty;
+    const j = JSON.parse(readFileSync(p, 'utf8'));
+    if (!j || typeof j !== 'object') return empty;
+    const pick = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
+    return { symptoms: pick(j.symptoms), index: pick(j.index) };
+  } catch {
+    return empty;
+  }
+}
+
 export function autoDetectPaths(targetDir) {
   const base = String(targetDir || process.cwd());
+
+  // ★①【最優先】対象リポが自分で場所を宣言していれば、それに従う。
+  //
+  //   なぜこれが要るか(2026-08-23に実測して分かった):
+  //     この検査は JS のファイル名を3つ決め打ちしていたため、
+  //     ★JS以外の製品では【構造上ずっと skip】になっていた。
+  //     実測: 手元の44リポ中4本が package.json を持たない。
+  //     AutoHotkey製品(soushin-suggest)は症状の知見が最も濃いのに、
+  //     この検査からは永久に見えなかった。
+  //
+  //   ★決め打ちを増やす方向に進めない。
+  //     言語や置き場所の流儀は変わり続けるので、名前を足し続ける設計は
+  //     必ず腐る(足し忘れた側が黙って skip になる＝一番危ない壊れ方)。
+  //   ⟹ ★場所を知っているのは対象リポなので、対象リポに宣言させる。
+  //     キットは「宣言があればそれを読む」だけにする。これなら
+  //     ★キットを一度も更新しなくても、新しい言語のリポが自分で参加できる。
+  //
+  //   宣言の書き方(diagnostics.json を対象リポの直下に置く):
+  //     { "symptoms": "_docs/SYMPTOMS.md", "index": "../ai-hub/index.json" }
+  //   ★symptoms は「症状IDが書いてあるファイル」であればよく、
+  //     拡張子は問わない(下の extractSymptomIds は .md でも動く)。
+  const declared = readDeclaration(base);
+
   // ★症状定義: 決め打ちせず、よくある置き場所を順に見る。
   const symptomCandidates = [
+    ...(declared.symptoms ? [join(base, declared.symptoms)] : []),
     join(base, 'src/lib/symptomVerdicts.js'),
     join(base, 'src/lib/symptoms.js'),
     join(base, 'lib/symptomVerdicts.js')
   ];
   // ★索引: 同じ親フォルダに ai-hub が並んでいる構成を想定(この環境の実際の形)。
   const indexCandidates = [
+    ...(declared.index ? [join(base, declared.index)] : []),
     join(base, '..', 'ai-hub', 'index.json'),
     join(base, 'ai-hub', 'index.json'),
     join(base, '_docs', 'index.json')
