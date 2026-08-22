@@ -31,6 +31,10 @@ const CHECKS = [
   { name: 'check-lockfile-sync', path: join(__dirname, 'check-lockfile-sync.mjs') },
   { name: 'check-secrets-not-tracked', path: join(__dirname, 'check-secrets-not-tracked.mjs') },
   { name: 'check-large-tracked-files', path: join(__dirname, 'check-large-tracked-files.mjs') },
+  // ★メタ検査: 検査自身が「サボると赤くなるか」を確かめているかを数える。
+  //   2026-08-23: 上の3本は --selftest を無視して exit 0 を返していた(壊れても緑)。
+  //   ★selfTarget: 対象プロジェクトではなく【この diagnostics 自身】を見る。
+  { name: 'check-selftest-coverage', path: join(__dirname, 'check-selftest-coverage.mjs'), selfTarget: true },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
@@ -46,23 +50,33 @@ for (const check of CHECKS) {
   try {
     // check-tracked-imports.mjs は引数を取らず process.cwd() 基準で動く契約(正本の既存仕様)。
     // 自作3本は引数(対象ディレクトリ)も見るが、cwd をTARGET_DIRに揃えれば両方が正しく動く。
-    const output = execFileSync('node', [check.path, TARGET_DIR], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
+    const scanDir = check.selfTarget ? __dirname : TARGET_DIR;
+    const output = execFileSync('node', [check.path, scanDir], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
     process.stdout.write(output);
     const status = /\(skip\)/.test(output) ? 'skip' : 'pass';
     results.push({ name: check.name, status });
   } catch (err) {
     if (err.stdout) process.stdout.write(err.stdout);
     if (err.stderr) process.stderr.write(err.stderr);
-    results.push({ name: check.name, status: 'fail' });
+    // ★3値の終了コード(このキットの掟): 0=合格 / 1=測れた赤 / ★2=測れなかった。
+    //   2 を fail に混ぜると「測っていない」を「異常あり」と誤報し、
+    //   逆に見逃すと「異常なし」と誤報する。★どちらにも混ぜず別の名前で出す。
+    const status = err.status === 2 ? 'unmeasured' : 'fail';
+    results.push({ name: check.name, status });
   }
   console.log('');
 }
 
 const failed = results.filter((r) => r.status === 'fail');
+// ★「測れなかった(exit 2)」は fail でも skip でもない第3の状態。
+//   ここに入れ忘れると【全チェック緑】と表示して exit 0 になる＝
+//   ★測っていないものを「異常なし」と報告する、このキットが最も嫌う形になる。
+const unmeasured = results.filter((r) => r.status === 'unmeasured');
 const skipped = results.filter((r) => r.status === 'skip');
 console.log('--- 診断結果まとめ ---');
 for (const r of results) {
-  const mark = r.status === 'pass' ? '✓' : r.status === 'skip' ? '-' : '✗';
+  const mark = r.status === 'pass' ? '✓' : r.status === 'skip' ? '-' : r.status === 'unmeasured' ? '?'
+    : '✗';
   console.log(`${mark} ${r.name}: ${r.status}`);
 }
 console.log('');
@@ -70,5 +84,15 @@ console.log('');
 if (failed.length > 0) {
   console.error(`[diagnostics] ${failed.length}件のチェックで問題を検出。上記の対処を確認してください。`);
   process.exit(1);
+}
+
+if (unmeasured.length > 0) {
+  // ★測れなかったものを緑にしない。かといって「異常あり」とも言わない。
+  console.error(
+    `[diagnostics] ★${unmeasured.length}件が【測れませんでした】: `
+    + unmeasured.map((r) => r.name).join(' / ')
+  );
+  console.error('  → これは「異常なし」ではありません。測れなかった理由を上の出力で確認してください。');
+  process.exit(2);
 }
 console.log(`[diagnostics] 全チェック緑(実行${results.length - skipped.length}件・skip${skipped.length}件)。`);
