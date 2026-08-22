@@ -1,0 +1,61 @@
+/**
+ * improvement-history.mjs — ★版ごとの【実測値】そのもの（データだけ・判定ロジックを置かない）。
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * ■ ★書き方の掟（これを守らないと台帳が死ぬ）
+ *   1. ★**実際に測った数字だけ**書く。体感・推定・目標値は書かない。
+ *   2. ★**どこで測ったか(source)を必ず書く**。後から検算できない数字は載せない。
+ *   3. 改善したときだけでなく、★**退化したときも書く**。隠すと台帳の意味が消える。
+ *   4. 指標は improvement-metrics.mjs に宣言してあるものだけ。
+ *      無ければ★**先に指標を宣言する**（方向 better を決める＝これが一番大事）。
+ *
+ * ■ ★なぜ「オプトインの台帳は死ぬ」のに、これは生きられるか
+ *   ★登録制の台帳は3ヶ月で登録1件のまま死んだ実績がある（tsuioku）。
+ *   ★だからこの台帳には**門番**(check-improvement.mjs)を付けた:
+ *     ・過去最良より悪い値を書いたら ★赤（退化を素通しできない）
+ *     ・宣言に無い指標を書いたら ★赤
+ *   ＝ 「書かないと赤くなる」ではなく★**「間違って書くと赤くなる」**。
+ *   ★書くこと自体は強制しない（強制すると【嘘の数字】が入る。嘘の入った台帳は無い方がマシ）。
+ *   ★そのかわり、いまの版が台帳に無ければ **exit 2** で鳴らし続ける
+ *     → 忘れたことを【忘れられない】。fail にしないので嘘を入れる動機は作らない。
+ *
+ * ■ ★悪化してよい場合は「数字を消す」のではなく note に理由を書く
+ *   ★note を書いた行は退化として数えないが、★過去最良は更新しない。
+ *   ＝ 一度大目に見た値が新しい基準にならない（★ラチェットが緩まない）。
+ *
+ * ■ 行の形
+ *   { version: '0.1.0', metric: '<宣言済みID>', value: 1360,
+ *     source: 'どこで測ったか', note: '悪化を許す理由(任意)' }
+ *
+ *   ★source は必須の運用。★[auto] で始まるものは機械が書いた印
+ *     （手書きと見分けが付かない印は印ではない — tsuioku の実損）。
+ * ───────────────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * @typedef {object} ImprovementRow
+ * @property {string} version 版（package.json の version と揃える）
+ * @property {string} metric 指標ID（improvement-metrics.mjs に宣言済みのもの）
+ * @property {number} value ★実測値。★測れなかったときは行ごと書かない（0を書かない）
+ * @property {string} source どこで測ったか（後から検算できる形で）
+ * @property {string} [note] ★悪化を許す理由。書くと退化として数えないが過去最良は据え置き
+ */
+
+/**
+ * ★実測値。**空で始める**。
+ * @type {ReadonlyArray<ImprovementRow>}
+ */
+export const IMPROVEMENT_HISTORY = Object.freeze([
+  Object.freeze({
+    version: '0.1.0', metric: 'diagnostics-checks', value: 6,
+    source: '[auto] templates/diagnostics/check-*.mjs'
+  }),
+  Object.freeze({
+    version: '0.1.0', metric: 'selftest-missing-scripts', value: 8,
+    source: 'node templates/diagnostics/check-selftest-coverage.mjs templates/scripts（2026-08-23 実測・上限3を超過）'
+  }),
+  Object.freeze({
+    version: '0.1.0', metric: 'selftest-missing-diagnostics', value: 3,
+    source: 'node templates/diagnostics/check-selftest-coverage.mjs templates/diagnostics（2026-08-23 実測・上限3ちょうど）'
+  })
+]);

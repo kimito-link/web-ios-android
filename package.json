@@ -1,4 +1,7 @@
 {
+  "name": "web-ios-android",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "zip:cws": "node scripts/chrome/build-zip-node.mjs",
     "publish:cws": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs",
@@ -6,7 +9,15 @@
     "publish:cws:upload": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs --upload-only",
     "lint:docs": "node scripts/verify-doc-impl-coverage.mjs",
     "check:instrument-drift": "node _docs/instruments/check-drift.mjs",
-    "check:instrument-drift:selftest": "node _docs/instruments/check-drift.mjs --selftest"
+    "check:instrument-drift:selftest": "node _docs/instruments/check-drift.mjs --selftest",
+    "diagnostics": "node templates/diagnostics/run.mjs .",
+    "improvement": "node scripts/check-improvement.mjs",
+    "improvement:record": "node scripts/record-improvement.mjs --auto",
+    "improvement:submission": "node scripts/check-improvement.mjs --submission",
+    "check:improvement:selftest": "node scripts/check-improvement.mjs --selftest",
+    "check:ran": "node scripts/check-instrument-ran.mjs --check",
+    "check:ran:selftest": "node scripts/check-instrument-ran.mjs --selftest",
+    "check:improvement": "node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement"
   },
   "devDependencies": {
     "sharp": "^0.34.5"

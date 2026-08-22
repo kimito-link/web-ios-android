@@ -190,7 +190,7 @@
           <div class="farr">→</div>
           <div class="fbox ok"><span class="fi">✅</span>出荷事故を<br>未然に防ぐ</div>
         </div>
-        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">このキット専用ではなく、どのJS/TSプロジェクトにも使えます</div>
+        <p style="text-align:center; margin-top:10px;"><b>このキットで作ったアプリでなくても使えます。</b><br>既にある JS/TS プロジェクトのフォルダを指定するだけで、そのまま走ります（実測: 無関係の3リポジトリに当てて、それぞれ実際の問題を検出しました）。</p>
       </div>
 
       <table class="check-table">
@@ -210,6 +210,18 @@
         <tr>
           <td><code>check-large-tracked-files</code></td>
           <td>ビルド成果物や動画など、サイズの大きいファイルの誤コミット（リポジトリ肥大化の原因）</td>
+        </tr>
+        <tr>
+          <td><code>check-selftest-coverage</code></td>
+          <td>★<b>検査そのものが「サボると赤くなるか」を確かめていない</b>もの。検査は在るのに壊れても緑を返す状態を数えます（増えたときだけ赤）。</td>
+        </tr>
+        <tr>
+          <td><code>check-symptom-index</code></td>
+          <td>★<b>症状の言葉で過去の原因を引けない</b>もの。症状IDが原因索引に登録されていない数を数えます（症状の仕組みがまだ無ければ skip し、入れ方を案内します）。</td>
+        </tr>
+        <tr>
+          <td><code>check-docs-match-code</code></td>
+          <td>★<b>説明した置き場所と、コードが実際に探す場所のズレ</b>。説明はコードより先に腐るので、人の記憶に頼らず機械で突き合わせます。</td>
         </tr>
       </table>
 

@@ -62,6 +62,22 @@ export function extractSearchPaths(src) {
 }
 
 /**
+ * run.mjs が走らせる検査の名前を抜き出す。
+ *
+ * ★なぜ要るか(2026-08-23)
+ *   検査を3本足したのに、★公開ページの表には4本しか載っていなかった。
+ *   ⟹ 読んだ人は「4本のキット」だと思う＝★足したのに存在しないのと同じ。
+ *   ＝ 説明が実装より遅れる、同じ型。
+ *
+ * @param {string} runSrc
+ * @returns {string[]}
+ */
+export function extractCheckNames(runSrc) {
+  const s = String(runSrc || '');
+  return [...new Set([...s.matchAll(/name:\s*'([a-z-]+)'/g)].map((m) => m[1]))];
+}
+
+/**
  * @typedef {object} DocsMatchVerdict
  * @property {boolean} measured
  * @property {string[]} missing ★コードにあるのに説明に無いパス
@@ -154,19 +170,27 @@ function main() {
     process.exit(2);
   }
 
-  const v = judgeDocsMatchCode({
-    codeSrc: readFileSync(codePath, 'utf8'),
-    docSrc: readFileSync(docPath, 'utf8')
-  });
+  const doc = readFileSync(docPath, 'utf8');
+  const v = judgeDocsMatchCode({ codeSrc: readFileSync(codePath, 'utf8'), docSrc: doc });
   if (!v.measured) {
     console.error(`[check-docs-match-code] ★測れませんでした: ${v.reason}`);
     process.exit(2);
   }
 
+  // ★検査そのものが表に載っているかも見る。
+  //   2026-08-23: 検査を3本足したのに表は4本のままだった＝読んだ人には存在しない。
+  const runPath = join(__dirname, 'run.mjs');
+  const names = existsSync(runPath) ? extractCheckNames(readFileSync(runPath, 'utf8')) : [];
+  const missingNames = names.filter((n) => !doc.includes('<code>' + n + '</code>'));
+
   console.log(`[check-docs-match-code] 探す場所 ${v.total} 件 / 説明に無い ${v.missing.length} 件`);
+  if (names.length > 0) {
+    console.log(`[check-docs-match-code] 検査 ${names.length} 本 / 表に無い ${missingNames.length} 本`);
+    for (const n of missingNames) console.log(`  ⚪ ${n}`);
+  }
   for (const p of v.missing) console.log(`  ⚪ ${p}`);
 
-  if (v.missing.length > 0) {
+  if (v.missing.length > 0 || missingNames.length > 0) {
     console.error('[check-docs-match-code] 🔴 コードが探す場所が、説明に載っていません。');
     console.error('  → 直し方: 公開ページの「どこに置くか」の表に、上のパスを足してください。');
     console.error('    ★渡された人は、載っていない場所を推測できません。');
