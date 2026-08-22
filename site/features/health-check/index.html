@@ -194,6 +194,113 @@
       </div>
 
       <div class="ai-box-slot" data-ai-key="diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+
+    <div class="section-divider">
+      <h2>🛡️ ストアに出す直前だけ効く「出荷事故ゲート」</h2>
+    </div>
+
+    <div class="chapter-body" style="box-shadow: 0 4px 24px rgba(0,0,0,0.08); border-radius: 20px;">
+
+      <p class="lead">
+        前の章の4本は<b>どんなプログラムにも使える汎用</b>でした。ここからは
+        <b>iOS/Androidアプリをストアに出すときだけ起きる事故</b>を止めるゲートです。
+        いずれも「誰かが実際に踏んだ事故」から作られていて、想像で書いた項目は1つもありません。<br>
+        <span style="font-size:0.85rem; color:#666;">（<code>templates/scripts/</code> に全10本。うち下表の7本がストア提出専用、残りは前後の章で扱っています）</span>
+      </p>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">💥</span><br>実際に<br>踏んだ事故</div>
+          <span class="farr">→</span>
+          <div class="fbox"><span class="fi">🔒</span><br>ゲートに<br>する</div>
+          <span class="farr">→</span>
+          <div class="fbox"><span class="fi">✅</span><br>二度と<br>起きない</div>
+        </div>
+        <p style="text-align:center; font-size:0.82rem; color:#666; margin-top:8px;">
+          「気をつける」で終わらせず、機械が止めるところまでやる
+        </p>
+      </div>
+
+      <h3 style="font-size:1rem; color:#667eea; margin:22px 0 8px;">ストア審査で弾かれる前に止める</h3>
+      <table class="check-table">
+        <tr><th>ゲート</th><th>止める事故（出典）</th></tr>
+        <tr>
+          <td><code>verify-ios-splash-not-default</code></td>
+          <td><b>Capacitorの青いデフォルト起動画面がそのまま出荷される。</b>
+          スプラッシュ用の元画像を置き忘れると生成がスキップされ、既定の画像のまま world に出る。
+          しかも生成ツールは<b>旧ファイルを上書きせず別名で書く</b>ため、ファイル名のハッシュ比較では検出できない。
+          生成の「前」に既定画像のsha256を記録し、後で置き換わったかを直接照合する方式で解決している。</td>
+        </tr>
+        <tr>
+          <td><code>verify-android-splash-not-default</code></td>
+          <td>上のAndroid版。<code>cap add android</code> が置くプレースホルダ画像がそのまま残る事故を、同じ直接証拠方式で止める。</td>
+        </tr>
+        <tr>
+          <td><code>verify-android-signing-config</code></td>
+          <td><b>未署名のAABができあがり、Play Consoleがアップロードを拒否する。</b>
+          bubblewrapもCapacitorも <code>build.gradle</code> に署名設定を書いてくれないため、
+          何もしないと必ず未署名になる。ビルドの前に検査して、Playに弾かれる前に止める。</td>
+        </tr>
+        <tr>
+          <td><code>verify-signing-material-path</code></td>
+          <td><b>「CIが鍵を置く場所」と「build.gradleが鍵を読む場所」がズレる。</b>
+          パスは相対解決されるため、ズレていても署名設定の注入自体は成功してしまい、
+          最後のビルドで初めて失敗が発覚する。1階層目で検出する。</td>
+        </tr>
+        <tr>
+          <td><code>verify-webdir-consistency</code></td>
+          <td><code>capacitor.config.ts</code> の <code>webDir</code> と、CIが実際に成果物を作る場所の不一致。
+          空のアプリが出来上がる事故を防ぐ。</td>
+        </tr>
+        <tr>
+          <td><code>verify-manual-setup-done</code></td>
+          <td><b>自動化できない手作業（ストアのアプリ枠作成など）が本当に終わったかを、APIで実在確認する。</b>
+          「画面に手順を出すだけ」で終わらせず、終わったことを機械が確かめる。</td>
+        </tr>
+        <tr>
+          <td><code>lint-pre-submission</code></td>
+          <td>提出前の総点検。過去に却下された観点をまとめて再検査する。</td>
+        </tr>
+      </table>
+
+      <div class="tip">
+        💡 <b>ゲートは「実際に踏んだ事故」からしか作られていません。</b>
+        たとえば署名のゲートは「未署名AABをPlayに弾かれた」実体験、
+        スプラッシュのゲートは「デフォルト画像のまま出荷した」実体験が出典です。
+        だから項目が少なく、そのぶん1本ずつが確実に効きます。
+      </div>
+
+      <h3 style="font-size:1rem; color:#667eea; margin:26px 0 8px;">「緑なのに何も検査していない」を潰す</h3>
+
+      <p style="font-size:0.9rem; line-height:1.9;">
+        いちばん怖いのは<b>失敗が赤くなること</b>ではなく、<b>何も見ていないのに緑になること</b>です。
+        テストが「該当なし」で全部スキップされていても、画面上は緑のチェックマークが並びます。
+        これを見逃すと「ゲートを通したから大丈夫」という確信だけが残り、事故はそのまま出荷されます。
+      </p>
+
+      <div class="rule-box">
+        <span class="rule-no">対策</span>
+        <p><code>check-instrument-ran</code> が「<b>その検査が本当に走ったか</b>」を確かめます。
+        件数ゼロの緑・条件が合わず全スキップの緑を、合格として扱わせません。</p>
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ 実際にあった例：認証状態の保存ファイルが無いまま検査が走り、
+        中身のテストが全部スキップされていたのに CI は緑だった。
+        「ゲートが緑なのに症状が続くときは、そのゲートが<b>何を見ていないか</b>を読む」——
+        これはキットの設計原則として残してあります。
+      </div>
+
+      <h3 style="font-size:1rem; color:#667eea; margin:26px 0 8px;">前提が無いときは、赤にせず「対象外」にする</h3>
+
+      <p style="font-size:0.9rem; line-height:1.9;">
+        gitリポジトリでない、<code>package.json</code> が無い——そういう「そもそも検査対象ではない」ものを
+        赤で止めると、赤が日常になり、誰も赤を見なくなります。
+        このキットは前提が無い場合を <b>skip</b> として扱い、
+        <b>本物の赤だけが赤</b>になるようにしてあります。
+      </p>
+
+    </div>
     </div>
 
     <div class="section-divider">
