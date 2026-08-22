@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>アプリが自分で「けんこう診断」を出す仕組み | web-ios-android</title>
-  <meta name="description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。仕組みと実例を説明します。">
+  <title>アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み | web-ios-android</title>
+  <meta name="description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みも説明します。">
   <link rel="canonical" href="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="アプリが自分で「けんこう診断」を出す仕組み | web-ios-android">
-  <meta property="og:description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。仕組みと実例を説明します。">
+  <meta property="og:title" content="アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み | web-ios-android">
+  <meta property="og:description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みも説明します。">
   <meta property="og:url" content="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -20,15 +20,15 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "name": "アプリが自分で「けんこう診断」を出す仕組み",
-        "description": "このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。"
+        "name": "アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み",
+        "description": "このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる仕組みもあります。"
       },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
           { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://web-ios-android.vercel.app/apps/" },
-          { "@type": "ListItem", "position": 3, "name": "けんこう診断の仕組み" }
+          { "@type": "ListItem", "position": 3, "name": "けんこう診断と進化の仕組み" }
         ]
       }
     ]
@@ -64,38 +64,38 @@
     .illust { border-radius: 12px; padding: 14px 12px; margin: 14px 0; }
     .illust-green { background: #e8f5e9; }
     .tip { background: #f5f5ff; border-left: 3px solid #667eea; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-top: 14px; font-size: 0.85rem; color: #555; }
+
+    .section-divider { margin: 36px 0 20px; padding-top: 28px; border-top: 1px dashed #d8dce6; }
+    .section-divider h2 { font-size: 1.15rem; color: #1a1a2e; margin-bottom: 6px; }
+    .section-divider .lead { font-size: 0.88rem; color: #667; margin-bottom: 16px; }
+
+    .ledger-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85rem; }
+    .ledger-table th, .ledger-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e7eaf0; vertical-align: top; }
+    .ledger-table th { color: #667eea; font-weight: 800; white-space: nowrap; }
+    .ledger-table .ok-cell { color: #2e7d32; font-weight: 700; }
+    .ledger-table .bad-cell { color: #c0392b; font-weight: 700; }
+
+    .rule-box { background: #fff; border: 1px solid #e7eaf0; border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
+    .rule-box .rule-no { display: inline-block; background: #667eea; color: #fff; font-size: 0.7rem; font-weight: 800; border-radius: 999px; padding: 2px 9px; margin-bottom: 6px; }
+    .rule-box p { font-size: 0.86rem; color: #333; line-height: 1.8; margin: 0; }
+
+    .bad-tip { background: #fff5f5; border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-top: 10px; font-size: 0.85rem; color: #555; }
   </style>
 </head>
 <body>
 
-<header>
-  <a class="logo-link" href="../../"><img class="logo" src="../../images/logo.png" alt="Kimito-Link"></a>
-  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
-  <nav id="site-nav">
-    <a href="../../">🏠 トップ</a>
-    <a href="../../howto/">🖼️ ゆっくり解説</a>
-    <a href="../../story/">📖 完成ものがたり</a>
-    <a href="../../guide/">📋 準備ガイド</a>
-    <a href="../../troubleshooting/">🩹 つまずいたら</a>
-    <a href="../../tax/">💴 課金の税務</a>
-    <a href="../../walkthrough/">📷 追体験</a>
-    <a href="../../learnings/">📚 実証知見</a>
-    <a href="../../line-bot/">💬 無応答ゼロ化</a>
-    <a href="../../line-bot-features/">🖼️ 画像・動画・音声</a>
-    <a href="../../sitemap/">🗺️ サイトマップ</a>
-  </nav>
-</header>
+<div id="site-header"></div>
 
 <div class="hero">
   <div class="hero-chars">
     <img src="../../images/tanunee-smile.png" alt="たぬ姉">
   </div>
-  <h1>できたアプリは、自分で<br><span>「けんこう診断」</span>を出す</h1>
-  <p>調子が悪いとき、あなたが説明しなくてもAIが自分で調べて直せる</p>
+  <h1>できたアプリは、自分で<br><span>「けんこう診断」</span>を出し、版を重ねるほど進化する</h1>
+  <p>調子が悪いとき自分で調べて直すだけでなく、悪化を出荷前に止め、良くなった記録を積み重ねる</p>
 </div>
 
 <nav class="breadcrumb" aria-label="パンくずリスト">
-  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断の仕組み
+  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断と進化の仕組み
 </nav>
 
 <div class="chapter">
@@ -128,26 +128,118 @@
       （AIが読む用）に書いてあります。
     </div>
 
+    <div class="section-divider">
+      <h2>📈 その診断、バージョンを重ねるたびに「進化」させる</h2>
+      <div class="lead">
+        直しても直しても、別の場所がこっそり悪くなっていたら意味がありません。
+        ここからは「1回直す」だけで終わらせず、<b>版を重ねるほど良くなったと数字で言い切る</b>ための
+        仕組みを、できるだけかみくだいて説明します。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">📏</span>新しい版で<br>数字を測る</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📒</span>台帳に<br>書き足す</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🔍</span>過去いちばん<br>良い版と比べる</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🟢</span>良くなった<br>ときだけ緑</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">悪くなっていたら、出荷する前に赤で止まります</div>
+      </div>
+
+      <p style="font-size:0.94rem; color:#333; line-height:1.9; margin-top:14px;">
+        <b>①「前の版」ではなく「今までで一番良かった版」と比べる。</b><br>
+        直前の版とだけ比べると、1版ごとの悪化はほんの少しなので誰も気づけません。
+        1→2→3→4と少しずつ悪くなっても、隣同士だと「+1」にしか見えないからです。
+        このキットは常に「これまでで一番良かった記録」と比較するので、
+        じわじわ悪化して元の悪い状態に戻っても必ず気づけます。
+      </p>
+
+      <table class="ledger-table">
+        <tr><th>版</th><th>測った数字</th><th>くらべた相手</th><th>判定</th></tr>
+        <tr>
+          <td>v1</td>
+          <td>2,400 KB（アプリの重さ）</td>
+          <td>―（最初の記録）</td>
+          <td class="ok-cell">🟢 記録</td>
+        </tr>
+        <tr>
+          <td>v2</td>
+          <td>1,360 KB</td>
+          <td>過去最良 2,400 KB</td>
+          <td class="ok-cell">🟢 改善（1,040 KB 軽くなった）</td>
+        </tr>
+        <tr>
+          <td>v3</td>
+          <td>2,000 KB</td>
+          <td>過去最良 1,360 KB</td>
+          <td class="bad-cell">🔴 悪化（出荷前に止まる）</td>
+        </tr>
+      </table>
+
+      <div class="bad-tip">
+        🛑 v3が赤になっても、直すか・悪化してよい理由を書くかのどちらかを選べます。
+        ただし理由を書いて通しても、<b>次に比べる相手は「1,360 KB」のまま</b>です。
+        一度大目に見た値がそのまま新しい基準になってしまう（＝基準がじわじわ緩む）ことを防ぐためです。
+      </div>
+
+      <p style="font-size:0.94rem; color:#333; line-height:1.9; margin-top:20px;">
+        <b>②「小さいほど良い」とは限らない。数字の向きは指標ごとに先に決めておく。</b><br>
+        「軽い方がいい」「速い方がいい」は直感的ですが、すべての数字がそうとは限りません。
+        向きを間違えると、<b>正しく直した人を「悪化させた」と誤判定して止めてしまう</b>という
+        一番やってはいけない事故になります。
+      </p>
+
+      <table class="ledger-table">
+        <tr><th>実際にあった数字の動き</th><th>正しい判定</th><th>もし「小さい方が良い」と決め打っていたら</th></tr>
+        <tr>
+          <td>エラー率 100% → 0%</td>
+          <td class="ok-cell">🟢 改善（エラーが消えた）</td>
+          <td class="bad-cell">🔴 誤って「退化」判定</td>
+        </tr>
+        <tr>
+          <td>描画の成功回数 2回 → 13回</td>
+          <td class="ok-cell">🟢 改善（ちゃんと動くようになった）</td>
+          <td class="bad-cell">🔴 誤って「退化」判定</td>
+        </tr>
+        <tr>
+          <td>読み込み間隔 3秒 → 12秒</td>
+          <td class="ok-cell">🟢 改善（取りこぼしがなくなった）</td>
+          <td class="bad-cell">🔴 誤って「退化」判定</td>
+        </tr>
+      </table>
+
+      <p style="font-size:0.94rem; color:#333; line-height:1.9; margin-top:14px;">
+        だからこのキットは、数字が動いた「見た目」から良し悪しを推測しません。
+        指標ごとに「大きい方が良いか・小さい方が良いか」を<b>先に人が決めて宣言</b>してから、
+        その方向でだけ比較します。
+      </p>
+
+      <div class="rule-box">
+        <span class="rule-no">仕組みの土台</span>
+        <p>
+          この台帳は「間違った数字を書いたときだけ赤くなる」設計です。
+          「毎回書かないと赤くなる」ようにはしていません。書くこと自体を強制すると、
+          面倒なときに<b>とりあえずの嘘の数字</b>が入ってしまい、台帳の信頼が一度で崩れるためです。
+          記録を忘れた版は「悪化」ではなく「まだ測っていません」という別の扱いになり、
+          忘れたことに後から気づける形にしてあります。
+        </p>
+      </div>
+
+      <div class="tip">
+        💡 この台帳は、審査や申請の場面でもそのまま使えます。「軽くしました」「速くなりました」ではなく
+        「2,400KBが1,360KBになりました」「817秒かかっていた診断が5秒になりました」と、
+        実際に測った数字だけを並べて説明できるからです。
+      </div>
+    </div>
+
   </div>
 </div>
 
-<footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="../../">🏠 トップ</a>
-    <a href="../../howto/">🖼️ ゆっくり解説</a>
-    <a href="../../story/">📖 完成ものがたり</a>
-    <a href="../../guide/">📋 準備ガイド</a>
-    <a href="../../troubleshooting/">🩹 つまずいたら</a>
-    <a href="../../tax/">💴 課金の税務</a>
-    <a href="../../walkthrough/">📷 追体験</a>
-    <a href="../../learnings/">📚 実証知見</a>
-    <a href="../../line-bot/">💬 無応答ゼロ化</a>
-    <a href="../../line-bot-features/">🖼️ 画像・動画・音声</a>
-    <a href="../../sitemap/">🗺️ サイトマップ</a>
-  </div>
-  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
-</footer>
+<div id="site-footer"></div>
 
-<script src="../../scripts/nav.js"></script>
+<script src="../../scripts/site-chrome.js"></script>
 </body>
 </html>

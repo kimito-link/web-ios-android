@@ -57,23 +57,7 @@
   </style>
 </head>
 <body>
-<header>
-  <a class="logo-link" href="../"><img class="logo" src="../images/logo.png" alt="Kimito-Link"></a>
-  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
-  <nav id="site-nav">
-    <a href="../">🏠 トップ</a>
-    <a href="../howto/">🖼️ ゆっくり解説</a>
-    <a href="../story/">📖 完成ものがたり</a>
-    <a href="../guide/">📋 準備ガイド</a>
-    <a href="../troubleshooting/">🩹 つまずいたら</a>
-    <a href="../tax/">💴 課金の税務</a>
-    <a href="../walkthrough/">📷 追体験</a>
-    <a href="../learnings/">📚 実証知見</a>
-    <a href="../line-bot/">💬 無応答ゼロ化</a>
-    <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
-    <a href="../sitemap/">🗺️ サイトマップ</a>
-  </nav>
-</header>
+<div id="site-header"></div>
   <div class="wrap">
     <a class="top-link" href="../">← トップにもどる</a>
     <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -95,9 +79,9 @@
         <span class="tag">申請まで通した知見</span>
       </a>
       <a class="card health" href="../features/health-check/">
-        <h2>🩺 けんこう診断</h2>
-        <p>アプリが自分で不具合の原因を教えてくれる仕組みと実例。</p>
-        <span class="tag">自己診断の仕組み</span>
+        <h2>🩺 けんこう診断と進化</h2>
+        <p>アプリが自分で不具合の原因を教えてくれ、版を重ねるほど数字で進化する仕組み。</p>
+        <span class="tag">自己診断・退化させない台帳</span>
       </a>
       <a class="card diag" href="../features/diagnostics/">
         <h2>🔍 汎用診断キット</h2>
@@ -106,23 +90,8 @@
       </a>
     </div>
 
-    <footer class="site-footer">
-      <div class="site-footer-links">
-        <a href="../">🏠 トップ</a>
-        <a href="../howto/">🖼️ ゆっくり解説</a>
-        <a href="../story/">📖 完成ものがたり</a>
-        <a href="../guide/">📋 準備ガイド</a>
-        <a href="../troubleshooting/">🩹 つまずいたら</a>
-        <a href="../tax/">💴 課金の税務</a>
-        <a href="../walkthrough/">📷 追体験</a>
-        <a href="../learnings/">📚 実証知見</a>
-        <a href="../line-bot/">💬 無応答ゼロ化</a>
-        <a href="../line-bot-features/">🖼️ 画像・動画・音声</a>
-        <a href="../sitemap/">🗺️ サイトマップ</a>
-      </div>
-      <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
-    </footer>
+    <div id="site-footer"></div>
   </div>
-  <script src="../scripts/nav.js"></script>
+  <script src="../scripts/site-chrome.js"></script>
 </body>
 </html>

@@ -637,23 +637,7 @@
 <body>
 
 <!-- ヘッダー -->
-<header>
-  <a class="logo-link" href="/"><img class="logo" src="images/logo.png" alt="Kimito-Link"></a>
-  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
-  <nav id="site-nav">
-    <a href="/" class="active">🏠 トップ</a>
-    <a href="howto/">🖼️ ゆっくり解説</a>
-    <a href="story/">📖 完成ものがたり</a>
-    <a href="guide/">📋 準備ガイド</a>
-    <a href="troubleshooting/">🩹 つまずいたら</a>
-    <a href="tax/">💴 課金の税務</a>
-    <a href="walkthrough/">📷 追体験</a>
-    <a href="learnings/">📚 実証知見</a>
-    <a href="line-bot/">💬 無応答ゼロ化</a>
-    <a href="line-bot-features/">🖼️ 画像・動画・音声</a>
-    <a href="sitemap/">🗺️ サイトマップ</a>
-  </nav>
-</header>
+<div id="site-header"></div>
 
 <!-- ヒーロー -->
 <div class="hero">
@@ -949,6 +933,50 @@
       <div class="tip" style="margin:14px 20px 0;">💡 仕組みと実例のくわしい説明は <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。開発中のコードそのものを検査したいときは <a href="features/diagnostics/" style="color:#667eea; font-weight:700;">診断キットの仕組みページ</a> へ。</div>
     </div>
 
+    <!-- ⑥.5 バージョンを重ねるほど、こっそり劣化させない・数字で良くなる（おまけ） -->
+    <div class="step step-bonus">
+      <div class="step-top">
+        <div class="step-circle">📈</div>
+        <div class="step-main">
+          <h3>更新するたびに、こっそり劣化させない<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">「直したつもり」を、体感ではなく数字で見張る</p>
+        </div>
+        <div class="step-char">
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
+        </div>
+      </div>
+      <div class="illust illust-green" style="flex-direction:column; gap:10px; align-items:stretch;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">📏</span>新しい版で<br>数字を測る</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📒</span>台帳に<br>書き足す</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🔍</span>過去いちばん<br>良い版と比べる</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🟢</span>良くなった<br>ときだけ緑</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#aaa;">「軽くしました」ではなく「2400KBが1360KBになりました」と言い切れる</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        アプリは1つ直すたびに、少しずつ別の場所が重くなったり遅くなったりしがちです。
+        1回ずつは小さい変化なので、人が見比べても気づけません。★このキットは
+        「前の版と比べる」のではなく<b>「今までで一番良かった版」と比べます</b>。
+        じわじわ悪化して元の悪い状態に戻っても、必ず気づけます。
+        <div class="tip">
+          💡 実例：ある配信ツールで、診断の読み込み速度を <b>817,000ミリ秒（約14分）→5ミリ秒</b> に改善。
+          この改善が「本当に起きたこと」だと言えるのは、体感ではなく実際に測った数字を
+          版ごとの台帳に残しているからです。台帳には「良くなった理由」も一緒に書くので、
+          審査提出のときに「何をどれだけ改善したか」をそのまま数字で説明できます。<br><br>
+          ★逆方向の工夫もあります。数字は「小さいほど良い」とは限りません
+          （エラー率は0%が良い、失敗を検知できた回数は多い方が良い、など）。
+          このキットは指標ごとに「どちらの方向が良いか」を先に決めてから測るので、
+          <b>正しく直した人を「悪化させた」と誤判定して止めてしまう事故</b>を防いでいます。
+        </div>
+      </div>
+    </div>
+
     <!-- ⑦ 知見を書き戻して、次はもっと早くなる（おまけ） -->
     <div class="step step-bonus">
       <div class="step-top">
@@ -1221,22 +1249,7 @@
 </div>
 
 <!-- フッター -->
-<footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="/">🏠 トップ</a>
-    <a href="howto/">🖼️ ゆっくり解説</a>
-    <a href="story/">📖 完成ものがたり</a>
-    <a href="guide/">📋 準備ガイド</a>
-    <a href="troubleshooting/">🩹 つまずいたら</a>
-    <a href="tax/">💴 課金の税務</a>
-    <a href="walkthrough/">📷 追体験</a>
-    <a href="learnings/">📚 実証知見まとめ</a>
-    <a href="line-bot/">💬 無応答ゼロ化</a>
-    <a href="line-bot-features/">🖼️ 画像・動画・音声</a>
-    <a href="sitemap/">🗺️ サイトマップ</a>
-  </div>
-  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
-</footer>
+<div id="site-footer"></div>
 
 <script>
 function toggle(btn) {
@@ -1245,7 +1258,7 @@ function toggle(btn) {
   btn.textContent = isOpen ? '▲ 閉じる' : '▼ くわしく見る';
 }
 </script>
-<script src="scripts/nav.js"></script>
+<script src="scripts/site-chrome.js"></script>
 
 </body>
 </html>

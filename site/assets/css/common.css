@@ -6,6 +6,32 @@
  * （ヒーローのグラデーション、各STEP専用モックアップの配色等）は各ページの
  * <style>に残す。ビルドツールなしの静的HTMLサイトのため、キャッシュバストは
  * クエリ文字列（common.css?v=1）を手動更新する運用。
+ *
+ * ヘッダー・フッターのHTML本体は scripts/site-chrome.js が実行時に差し込む
+ * （24ページに生HTMLをコピペしていたのを廃止・2026-08-22）。ここにあるのは
+ * その見た目のスタイルのみ。
+ *
+ * ─────────────────────────────────────────────────────────────
+ * ■ 目次（Ctrl+Fで見出しの記号を検索）
+ *   基本リセット・共通ユーティリティ ............ 直後
+ *   ヘッダー（ロゴ・PC横並びナビ） .............. ── ヘッダー ──
+ *   ハンバーガーメニュー（幅1600px以下） ......... ── ハンバーガーメニュー ──
+ *   サイト共通フッター .......................... ── サイト共通フッター ──
+ *   コマ（吹き出し＋画面。howto系ページ共通） .... ── コマ ──
+ *   モックアップ画面の共通枠 .................... ── モックアップ画面の共通枠 ──
+ *   矢印ポインター ............................... ── 矢印ポインター ──
+ *   ステップバッジ ............................... ── ステップバッジ ──
+ *   セクション共通（chapterカード） .............. ── セクション共通 ──
+ *   パンくず ..................................... ── パンくず ──
+ *   前後ナビ ..................................... ── 前後ナビ ──
+ *   ページ末尾フッター（見た目のみ。本体は上記footer） ── フッター ──
+ *
+ * ■ ブレークポイント一覧（このファイル内。ページ固有<style>は含まない）
+ *   max-width: 1600px … ヘッダーnavをハンバーガーに切り替え（11項目が横に収まらないため）
+ *   max-width: 500px  … koma-talk（吹き出し）を縦積みに変更
+ *   ※ LP（index.html）は独自<style>を持ち、ヘッダーのブレークポイントは768px。
+ *     common.cssとは別管理なので、ヘッダーの折り返し幅を変えるときは両方確認すること。
+ * ─────────────────────────────────────────────────────────────
  */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,7 +139,12 @@ header nav a.active { background: #667eea; color: white; }
   header nav a { font-size: 0.88rem; padding: 10px 12px; }
 }
 
-/* ── サイト共通フッター（全ページ主要リンク集） ── */
+/* ── サイト共通フッター（全ページ主要リンク集） ──
+   注意: サイト共通フッターの実体は <footer class="site-footer"> なので、
+   下の「── フッター ──」にある要素セレクタ footer{} の見た目（黒背景・中央寄せ）と
+   ここの .site-footer{}（余白・幅）が両方効く。競合ではなく意図した二層適用:
+     footer          … 外枠の見た目（背景色・パディング・文字色）
+     .site-footer    … 内側の中身のレイアウト（リンクの並び・最大幅） */
 .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; max-width: 760px; margin-left: auto; margin-right: auto; padding-left: 18px; padding-right: 18px; }
 .site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
 .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
@@ -286,7 +317,7 @@ header nav a.active { background: #667eea; color: white; }
 .step-nav a:hover { transform: translateY(-2px); }
 .step-nav .nav-label { display: block; font-size: 0.7rem; color: #888; font-weight: 400; margin-bottom: 2px; }
 
-/* ── フッター ── */
+/* ── フッター（外枠。中身のリンク配置は上の「── サイト共通フッター ──」を見る） ── */
 footer {
   background: #1a1a2e;
   color: #aaa;
@@ -294,6 +325,8 @@ footer {
   padding: 32px 24px;
   font-size: 0.85rem;
 }
+/* footer a はリンク色の既定値。.site-footer-links a（#1565c0）の方が詳細度で勝つため、
+   共通フッター配下では実際には使われない（他ページの単発フッターへの保険として残す）。 */
 footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82em; display: inline-block; }
 
 @media (max-width: 500px) {
