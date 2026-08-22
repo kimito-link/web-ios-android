@@ -163,6 +163,15 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 
 ---
 
+## 3.4 ★診断が開かないときに測る
+
+→ [**MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md**](MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md)
+
+★計器は「重いとき」にこそ読みたいのに、重いと計器の画面が開かない。
+★そのときユーザーに頼まず、自分で測るための7手。
+
+---
+
 ## 3.5 ★進化を記録する規約（版を重ねて良くなったと言い切るために）
 
 → [**IMPROVEMENT-RULES.md**](IMPROVEMENT-RULES.md)

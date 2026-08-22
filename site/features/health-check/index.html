@@ -130,6 +130,51 @@
     </div>
 
     <div class="section-divider">
+      <h2>🚨 では、その診断画面が「重すぎて開かない」ときは？</h2>
+      <div class="lead">
+        いちばん知りたいのは「重いとき」なのに、重いと診断画面そのものが開かない。
+        <b>計器を作れば作るほど、必要な瞬間に読めなくなる</b>という弱点があります。
+        キットには、その場合に<b>ユーザーに頼まず開発側が自分で測る</b>手順が入っています。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🥵</span>重くて<br>開かない</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🖥️</span>別の窓で<br>同じ規模を再現</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">📏</span>数字が<br>出る</div>
+        </div>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 1</span>
+        <p><b>症状の出ている画面では測らない。</b>重い画面をさらに操作すると、測ること自体が症状を悪化させます。
+        別のブラウザ窓に出荷物だけを読ませて、そこで測ります。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 2</span>
+        <p><b>必要なのは「実データ」ではなく「実規模」。</b>
+        たとえば「参加者857人」で崩れるなら、857個ぶんの部品を合成すれば再現できます。
+        本物の配信を待つ必要はありません。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 3</span>
+        <p><b>「効いているはずの対策」の実文を読む。</b>
+        実例では「25個目から小さくする」という対策が入っていましたが、実際の指定を読むと
+        <b>小さくするだけで、個数は1個も減らしていません</b>でした。思い込みはここで壊れます。</p>
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ <b>測れなかったものは「測れなかった」と書く。</b>
+        別の窓では画面の配置が本物と違うので、高さなどは正しく測れないことがあります。
+        そこで出た「0」を「異常なし」と読むと、誤診になります。
+      </div>
+    </div>
+
+    <div class="section-divider">
       <h2>📈 その診断、バージョンを重ねるたびに「進化」させる</h2>
       <div class="lead">
         直しても直しても、別の場所がこっそり悪くなっていたら意味がありません。
