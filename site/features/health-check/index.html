@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み | web-ios-android</title>
-  <meta name="description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みも説明します。">
+  <title>アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット） | web-ios-android</title>
+  <meta name="description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットも、このページ1つで説明します。">
   <link rel="canonical" href="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み | web-ios-android">
-  <meta property="og:description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みも説明します。">
+  <meta property="og:title" content="アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット） | web-ios-android">
+  <meta property="og:description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットも、このページ1つで説明します。">
   <meta property="og:url" content="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -20,15 +20,15 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "name": "アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み",
-        "description": "このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる仕組みもあります。"
+        "name": "アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット）",
+        "description": "このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットもあります。"
       },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
           { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://web-ios-android.vercel.app/apps/" },
-          { "@type": "ListItem", "position": 3, "name": "けんこう診断と進化の仕組み" }
+          { "@type": "ListItem", "position": 3, "name": "けんこう診断と進化・診断キットの仕組み" }
         ]
       }
     ]
@@ -81,6 +81,18 @@
 
     .bad-tip { background: #fff5f5; border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-top: 10px; font-size: 0.85rem; color: #555; }
     /* .ai-box / .ai-copy / .ai-copy-btn は common.css の共通スタイルを使う */
+
+    .check-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.88rem; }
+    .check-table th, .check-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e7eaf0; vertical-align: top; }
+    .check-table th { color: #667eea; font-weight: 800; white-space: nowrap; }
+    .check-table code { background: #eef0ff; padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+
+    .code-block {
+      background: #1a1a2e; color: #e8e8f0; border-radius: 10px;
+      padding: 14px 16px; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.82rem; overflow-x: auto; margin: 14px 0;
+    }
+    .code-block .cmt { color: #8888aa; }
   </style>
 </head>
 <body>
@@ -92,11 +104,12 @@
     <img src="../../images/tanunee-smile.png" alt="たぬ姉">
   </div>
   <h1>できたアプリは、自分で<br><span>「けんこう診断」</span>を出し、版を重ねるほど進化する</h1>
-  <p>調子が悪いとき自分で調べて直すだけでなく、悪化を出荷前に止め、良くなった記録を積み重ねる</p>
+  <p>調子が悪いとき自分で調べて直すだけでなく、悪化を出荷前に止め、良くなった記録を積み重ねる。<br>
+  出荷前のコード検査（汎用診断キット）も、このページ1つにまとまっています。</p>
 </div>
 
 <nav class="breadcrumb" aria-label="パンくずリスト">
-  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断と進化の仕組み
+  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断・進化・診断キットの仕組み
 </nav>
 
 <div class="chapter">
@@ -127,6 +140,60 @@
       読み込みが817秒（約14分）もかかっていた原因を突き止め、0.005秒まで直した実績があります。
       人間がやったのは最後の再読み込みボタン1回だけ。仕組みの正体はキットに入っている説明書
       （AIが読む用）に書いてあります。
+    </div>
+
+    <div class="section-divider">
+      <h2>🔍 出荷する前に、コードそのものを検査する「診断キット」</h2>
+      <div class="lead">
+        ここまでは<b>アプリが動いているとき</b>の診断でした。もう1つ、<b>出荷する前</b>のコードそのものを
+        機械的に検査する診断キットも同梱されています。「ローカルではちゃんと動いていたのに、
+        本番デプロイやストア提出だけ失敗する」——たいてい<b>ローカルの作業フォルダ</b>と
+        <b>git clone直後の状態</b>（CI・Vercel・ストアビルドが見る実体）がズレていることが原因です。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">📁</span>好きな<br>プログラム</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🩺</span>コマンド<br>1つで診断</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">✅</span>出荷事故を<br>未然に防ぐ</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">このキット専用ではなく、どのJS/TSプロジェクトにも使えます</div>
+      </div>
+
+      <table class="check-table">
+        <tr><th>チェック</th><th>見つけること</th></tr>
+        <tr>
+          <td><code>check-tracked-imports</code></td>
+          <td>新しく作ったファイルを<code>git add</code>し忘れたまま使っている箇所。ローカルではディスクにあるので動いてしまうが、git clone直後（CI/Vercel）だけ「解決できません」と失敗する</td>
+        </tr>
+        <tr>
+          <td><code>check-lockfile-sync</code></td>
+          <td><code>package.json</code>に足したパッケージが<code>package-lock.json</code>に反映されていない（<code>npm install</code>後のコミット忘れ）</td>
+        </tr>
+        <tr>
+          <td><code>check-secrets-not-tracked</code></td>
+          <td><code>.env</code>や秘密鍵ファイルが、意図せずgitに追跡（コミット）されてしまっている</td>
+        </tr>
+        <tr>
+          <td><code>check-large-tracked-files</code></td>
+          <td>ビルド成果物や動画など、サイズの大きいファイルの誤コミット（リポジトリ肥大化の原因）</td>
+        </tr>
+      </table>
+
+      <div class="code-block">
+        <span class="cmt"># 4つまとめて診断（対象フォルダを指定）</span><br>
+        node templates/diagnostics/run.mjs /path/to/your-project
+      </div>
+
+      <div class="tip">
+        💡 このキット専用の仕組みではありません。<code>node</code>が動く環境なら、
+        このリポジトリの外にある<b>どんなプログラムのフォルダに対しても</b>そのまま実行できます。
+        追加インストールも不要（Node標準機能だけで動きます）。
+      </div>
+
+      <div class="ai-box-slot" data-ai-key="diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     </div>
 
     <div class="section-divider">

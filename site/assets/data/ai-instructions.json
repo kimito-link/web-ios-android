@@ -1,8 +1,8 @@
 {
-  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。",
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止）。一覧では同じpageは代表1件のみ表示される。",
   "diagnostics": {
     "order": 1,
-    "page": "/features/diagnostics/",
+    "page": "/features/health-check/",
     "indexLabel": "🔍 汎用診断キットで検査する",
     "title": "🤖 このページをAIに実装させたい方へ",
     "text": "web-ios-androidキットの汎用診断キットで、このリポジトリ（またはフォルダ）を検査して。\nhttps://github.com/kimito-link/web-ios-android/tree/main/templates/diagnostics\nの README.md を読んで、node run.mjs <対象ディレクトリ> を実行し、\n出た結果（git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミット）を直して。\n依存インストールは不要、Node標準機能だけで動く。web-ios-androidキットで作ったアプリでなくても、\nどんなJS/TSプロジェクトにもそのまま使える。",
