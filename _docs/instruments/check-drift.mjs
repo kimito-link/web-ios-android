@@ -31,11 +31,52 @@ const GH_ROOT = resolve(KIT_ROOT, '..');
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
 const SELFTEST = process.argv.includes('--selftest');
 
-/** ★正本（キット側）と、追随するコピー。 */
-const CANONICAL = resolve(KIT_ROOT, 'templates/scripts/lib/instrument-core.mjs');
-const COPIES = [
-  resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/lib/instrument-core.mjs')
+/**
+ * ★正本（キット側）と、追随するコピー。
+ *
+ * ★1ファイルしか見ていないと、配った他の実体は★黙って割れる。
+ *   実際 2026-08-22 に台帳を配るまで、ここは instrument-core.mjs だけを見ていた。
+ *   ★配る実体を増やしたら、必ずここに足すこと。
+ *
+ * ★`copies: []` は「まだ誰もコピーを持っていない」＝正常。
+ *   ただし★正本が消えていたら赤（配ったはずのものが無い）。
+ */
+const PAIRS = [
+  {
+    label: '計器の土台',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/instrument-core.mjs'),
+    copies: [resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/lib/instrument-core.mjs')]
+  },
+  {
+    label: '進化台帳（判定）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/improvement-ledger.mjs'),
+    /*
+     * ★tsuioku の src/lib/improvementLedger.js は【表を内蔵する旧世代】。
+     *   キット版は★表を引数で受け取る形に変えた（空の表で偽の緑になる穴を塞ぐため・
+     *   2026-08-22 に実測で確認）。★設計が違うので実コード一致を要求しない。
+     *   tsuioku をキット版へ寄せたときに、ここへコピーを足す。
+     */
+    copies: []
+  },
+  {
+    label: '進化台帳（門番）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/check-improvement.mjs'),
+    copies: []
+  },
+  {
+    label: '進化台帳（記録の口）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/record-improvement.mjs'),
+    copies: []
+  },
+  {
+    label: '検査の実行記録（4つ目の状態）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/check-instrument-ran.mjs'),
+    copies: []
+  }
 ];
+
+/** ★selftest が単体で使う正本（土台）。 */
+const CANONICAL = PAIRS[0].canonical;
 
 /** ★コメント・文字列内は触らず、行コメント/ブロックコメント/空行だけ落とす。 */
 function codeOnly(text) {
@@ -56,8 +97,8 @@ function compare(canonicalPath, copies) {
   if (!existsSync(canonicalPath)) {
     return {
       verdict: 'inconclusive',
-      detail: `正本が見つかりません: ${canonicalPath}`,
-      howToFix: 'キットの templates/scripts/lib/instrument-core.mjs を復旧する'
+      detail: `正本が見つかりません: ${rel(canonicalPath)}`,
+      howToFix: '★配っているはずの実体が欠けています。キット側のファイルを復旧する'
     };
   }
   const base = codeOnly(readFileSync(canonicalPath, 'utf8'));
@@ -71,12 +112,24 @@ function compare(canonicalPath, copies) {
     if (codeOnly(readFileSync(p, 'utf8')) !== base) drifted.push(p);
   }
 
-  // ★1本も比較できていないなら「緑」ではない（測れなかった）
+  /*
+   * ★「コピーを1本も宣言していない」と「宣言したのに見つからない」を分ける。
+   *   ★前者は正常（まだ誰も持っていない実体。正本があることは確かめた）。
+   *   ★後者は【測れなかった】＝緑にしない（掟⑤: 測れなかったを素通しさせない）。
+   *   ここを一緒にすると、配ったばかりの実体で常に🟡が出て★読み手が慣れてしまう。
+   */
+  if (copies.length === 0) {
+    return {
+      verdict: 'pass',
+      evidence: { 正本: 1, コピー: 0 },
+      limitation: '★まだ追随するコピーがありません（正本の存在だけを確かめました）'
+    };
+  }
   if (checked.length === 0) {
     return {
       verdict: 'inconclusive',
       detail: `比較できたコピーが0本（見つからない: ${missing.length}本）`,
-      howToFix: 'COPIES のパスを実在するものに直す。リポを clone していないなら、それは正常'
+      howToFix: 'copies のパスを実在するものに直す。リポを clone していないなら、それは正常'
     };
   }
   if (drifted.length) {
@@ -133,11 +186,19 @@ if (SELFTEST) {
   process.exit(EXIT.PASS);
 }
 
-const r = compare(CANONICAL, COPIES);
-const mark = r.verdict === 'pass' ? '✅' : r.verdict === 'fail' ? '🔴' : '🟡';
-console.log(`[check-drift] ${mark} 計器の土台 — ${r.verdict}`);
-if (r.evidence) console.log('  根拠: ' + JSON.stringify(r.evidence, null, 0));
-if (r.detail) console.log('  ' + r.detail);
-if (r.howToFix) console.log('  → 直し方: ' + r.howToFix);
-if (r.limitation) console.log('  → この検査の限界: ' + r.limitation);
-process.exit(r.verdict === 'pass' ? EXIT.PASS : r.verdict === 'fail' ? EXIT.FAIL : EXIT.INCONCLUSIVE);
+/* ── ★配っている実体すべてを見る（1本だけ見ていると他は黙って割れる） ───── */
+let worst = EXIT.PASS;
+for (const pair of PAIRS) {
+  const r = compare(pair.canonical, pair.copies);
+  const mark = r.verdict === 'pass' ? '✅' : r.verdict === 'fail' ? '🔴' : '🟡';
+  console.log(`[check-drift] ${mark} ${pair.label} — ${r.verdict}`);
+  if (r.evidence) console.log('  根拠: ' + JSON.stringify(r.evidence, null, 0));
+  if (r.detail) console.log('  ' + r.detail);
+  if (r.howToFix) console.log('  → 直し方: ' + r.howToFix);
+  if (r.limitation) console.log('  → この検査の限界: ' + r.limitation);
+
+  // ★優先順は fail > inconclusive > pass（土台の computeExitCode と同じ規約）。
+  if (r.verdict === 'fail') worst = EXIT.FAIL;
+  else if (r.verdict === 'inconclusive' && worst === EXIT.PASS) worst = EXIT.INCONCLUSIVE;
+}
+process.exit(worst);
