@@ -47,6 +47,10 @@ import {
   formatImprovementLine,
   undeclaredRows
 } from './lib/improvement-ledger.mjs';
+import {
+  analyzeImprovementStaleness,
+  formatImprovementStalenessLine
+} from './lib/improvement-staleness.mjs';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -130,7 +134,37 @@ if (SELFTEST) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(EXIT.FAIL);
   }
-  console.log('[check-improvement] selftest OK(退化を検知 / 方向を取り違えない / ★未宣言を緑にしない / ★ラチェットが緩まない)');
+  /*
+   * ★鮮度の検知も同じ場で試す(この検知器も【サボると鳴るか】が生死を決める)。
+   *   ★自前の表を使う=アプリの表が空でも判定できる。
+   */
+  const staleFails = [];
+  {
+    const rows = analyzeImprovementStaleness({
+      metrics: T,
+      history: [{ version: '0.1.100', metric: 'sf-lower', value: 1 }],
+      currentVersion: '0.1.200'
+    });
+    const lower = rows.find((r) => r.metric === 'sf-lower');
+    const higher = rows.find((r) => r.metric === 'sf-higher');
+    // ★100版ぶん空いた指標を stale と言えるか
+    if (!lower || lower.state !== 'stale') staleFails.push('★放置(100版前)を stale と言えない');
+    // ★一度も無い指標を stale に混ぜていないか(まだ分からない側)
+    if (!higher || higher.state !== 'never') staleFails.push('★一度も無いを never と分けられない');
+    // ★直近の記録を放置と誤検知しないか
+    const fresh = analyzeImprovementStaleness({
+      metrics: T,
+      history: [{ version: '0.1.200', metric: 'sf-lower', value: 1 }],
+      currentVersion: '0.1.200'
+    }).find((r) => r.metric === 'sf-lower');
+    if (!fresh || fresh.state !== 'fresh') staleFails.push('★直近の記録を放置と誤検知した');
+  }
+  if (staleFails.length) {
+    console.error('[check-improvement] ★selftest 失敗(鮮度の検知が効いていません):');
+    for (const f of staleFails) console.error('  - ' + f);
+    process.exit(EXIT.FAIL);
+  }
+  console.log('[check-improvement] selftest OK(退化を検知 / 方向を取り違えない / ★未宣言を緑にしない / ★ラチェットが緩まない / ★放置を数える)');
   process.exit(EXIT.PASS);
 }
 
@@ -180,11 +214,16 @@ if (SUBMISSION) {
  * ★いまの版が台帳に1件も無いか。
  * ★fail ではなく inconclusive にする（記録し忘れは【測っていない】であって【悪化】ではない）。
  */
-function currentVersionUnrecorded() {
+/** ★いまの版(package.json が正本)。鮮度判定と未記録判定の両方が使う。 */
+function currentVersion() {
   const pkgPath = join(ROOT, 'package.json');
-  if (!existsSync(pkgPath)) return null; // ★版が分からないなら、この観点では判定しない
-  const version = JSON.parse(readFileSync(pkgPath, 'utf8')).version;
-  if (!version) return null;
+  if (!existsSync(pkgPath)) return '';
+  return String(JSON.parse(readFileSync(pkgPath, 'utf8')).version || '');
+}
+
+function currentVersionUnrecorded() {
+  const version = currentVersion();
+  if (!version) return null; // ★版が分からないなら、この観点では判定しない
   return history.some((r) => String(r?.version || '') === version) ? null : version;
 }
 
@@ -200,6 +239,18 @@ if (!CHECK) {
     if (prev) console.log('  ' + formatImprovementLine({ metric: r.metric, before: prev.value, after: r.value }, metrics) + `  (${r.version})`);
     byMetric.set(r.metric, r);
   }
+  /*
+   * ★「どの指標を測っていないか」を出す。
+   *   ★実損(2026-08-22 tsuioku): 台帳を入れて8日後、10指標のうち
+   *     自動の2つしか動いておらず、診断の所要が1,500倍動いたのに記録が0件だった。
+   *   ★強制はしない(書かせると嘘の数字が入る)。数を見せるだけ。
+   */
+  console.log("");
+  console.log(formatImprovementStalenessLine(analyzeImprovementStaleness({
+    metrics,
+    history,
+    currentVersion: currentVersion()
+  })));
   process.exit(EXIT.PASS);
 }
 
