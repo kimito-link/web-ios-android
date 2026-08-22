@@ -104,6 +104,26 @@
       .gate-table td, .gate-table th { border-bottom: none; padding: 4px 0; white-space: normal; }
       .gate-table td:first-child { color: #667eea; font-weight: 800; }
     }
+
+    /* --- スマホでの表の扱い(2026-08-22 実測で修正) ---
+       375px実測で check-table は tbody が1327px、ledger-table は579/741pxまで
+       はみ出し、親に隠れて右側が読めない状態だった。表の性質で対処を分ける。
+
+       check-table … 「名前 + 長い説明」の2列。縦積みにすると自然に読める。
+       ledger-table … 3〜4列の比較表。列の対応が意味を持つので縦積みにせず、
+                      横スクロール可能にして表の形を保つ。 */
+    @media (max-width: 640px) {
+      .check-table, .check-table tbody, .check-table tr,
+      .check-table td, .check-table th { display: block; width: 100%; }
+      .check-table thead { display: none; }
+      .check-table tr { border-bottom: 1px solid #e7eaf0; padding: 10px 0; }
+      .check-table td, .check-table th { border-bottom: none; padding: 4px 0; white-space: normal; }
+      .check-table td:first-child { color: #667eea; font-weight: 800; }
+      .check-table code { word-break: break-all; }
+
+      .ledger-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 18px 0; }
+      .ledger-scroll .ledger-table { margin: 0; min-width: 520px; }
+    }
   </style>
 </head>
 <body>
@@ -428,6 +448,7 @@
         じわじわ悪化して元の悪い状態に戻っても必ず気づけます。
       </p>
 
+      <div class="ledger-scroll">
       <table class="ledger-table">
         <tr><th>版</th><th>測った数字</th><th>くらべた相手</th><th>判定</th></tr>
         <tr>
@@ -449,6 +470,7 @@
           <td class="bad-cell">🔴 悪化（出荷前に止まる）</td>
         </tr>
       </table>
+      </div>
 
       <div class="bad-tip">
         🛑 v3が赤になっても、直すか・悪化してよい理由を書くかのどちらかを選べます。
@@ -463,6 +485,7 @@
         一番やってはいけない事故になります。
       </p>
 
+      <div class="ledger-scroll">
       <table class="ledger-table">
         <tr><th>実際にあった数字の動き</th><th>正しい判定</th><th>もし「小さい方が良い」と決め打っていたら</th></tr>
         <tr>
@@ -481,6 +504,7 @@
           <td class="bad-cell">🔴 誤って「退化」判定</td>
         </tr>
       </table>
+      </div>
 
       <p style="font-size:0.94rem; color:#333; line-height:1.9; margin-top:14px;">
         だからこのキットは、数字が動いた「見た目」から良し悪しを推測しません。
