@@ -163,6 +163,15 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 
 ---
 
+## 3.3 ★常にリアルタイムで診断する ＋ コピペ1回で伝える
+
+→ [**ALWAYS-ON-DIAGNOSTICS.md**](ALWAYS-ON-DIAGNOSTICS.md)
+
+★これが「けんこう診断」の【本体】。①常時測る ②1回のコピーで渡せる の2つで1組。
+★読む頻度は【書き手の更新間隔】から導く（鮮度要求・実測所要は基準にならない）。
+
+---
+
 ## 3.4 ★診断が開かないときに測る
 
 → [**MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md**](MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md)

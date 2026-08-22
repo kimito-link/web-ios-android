@@ -130,6 +130,52 @@
     </div>
 
     <div class="section-divider">
+      <h2>⏱️ 診断は「押したとき」ではなく、<b>ずっと動いています</b></h2>
+      <div class="lead">
+        不具合は、こちらが見ている時だけ起きるわけではありません。
+        キットで作るアプリは<b>2秒ごとに自分の状態を測り続け</b>、
+        気づいた異常を<b>コピー1回で開発者に渡せる</b>形にまとめます。この2つで1組です。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">⏱️</span>2秒ごとに<br>自分を測る</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📋</span>コピー<br>1回</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🔍</span>原因が<br>分かる</div>
+        </div>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 1</span>
+        <p><b>見ていないときは止まります。</b>画面が隠れているあいだは測定を停止するので、
+        電池もCPUも食いません。「ずっと動く」と「ずっと重い」は別です。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 2</span>
+        <p><b>読む間隔は「書く側の間隔」で決めます。</b>
+        「1秒でも遅れたら困る」といった感覚で決めると、人によって答えが変わり、根拠が残りません。
+        <b>データを書いている側が何秒ごとに更新するか</b>——これだけが動かない事実なので、そこから決めます。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">鍵 3</span>
+        <p><b>コピーには「いつの値か」を必ず入れます。</b>
+        30秒前の数字を「今の状態」として読むと誤診になります。
+        判定も<b>正常／注意／異常／まだ測れていない</b>の4つに分け、
+        「測れていない」を「正常」に混ぜません。</p>
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ <b>計器を増やすほど良い、ではありません。</b>
+        実例では計器を100個まで増やしましたが、実際に原因を突き止めたのはごく一部でした。
+        <b>1本足すたびに「この計器は原因に導いたか」で判定し、導かないものは消す</b>——これが続けるコツです。
+      </div>
+    </div>
+
+    <div class="section-divider">
       <h2>🚨 では、その診断画面が「重すぎて開かない」ときは？</h2>
       <div class="lead">
         いちばん知りたいのは「重いとき」なのに、重いと診断画面そのものが開かない。
