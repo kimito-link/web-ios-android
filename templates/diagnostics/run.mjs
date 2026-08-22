@@ -99,4 +99,17 @@ if (unmeasured.length > 0) {
   console.error('  → これは「異常なし」ではありません。測れなかった理由を上の出力で確認してください。');
   process.exit(2);
 }
-console.log(`[diagnostics] 全チェック緑(実行${results.length - skipped.length}件・skip${skipped.length}件)。`);
+// ★skip が過半なら「緑」と名乗らない。
+//   2026-08-23: まっさらな新規プロジェクトで【実行1件・skip5件】なのに
+//   「全チェック緑」と出た。★ほとんど何も測っていないのに「問題なし」に読める。
+//   ＝ このキットの掟「使っていない0と動くはずの0は別物」に反する。
+const ran = results.length - skipped.length;
+if (skipped.length > ran) {
+  console.log(
+    `[diagnostics] ★ほとんど測れていません(実行${ran}件・skip${skipped.length}件)。`
+  );
+  console.log(`  → これは「問題なし」ではありません。skip の理由を上で確認してください。`);
+  console.log(`    (git 未初期化・package.json 無しなどで、検査の前提が無い場合に skip します)`);
+} else {
+  console.log(`[diagnostics] 全チェック緑(実行${ran}件・skip${skipped.length}件)。`);
+}
