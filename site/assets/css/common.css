@@ -25,6 +25,7 @@
  *   パンくず ..................................... ── パンくず ──
  *   前後ナビ ..................................... ── 前後ナビ ──
  *   ページ末尾フッター（見た目のみ。本体は上記footer） ── フッター ──
+ *   AIへの指示ブロック（コピペ用。機能ページ共通） ── AIへの指示ブロック ──
  *
  * ■ ブレークポイント一覧（このファイル内。ページ固有<style>は含まない）
  *   max-width: 1600px … ヘッダーnavをハンバーガーに切り替え（11項目が横に収まらないため）
@@ -335,3 +336,45 @@ footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82
   .koma-talk .talk-bubble::before,
   .koma-talk.reverse .talk-bubble::after { display: none; }
 }
+
+/* ── AIへの指示ブロック（コピペ用。機能ページ共通） ──
+   使い方: <div class="ai-box"> の中に <div class="ai-copy" id="一意なID">指示文</div> と
+   コピー用ボタン <button class="ai-copy-btn" onclick="...navigator.clipboard.writeText(...)">
+   を置く（features/health-check/ 参照）。「AIにこの機能を実装させたい」という導線が
+   ある機能ページ（診断・LINE bot 等）すべてで同じ見た目に揃える。2026-08-22追加。 */
+.ai-box {
+  background: #1a1a2e;
+  color: #e8e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin: 32px 0 0;
+}
+.ai-box h2, .ai-box h3 { font-size: 1.05rem; color: #fff; margin-bottom: 4px; }
+.ai-box .ai-sub { font-size: 0.82rem; color: #9a9ac0; margin-bottom: 14px; }
+.ai-copy {
+  background: #0f0f1e;
+  border: 1px solid #34345a;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #d6d6f0;
+  white-space: pre-wrap;
+  position: relative;
+}
+.ai-copy-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ai-copy-btn:hover { background: #5568d3; }
+.ai-box .ai-note { font-size: 0.78rem; color: #8888aa; margin-top: 10px; line-height: 1.7; }
+.ai-box .ai-note a { color: #a0b4ff; }

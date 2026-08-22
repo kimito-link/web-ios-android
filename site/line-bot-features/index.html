@@ -331,6 +331,22 @@
       <p>くわしい手順は <code>templates/line-bot/README.md</code> の「画像・動画・音声認識」の章を参照。</p>
     </div>
 
+    <div class="ai-box" id="ai-instructions">
+      <h2>🤖 このページをAIに実装させたい方へ</h2>
+      <div class="ai-sub">このURLをAIに貼って、下の指示をそのままコピペしてください</div>
+      <div class="ai-copy" id="ai-copy-text">このアプリのLINE公式アカウントAI社員botに、画像・動画・音声認識を追加して。
+手順書 templates/line-bot/README.md の「画像・動画・音声認識」の章を読んで、そこに書かれている通りに進めて。
+R2バケット作成・GEMINI_API_KEY投入・wrangler.tomlのr2_bucketsバインディング確認が必要。
+（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は
+ https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot
+ から取得して。）</div>
+      <button class="ai-copy-btn" onclick="
+        navigator.clipboard.writeText(document.getElementById('ai-copy-text').textContent);
+        this.textContent = 'コピーしました';
+        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
+      ">コピー</button>
+    </div>
+
     <div id="site-footer"></div>
   </div>
   <script src="../scripts/site-chrome.js"></script>

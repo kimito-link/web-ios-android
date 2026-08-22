@@ -23,3 +23,6 @@ service-account*.json
 # 別リポのクローンを作業用にこのツリー内へ置いたもの（.git 入り）。
 # 親リポに取り込まない（embedded repo 事故防止）。実証プロジェクトは各自のリポで管理する。
 kimitolink-line/
+
+.vercel
+.env*.local

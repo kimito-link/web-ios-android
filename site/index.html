@@ -632,6 +632,44 @@
       .bottom-wrap { padding: 0 14px 32px; }
       .showcase-wrap { padding: 0 14px 32px; }
     }
+
+    /* ── AIへの指示ブロック（コピペ用） ── */
+    .ai-box {
+      background: #1a1a2e;
+      color: #e8e8f0;
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin: 0 20px 28px;
+    }
+    .ai-box h3 { font-size: 1rem; color: #fff; margin-bottom: 4px; }
+    .ai-box .ai-sub { font-size: 0.8rem; color: #9a9ac0; margin-bottom: 12px; }
+    .ai-copy {
+      background: #0f0f1e;
+      border: 1px solid #34345a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #d6d6f0;
+      white-space: pre-wrap;
+      position: relative;
+    }
+    .ai-copy-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .ai-copy-btn:hover { background: #5568d3; }
+    .ai-box .ai-note { font-size: 0.76rem; color: #8888aa; margin-top: 10px; line-height: 1.7; }
+    .ai-box .ai-note a { color: #a0b4ff; }
   </style>
 </head>
 <body>
@@ -974,6 +1012,22 @@
           このキットは指標ごとに「どちらの方向が良いか」を先に決めてから測るので、
           <b>正しく直した人を「悪化させた」と誤判定して止めてしまう事故</b>を防いでいます。
         </div>
+      </div>
+    </div>
+
+    <div class="ai-box" id="ai-instructions">
+      <h3>🤖 このAIに実装させたい方へ</h3>
+      <div class="ai-sub">AIに下の指示をそのままコピペしてください</div>
+      <div class="ai-copy" id="ai-copy-text-lp">このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。
+手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。</div>
+      <button class="ai-copy-btn" onclick="
+        navigator.clipboard.writeText(document.getElementById('ai-copy-text-lp').textContent);
+        this.textContent = 'コピーしました';
+        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
+      ">コピー</button>
+      <div class="ai-note">
+        詳しい仕組みと「進化台帳」の現状（規約のみ配布・実装は実証中）は
+        <a href="features/health-check/#ai-instructions" style="color:#a0b4ff; font-weight:700;">けんこう診断の仕組みページ</a> へ。
       </div>
     </div>
 

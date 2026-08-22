@@ -80,6 +80,7 @@
     .rule-box p { font-size: 0.86rem; color: #333; line-height: 1.8; margin: 0; }
 
     .bad-tip { background: #fff5f5; border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-top: 10px; font-size: 0.85rem; color: #555; }
+    /* .ai-box / .ai-copy / .ai-copy-btn は common.css の共通スタイルを使う */
   </style>
 </head>
 <body>
@@ -232,6 +233,28 @@
         💡 この台帳は、審査や申請の場面でもそのまま使えます。「軽くしました」「速くなりました」ではなく
         「2,400KBが1,360KBになりました」「817秒かかっていた診断が5秒になりました」と、
         実際に測った数字だけを並べて説明できるからです。
+      </div>
+    </div>
+
+    <div class="ai-box" id="ai-instructions">
+      <h2>🤖 このページをAIに実装させたい方へ</h2>
+      <div class="ai-sub">このURLをAIに貼って、下の指示をそのままコピペしてください</div>
+      <div class="ai-copy" id="ai-copy-text">このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。
+手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。
+（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は
+ https://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments
+ から取得して。）</div>
+      <button class="ai-copy-btn" onclick="
+        navigator.clipboard.writeText(document.getElementById('ai-copy-text').textContent);
+        this.textContent = 'コピーしました';
+        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
+      ">コピー</button>
+      <div class="ai-note">
+        ※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。
+        本ページ後半で説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です
+        （実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル
+        <code>_docs/instruments/IMPROVEMENT-RULES.md</code> を渡せますが、
+        すぐ動くコードとして同梱されているのは診断側だけです。
       </div>
     </div>
 
