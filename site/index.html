@@ -988,13 +988,13 @@
       <div class="tip" style="margin:14px 20px 0;">💡 仕組みと実例のくわしい説明は <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。開発中のコードそのものを検査したいときは <a href="features/diagnostics/" style="color:#667eea; font-weight:700;">診断キットの仕組みページ</a> へ。</div>
     </div>
 
-    <!-- ⑥.3 診断は「押したとき」ではなく常に動いている（おまけ） -->
+    <!-- ⑥.3 診断は「押したとき」ではなく常に動いている（おまけ・壊れて開けないときの備えつき） -->
     <div class="step step-bonus">
       <div class="step-top">
         <div class="step-circle">⏱️</div>
         <div class="step-main">
           <h3>診断は「押したとき」ではなく、ずっと動いている<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
-          <p class="one-line">不具合はこちらが見ている時だけ起きるわけではない</p>
+          <p class="one-line">不具合はこちらが見ている時だけ起きるわけではない。壊れて開けないときの備えも同じ仕組み</p>
         </div>
         <div class="step-char">
           <img src="images/tanunee-smile.png" alt="たぬ姉">
@@ -1015,6 +1015,8 @@
       <div class="step-detail">
         アプリは2秒ごとに自分の状態を測り続け、気づいた異常をコピー1回で開発者に渡せる形にまとめます。
         この「①ずっと測る」と「②コピー1回で伝える」は2つで1組。片方だけでは機能しません。
+        さらに、いちばん知りたい「重いとき」に診断画面そのものが開かなくなる弱点に備え、
+        <b>ユーザーに頼まず開発側が自分で測る手順</b>も同じ仕組みの一部として持っています。
         <div class="tip">
           💡 判定は🟢正常／🟡注意／🔴異常／⚪測れていない の4値。「測れていない」を「正常」に混ぜないので、
           0件を「異常なし」と誤診しません。実績：この仕組みで「診断817秒→0.005秒」の原因特定が、
@@ -1070,7 +1072,6 @@
 
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="assets/data/ai-instructions.json"></div>
-    <div class="ai-box-slot" data-ai-key="measure-when-diagnostics-wont-open" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box" style="margin-top:14px;">
       <div class="ai-note" style="margin-top:0;">
         「進化台帳」（過去最良との比較で退化を止める仕組み）の指示文と現状（規約のみ配布・実装は実証中）は

@@ -130,11 +130,13 @@
     </div>
 
     <div class="section-divider">
-      <h2>⏱️ 診断は「押したとき」ではなく、<b>ずっと動いています</b></h2>
+      <h2>⏱️ 診断は「押したとき」ではなく、<b>ずっと動いています</b>（壊れて開けないときの備えつき）</h2>
       <div class="lead">
         不具合は、こちらが見ている時だけ起きるわけではありません。
         キットで作るアプリは<b>2秒ごとに自分の状態を測り続け</b>、
         気づいた異常を<b>コピー1回で開発者に渡せる</b>形にまとめます。この2つで1組です。
+        さらに、いちばん知りたい「重いとき」に診断画面そのものが開かなくなる弱点に備え、
+        <b>ユーザーに頼まず開発側が自分で測る手順</b>も同じ仕組みの一部として持っています。
       </div>
 
       <div class="illust illust-green">
@@ -173,15 +175,8 @@
         実例では計器を100個まで増やしましたが、実際に原因を突き止めたのはごく一部でした。
         <b>1本足すたびに「この計器は原因に導いたか」で判定し、導かないものは消す</b>——これが続けるコツです。
       </div>
-    </div>
 
-    <div class="section-divider">
-      <h2>🚨 では、その診断画面が「重すぎて開かない」ときは？</h2>
-      <div class="lead">
-        いちばん知りたいのは「重いとき」なのに、重いと診断画面そのものが開かない。
-        <b>計器を作れば作るほど、必要な瞬間に読めなくなる</b>という弱点があります。
-        キットには、その場合に<b>ユーザーに頼まず開発側が自分で測る</b>手順が入っています。
-      </div>
+      <h3 style="font-size:1rem; color:#1a1a2e; margin:22px 0 10px;">🚨 その診断画面が「重すぎて開かない」ときは？</h3>
 
       <div class="illust illust-green">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
@@ -329,7 +324,6 @@
 
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
-    <div class="ai-box-slot" data-ai-key="measure-when-diagnostics-wont-open" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
   </div>
