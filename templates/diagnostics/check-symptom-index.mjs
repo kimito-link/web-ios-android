@@ -190,6 +190,39 @@ function runSelftest() {
   process.exit(0);
 }
 
+/**
+ * ★引数が無いときに、対象プロジェクトから自動で見つける。
+ *
+ * ★なぜ要るか(2026-08-23)
+ *   この検査はページに名前が載っているのに、★run.mjs に登録されておらず
+ *   引数も要るため【一度も走らない】状態だった。
+ *   ＝ 配ったのに届いていない(このキットが何度も踏んだ型)。
+ *   ⟹ ★名前を知らない人でも run.mjs 一本で走るようにする。
+ *
+ * ★見つからなければ「測れなかった(exit 2)」にする。★勝手に緑にしない。
+ *
+ * @param {string} targetDir
+ * @returns {{ symptoms: string, index: string }}
+ */
+export function autoDetectPaths(targetDir) {
+  const base = String(targetDir || process.cwd());
+  // ★症状定義: 決め打ちせず、よくある置き場所を順に見る。
+  const symptomCandidates = [
+    join(base, 'src/lib/symptomVerdicts.js'),
+    join(base, 'src/lib/symptoms.js'),
+    join(base, 'lib/symptomVerdicts.js')
+  ];
+  // ★索引: 同じ親フォルダに ai-hub が並んでいる構成を想定(この環境の実際の形)。
+  const indexCandidates = [
+    join(base, '..', 'ai-hub', 'index.json'),
+    join(base, 'ai-hub', 'index.json'),
+    join(base, '_docs', 'index.json')
+  ];
+  const symptoms = symptomCandidates.find((f) => existsSync(f)) || '';
+  const index = indexCandidates.find((f) => existsSync(f)) || '';
+  return { symptoms, index };
+}
+
 function argOf(name) {
   const i = process.argv.indexOf(name);
   return i >= 0 ? process.argv[i + 1] : undefined;
@@ -198,13 +231,26 @@ function argOf(name) {
 function main() {
   if (process.argv.includes('--selftest')) return runSelftest();
 
-  const symptomsPath = argOf('--symptoms');
-  const indexPath = argOf('--index');
+  // ★引数が無ければ自動で探す(名前を知らない人でも run.mjs 一本で走るように)。
+  const target = process.argv.slice(2).find((a) => !a.startsWith('--'));
+  const auto = autoDetectPaths(target);
+  const symptomsPath = argOf('--symptoms') || auto.symptoms;
+  const indexPath = argOf('--index') || auto.index;
   const max = Number(argOf('--max') ?? DEFAULT_UNINDEXED_MAX);
 
-  if (!symptomsPath || !indexPath) {
-    console.error('[check-symptom-index] ★測れませんでした: --symptoms と --index が要ります');
-    console.error('  例: node check-symptom-index.mjs --symptoms src/lib/symptomVerdicts.js --index ../ai-hub/index.json');
+  // ★「まだ症状の仕組みを入れていない」と「入れたのに読めない」を分ける。
+  //   前者は不具合ではない(新しいプロジェクトは必ずここを通る)。
+   //  ★ここを exit 2 にすると初日から必ず ? が出て★狼少年になる。
+  if (!symptomsPath) {
+    console.log("[check-symptom-index] 症状の仕組みがまだありません(skip)。");
+    console.log("  → 入れ方: 症状ごとに短いID(例 panel-black)を決めて共有テキストに出す。");
+    console.log("    ★そのIDで過去の原因を検索できるようになります。");
+    process.exit(0);
+  }
+  // ★症状はあるのに索引が無い＝【入れたのに繋がっていない】。これは測れない(exit 2)。
+  if (!indexPath) {
+    console.error("[check-symptom-index] ★測れませんでした: 症状はありますが原因索引が見つかりません");
+    console.error("  → --index <index.json> で場所を渡してください。");
     process.exit(2);
   }
   if (!existsSync(symptomsPath) || !existsSync(indexPath)) {

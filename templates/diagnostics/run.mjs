@@ -35,6 +35,10 @@ const CHECKS = [
   //   2026-08-23: 上の3本は --selftest を無視して exit 0 を返していた(壊れても緑)。
   //   ★selfTarget: 対象プロジェクトではなく【この diagnostics 自身】を見る。
   { name: 'check-selftest-coverage', path: join(__dirname, 'check-selftest-coverage.mjs'), selfTarget: true },
+  // ★症状の言葉で原因索引を引けるか。引数が無ければ対象から自動で探す。
+  //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
+  //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
+  { name: 'check-symptom-index', path: join(__dirname, 'check-symptom-index.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
