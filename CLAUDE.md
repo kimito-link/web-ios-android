@@ -114,3 +114,9 @@ site/                ← 紹介サイト＋キャラ画像
 
 > iOS/Android/Web の自動化はすべて `templates/` に同梱済み。`templates/README.md` の
 > マッピングに従ってコピーし、`app.config.json` の値で置換する。
+
+> 🌐 **「〈機能ページ〉の内容をLPにも反映させて」と言われたら、必ず先に
+> [`site/LP-SYNC.md`](site/LP-SYNC.md) を読む。** 機能ページ↔LP(`site/index.html`)の
+> 対応表・stepテンプレート・反映手順がまとまっている。AI指示ボックス
+> （`.ai-box-slot`）は `site/assets/data/ai-instructions.json` が正本で、
+> そこを直せば全ページに自動反映されLP側のHTMLは触らなくていい（詳細は同ファイル参照）。
