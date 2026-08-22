@@ -988,6 +988,42 @@
       <div class="tip" style="margin:14px 20px 0;">💡 仕組みと実例のくわしい説明は <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。開発中のコードそのものを検査したいときは <a href="features/diagnostics/" style="color:#667eea; font-weight:700;">診断キットの仕組みページ</a> へ。</div>
     </div>
 
+    <!-- ⑥.3 診断は「押したとき」ではなく常に動いている（おまけ） -->
+    <div class="step step-bonus">
+      <div class="step-top">
+        <div class="step-circle">⏱️</div>
+        <div class="step-main">
+          <h3>診断は「押したとき」ではなく、ずっと動いている<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">不具合はこちらが見ている時だけ起きるわけではない</p>
+        </div>
+        <div class="step-char">
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
+        </div>
+      </div>
+      <div class="illust illust-green" style="flex-direction:column; gap:10px; align-items:stretch;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">⏱️</span>2秒ごとに<br>自分を測る</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📋</span>コピー<br>1回</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🔍</span>原因が<br>分かる</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#aaa;">見ていない画面では自動で止まるので、電池もCPUも食わない</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        アプリは2秒ごとに自分の状態を測り続け、気づいた異常をコピー1回で開発者に渡せる形にまとめます。
+        この「①ずっと測る」と「②コピー1回で伝える」は2つで1組。片方だけでは機能しません。
+        <div class="tip">
+          💡 判定は🟢正常／🟡注意／🔴異常／⚪測れていない の4値。「測れていない」を「正常」に混ぜないので、
+          0件を「異常なし」と誤診しません。実績：この仕組みで「診断817秒→0.005秒」の原因特定が、
+          ユーザーの操作1回で回るようになりました。くわしい骨格は
+          <a href="features/health-check/#ai-instructions" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。
+        </div>
+      </div>
+    </div>
+
     <!-- ⑥.5 バージョンを重ねるほど、こっそり劣化させない・数字で良くなる（おまけ） -->
     <div class="step step-bonus">
       <div class="step-top">
@@ -1033,6 +1069,7 @@
     </div>
 
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="measure-when-diagnostics-wont-open" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box" style="margin-top:14px;">
       <div class="ai-note" style="margin-top:0;">

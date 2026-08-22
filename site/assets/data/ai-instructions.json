@@ -1,11 +1,11 @@
 {
-  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。",
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。",
   "diagnostics": {
     "order": 1,
     "page": "/features/diagnostics/",
     "indexLabel": "🔍 汎用診断キットで検査する",
     "title": "🤖 このページをAIに実装させたい方へ",
-    "text": "このリポジトリ（またはフォルダ）を、web-ios-androidキットの汎用診断キットで検査して。\ntemplates/diagnostics/README.md を読んで、node templates/diagnostics/run.mjs <対象ディレクトリ> を実行し、\n出た結果（git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミット）を直して。\n（このキットの外のプロジェクトが対象なら\n https://github.com/kimito-link/web-ios-android/tree/main/templates/diagnostics\n から取得して。依存インストールは不要、Node標準機能だけで動く。）",
+    "text": "web-ios-androidキットの汎用診断キットで、このリポジトリ（またはフォルダ）を検査して。\nhttps://github.com/kimito-link/web-ios-android/tree/main/templates/diagnostics\nの README.md を読んで、node run.mjs <対象ディレクトリ> を実行し、\n出た結果（git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミット）を直して。\n依存インストールは不要、Node標準機能だけで動く。web-ios-androidキットで作ったアプリでなくても、\nどんなJS/TSプロジェクトにもそのまま使える。",
     "note": ""
   },
   "health-check": {
@@ -13,39 +13,47 @@
     "page": "/features/health-check/",
     "indexLabel": "🩺 けんこう診断（計器）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
-    "text": "このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。\n手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\n から取得して。）",
-    "note": "※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。本ページで説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル <code>_docs/instruments/IMPROVEMENT-RULES.md</code> を渡せますが、すぐ動くコードとして同梱されているのは診断側だけです。"
+    "text": "このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。\n このキットの中で作業している場合はリポジトリ直下の _docs/instruments/ から読める。）",
+    "note": "※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。本ページで説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル <code>IMPROVEMENT-RULES.md</code> を渡せますが、すぐ動くコードとして同梱されているのは診断側だけです。"
+  },
+  "always-on-diagnostics": {
+    "order": 3,
+    "page": "/features/health-check/",
+    "indexLabel": "⏱️ 常時リアルタイム診断＋コピペ1回の共有を入れる",
+    "title": "🤖 「常時リアルタイム診断」をAIに実装させたい方へ",
+    "text": "このアプリに、常にリアルタイムで自分の状態を測り続け、不具合が起きたとき\nコピペ1回で開発者に伝えられる仕組みを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの ALWAYS-ON-DIAGNOSTICS.md を読んで、そこに書かれている骨格（①2秒間隔で自己測定・\n画面が隠れたら停止・書き手の更新間隔から読む頻度を決める ②いつの値か／症状の言葉／\n🟢🟡🔴⚪の4値判定／次の一手をコピペ1回で出す）の通りに進めて。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ骨格で作れる。\n 移植するのは骨格と鉄則であって、指標そのものではない。）",
+    "note": "※これは「けんこう診断」の本体です。壊れて開かないときの最後の手段は measure-when-diagnostics-wont-open の指示文を参照してください。"
   },
   "measure-when-diagnostics-wont-open": {
-    "order": 3,
+    "order": 4,
     "page": "/features/health-check/",
     "indexLabel": "🚨 診断画面が重すぎて開かないときの対処",
     "title": "🤖 「重すぎて開かない」への対処をAIにやらせたい方へ",
-    "text": "診断画面が重くて開けない不具合が出たら、ユーザーに操作を頼まず自分で測って。\n手順書 _docs/instruments/MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md を読んで、そこに書かれている\n7手（別インスタンスで実規模を再現→基準値→症状合成→CSS規則の実文確認→測れなかったものは\n測れなかったと書く）の順に進めて。",
+    "text": "診断画面が重くて開けない不具合が出たら、ユーザーに操作を頼まず自分で測って。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md を読んで、そこに書かれている\n7手（別インスタンスで実規模を再現→基準値→症状合成→CSS規則の実文確認→測れなかったものは\n測れなかったと書く）の順に進めて。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
     "note": "※症状の出ている画面そのものでは測らない、が大原則です（測定が症状を悪化させるため）。"
   },
   "improvement-ledger": {
-    "order": 4,
+    "order": 5,
     "page": "/features/health-check/",
     "indexLabel": "📈 版を重ねて退化させない台帳を検討する",
     "title": "🤖 進化台帳（規約）をAIに読ませたい方へ",
-    "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを検討したい。\n規約ファイル _docs/instruments/IMPROVEMENT-RULES.md を読んで、方針（方向は指標ごとに宣言する・\n過去最良と比較する・記録忘れはfailにしない）を理解した上で、このアプリに合う指標案を提案して。",
+    "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを検討したい。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの IMPROVEMENT-RULES.md を読んで、方針（方向は指標ごとに宣言する・過去最良と比較する・\n記録忘れはfailにしない）を理解した上で、このアプリに合う指標案を提案して。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLの規約だけ読めば同じ考え方で使える。）",
     "note": "※これは規約のみで、すぐ動く実装コードはまだキットに同梱されていません（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには「設計方針」として渡すものです。"
   },
   "line-bot": {
-    "order": 5,
+    "order": 6,
     "page": "/line-bot/",
     "indexLabel": "💬 LINEのAI社員bot（無応答ゼロ化）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
-    "text": "このアプリに、web-ios-androidキットのLINE公式アカウントAI社員bot（無応答ゼロ化）を入れて。\n手順書 templates/line-bot/README.md を読んで、そこに書かれている通りに進めて。\napp.config.json の lineBot セクションを埋めて enabled: true にし、\ntemplates/line-bot/ をアプリの line-bot/ にコピーして {{...}} を置換すること。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\n から取得して。）",
+    "text": "このアプリに、web-ios-androidキットのLINE公式アカウントAI社員bot（無応答ゼロ化）を入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\nの README.md を読んで、そこに書かれている通りに進めて。\napp.config.json の lineBot セクションを埋めて enabled: true にし、\nline-bot/ をアプリの line-bot/ にコピーして {{...}} を置換すること。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得してCloudflare Workers\n上に単体で構築できる。app.config.json が無ければ環境変数で同等の設定を渡す形に読み替える。）",
     "note": ""
   },
   "line-bot-features": {
-    "order": 6,
+    "order": 7,
     "page": "/line-bot-features/",
     "indexLabel": "🖼️ LINE botに画像・動画・音声認識を追加する",
     "title": "🤖 このページをAIに実装させたい方へ",
-    "text": "このアプリのLINE公式アカウントAI社員botに、画像・動画・音声認識を追加して。\n手順書 templates/line-bot/README.md の「画像・動画・音声認識」の章を読んで、そこに書かれている通りに進めて。\nR2バケット作成・GEMINI_API_KEY投入・wrangler.tomlのr2_bucketsバインディング確認が必要。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\n から取得して。）",
+    "text": "このアプリのLINE公式アカウントAI社員botに、画像・動画・音声認識を追加して。\nhttps://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\nの README.md の「画像・動画・音声認識」の章を読んで、そこに書かれている通りに進めて。\nR2バケット作成・GEMINI_API_KEY投入・wrangler.tomlのr2_bucketsバインディング確認が必要。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
     "note": ""
   }
 }

@@ -1,8 +1,13 @@
-# 新しいアプリに計器を入れるとき（このキットを渡された AI が読む1枚）
+# 新しいアプリに計器を入れるとき（AI が読む1枚）
 
 > ★この1枚だけで着手できる粒度で書いてあります。
 > 思想の背景は [`README.md`](README.md)、根っこの思想は
 > [`../../docs/ai-rules/04_SELF_VERIFICATION.md`](../../docs/ai-rules/04_SELF_VERIFICATION.md)。
+>
+> ★**web-ios-androidキットを使っていないプロジェクトでも、この1枚だけ読めば同じ手順で使えます。**
+> `scripts/lib/instrument-core.mjs`（依存ゼロ・純Node）を
+> [ここから直接取得](https://github.com/kimito-link/web-ios-android/blob/main/templates/scripts/lib/instrument-core.mjs)
+> して、自分のプロジェクトの `scripts/lib/` 等にコピーしてから読み進めてください。
 
 ---
 
@@ -40,7 +45,8 @@ audit-native-cta.mjs を引数なしで実行
 
 ## 2. 使い方（コピーして書き換えるだけ）
 
-`scripts/lib/instrument-core.mjs` は**キットに同梱済み・依存ゼロ・純Node**です。
+`scripts/lib/instrument-core.mjs` は**依存ゼロ・純Node**です。
+web-ios-androidキットには同梱済み。それ以外のプロジェクトでは上記リンクからコピーしてください。
 
 ```js
 #!/usr/bin/env node
