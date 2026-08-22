@@ -82,6 +82,32 @@ header nav a {
 header nav a:hover { background: #f0f0ff; color: #667eea; }
 header nav a.active { background: #667eea; color: white; }
 
+/* ── AIに共有ボタン（ヘッダー常設・ハンバーガーに隠れない） ── */
+.share-to-ai-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+.share-to-ai-btn:hover { background: #667eea; }
+.share-to-ai-btn:active { transform: scale(0.97); }
+/* ハンバーガーが出る幅では nav が margin-left:auto を失うので、
+   このボタン側の margin-left:auto は不要になるが、悪さもしないため単純化のため残す */
+@media (max-width: 1600px) {
+  .share-to-ai-btn { margin-left: 0; }
+}
+@media (max-width: 480px) {
+  .share-to-ai-btn { padding: 7px 10px; font-size: 0.72rem; }
+}
+
 /* ── ハンバーガーメニュー（幅1600px以下でnavを折りたたむ。11項目のフルナビは
    横1600px未満だと収まらないため、実質デスクトップでも既定でハンバーガー） ── */
 .nav-toggle {

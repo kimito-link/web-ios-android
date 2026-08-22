@@ -43,6 +43,7 @@
     return (
       '<header>\n' +
       '  <a class="logo-link" href="/"><img class="logo" src="/images/logo.png" alt="Kimito-Link"></a>\n' +
+      '  <button class="share-to-ai-btn" type="button" title="このページのURLをAIに貼る用にコピー">🤖 AIに共有</button>\n' +
       '  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>\n' +
       '  <nav id="site-nav">\n' +
       '    <a href="/"' + (isActive('/') ? ' class="active"' : '') + '>🏠 トップ</a>\n' +
@@ -50,6 +51,27 @@
       '  </nav>\n' +
       '</header>'
     );
+  }
+
+  // ヘッダーの「🤖 AIに共有」ボタン: このページのURLを、AIに貼ってそのまま
+  // 使える定型文つきでクリップボードにコピーする（ai-box.js のコピーボタンと
+  // 同じ「失敗を偽らない」方針）。
+  function mountShareToAi() {
+    var btn = document.querySelector('.share-to-ai-btn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var url = window.location.origin + window.location.pathname;
+      var text = 'このページを読んで、書かれている通りに進めて。\n' + url;
+      navigator.clipboard.writeText(text).then(function () {
+        var original = btn.textContent;
+        btn.textContent = '✅ コピーしました';
+        setTimeout(function () { btn.textContent = original; }, 1500);
+      }, function () {
+        var original = btn.textContent;
+        btn.textContent = 'コピーできません（手動で選択してください）';
+        setTimeout(function () { btn.textContent = original; }, 2500);
+      });
+    });
   }
 
   function buildFooter() {
@@ -102,5 +124,6 @@
       footerSlot.outerHTML = buildFooter();
     }
     mountToggle();
+    mountShareToAi();
   });
 })();
