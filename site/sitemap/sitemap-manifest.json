@@ -57,7 +57,7 @@
         { "label": "応用・実績 一覧", "href": "../apps/", "srcPath": "apps/index.html" },
         { "label": "アプリ一覧 — このキットで実際に公開できたアプリ", "href": "../showcase/", "srcPath": "showcase/index.html" },
         { "label": "実証知見まとめ — 申請まで通した知見", "href": "../learnings/", "srcPath": "learnings/index.html" },
-        { "label": "けんこう診断・進化・診断キット — アプリが自分で不具合の原因を教えてくれる仕組みと、出荷前にどんなJS/TSプログラムにも使える診断ツール", "href": "../features/health-check/", "srcPath": "features/health-check/index.html" }
+        { "label": "けんこう診断・進化・診断キット — アプリが自分で不具合の原因を教えてくれる仕組み、退化を出荷前に止める台帳、その見張り役が動いていないことの検出、出荷前にどんなJS/TSプログラムにも使える診断ツール", "href": "../features/health-check/", "srcPath": "features/health-check/index.html" }
       ]
     },
     {
