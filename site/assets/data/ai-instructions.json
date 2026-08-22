@@ -14,7 +14,7 @@
     "indexLabel": "🩺 けんこう診断（計器）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
     "text": "このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。\n このキットの中で作業している場合はリポジトリ直下の _docs/instruments/ から読める。）",
-    "note": "※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。本ページで説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル <code>IMPROVEMENT-RULES.md</code> を渡せますが、すぐ動くコードとして同梱されているのは診断側だけです。"
+    "note": "※このページで説明した仕組みは【すべて実装コードごと配布済み】です。「診断」（3値exit・selftest・SHAPE検査）に加え、「進化台帳」（過去最良との比較）と「検査がそもそも走っていないことの検出」も 2026-08-22 から同梱しています。★指標テーブルだけは空で配ります（どの数字を測るかはアプリごとに違うため。実測してから足すもの）。"
   },
   "always-on-diagnostics": {
     "order": 3,
@@ -27,10 +27,10 @@
   "improvement-ledger": {
     "order": 4,
     "page": "/features/health-check/",
-    "indexLabel": "📈 版を重ねて退化させない台帳を検討する",
-    "title": "🤖 進化台帳（規約）をAIに読ませたい方へ",
-    "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを検討したい。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの IMPROVEMENT-RULES.md を読んで、方針（方向は指標ごとに宣言する・過去最良と比較する・\n記録忘れはfailにしない）を理解した上で、このアプリに合う指標案を提案して。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLの規約だけ読めば同じ考え方で使える。）",
-    "note": "※これは規約のみで、すぐ動く実装コードはまだキットに同梱されていません（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには「設計方針」として渡すものです。"
+    "indexLabel": "📈 版を重ねて退化させない台帳を入れる",
+    "title": "🤖 進化台帳をAIに実装させたい方へ",
+    "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの IMPROVEMENT-RULES.md を読んで、そこに書かれている通りに進めて。\n実装（判定・記録の口・門番）は templates/scripts/ に入っているのでコピーして使う:\ncheck-improvement.mjs / record-improvement.mjs / lib/improvement-ledger.mjs /\nimprovement-metrics.mjs / improvement-history.mjs。\n★指標テーブル（improvement-metrics.mjs）は空で始めて、実測してから足すこと。\n実測せずに方向（better）を宣言すると、正しくない向きを機械で固定してしまう。\nあわせて check-instrument-ran.mjs も入れて、門番がそもそも走っていない状態を検出して。\n配線は「検査が緑のときだけ記録が残る」形にする:\n  node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
+    "note": "※実装コードごと配布済みです（2026-08-22〜）。★指標テーブルだけは空で配ります ── どの数字を測るかはアプリごとに違い、実測せずに方向を宣言すると正しく直した人を「退化させた」と誤判定して止めてしまうためです。"
   },
   "line-bot": {
     "order": 5,

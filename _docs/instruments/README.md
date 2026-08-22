@@ -24,6 +24,15 @@
 |---|---|---|
 | 3値exit + 根拠なき緑の降格 + selftest | [`templates/scripts/lib/instrument-core.mjs`](../../templates/scripts/lib/instrument-core.mjs) | ★新規アプリすべてに同梱 |
 | 使用例（毒→赤を実演） | [`templates/scripts/audit-native-cta.mjs`](../../templates/scripts/audit-native-cta.mjs) | `--selftest` あり |
+| ★進化台帳（判定・★表を持たない） | [`templates/scripts/lib/improvement-ledger.mjs`](../../templates/scripts/lib/improvement-ledger.mjs) | ★2026-08-22 配布開始 |
+| ★進化台帳（門番） | [`templates/scripts/check-improvement.mjs`](../../templates/scripts/check-improvement.mjs) | `--selftest` 5ケース |
+| ★進化台帳（記録の1本の口） | [`templates/scripts/record-improvement.mjs`](../../templates/scripts/record-improvement.mjs) | `--selftest` 5ケース |
+| ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
+| ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
+
+★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
+**配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
+2026-08-22 に両条件を実測で確認して配った（前科3件を踏まえた意図的な保留だった）。
 
 ★**コードの正本はキット側（このリポ）**。各プロダクトはコピーを持つ。
 
@@ -241,7 +250,13 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 
 → [**IMPROVEMENT-RULES.md**](IMPROVEMENT-RULES.md)
 
-★規約は汎用・★指標はアプリごとにカスタム。実装はまだ配っていません（条件つき）。
+★規約は汎用・★指標はアプリごとにカスタム。
+★**実装も配っています**（2026-08-22〜。§1 の表を参照）。★指標テーブルは**空で配る**。
+
+```bash
+# 配線（★緑のときだけ「走った」記録が残る形にする）
+node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement
+```
 
 ---
 
@@ -288,6 +303,6 @@ soushin ──(exit2は保証にならない・Invoke-WithPoison)──→ tsuio
 
 | # | 問い | 出どころ |
 |---|---|---|
-| 1 | ★「検査がそもそも走っていない」をどう検出するか（4つ目の状態） | `soushin` の実測2件 |
+| ~~1~~ | ~~★「検査がそもそも走っていない」をどう検出するか（4つ目の状態）~~ → ★**2026-08-22 解決**: [`check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs)。★走らなかった検査は何も出力しない＝内側では観測できないので、**緑のときだけ記録を残し、常に前へ進むもの（コミット）との距離**で測る。実地確認: 12コミット放置で exit 2、走らせ直すと緑。★限界: 手で stamp を打てばだませる（うっかり用であって意図的な回避は防がない） | `soushin` の実測2件 |
 | 2 | 「exit 2 を持っているか」の代わりに**何を見れば**正しさに近づくか | `soushin` の実証 |
 | 3 | 直した検査が**実機で緑のまま**か（`soushin` 側12本が未測定） | `soushin` 申告 |

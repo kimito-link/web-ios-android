@@ -389,6 +389,57 @@
       </div>
     </div>
 
+    <div class="section-divider">
+      <h2>🚨 その見張り役が「そもそも動いていない」ときは？</h2>
+      <div class="lead">
+        ここまでの仕組みには、最後に1つ穴が残ります。<b>見張り役そのものが動かなくなっていたら、
+        何も起きない</b>ということです。赤くなって止まっているのに誰も気づかない状態は、
+        <b>緑と同じくらい危険</b>です。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">✅</span>通ったときだけ<br>印を残す</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📌</span>更新が<br>積み重なる</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🔔</span>離れすぎたら<br>知らせる</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">「悪くなった」ではなく「最近ちゃんと調べていない」を知らせます</div>
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ <b>実際にあったこと。</b>ある開発現場で、測った数字を1つ書き間違えたまま
+        <b>8日間ずっと赤</b>になっていました。別の日には、単に走らせ忘れて
+        また赤のまま。どちらも「品質が落ちた」のではなく、<b>誰も見ていなかった</b>だけです。
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">なぜ内側では気づけないか</span>
+        <p><b>動かなかったものは、何も言いません。</b>
+        「無言だった」ことは、それ自身には分かりません（動いていないのだから）。
+        だから<b>外側に記録を置き、必ず前へ進むもの（更新の履歴）と照らし合わせます</b>。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">通ったときだけ記録する</span>
+        <p>検査が<b>ちゃんと通ったときにだけ</b>印が残る形にしてあります。
+        赤で止まっていれば印は残らないので、放置するほど差が開き、やがて知らせが出ます。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">これも「赤」にはしない</span>
+        <p>知らせは<b>「調べていません」</b>であって「悪くなりました」ではありません。
+        ここを赤にすると、<b>とりあえず印だけ付けて黙らせる</b>動機を作ってしまうためです
+        （台帳を無理に書かせると嘘の数字が入るのと、まったく同じ理由）。</p>
+      </div>
+
+      <div class="tip">
+        💡 <b>この仕組みの限界も書いておきます。</b>印は手作業でも付けられるので、
+        本気で回避しようと思えば回避できます。これは<b>「うっかり」を拾うための仕組み</b>であって、
+        意図的なごまかしを防ぐものではありません。
+      </div>
+    </div>
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
