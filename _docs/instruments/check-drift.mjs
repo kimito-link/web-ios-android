@@ -51,27 +51,29 @@ const PAIRS = [
     label: '進化台帳（判定）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/lib/improvement-ledger.mjs'),
     /*
-     * ★tsuioku の src/lib/improvementLedger.js は【表を内蔵する旧世代】。
-     *   キット版は★表を引数で受け取る形に変えた（空の表で偽の緑になる穴を塞ぐため・
-     *   2026-08-22 に実測で確認）。★設計が違うので実コード一致を要求しない。
-     *   tsuioku をキット版へ寄せたときに、ここへコピーを足す。
+     * ★キット自身が使っているコピー（2026-08-23〜。配る側が使わない仕組みは死ぬ）。
+     *
+     * ★tsuioku の src/lib/improvementLedger.js は【表を内蔵する旧世代】なので
+     *   ここには入れていない。キット版は★表を引数で受け取る形に変えてある
+     *   （空の表で偽の緑になる穴を塞ぐため・2026-08-22 に実測で確認）。
+     *   tsuioku をキット版へ寄せたときに、そのパスもここへ足す。
      */
-    copies: []
+    copies: [resolve(KIT_ROOT, 'scripts/lib/improvement-ledger.mjs')]
   },
   {
     label: '進化台帳（門番）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-improvement.mjs'),
-    copies: []
+    copies: [resolve(KIT_ROOT, 'scripts/check-improvement.mjs')]
   },
   {
     label: '進化台帳（記録の口）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/record-improvement.mjs'),
-    copies: []
+    copies: [resolve(KIT_ROOT, 'scripts/record-improvement.mjs')]
   },
   {
     label: '検査の実行記録（4つ目の状態）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-instrument-ran.mjs'),
-    copies: []
+    copies: [resolve(KIT_ROOT, 'scripts/check-instrument-ran.mjs')]
   }
 ];
 

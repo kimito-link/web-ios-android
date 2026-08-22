@@ -705,6 +705,62 @@
         意図的なごまかしを防ぐものではありません。
       </div>
     </div>
+    <div class="section-divider">
+      <h2>🪞 この仕組みは、まず<b>自分自身</b>に使っています</h2>
+      <div class="lead">
+        道具をくばる側が自分で使っていない道具は、渡された側もまず使いません。
+        ここで説明した仕組みは、<b>このキット自身の中で毎回動いています</b>。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">📦</span>くばる</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🪞</span>自分でも<br>使う</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🔧</span>使えないと<br>自分が困る</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">だから放置されません</div>
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ <b>くばっただけの道具は死にます。</b>このキットには前科があります。
+        診断の土台は前から同梱されていたのに、<b>入口が説明書の1行だけ</b>で誰も使いませんでした。
+        別の仕組みは配ったあと<b>3か月で登録1件のまま</b>止まりました。
+      </div>
+
+      <p style="font-size:0.94rem; color:#333; line-height:1.9; margin-top:14px;">
+        いま実際に見ている数字は次の3つです。どれも<b>このリポジトリの中だけで数えられる</b>ものに
+        限っています（実機の速さのように、測るたび条件が変わる数字は自動では記録しません。
+        条件の違う数字を並べると、比べてはいけないものを比べることになるからです）。
+      </p>
+
+      <table class="check-table">
+        <tr><th>見ている数字</th><th>いまの値と、なぜ見るのか</th></tr>
+        <tr>
+          <td><code>診断キットの検査本数</code></td>
+          <td><b>6本</b>（多いほど良い）。以前、検査が1本も走っていないのに
+          「全チェック緑」と表示されていた時期がありました。本数が減れば、
+          配っている検査が静かに消えたということです。</td>
+        </tr>
+        <tr>
+          <td><code>自己検査を持たない配布物</code></td>
+          <td><b>8本</b>（少ないほど良い）。わざと壊しても赤くならない検査は、
+          気づかないうちに全部を通してしまいます。これから減らしていく対象です。</td>
+        </tr>
+        <tr>
+          <td><code>自己検査を持たない診断</code></td>
+          <td><b>3本</b>（少ないほど良い）。新しい検査に自己検査を付け忘れると
+          ここが増えるので、その場で気づけます。</td>
+        </tr>
+      </table>
+
+      <div class="tip">
+        💡 この3つは<b>実際にコマンドを走らせて数えた値だけ</b>です。
+        見込みや目標は書きません。測らずに「こちらが良い」と決めてしまうと、
+        <b>正しく直した人を「悪くした」と判定して止めてしまう</b>ためです。
+      </div>
+    </div>
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
