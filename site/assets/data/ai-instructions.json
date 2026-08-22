@@ -1,0 +1,33 @@
+{
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。",
+  "diagnostics": {
+    "title": "🤖 このページをAIに実装させたい方へ",
+    "text": "このリポジトリ（またはフォルダ）を、web-ios-androidキットの汎用診断キットで検査して。\ntemplates/diagnostics/README.md を読んで、node templates/diagnostics/run.mjs <対象ディレクトリ> を実行し、\n出た結果（git add忘れ・lockfile不一致・秘密情報の追跡漏れ・巨大ファイルの誤コミット）を直して。\n（このキットの外のプロジェクトが対象なら\n https://github.com/kimito-link/web-ios-android/tree/main/templates/diagnostics\n から取得して。依存インストールは不要、Node標準機能だけで動く。）",
+    "note": ""
+  },
+  "health-check": {
+    "title": "🤖 このページをAIに実装させたい方へ",
+    "text": "このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。\n手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\n から取得して。）",
+    "note": "※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。本ページで説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル <code>_docs/instruments/IMPROVEMENT-RULES.md</code> を渡せますが、すぐ動くコードとして同梱されているのは診断側だけです。"
+  },
+  "measure-when-diagnostics-wont-open": {
+    "title": "🤖 「重すぎて開かない」への対処をAIにやらせたい方へ",
+    "text": "診断画面が重くて開けない不具合が出たら、ユーザーに操作を頼まず自分で測って。\n手順書 _docs/instruments/MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md を読んで、そこに書かれている\n7手（別インスタンスで実規模を再現→基準値→症状合成→CSS規則の実文確認→測れなかったものは\n測れなかったと書く）の順に進めて。",
+    "note": "※症状の出ている画面そのものでは測らない、が大原則です（測定が症状を悪化させるため）。"
+  },
+  "improvement-ledger": {
+    "title": "🤖 進化台帳（規約）をAIに読ませたい方へ",
+    "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを検討したい。\n規約ファイル _docs/instruments/IMPROVEMENT-RULES.md を読んで、方針（方向は指標ごとに宣言する・\n過去最良と比較する・記録忘れはfailにしない）を理解した上で、このアプリに合う指標案を提案して。",
+    "note": "※これは規約のみで、すぐ動く実装コードはまだキットに同梱されていません（実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには「設計方針」として渡すものです。"
+  },
+  "line-bot": {
+    "title": "🤖 このページをAIに実装させたい方へ",
+    "text": "このアプリに、web-ios-androidキットのLINE公式アカウントAI社員bot（無応答ゼロ化）を入れて。\n手順書 templates/line-bot/README.md を読んで、そこに書かれている通りに進めて。\napp.config.json の lineBot セクションを埋めて enabled: true にし、\ntemplates/line-bot/ をアプリの line-bot/ にコピーして {{...}} を置換すること。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\n から取得して。）",
+    "note": ""
+  },
+  "line-bot-features": {
+    "title": "🤖 このページをAIに実装させたい方へ",
+    "text": "このアプリのLINE公式アカウントAI社員botに、画像・動画・音声認識を追加して。\n手順書 templates/line-bot/README.md の「画像・動画・音声認識」の章を読んで、そこに書かれている通りに進めて。\nR2バケット作成・GEMINI_API_KEY投入・wrangler.tomlのr2_bucketsバインディング確認が必要。\n（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は\n https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\n から取得して。）",
+    "note": ""
+  }
+}

@@ -338,16 +338,21 @@ footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82
 }
 
 /* ── AIへの指示ブロック（コピペ用。機能ページ共通） ──
-   使い方: <div class="ai-box"> の中に <div class="ai-copy" id="一意なID">指示文</div> と
-   コピー用ボタン <button class="ai-copy-btn" onclick="...navigator.clipboard.writeText(...)">
-   を置く（features/health-check/ 参照）。「AIにこの機能を実装させたい」という導線が
-   ある機能ページ（診断・LINE bot 等）すべてで同じ見た目に揃える。2026-08-22追加。 */
-.ai-box {
+   正本はHTMLではなく assets/data/ai-instructions.json。
+   使い方: ページには空の <div class="ai-box-slot" data-ai-key="診断キー名"></div> だけを置き、
+   scripts/ai-box.js を読み込む（site-chrome.js の直後）。実行時にJSONを取得して
+   中身（見出し・指示文・コピーボタン・注記）を差し込み、クラスを ai-box-slot → ai-box に
+   差し替える。1ページに複数機能が乗る場合は data-ai-key の異なるスロットを並べるだけでよい
+   （features/health-check/ が3スロットの実例）。手順書のパスが変わった／新しい機能が
+   増えたときは ai-instructions.json だけを直せば全ページに反映される。HTMLへの直書きはしない。
+   2026-08-22 データ駆動化。 */
+.ai-box, .ai-box-slot {
   background: #1a1a2e;
   color: #e8e8f0;
   border-radius: 14px;
   padding: 20px 22px;
   margin: 32px 0 0;
+  min-height: 40px;
 }
 .ai-box h2, .ai-box h3 { font-size: 1.05rem; color: #fff; margin-bottom: 4px; }
 .ai-box .ai-sub { font-size: 0.82rem; color: #9a9ac0; margin-bottom: 14px; }

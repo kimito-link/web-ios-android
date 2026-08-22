@@ -220,25 +220,11 @@
       <p>くわしい手順は <code>templates/line-bot/README.md</code> を参照。</p>
     </div>
 
-    <div class="ai-box" id="ai-instructions">
-      <h2>🤖 このページをAIに実装させたい方へ</h2>
-      <div class="ai-sub">このURLをAIに貼って、下の指示をそのままコピペしてください</div>
-      <div class="ai-copy" id="ai-copy-text">このアプリに、web-ios-androidキットのLINE公式アカウントAI社員bot（無応答ゼロ化）を入れて。
-手順書 templates/line-bot/README.md を読んで、そこに書かれている通りに進めて。
-app.config.json の lineBot セクションを埋めて enabled: true にし、
-templates/line-bot/ をアプリの line-bot/ にコピーして {{...}} を置換すること。
-（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は
- https://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot
- から取得して。）</div>
-      <button class="ai-copy-btn" onclick="
-        navigator.clipboard.writeText(document.getElementById('ai-copy-text').textContent);
-        this.textContent = 'コピーしました';
-        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
-      ">コピー</button>
-    </div>
+    <div class="ai-box-slot" data-ai-key="line-bot" data-ai-data-path="../assets/data/ai-instructions.json"></div>
 
     <div id="site-footer"></div>
   </div>
   <script src="../scripts/site-chrome.js"></script>
+  <script src="../scripts/ai-box.js"></script>
 </body>
 </html>

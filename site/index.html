@@ -633,15 +633,20 @@
       .showcase-wrap { padding: 0 14px 32px; }
     }
 
-    /* ── AIへの指示ブロック（コピペ用） ── */
-    .ai-box {
+    /* ── AIへの指示ブロック（コピペ用。中身は scripts/ai-box.js が
+       assets/data/ai-instructions.json から実行時に差し込む） ──
+       .steps-grid は2カラムgridなので、直下に置く .ai-box は
+       grid-column:1/-1 で全幅にまたがせないと2カラムに割れて重なる。 */
+    .ai-box, .ai-box-slot {
+      grid-column: 1 / -1;
       background: #1a1a2e;
       color: #e8e8f0;
       border-radius: 14px;
       padding: 20px 22px;
       margin: 0 20px 28px;
+      min-height: 40px;
     }
-    .ai-box h3 { font-size: 1rem; color: #fff; margin-bottom: 4px; }
+    .ai-box h2, .ai-box h3 { font-size: 1rem; color: #fff; margin-bottom: 4px; }
     .ai-box .ai-sub { font-size: 0.8rem; color: #9a9ac0; margin-bottom: 12px; }
     .ai-copy {
       background: #0f0f1e;
@@ -1015,18 +1020,11 @@
       </div>
     </div>
 
-    <div class="ai-box" id="ai-instructions">
-      <h3>🤖 このAIに実装させたい方へ</h3>
-      <div class="ai-sub">AIに下の指示をそのままコピペしてください</div>
-      <div class="ai-copy" id="ai-copy-text-lp">このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。
-手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。</div>
-      <button class="ai-copy-btn" onclick="
-        navigator.clipboard.writeText(document.getElementById('ai-copy-text-lp').textContent);
-        this.textContent = 'コピーしました';
-        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
-      ">コピー</button>
-      <div class="ai-note">
-        詳しい仕組みと「進化台帳」の現状（規約のみ配布・実装は実証中）は
+    <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="measure-when-diagnostics-wont-open" data-ai-data-path="assets/data/ai-instructions.json"></div>
+    <div class="ai-box" style="margin-top:14px;">
+      <div class="ai-note" style="margin-top:0;">
+        「進化台帳」（過去最良との比較で退化を止める仕組み）の指示文と現状（規約のみ配布・実装は実証中）は
         <a href="features/health-check/#ai-instructions" style="color:#a0b4ff; font-weight:700;">けんこう診断の仕組みページ</a> へ。
       </div>
     </div>
@@ -1313,6 +1311,7 @@ function toggle(btn) {
 }
 </script>
 <script src="scripts/site-chrome.js"></script>
+<script src="scripts/ai-box.js"></script>
 
 </body>
 </html>

@@ -281,27 +281,9 @@
       </div>
     </div>
 
-    <div class="ai-box" id="ai-instructions">
-      <h2>🤖 このページをAIに実装させたい方へ</h2>
-      <div class="ai-sub">このURLをAIに貼って、下の指示をそのままコピペしてください</div>
-      <div class="ai-copy" id="ai-copy-text">このアプリに、web-ios-androidキットの計器（診断の仕組み）を入れて。
-手順書 _docs/instruments/HANDOFF-new-app.md を読んで、そこに書かれている通りに進めて。
-（このキットの中で作業している場合はリポジトリ直下から読める。無い場合は
- https://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments
- から取得して。）</div>
-      <button class="ai-copy-btn" onclick="
-        navigator.clipboard.writeText(document.getElementById('ai-copy-text').textContent);
-        this.textContent = 'コピーしました';
-        setTimeout(() => { this.textContent = 'コピー'; }, 1500);
-      ">コピー</button>
-      <div class="ai-note">
-        ※「診断」（3値exit・selftest・SHAPE検査）は実装コードごと配布済みです。
-        本ページ後半で説明した「進化台帳」（過去最良との比較）は、まだ規約のみの配布です
-        （実装は <code>tsuioku-no-kirameki.com</code> で実証運用中）。AIには規約ファイル
-        <code>_docs/instruments/IMPROVEMENT-RULES.md</code> を渡せますが、
-        すぐ動くコードとして同梱されているのは診断側だけです。
-      </div>
-    </div>
+    <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="measure-when-diagnostics-wont-open" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
   </div>
 </div>
@@ -309,5 +291,6 @@
 <div id="site-footer"></div>
 
 <script src="../../scripts/site-chrome.js"></script>
+<script src="../../scripts/ai-box.js"></script>
 </body>
 </html>
