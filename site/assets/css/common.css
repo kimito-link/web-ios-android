@@ -26,6 +26,7 @@
  *   前後ナビ ..................................... ── 前後ナビ ──
  *   ページ末尾フッター（見た目のみ。本体は上記footer） ── フッター ──
  *   AIへの指示ブロック（コピペ用。機能ページ共通） ── AIへの指示ブロック ──
+ *   AIへの指示 一覧（全ページ共通・フッター直前） .... ── AIへの指示 一覧 ──
  *
  * ■ ブレークポイント一覧（このファイル内。ページ固有<style>は含まない）
  *   max-width: 1600px … ヘッダーnavをハンバーガーに切り替え（11項目が横に収まらないため）
@@ -383,3 +384,18 @@ footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82
 .ai-copy-btn:hover { background: #5568d3; }
 .ai-box .ai-note { font-size: 0.78rem; color: #8888aa; margin-top: 10px; line-height: 1.7; }
 .ai-box .ai-note a { color: #a0b4ff; }
+
+/* ── AIへの指示 一覧（全ページ共通フッター直前。site-chrome.js が差し込むスロット） ──
+   個別の ai-box とは別物: 「このキットで何をAIに任せられるか」の総覧をリンクだけで出す。
+   健康診断ページ以外の機能ページに気づけないという声を受けて追加（2026-08-22）。 */
+.ai-index-slot { min-height: 1px; }
+.ai-index {
+  max-width: 760px;
+  margin: 40px auto 0;
+  padding: 16px 18px;
+  border-top: 1px dashed #d8dce6;
+}
+.ai-index-title { font-size: 0.82rem; font-weight: 800; color: #667eea; margin-bottom: 8px; }
+.ai-index-links { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.ai-index-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
+.ai-index-links a:hover { text-decoration: underline; }

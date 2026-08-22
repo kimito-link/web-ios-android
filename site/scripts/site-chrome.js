@@ -91,7 +91,16 @@
     var headerSlot = document.getElementById('site-header');
     var footerSlot = document.getElementById('site-footer');
     if (headerSlot) headerSlot.outerHTML = buildHeader();
-    if (footerSlot) footerSlot.outerHTML = buildFooter();
+    if (footerSlot) {
+      // フッター直前に「AIへの指示 一覧」のスロットを自動で差し込む。
+      // ai-box.js（このスクリプトの後に読み込まれる想定）がこれを見つけて描画する。
+      // ai-box.js を読み込んでいないページでは空の div のまま残るだけで実害はない。
+      var indexSlot = document.createElement('div');
+      indexSlot.className = 'ai-index-slot';
+      indexSlot.setAttribute('data-ai-data-path', '/assets/data/ai-instructions.json');
+      footerSlot.parentNode.insertBefore(indexSlot, footerSlot);
+      footerSlot.outerHTML = buildFooter();
+    }
     mountToggle();
   });
 })();
