@@ -1065,19 +1065,22 @@
           ★逆方向の工夫もあります。数字は「小さいほど良い」とは限りません
           （エラー率は0%が良い、失敗を検知できた回数は多い方が良い、など）。
           このキットは指標ごとに「どちらの方向が良いか」を先に決めてから測るので、
-          <b>正しく直した人を「悪化させた」と誤判定して止めてしまう事故</b>を防いでいます。
+          <b>正しく直した人を「悪化させた」と誤判定して止めてしまう事故</b>を防いでいます。<br><br>
+          ★さらに、この見張り役<b>そのものが動いていない</b>状態も検出します。
+          「赤いまま放置された検査」は、緑と同じくらい危険だからです
+          （実際、別のプロジェクトで<b>8日間も赤に気づかなかった</b>ことがありました）。
+          検査が最後に通った時点を記録しておき、そこから更新が重なると
+          「そもそも走っていないのでは」と知らせます。<br><br>
+          ★<b>測る項目そのものは、はじめは空っぽで届きます。</b>
+          何を測るべきかはアプリごとに違うので、実際に測ってから足す作りです
+          （測らずに「こちらが良い」と決めると、正しい修正を止めてしまうため）。
         </div>
       </div>
     </div>
 
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="assets/data/ai-instructions.json"></div>
-    <div class="ai-box" style="margin-top:14px;">
-      <div class="ai-note" style="margin-top:0;">
-        「進化台帳」（過去最良との比較で退化を止める仕組み）の指示文と現状（規約のみ配布・実装は実証中）は
-        <a href="features/health-check/#ai-instructions" style="color:#a0b4ff; font-weight:700;">けんこう診断の仕組みページ</a> へ。
-      </div>
-    </div>
+    <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="assets/data/ai-instructions.json"></div>
 
     <!-- ⑦ 知見を書き戻して、次はもっと早くなる（おまけ） -->
     <div class="step step-bonus">
