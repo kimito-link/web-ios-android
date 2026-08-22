@@ -39,6 +39,9 @@ const CHECKS = [
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
   { name: 'check-symptom-index', path: join(__dirname, 'check-symptom-index.mjs') },
+  // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
+  //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
+  { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
@@ -54,7 +57,10 @@ for (const check of CHECKS) {
   try {
     // check-tracked-imports.mjs は引数を取らず process.cwd() 基準で動く契約(正本の既存仕様)。
     // 自作3本は引数(対象ディレクトリ)も見るが、cwd をTARGET_DIRに揃えれば両方が正しく動く。
-    const scanDir = check.selfTarget ? __dirname : TARGET_DIR;
+    // ★selfTarget=この diagnostics 自身 / kitRoot=キットのルート(site/ を見るため)
+    const scanDir = check.kitRoot
+      ? join(__dirname, '..', '..')
+      : check.selfTarget ? __dirname : TARGET_DIR;
     const output = execFileSync('node', [check.path, scanDir], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
     process.stdout.write(output);
     const status = /\(skip\)/.test(output) ? 'skip' : 'pass';

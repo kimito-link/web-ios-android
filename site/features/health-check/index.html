@@ -224,6 +224,48 @@
         追加インストールも不要（Node標準機能だけで動きます）。
       </div>
 
+      <div class="rule-box" id="layout-rule">
+        <h3>📁 使う前に：どこに置くか（これだけ守れば自動で繋がります）</h3>
+        <p>
+          このキットは<b>1つの親フォルダの下に、プロジェクトを横に並べる</b>形を前提にしています。
+          この形なら、検査は<b>症状の定義も原因の索引も自分で見つけます</b>（引数を渡す必要がありません）。
+        </p>
+        <pre><code>github/            ← 親フォルダ（名前は何でもよい）
+  ├ ai-hub/         ← 原因の索引（index.json）★これが横に居ることが大事
+  ├ web-ios-android/← このキット
+  ├ your-app-a/     ← あなたのプロジェクト
+  └ your-app-b/</code></pre>
+        <p class="note">
+          <b>探す場所は決め打ちしていません。</b>下の順に見て、最初に見つかったものを使います。
+        </p>
+        <table class="gate-table">
+          <thead><tr><th>探すもの</th><th>見る場所（上から順に）</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>症状の定義</td>
+              <td><code>src/lib/symptomVerdicts.js</code> → <code>src/lib/symptoms.js</code> → <code>lib/symptomVerdicts.js</code></td>
+            </tr>
+            <tr>
+              <td>原因の索引</td>
+              <td><code>../ai-hub/index.json</code> → <code>ai-hub/index.json</code> → <code>_docs/index.json</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <b>別の場所に置きたいときは、場所を渡してください。</b>
+        </p>
+        <pre><code>node templates/diagnostics/check-symptom-index.mjs \
+  --symptoms path/to/symptoms.js \
+  --index    path/to/index.json</code></pre>
+        <p class="note">
+          ★<b>見つからなくても、勝手に「問題なし」にはしません。</b>
+          症状の仕組みをまだ入れていなければ「まだありません（skip）」と入れ方を案内し、
+          <b>症状はあるのに索引だけ見つからない</b>ときは
+          <b>「測れませんでした」</b>として区別します
+          （＝<b>入れたのに繋がっていない</b>合図です）。
+        </p>
+      </div>
+
       <div class="rule-box">
         <h3>★検査そのものが「サボると赤くなるか」を確かめているか</h3>
         <p>
