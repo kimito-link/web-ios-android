@@ -93,6 +93,17 @@
       font-size: 0.82rem; overflow-x: auto; margin: 14px 0;
     }
     .code-block .cmt { color: #8888aa; }
+
+    /* 出荷事故ゲートの表: スマホでは横に潰さず縦積みにする
+       (2026-08-22 実測: th の nowrap でセルが215pxまで潰れ、説明が読めなかった) */
+    .gate-table code { word-break: break-all; }
+    @media (max-width: 640px) {
+      .gate-table, .gate-table tbody, .gate-table tr, .gate-table td, .gate-table th { display: block; width: 100%; }
+      .gate-table thead { display: none; }
+      .gate-table tr { border-bottom: 1px solid #e7eaf0; padding: 10px 0; }
+      .gate-table td, .gate-table th { border-bottom: none; padding: 4px 0; white-space: normal; }
+      .gate-table td:first-child { color: #667eea; font-weight: 800; }
+    }
   </style>
 </head>
 <body>
@@ -222,7 +233,7 @@
       </div>
 
       <h3 style="font-size:1rem; color:#667eea; margin:22px 0 8px;">ストア審査で弾かれる前に止める</h3>
-      <table class="check-table">
+      <table class="check-table gate-table">
         <tr><th>ゲート</th><th>止める事故（出典）</th></tr>
         <tr>
           <td><code>verify-ios-splash-not-default</code></td>
