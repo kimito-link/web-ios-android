@@ -42,6 +42,11 @@ const CHECKS = [
   // ★「遅い」と言われる経路に時間を測る計器があるか(2026-08-23追加)。
   //   実損: 計器が無い経路の遅さを推測で3回直そうとして3回とも外した。
   { name: 'check-timing-instrumented', path: join(__dirname, 'check-timing-instrumented.mjs') },
+  // ★製品が「異常なし」を自分で名乗れるか(2026-08-24追加)。
+  //   実損: 製品を起動する重い検査76本(1回22分)が見つけた製品の不具合は【0件】で、
+  //   実際の不具合5件はオーナーの報告と★製品自身の診断ログから見つかっていた。
+  //   ⟹ 重い検査を減らすなら、その前に「沈黙と正常を区別できる」ことが要る。
+  { name: 'check-heartbeat-present', path: join(__dirname, 'check-heartbeat-present.mjs') },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
