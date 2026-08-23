@@ -39,6 +39,9 @@ const CHECKS = [
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
   { name: 'check-symptom-index', path: join(__dirname, 'check-symptom-index.mjs') },
+  // ★「遅い」と言われる経路に時間を測る計器があるか(2026-08-23追加)。
+  //   実損: 計器が無い経路の遅さを推測で3回直そうとして3回とも外した。
+  { name: 'check-timing-instrumented', path: join(__dirname, 'check-timing-instrumented.mjs') },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
