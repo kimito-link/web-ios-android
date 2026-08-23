@@ -36,6 +36,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-large-tracked-files` | 5MB超の誤コミット（リポジトリ肥大化） |
 | `check-selftest-coverage` | **検査自身が「サボると赤くなるか」を確かめていない**もの |
 | `check-symptom-index` | **症状の言葉で過去の原因を引けない**もの |
+| `check-timing-instrumented` | **「遅い」と言われる経路に時間を測る計器が無い**もの |
 | `check-docs-match-code` | 説明とコードのズレ |
 
 ## いちばん大事な設計：3値で答えます
