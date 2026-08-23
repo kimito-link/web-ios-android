@@ -48,7 +48,7 @@
  *   node check-timing-instrumented.mjs --selftest   ← ★自分自身を毒で試す
  */
 
-import { readFileSync, existsSync, readdirSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -118,17 +118,44 @@ export function scanDirectory(dir) {
   const untimed = [];
   let total = 0;
   let files = 0;
-  for (const name of readdirSync(dir)) {
-    if (!SRC_FILE_RE.test(name)) continue;
-    files += 1;
-    let src = '';
-    try { src = readFileSync(join(dir, name), 'utf8'); } catch { continue; }
-    for (const fn of splitFunctions(src)) {
-      if (!ACTION_NAME_RE.test(fn.name)) continue;
-      total += 1;
-      if (!(hasTiming(fn.body) && reportsTiming(fn.body))) untimed.push(`${name}: ${fn.name}`);
+  // ★下の階層まで探す(2026-08-24)。
+  //
+  // 【なぜ直したか】最初の実装は【渡されたフォルダの直下だけ】を見ていた。
+  // そのため run.mjs からリポジトリのルートを渡されると
+  // ★ソースが1本も見つからず、毎回「測れませんでした」で終わっていた。
+  // 手で src を渡したときだけ動くので、私は「動いている」と思い込んでいた。
+  // ⟹ ★わざと引数を足さないと動かない検査は、実質【使われない検査】。
+  //   このキットが繰り返し戒めている「登録されない仕組みは死ぬ」と同じ型。
+  //
+  // ビルド生成物や依存は見ない(遅いうえ、直せないものを数えても意味が無い)。
+  const SKIP_DIR = new Set(['node_modules', '.git', 'dist', 'build', 'out',
+    'vendor', 'coverage', '.next', 'target', 'bin', 'obj']);
+  const walk = (d, depth) => {
+    if (depth > 4) return;                      // ★深追いしない(実測で十分な深さ)
+    let items = [];
+    try { items = readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const it of items) {
+      if (it.isDirectory()) {
+        // ★dist-demo / build-old のような派生も除く。完全一致だけだと
+        //   生成物を数えて【同じ関数を二重に数える】(実測で dist-demo が漏れた)。
+        const skip = SKIP_DIR.has(it.name) || it.name.startsWith('.')
+          || [...SKIP_DIR].some((k) => it.name.startsWith(k + '-'));
+        if (skip) continue;
+        walk(join(d, it.name), depth + 1);
+        continue;
+      }
+      if (!SRC_FILE_RE.test(it.name)) continue;
+      files += 1;
+      let src = '';
+      try { src = readFileSync(join(d, it.name), 'utf8'); } catch { continue; }
+      for (const fn of splitFunctions(src)) {
+        if (!ACTION_NAME_RE.test(fn.name)) continue;
+        total += 1;
+        if (!(hasTiming(fn.body) && reportsTiming(fn.body))) untimed.push(`${it.name}: ${fn.name}`);
+      }
     }
-  }
+  };
+  walk(dir, 0);
   if (files === 0) {
     // ★「ソースが1本も無い」は合格ではない。測れなかった(コード2)。
     return { ok: false, total: 0, untimed: [], reason: 'ソースファイルが1本も見つからない' };
@@ -197,6 +224,26 @@ function runSelftest() {
   const noAction = mkdtempSync(join(tmpdir(), 'nl-timing-noaction-'));
   writeFileSync(join(noAction, 'a.mjs'), 'function helper(a) {\n  return a;\n}\n');
   if (scanDirectory(noAction).ok) fails.push('★操作0件を合格にしている');
+
+  // ⑦-b ★下の階層のソースも見つけること。
+  //   最初の実装は直下しか見ておらず、リポジトリのルートを渡されると
+  //   毎回「測れませんでした」で終わっていた(実損)。
+  //   ★手で src を渡したときだけ動くので「動いている」と誤認していた。
+  const nested = mkdtempSync(join(tmpdir(), 'nl-timing-nested-'));
+  mkdirSync(join(nested, 'src'), { recursive: true });
+  writeFileSync(join(nested, 'src', 'a.mjs'), 'function PasteThing(a) {\n  return a;\n}\n');
+  const rn = scanDirectory(nested);
+  if (!(rn.ok && rn.total === 1))
+    fails.push('★下の階層のソースを見つけられない: ' + JSON.stringify(rn));
+
+  // ⑦-c ★node_modules は見ないこと(遅いうえ、直せないものを数えても意味が無い)
+  const withDeps = mkdtempSync(join(tmpdir(), 'nl-timing-deps-'));
+  mkdirSync(join(withDeps, 'node_modules', 'x'), { recursive: true });
+  writeFileSync(join(withDeps, 'node_modules', 'x', 'b.mjs'), 'function PasteOther(a) {\n  return a;\n}\n');
+  writeFileSync(join(withDeps, 'c.mjs'), 'function PasteMine(a) {\n  return a;\n}\n');
+  const rd = scanDirectory(withDeps);
+  if (!(rd.ok && rd.total === 1))
+    fails.push('★node_modules を数えてしまっている: ' + JSON.stringify(rd));
 
   // ⑧ ★正の対照: 本物の未計測を1件だけ置いて、ちゃんと1件と数えること
   const one = mkdtempSync(join(tmpdir(), 'nl-timing-one-'));
