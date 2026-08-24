@@ -16,6 +16,7 @@
  *   node scripts/run-splash-gates.mjs --allow-missing-dark
  *   node scripts/run-splash-gates.mjs --origin ../splash/templates/scripts
  *   node scripts/run-splash-gates.mjs --skip-drift
+ *   node scripts/run-splash-gates.mjs --dry-run   # 検査を実行せず、配線の健全性だけ見る
  */
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -81,6 +82,32 @@ if (!argv.includes('--skip-drift')) {
     script: 'check-splash-template-drift.mjs',
     args: origin ? ['--origin', origin] : [],
   });
+}
+
+// ★--dry-run: 検査自体は走らせず「配線が health か」だけを見る。
+//   site/claims.json の level:"auto" を名乗る条件（verify-claims-coverage.mjs RULE 3）を満たすため。
+//   ここで検査本体を走らせないのは、対象リポ（キット自身）に capacitor.config が無く、
+//   実行すると常に🟡になってしまい「配線の健全性」と「対象の状態」を区別できなくなるため。
+if (argv.includes('--dry-run')) {
+  const missing = gates
+    .map((g) => ({ ...g, path: join(HERE, g.script) }))
+    .filter((g) => !existsSync(g.path));
+
+  console.log('[run-splash-gates] --dry-run（検査は実行しない・配線のみ確認）');
+  for (const gate of gates) {
+    const present = existsSync(join(HERE, gate.script));
+    console.log(`  ${present ? '✅' : '🔴'} ${gate.name} → ${gate.script}`);
+  }
+
+  if (missing.length) {
+    console.error(
+      `\n🔴 検査スクリプトが ${missing.length}件 見つからない: ${missing.map((m) => m.script).join(', ')}`,
+    );
+    process.exit(1);
+  }
+  console.log('\n✅ 配線OK（全検査スクリプトが実在する）');
+  console.log('★--dry-run が見ないこと: 各検査の判定結果。実際の合否は --dry-run 無しで実行すること。');
+  process.exit(0);
 }
 
 let worst = 0;

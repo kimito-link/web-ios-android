@@ -14,6 +14,12 @@
       "verify": "templates/scripts/cloudflare-auth.mjs"
     },
     {
+      "id": "splash-gates",
+      "label": "起動画面（スプラッシュ）の伸び・ダーク未対応・色フラッシュを出荷前に検出",
+      "level": "auto",
+      "verify": "templates/scripts/run-splash-gates.mjs"
+    },
+    {
       "id": "store-submission",
       "label": "iOS/Android/Chrome拡張のストア提出まで自動で進む（審査の合否・最後の一押しは人間）",
       "level": "assisted",
