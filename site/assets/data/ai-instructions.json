@@ -58,11 +58,11 @@
   },
   "splash-screen": {
     "order": 8,
-    "page": "/features/health-check/",
-    "indexLabel": "🌅 起動直後の画像崩れを自動確認する",
-    "title": "🤖 起動画面の生成と検査をAIに実装させたい方へ",
-    "text": "このアプリの起動画面（スプラッシュ）を、web-ios-androidキットの正本に合わせて生成・検査して。\nhttps://github.com/kimito-link/web-ios-android/blob/main/_docs/SPLASH-SCREEN-PLAYBOOK.md\nを読み、templates/scripts/lib/splash-manifest.mjs の SPLASH_TEMPLATE_FILES に載っている全ファイルを scripts/ の同じ構成へ入れる。これには生成器、設定・ダーク版・安全円・配布版の各検査、まとめランナー、共通土台が含まれる。\npackage.json に splash:generate / splash:check / splash:selftest を配線し、まず npm run splash:selftest、次に npm run splash:generate、最後に npm run splash:check を実行する。\n赤は修正し、測れなかった項目を合格へ丸めない。Expoなら安全円検査も本体素材へ実行する。全部合格しても実機の見え方は判定できないため、iPhone・Androidで最後に1回ずつ目視し、未確認なら未確認と報告する。",
-    "note": "※自動検査は設定・画像・配布元との差を確認します。端末ごとの色味や大きさを保証するものではありません。"
+    "page": "/features/health-check/#splash-check",
+    "indexLabel": "🎬 起動画面は公式の標準どおりに作る",
+    "title": "🤖 起動画面（スプラッシュ）をAIに任せる方へ",
+    "text": "このアプリの起動画面（スプラッシュ）を用意して。★自作の生成コードは書かないこと。\nhttps://web-ios-android.vercel.app/features/health-check/#splash-check を読むこと。\n\n手順:\n1. 元画像を assets/ に置く。splash.png（2732x2732以上）と、必要ならダーク用 splash-dark.png。\n   ファイル名は公式が決めた規定名。元画像が無いなら「無い」と報告して止まること。\n   ★勝手に単色などのプレースホルダを生成して埋めないこと（原版が無い状態を隠すことになる）。\n2. 全サイズへの展開は公式ツール @capacitor/assets に任せる。\n   npx @capacitor/assets generate --android --androidProject android --assetPath assets\n   背景色は app.config.json の brand.splashBackgroundColor から読み、ハードコードしない。\n   ダークモードは splash-dark.png を置けば公式が drawable-night-* を自動生成する（自作不要）。\n3. 公式が面倒を見ない所だけ検査する。キットの scripts/ へ入れるのは次の3種だけ:\n   verify-ios-splash-not-default.mjs / verify-android-splash-not-default.mjs（既定画像のまま出荷していないか）\n   check-splash-config.mjs（androidScaleType 未設定=引き伸ばし、背景色4箇所の不一致=色のちらつき）\n   Expo prebuild 方式なら check-splash-safe-circle.mjs も。\n\n★2026-08-25時点の方針: 以前このキットにあった生成器（generate-capacitor-splash.mjs）、\nダーク版の同一検査、まとめランナーは廃止した。公式ツールで足りる範囲を自作していたため。\nそれらを復活させないこと。\n\n赤は直し、測れなかった項目を合格に丸めないこと。\n全部合格しても実機の見え方は判定できないので、iPhone・Androidで最後に1回ずつ目視し、\n未確認なら未確認と報告すること。",
+    "note": "※検査が見るのは設定と画像ファイルです。端末ごとの色味や大きさの好みは保証しません。"
   },
   "line-bot": {
     "order": 9,
