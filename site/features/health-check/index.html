@@ -87,6 +87,16 @@
     .check-table th { color: #667eea; font-weight: 800; white-space: nowrap; }
     .check-table code { background: #eef0ff; padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
 
+    /* 起動画面の生成デモ動画。max-width:100% で親からはみ出さない（スマホ実測対策） */
+    .splash-demo { margin: 16px 0; }
+    .splash-demo video {
+      display: block; width: 100%; height: auto; max-width: 100%;
+      border-radius: 12px; border: 1px solid #e7eaf0; background: #f7f9fc;
+    }
+    .splash-demo figcaption {
+      margin-top: 8px; font-size: 0.82rem; color: #555; line-height: 1.7;
+    }
+
     .code-block {
       background: #1a1a2e; color: #e8e8f0; border-radius: 10px;
       padding: 14px 16px; font-family: 'SFMono-Regular', Consolas, monospace;
@@ -258,6 +268,19 @@
           ダークモード用も <code>splash-dark.png</code> という決まった名前を置けば公式が対応します。
           <b>ここに自前の生成処理を書き足す必要はありません。</b>
         </p>
+
+        <figure class="splash-demo">
+          <video
+            src="../../videos/splash-assets-demo.mp4"
+            poster="../../videos/splash-assets-demo-poster.jpg"
+            controls muted playsinline preload="none"
+            width="1280" height="720"
+            aria-describedby="splash-demo-cap"></video>
+          <figcaption id="splash-demo-cap">
+            実際に <code>@capacitor/assets</code> を動かした結果です。元の画像2枚から
+            <b>26ファイル</b>（通常13＋ダーク13）が自動生成されました。自分で書いたコードは0行です。
+          </figcaption>
+        </figure>
 
         <table class="gate-table">
           <thead><tr><th>誰がやるか</th><th>内容</th></tr></thead>
