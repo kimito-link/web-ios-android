@@ -45,28 +45,59 @@ node templates/scripts/verify-security-score.mjs --url https://example.com --loc
 
 ---
 
-## 2. チェックしている項目（malwarecheck.site の WEIGHTS と対応）
+## 2. チェックしている項目（malwarecheck.site の WEIGHTS 全26項目との対応）
 
-| 項目 | 減点 | 何を見るか |
-|---|---|---|
-| httpsMissing | 25 | HTTPS到達性 |
-| sslError | 20 | ※現状未実装（TLS証明書エラーの検出はNode標準fetchでは限界があるため見送り） |
-| envFileExposed | 30 | `/.env` がGETで200を返すか |
-| gitDirExposed | 25 | `/.git/config` がGETで200を返すか |
-| hstsMissing | 3 | `Strict-Transport-Security` ヘッダー |
-| cspMissing | 8 | `Content-Security-Policy` ヘッダー |
-| xFrameOptionsMissing | 5 | `X-Frame-Options`（またはCSPの`frame-ancestors`） |
-| xContentTypeMissing | 4 | `X-Content-Type-Options: nosniff` |
-| referrerPolicyMissing | 3 | `Referrer-Policy` |
-| permissionsPolicyMissing | 2 | `Permissions-Policy` |
-| serverVersionExposed | 4 | `Server` ヘッダーにバージョン番号が出ていないか |
-| poweredByExposed | 4 | `X-Powered-By` ヘッダーの有無 |
-| cookieInsecure | 6 | `Set-Cookie` に `Secure`/`HttpOnly` があるか |
+★**車輪の再発明をしない方針（2026-08-25確立）**: malwarecheck.site 本体は
+26項目すべてを正式実装済みの公式スコアリングエンジン。それを自前で再実装するのは
+車輪の再発明であり、かつ移植の過程で必ずズレる。だから**正確な判定は必ず本体実測
+（`scoreViaMalwarecheck`）に委ねる**。内部先取り（`scoreUrl`）は「本体が一時的に
+使えないときの最低限の目安」に位置づけを絞り、以下13項目のみを持つ
+（`--local-only` で内部先取りだけを見られるが、これは満点の証明にはならない）。
+
+| WEIGHTS全項目 | 減点 | 内部先取り | 本体実測 |
+|---|---|---|---|
+| httpsMissing | 25 | ✅ | ✅ |
+| sslError | 20 | ❌（Node標準fetchでは証明書検証の詳細が取れないため見送り） | ✅ |
+| hstsMissing | 3 | ✅ | ✅ |
+| cspMissing | 8 | ✅ | ✅ |
+| xFrameOptionsMissing | 5 | ✅ | ✅ |
+| xContentTypeMissing | 4 | ✅ | ✅ |
+| referrerPolicyMissing | 3 | ✅ | ✅ |
+| permissionsPolicyMissing | 2 | ✅ | ✅ |
+| wpPathExposed | 5 | ❌ | ✅ |
+| wpVersionExposed | 5 | ❌ | ✅ |
+| externalScriptsMany | 8 | ❌ | ✅ |
+| suspiciousExternalDomain | 15 | ❌ | ✅ |
+| iframeMany | 8 | ❌ | ✅ |
+| redirectChainLong | 12 | ❌ | ✅ |
+| redirectCrossDomain | 15 | ❌ | ✅ |
+| redirectTampering | 15 | ❌ | ✅ |
+| robotsMissing | 2 | ❌ | ✅ |
+| sitemapMissing | 2 | ❌ | ✅ |
+| titleMetaAbnormal | 8 | ❌ | ✅ |
+| unreachable | 30 | △（到達不可はinconclusive扱いで代替） | ✅ |
+| envFileExposed | 30 | ✅ | ✅ |
+| gitDirExposed | 25 | ✅ | ✅ |
+| backupFileExposed | 18 | ❌ | ✅ |
+| directoryListing | 12 | ❌ | ✅ |
+| serverVersionExposed | 4 | ✅ | ✅ |
+| poweredByExposed | 4 | ✅ | ✅ |
+| cookieInsecure | 6 | ✅ | ✅ |
+| credentialInsecureAction | 10 | ❌ | ✅ |
+
+★上記に加えて本体実測は `reputation`（VirusTotal等の外部評価API連携）、
+`email-hygiene`（SPF/DMARC）、`surface`（crt.sh証明書透明性ログ照合）、
+`injection-surface`（SQLi/XSS受動シグネチャ）、`credential`（ログインフォーム静的解析）
+の各カテゴリも持つ。これらは外部API連携・専用パーサが要るため内部先取りには
+移植していない（同じ理由＝再発明しない）。
 
 ★**この検査の限界**（`verify-security-score.mjs` の出力にも毎回明記される）:
-- 内部先取りはヘッダ・HTML静的解析で完結する項目のみ。本体実測で不足分を補う。
+- 内部先取りはヘッダ・HTML静的解析で完結する13項目のみ。**正式なスコアは本体実測**。
 - 公開URLだけを外部サービスへ送る。秘密情報やローカルファイルは送らない。
 - 「100点」は外部から見える簡易診断の満点であり、安全性や感染の有無を保証しない。
+- `reputation`カテゴリ（VirusTotal等）の減点は**自サイトの設定不備ではない**。
+  ヘッダを直しても消えない（実測: 2026-08-25、`malwarecheck.site`自身がこのカテゴリで
+  減点されるケースを確認済み。`howToFix`はカテゴリ別に案内を分けてある）。
 
 ---
 

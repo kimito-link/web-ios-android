@@ -204,6 +204,7 @@ async function scoreViaMalwarecheck(targetUrl) {
   const deductions = Array.isArray(data.checks)
     ? data.checks.filter((check) => Number(check?.deduction) > 0).map((check) => ({
         id: String(check.id || 'unknown'),
+        category: String(check.category || ''),
         title: String(check.title || check.id || '確認項目'),
         weight: Number(check.deduction),
         detail: String(check.message || ''),
@@ -344,8 +345,26 @@ if (external?.verdict === 'inconclusive') {
 
 if (result.verdict === 'fail' || external?.verdict === 'fail') {
   const localLines = result.deductions.map((d) => `内部先取り: ${d.detail}（-${d.weight}点）`);
-  const externalLines = (external?.deductions || []).map((d) => `本体実測: ${d.title}（-${d.weight}点）`);
+  const externalLines = (external?.deductions || []).map((d) => `本体実測: ${d.title}${d.category ? `[${d.category}]` : ''}（-${d.weight}点）`);
   const lines = [...localLines, ...externalLines].join(' / ');
+
+  // ★howToFixを画一化しない。reputationカテゴリ（VirusTotal等の外部評価）は
+  //   ヘッダ設定では直せない、自サイト以外の要因（誤検知・過去の汚染歴等）のため、
+  //   ヘッダ修正案内を出すと見当違いの作業をさせてしまう（実測: 2026-08-25、
+  //   このリポでmalwarecheck.site自身がreputation-VirusTotalで-10点を出した）。
+  const externalCategories = new Set((external?.deductions || []).map((d) => d.category));
+  const howToFixParts = [];
+  if (result.deductions.length > 0) {
+    howToFixParts.push('内部先取りの減点はヘッダ・ファイル公開設定を直す（Vercel/Cloudflare Pages の場合は next.config / _headers 等）');
+  }
+  const nonReputation = (external?.deductions || []).filter((d) => d.category !== 'reputation');
+  if (nonReputation.length > 0) {
+    howToFixParts.push('本体実測の減点（reputation以外）は malwarecheck.site の各チェックのmessageに従って設定を直す');
+  }
+  if (externalCategories.has('reputation')) {
+    howToFixParts.push('reputationカテゴリの減点は自サイトの設定不備ではなく外部評価サービス（VirusTotal等）の判定。ヘッダ修正では直らない。該当サービスへの誤検知申告、または時間経過での再評価を待つ必要がある');
+  }
+
   console.log(formatProbeReport([{
     probe: `malwarecheck.site満点チェック (${targetUrl})`,
     verdict: 'fail',
@@ -355,7 +374,7 @@ if (result.verdict === 'fail' || external?.verdict === 'fail') {
       減点項目数: result.deductions.length + (external?.deductions?.length || 0),
     },
     detail: lines,
-    howToFix: '減点項目のヘッダ・ファイル公開設定を直す（Vercel/Cloudflare Pages の場合は next.config / _headers 等）',
+    howToFix: howToFixParts.join(' / ') || '減点内容を確認して直す',
     limitation: '外部から見える範囲の簡易診断。サーバー内部の安全性や感染の有無を保証するものではない',
   }]));
   process.exit(EXIT.FAIL);
