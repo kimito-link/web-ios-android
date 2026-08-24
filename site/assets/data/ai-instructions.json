@@ -1,5 +1,5 @@
 {
-  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger/context-evolution/shindan-version-page/security-score は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止。2026-08-24、security-score・全文脈の進化ループ・本体の診断進捗ページを追加）。一覧では同じpageは代表1件のみ表示される。",
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger/context-evolution/shindan-version-page/security-score/responsive-design は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止。2026-08-24、security-score・全文脈の進化ループ・本体の診断進捗ページを追加。2026-08-25、responsive-designを追加）。一覧では同じpageは代表1件のみ表示される。",
   "diagnostics": {
     "order": 1,
     "page": "/features/health-check/",
@@ -56,8 +56,16 @@
     "text": "このアプリのWebサイトに、出荷前セキュリティスコアの完全チェックを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの SECURITY-SCORE.md を読んで、そこに書かれている通りに進めて。\n実装は templates/scripts/verify-security-score.mjs（依存ゼロ・純Node）をコピーして使う:\n  node verify-security-score.mjs\napp.config.json の identity.productionDomain を自動で読み、まずセキュリティヘッダーや .env・.git の露出を内部で先取り確認する。\n続けて malwarecheck.site 本体の公開診断APIへ公開URLだけを送り、本体スコアも実測する。\n内部100点・本体100点の両方がそろったときだけ完了にする。\n★秘密情報やローカルファイルは外部へ送らない。公開URLへの受動チェックだけで、攻撃・侵入・総当たりは一切しない。\n100点は外部から見える簡易診断の満点であり、安全性の保証とは書かない。",
     "note": "※通常実行は内部先取りとmalwarecheck.site本体実測の2段階です。外部サービスを使えない場合の --local-only は、最終的な本体100点確認の代わりにはなりません。"
   },
-  "splash-screen": {
+  "responsive-design": {
     "order": 8,
+    "page": "/features/health-check/",
+    "indexLabel": "📱 レスポンシブ設計を抜け漏れなくチェックする",
+    "title": "🤖 レスポンシブ設計チェックをAIに実装させたい方へ",
+    "text": "このアプリのWebサイトに、出荷前レスポンシブ設計の完全チェックを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの RESPONSIVE-CHECK.md を読んで、そこに書かれている通りに進めて。\n実装は templates/scripts/verify-responsive-design.mjs（依存ゼロ・純Node）をコピーして使う:\n  node verify-responsive-design.mjs\n固定px幅・viewportメタタグ欠如・メディアクエリ不在・overflow-x制御なし・極小フォントを静的解析で先取り検出する。\n★これは軽量な先取りゲート。正式な「実際にどう見えるか」の判定は自前で再実装せず、\n実ブラウザで375/768/1024/1440pxを実際に開いて実測すること（responsive-checkスキル、またはPlaywright）。\n静的解析が緑でも、実ブラウザ実測をせずに完了と報告しないこと。",
+    "note": "※静的解析はCSS標準の既知パターンだけを見ます。CSS Gridの2次崩れ・JS動的スタイル・フォント読み込みタイミングによるレイアウトシフトは検出できないため、出荷前は必ず実ブラウザでの実測を併用してください。"
+  },
+  "splash-screen": {
+    "order": 9,
     "page": "/features/health-check/#splash-check",
     "indexLabel": "🎬 起動画面は公式の標準どおりに作る",
     "title": "🤖 起動画面（スプラッシュ）をAIに任せる方へ",
@@ -65,7 +73,7 @@
     "note": "※検査が見るのは設定と画像ファイルです。端末ごとの色味や大きさの好みは保証しません。"
   },
   "line-bot": {
-    "order": 9,
+    "order": 10,
     "page": "/line-bot/",
     "indexLabel": "💬 LINEのAI社員bot（無応答ゼロ化）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
@@ -73,7 +81,7 @@
     "note": ""
   },
   "line-bot-features": {
-    "order": 10,
+    "order": 11,
     "page": "/line-bot-features/",
     "indexLabel": "🖼️ LINE botに画像・動画・音声認識を追加する",
     "title": "🤖 このページをAIに実装させたい方へ",

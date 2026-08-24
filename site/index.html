@@ -135,6 +135,20 @@
     .security-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
     .security-links a { padding: 9px 12px; border: 1px solid #ffffff40; border-radius: 999px; color: #fff; text-decoration: none; font-size: .78rem; font-weight: 900; }
 
+    /* レスポンシブ設計チェック（security-panel と同型・別カラー） */
+    .responsive-panel { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 24px; align-items: center; padding: 30px; border-radius: 22px; background: #16324f; color: #fff; box-shadow: 0 16px 40px #14213d24; }
+    .responsive-panel h2 { margin: 6px 0 12px; }
+    .responsive-panel p { color: #d8deec; }
+    .responsive-flow { display: grid; gap: 10px; margin-top: 20px; list-style: none; counter-reset: responsive; }
+    .responsive-flow li { counter-increment: responsive; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; color: #eef2fb; font-size: .9rem; }
+    .responsive-flow li::before { content: counter(responsive); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; background: #ffffff18; color: var(--yellow); font-weight: 900; }
+    .responsive-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+    .responsive-links a { padding: 9px 12px; border: 1px solid #ffffff40; border-radius: 999px; color: #fff; text-decoration: none; font-size: .78rem; font-weight: 900; }
+    .responsive-widths { padding: 24px; border: 1px solid #ffffff28; border-radius: 18px; background: #ffffff0d; text-align: center; }
+    .responsive-widths strong { display: block; color: var(--yellow); font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.3; }
+    .responsive-widths b { display: block; margin-top: 8px; }
+    .responsive-widths small { display: block; margin-top: 9px; color: #bdc7da; }
+
     .version-wrap { max-width: 860px; margin: 0 auto; }
     .faq-list { max-width: 820px; margin: 0 auto; display: grid; gap: 10px; }
     .faq-card { padding: 0; overflow: hidden; }
@@ -151,7 +165,7 @@
     .trust-line { margin-top: 18px; color: #bfc8dc; font-size: .8rem; }
 
     @media (max-width: 880px) {
-      .hero-grid, .ai-split, .security-panel { grid-template-columns: 1fr; }
+      .hero-grid, .ai-split, .security-panel, .responsive-panel { grid-template-columns: 1fr; }
       .hero-visual { order: -1; }
       .characters img { width: 82px; }
       .characters img:nth-child(2) { width: 102px; }
@@ -281,6 +295,7 @@
 最初に START-HERE.md、CLAUDE.md、app.config.json を読み、現在の状態を確認してください。
 不足している情報は一度に並べず、作業を止めるものだけ1問ずつ確認してください。
 Webを公開したら npm run security:score を実行し、内部先取りと malwarecheck.site 本体の両方が100点になるまで直してください。
+あわせて npm run responsive:check を実行し、崩れやすい書き方が見つかったら直したうえで、375/768/1024/1440pxの実ブラウザ表示も確認してください。
 人の確認が必要な作業と、自動で進められる作業を分けて進め、最後に完了・未完了・次にすることを日本語でまとめてください。<button class="copy-button" type="button" data-copy-target="starter-prompt">開始文をコピー</button></div>
           </article>
           <aside class="ai-card">
@@ -362,6 +377,29 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
             <strong>100</strong>
             <b>本体を取得できた実測で100点確認</b>
             <small>連続診断でVercelの確認画面が出た回は未計測として分けます。100点は外部から見える簡易診断であり、安全性を完全に保証するものではありません。</small>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-white" aria-labelledby="responsive-title">
+      <div class="container">
+        <div class="responsive-panel">
+          <div>
+            <p class="section-kicker">どの画面サイズでも崩れない</p>
+            <h2 id="responsive-title">崩れやすい書き方をコードで先に見つけ、実ブラウザで最終確認</h2>
+            <p>スマホ・タブレット・PCなど画面幅が違うだけで、横スクロールが出たり文字が読めなくなったりします。固定px幅やviewport設定漏れをコードのまま先に見つけ、最後は実際のブラウザで見た目を確認します。</p>
+            <ol class="responsive-flow">
+              <li>固定px幅・viewportタグの欠如・メディアクエリ不在などをコードで先に検出</li>
+              <li>375px・768px・1024px・1440pxで実際にブラウザを開いて実測</li>
+              <li>横スクロール・見切れ・重なりがゼロであることを確認</li>
+            </ol>
+            <div class="responsive-links"><a href="features/health-check/#responsive-check">仕組みを詳しく見る</a></div>
+          </div>
+          <aside class="responsive-widths" aria-label="レスポンシブ確認幅">
+            <strong>375 / 768 / 1024 / 1440px</strong>
+            <b>主要4幅を実ブラウザで実測</b>
+            <small>見た目の最終判定は自作の判定エンジンではなく、実際のブラウザに任せます。</small>
           </aside>
         </div>
       </div>

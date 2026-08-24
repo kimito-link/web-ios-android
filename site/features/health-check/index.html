@@ -442,6 +442,42 @@
 
       <div class="ai-box-slot" data-ai-key="security-score" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
+      <div class="rule-box" id="responsive-check">
+        <h3>📱 レスポンシブ設計を抜け漏れなくチェックする</h3>
+        <p>
+          スマホ・タブレット・PCなど画面サイズが違うだけで、横スクロールが出たり
+          文字が読めないほど小さくなったりすることがあります。<b>崩れやすい書き方を
+          コードのまま先に見つけ、最後に実際のブラウザで見た目を確認する</b>
+          2段階の検査にしています。
+        </p>
+        <div class="illust illust-blue">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+            <div class="fbox"><span class="fi">📄</span>CSSを<br>静的解析</div>
+            <div class="farr">→</div>
+            <div class="fbox"><span class="fi">📱</span>崩れやすい<br>書き方を検出</div>
+            <div class="farr">→</div>
+            <div class="fbox"><span class="fi">🖥️</span>実ブラウザで<br>375〜1440pxを実測</div>
+            <div class="farr">→</div>
+            <div class="fbox ok"><span class="fi">✅</span>横スクロール<br>ゼロを確認</div>
+          </div>
+          <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">見た目の最終判定は、自作の判定エンジンではなく実際のブラウザに任せます</div>
+        </div>
+        <div class="code-block">
+          <span class="cmt"># site/ 配下のCSS・HTMLを静的解析</span><br>
+          node templates/scripts/verify-responsive-design.mjs
+        </div>
+        <p class="note">
+          ★<b>「実際にどう見えるか」の判定は自前で再実装しません。</b>ブラウザのレイアウト
+          計算をコードで完全再現するのは車輪の再発明であり、必ずズレます。
+          静的解析は「固定px幅」「viewportタグの欠如」「メディアクエリの不在」といった
+          <b>崩れやすい既知パターンの先取りゲート</b>に留め、正式な判定は実ブラウザでの
+          実測（375px・768px・1024px・1440pxで実際に開いて横スクロール・見切れを確認）
+          に委ねています。
+        </p>
+      </div>
+
+      <div class="ai-box-slot" data-ai-key="responsive-design" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+
     </div>
 
     <div class="section-divider">

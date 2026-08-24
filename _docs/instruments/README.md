@@ -33,6 +33,7 @@
 | ★起動画面（スプラッシュ）完全検査 | [`templates/scripts/run-splash-gates.mjs`](../../templates/scripts/run-splash-gates.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | ★設定・背景色・ダーク版・配布元との差を集約。実機目視は別に残す |
 | ★全文脈パケット＋判断の進化台帳 | [`templates/scripts/context-engine.mjs`](../../templates/scripts/context-engine.mjs) / [`context-evolution.json`](../../templates/scripts/context-evolution.json) | ★全追跡・未追跡ファイル、Git全履歴、現在差分、確定/却下/未確定を出典つきで1枚化 |
 | ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
+| ★レスポンシブ設計の静的先取り＋実ブラウザ実測の使い分け | [`templates/scripts/verify-responsive-design.mjs`](../../templates/scripts/verify-responsive-design.mjs) / [`RESPONSIVE-CHECK.md`](RESPONSIVE-CHECK.md) | ★2026-08-25 配布開始。`--selftest` 3ケース。正式判定は実ブラウザ実測に委ねる |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
@@ -302,6 +303,17 @@ node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.
 ★新しいアプリには `/check-shindan-version/` を標準搭載します。
 進捗率は品質点ではなく、導入・配線・実測・履歴・公開の確認できた節目の割合です。
 黄（未計測）を緑に混ぜず、根拠と次の一手まで表示します。
+
+---
+
+## 3.8.1 ★レスポンシブ設計を抜け漏れなくチェックする
+
+→ [**RESPONSIVE-CHECK.md**](RESPONSIVE-CHECK.md)
+
+★崩れやすいCSSパターン（固定px幅・viewport欠如・メディアクエリ不在・overflow-x制御なし・
+極小フォント）を静的解析で先取りします。★車輪の再発明はしない: 「実際にどう見えるか」の
+正式判定は自前で再実装せず、実ブラウザ実測（`responsive-check`スキル、または業界標準の
+Playwright）に委ねます。静的解析はあくまで軽量な先取りゲートという位置づけです。
 
 ---
 
