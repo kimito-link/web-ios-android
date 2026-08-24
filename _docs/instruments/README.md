@@ -29,6 +29,7 @@
 | ★進化台帳（記録の1本の口） | [`templates/scripts/record-improvement.mjs`](../../templates/scripts/record-improvement.mjs) | `--selftest` 5ケース |
 | ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
 | ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
+| ★セキュリティスコア先取り（malwarecheck.site満点チェック） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 3ケース |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
 **配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
@@ -257,6 +258,16 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 # 配線（★緑のときだけ「走った」記録が残る形にする）
 node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement
 ```
+
+---
+
+## 3.6 ★出荷前に「malwarecheck.site満点」を先取りする
+
+→ [**SECURITY-SCORE.md**](SECURITY-SCORE.md)
+
+★malwarecheck.site の減点基準（セキュリティヘッダー・`.env`/`.git`露出等）を移植し、
+出荷前に同じ基準でセルフチェックする。★「公開URLへのGETのみ」の不変条件は継承済み
+（能動的な脆弱性テスト・ポートスキャン・総当たりはしない）。
 
 ---
 

@@ -334,6 +334,38 @@
 
       <div class="ai-box-slot" data-ai-key="diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
+      <div class="rule-box">
+        <h3>🔒 出荷前に「セキュリティ診断で満点」を先取りする</h3>
+        <p>
+          セキュリティ診断サービス（<code>malwarecheck.site</code>など）に自分のWebサイトを投げると、
+          セキュリティヘッダーの設定漏れや <code>.env</code> ファイルの公開放置などで
+          減点されることがあります。<b>出荷してから気づくのではなく、出荷前に同じ基準で
+          自分でチェックできる</b>ようにしたのがこの検査です。
+        </p>
+        <div class="illust illust-green">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+            <div class="fbox"><span class="fi">🌐</span>公開URLに<br>GETするだけ</div>
+            <div class="farr">→</div>
+            <div class="fbox"><span class="fi">🔒</span>ヘッダー・<br>露出を確認</div>
+            <div class="farr">→</div>
+            <div class="fbox ok"><span class="fi">💯</span>減点ゼロを<br>確認</div>
+          </div>
+          <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">攻撃・侵入・総当たりは一切しません（外形の確認のみ）</div>
+        </div>
+        <div class="code-block">
+          <span class="cmt"># app.config.json の productionDomain を自動で読んでチェック</span><br>
+          node templates/scripts/verify-security-score.mjs
+        </div>
+        <p class="note">
+          ★<b>公開URLへのGETのみ</b>で完結します。SQLi/XSSの実注入テストやポートスキャン、
+          パスワードの総当たりは<b>一切行いません</b>（セキュリティ診断サービス側の
+          設計方針をそのまま継承しています）。「兆候が無い」ことは「絶対安全」を
+          意味しない、という限界も検査結果に毎回明記されます。
+        </p>
+      </div>
+
+      <div class="ai-box-slot" data-ai-key="security-score" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+
     </div>
 
     <div class="section-divider">

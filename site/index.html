@@ -1083,6 +1083,38 @@
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="assets/data/ai-instructions.json"></div>
 
+    <!-- ⑥.7 出荷前にセキュリティ診断で満点を先取りする（おまけ） -->
+    <div class="step step-bonus">
+      <div class="step-top">
+        <div class="step-circle">🔒</div>
+        <div class="step-main">
+          <h3>出荷前に「セキュリティ診断で満点」を先取りする<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">セキュリティヘッダーの設定漏れなどを、出してから気づかない</p>
+        </div>
+        <div class="step-char">
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
+        </div>
+      </div>
+      <div class="illust illust-green" style="flex-direction:column; gap:10px; align-items:stretch;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🌐</span>公開URLに<br>GETするだけ</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">💯</span>減点ゼロを<br>先に確認</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#aaa;">攻撃・侵入・総当たりは一切しません（外形の確認のみ）</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        セキュリティ診断サービスに自分のサイトを投げると、セキュリティヘッダーの設定漏れや
+        <code>.env</code>ファイルの公開放置などで減点されることがあります。出荷してから
+        気づくのではなく、出荷前に同じ基準で自分でチェックできる仕組みを同梱しています。
+        <div class="tip">💡 公開URLへのGETのみで完結します。SQLi/XSSの実注入テストやポートスキャンは一切行いません。くわしくは <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。</div>
+      </div>
+    </div>
+
+    <div class="ai-box-slot" data-ai-key="security-score" data-ai-data-path="assets/data/ai-instructions.json"></div>
+
     <!-- ⑦ 知見を書き戻して、次はもっと早くなる（おまけ） -->
     <div class="step step-bonus">
       <div class="step-top">

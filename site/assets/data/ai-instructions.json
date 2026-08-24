@@ -1,5 +1,5 @@
 {
-  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止）。一覧では同じpageは代表1件のみ表示される。",
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger/security-score は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止。2026-08-24、security-score追加）。一覧では同じpageは代表1件のみ表示される。",
   "diagnostics": {
     "order": 1,
     "page": "/features/health-check/",
@@ -32,8 +32,16 @@
     "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの IMPROVEMENT-RULES.md を読んで、そこに書かれている通りに進めて。\n実装（判定・記録の口・門番）は templates/scripts/ に入っているのでコピーして使う:\ncheck-improvement.mjs / record-improvement.mjs / lib/improvement-ledger.mjs /\nimprovement-metrics.mjs / improvement-history.mjs。\n★指標テーブル（improvement-metrics.mjs）は空で始めて、実測してから足すこと。\n実測せずに方向（better）を宣言すると、正しくない向きを機械で固定してしまう。\nあわせて check-instrument-ran.mjs も入れて、門番がそもそも走っていない状態を検出して。\n配線は「検査が緑のときだけ記録が残る」形にする:\n  node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
     "note": "※実装コードごと配布済みです（2026-08-22〜）。★指標テーブルだけは空で配ります ── どの数字を測るかはアプリごとに違い、実測せずに方向を宣言すると正しく直した人を「退化させた」と誤判定して止めてしまうためです。"
   },
-  "line-bot": {
+  "security-score": {
     "order": 5,
+    "page": "/features/health-check/",
+    "indexLabel": "🔒 セキュリティスコアを出荷前にチェックする",
+    "title": "🤖 セキュリティスコアチェックをAIに実装させたい方へ",
+    "text": "このアプリのWebサイトに、出荷前セキュリティスコアのセルフチェックを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの SECURITY-SCORE.md を読んで、そこに書かれている通りに進めて。\n実装は templates/scripts/verify-security-score.mjs（依存ゼロ・純Node）をコピーして使う:\n  node verify-security-score.mjs\napp.config.json の identity.productionDomain を自動で読んでGETし、\nセキュリティヘッダー（HSTS/CSP/X-Frame-Options等）や .env・.git の露出を、\nmalwarecheck.site の減点基準と同じ項目でチェックする。\n★公開URLへのGETのみで、攻撃・侵入・総当たりは一切しない設計（不変条件）。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
+    "note": "※malwarecheck.site（外部サイトを診断するセキュリティチェックサービス）の減点基準を移植したもの。出荷前にこのスクリプトで満点相当を確認しておけば、実際にmalwarecheck.siteのようなサービスへ投げても減点されにくくなります。"
+  },
+  "line-bot": {
+    "order": 6,
     "page": "/line-bot/",
     "indexLabel": "💬 LINEのAI社員bot（無応答ゼロ化）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
@@ -41,7 +49,7 @@
     "note": ""
   },
   "line-bot-features": {
-    "order": 6,
+    "order": 7,
     "page": "/line-bot-features/",
     "indexLabel": "🖼️ LINE botに画像・動画・音声認識を追加する",
     "title": "🤖 このページをAIに実装させたい方へ",
