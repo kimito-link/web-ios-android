@@ -27,9 +27,8 @@
     "instrument:selftest": "node templates/scripts/run-instruments.mjs --selftest",
     "security:score": "node templates/scripts/verify-security-score.mjs --url https://web-ios-android.vercel.app",
     "security:score:selftest": "node templates/scripts/verify-security-score.mjs --selftest",
-    "splash:generate": "node templates/scripts/generate-capacitor-splash.mjs",
-    "splash:check": "node templates/scripts/run-splash-gates.mjs --skip-drift",
-    "splash:selftest": "node templates/scripts/check-splash-config.mjs --selftest && node templates/scripts/check-splash-dark-variant.mjs --selftest && node templates/scripts/check-splash-safe-circle.mjs --selftest && node templates/scripts/check-splash-template-drift.mjs --selftest && node templates/scripts/run-splash-gates.mjs --selftest",
+    "splash:check": "node templates/scripts/check-splash-config.mjs",
+    "splash:selftest": "node templates/scripts/check-splash-config.mjs --selftest && node templates/scripts/check-splash-safe-circle.mjs --selftest && node templates/scripts/check-splash-template-drift.mjs --selftest",
     "shindan": "node templates/scripts/generate-shindan-version.mjs --measure --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android",
     "shindan:update": "node templates/scripts/generate-shindan-version.mjs --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android"
   },

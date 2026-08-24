@@ -33,11 +33,8 @@
 | `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・iOS版(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
 | `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
-| `scripts/generate-capacitor-splash.mjs` | スプラッシュのマスター素材(`assets/splash.png`/`splash-dark.png`)を用意する(無ければブランド色で生成、既存は上書きしない)。★ios/android 両リリース CI が名指しで呼ぶのに、2026-08-24までキットに実体が無く、5リポがそれぞれ自力実装した結果5つとも中身が違っていた事故の再発防止 | **無改変**(`--out-dir` は検証用の脱出口。app.config.json の `brand.primaryColor`/`accentColor` を読む) |
-| `scripts/check-splash-config.mjs` | Android の `androidScaleType` 未設定(既定=引き伸ばし)と、背景色の4箇所不一致(白フラッシュ)を検査。Expo prebuild 方式では自動的に対象外(🟡)になる | **無改変**(`node scripts/run-splash-gates.mjs` から呼ばれる) |
-| `scripts/check-splash-dark-variant.mjs` | `splash.png`/`splash-dark.png` が**中身まで別画像**かをハッシュで検査。「ファイルは2つあるが同一データ」という、存在チェックでは見つからない事故を検出 | **無改変**(同上) |
+| `scripts/check-splash-config.mjs` | Android の `androidScaleType` 未設定(既定=引き伸ばし)と、背景色の4箇所不一致(白フラッシュ)を検査。Expo prebuild 方式では自動的に対象外(🟡)になる | **無改変**(リリースCIが直接呼ぶ) |
 | `scripts/check-splash-safe-circle.mjs` | Expo prebuild 方式向け。Android 12+ の円形マスクでロゴが切れないか(透過PNGか・安全円の内側か)を検査。詳細は [`SPLASH-SCREEN-PLAYBOOK.md`](../_docs/SPLASH-SCREEN-PLAYBOOK.md) | **無改変**(同上) |
-| `scripts/run-splash-gates.mjs` | 上記スプラッシュ検査群をまとめて走らせる入口。終了コードは一番悪いものを返す(fail > inconclusive > pass) | **無改変**(`--allow-missing-dark`/`--config`/`--dir` で調整) |
 | `scripts/lib/splash-manifest.mjs` | スプラッシュ検査群の配布版と対象ファイル一覧(このキットが正本) | 無改変 |
 | `scripts/check-tracked-imports.mjs` | **新規ファイルの `git add` 忘れ検出ゲート**。git 追跡ファイルだけで相対 import が全解決するか静的検査= git clone 直後(CI/Vercel/ストアビルド)の実体を再現。ローカル検証は作業ツリー基準なので原理的に検出できない穴を塞ぐ。思想は [`../docs/ai-rules/04_SELF_VERIFICATION.md`](../docs/ai-rules/04_SELF_VERIFICATION.md) §5 | **無改変**(`TRACKED_IMPORT_ROOTS` env で対象限定可。CI の build 直後と pre-push に置く) |
 | `scripts/lib/instrument-core.mjs`<br>★[計器のやりとりはこちら](../_docs/instruments/README.md) | **検査の共通土台(依存ゼロ)**。★終了コードを3値にする(0=合格 / 1=測れた上での赤 / ★2=測れなかった)。`normalizeProbeResult` が★**根拠(evidence)なき pass を自動で inconclusive へ降格**＝「何も測っていないのに緑」を構造的に潰す(2026-08-17 に `audit-native-cta.mjs` が引数なしで「✅0件」と出した偽の緑と同じ型)。`runSelfTest` は毒→赤→finally復帰の定型。赤のときは3行(何が/直し方/★この検査の限界)を出す | **無改変**(新しい検査を書くときに import する。見本は `audit-native-cta.mjs --selftest`) |

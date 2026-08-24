@@ -15,9 +15,9 @@
     },
     {
       "id": "splash-gates",
-      "label": "起動画面（スプラッシュ）の伸び・ダーク未対応・色フラッシュを出荷前に検出",
+      "label": "起動画面（スプラッシュ）の伸び・色フラッシュを出荷前に検出",
       "level": "auto",
-      "verify": "templates/scripts/run-splash-gates.mjs"
+      "verify": "templates/scripts/check-splash-config.mjs"
     },
     {
       "id": "store-submission",

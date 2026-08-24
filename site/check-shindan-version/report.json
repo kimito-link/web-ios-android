@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T07:11:30.536Z",
-  "generatedAtLabel": "2026/08/24 16:11",
-  "commit": "c0363e97",
+  "generatedAt": "2026-08-24T13:53:12.348Z",
+  "generatedAtLabel": "2026/08/24 22:53",
+  "commit": "e0fea62e",
   "measurement": {
     "attempted": true,
     "exitCode": 2
@@ -16,15 +16,15 @@
     "accentColor": "#11a36a"
   },
   "progress": {
-    "completed": 26,
-    "total": 28,
-    "percent": 93
+    "completed": 23,
+    "total": 26,
+    "percent": 88
   },
   "counts": {
-    "pass": 26,
+    "pass": 23,
     "warning": 0,
     "fail": 0,
-    "unmeasured": 2
+    "unmeasured": 3
   },
   "stages": [
     {
@@ -61,9 +61,9 @@
           "nextAction": ""
         },
         {
-          "label": "起動画面の完全検査",
+          "label": "起動画面の設定検査",
           "status": "pass",
-          "evidence": "templates/scripts/run-splash-gates.mjs",
+          "evidence": "templates/scripts/check-splash-config.mjs",
           "nextAction": ""
         },
         {
@@ -86,7 +86,7 @@
         {
           "label": "計器レポート",
           "status": "pass",
-          "evidence": "2026-08-24T07:11:30.519Z",
+          "evidence": "2026-08-24T13:53:12.337Z",
           "nextAction": "npm run shindan を実行する"
         },
         {
@@ -201,24 +201,18 @@
       "title": "起動画面の自己検査",
       "summary": "起動直後の画像崩れを見つける検査自体が、壊れずに赤・黄・緑を返せるか。",
       "status": "pass",
-      "completed": 6,
-      "total": 6,
+      "completed": 4,
+      "total": 4,
       "percent": 100,
       "checks": [
         {
-          "label": "起動画面の完全検査",
+          "label": "起動画面の設定検査",
           "status": "pass",
-          "evidence": "templates/scripts/run-splash-gates.mjs",
+          "evidence": "templates/scripts/check-splash-config.mjs",
           "nextAction": ""
         },
         {
           "label": "起動画面設定 selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
-        },
-        {
-          "label": "起動画面ダーク版 selftest",
           "status": "pass",
           "evidence": "pass / exit 0",
           "nextAction": ""
@@ -234,12 +228,6 @@
           "status": "pass",
           "evidence": "pass / exit 0",
           "nextAction": ""
-        },
-        {
-          "label": "起動画面検査 runner selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
         }
       ]
     },
@@ -247,10 +235,10 @@
       "id": "security",
       "title": "公開前の安全確認",
       "summary": "診断ページを含む公開サイトを、安全側の基準で点検できるか。",
-      "status": "pass",
-      "completed": 3,
+      "status": "warning",
+      "completed": 2,
       "total": 3,
-      "percent": 100,
+      "percent": 67,
       "checks": [
         {
           "label": "セキュリティ計器",
@@ -266,9 +254,9 @@
         },
         {
           "label": "公開サイトのセキュリティ満点チェック",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "inconclusive / exit 2",
+          "nextAction": "本番URLを公開して npm run shindan を再実行する"
         }
       ]
     }
@@ -311,7 +299,7 @@
     "publicLatest": [
       {
         "version": "0.1.1",
-        "label": "malwarecheck.site本体で公開サイトを100点確認",
+        "label": "malwarecheck.site本体で公開サイトを実測する仕組みを追加",
         "value": "",
         "unit": ""
       },

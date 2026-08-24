@@ -155,26 +155,44 @@ node scripts/check-splash-safe-circle.mjs              # 本体
 
 ## ★Capacitor用の完全検査（2026-08-24追加）
 
-Capacitor系は「全面1枚絵」方式ですが、画像を用意しただけでは不十分です。
-このキットでは次の6ファイルを正本として配り、CIからも同じ検査を実行します。
+### ★画像の生成は公式ツールに任せる（2026-08-24 方針転換）
+
+**原版（2732×2732）はデザインした1枚をリポにコミットし、全サイズ展開は公式の
+[`@capacitor/assets`](https://capacitorjs.com/docs/guides/splash-screens-and-icons) に任せます。**
+公式の標準構成は `assets/` に `icon-only.png` / `splash.png` / `splash-dark.png` を置くだけで、
+**ダークモードも公式が標準対応**しています（`splash-dark.png` という規定ファイル名）。
+
+かつてこのキットには `generate-capacitor-splash.mjs`（原版が無ければ単色を自動生成）が
+ありましたが、廃止しました。理由:
+
+- **fail-closed の逆だった**。原版が無いリポでも単色プレースホルダが置かれ、
+  「誰もデザインしていない画面」が出荷防止ゲートを緑で素通りしていた。
+  原版が無いなら**赤で止まる**のが正しい。
+- GOLDEN-RULES 原則7 は元々「マスターを `store-assets/` に**コミット**」と定めており、
+  自動生成はそのルール自体と矛盾していた。
+- 5リポにコピーされ**5つとも中身が違う**状態を生み、うち4リポで通常版とダーク版が
+  同一データになる事故を起こしていた（同じバッファを2回書いていた）。
+
+いま配っているのは検査だけです。
 
 | ファイル | 役割 |
 |---|---|
-| `generate-capacitor-splash.mjs` | 2732×2732の通常版・ダーク版を同じ条件で生成 |
-| `check-splash-config.mjs` | Androidの引き伸ばし、背景色、プラグイン設定を確認 |
-| `check-splash-dark-variant.mjs` | 通常版とダーク版が名前だけでなく実際に違うか確認 |
-| `check-splash-template-drift.mjs` | 各アプリへコピーした検査が正本から古くなっていないか確認 |
-| `run-splash-gates.mjs` | 赤・黄・緑をまとめ、1件でも赤なら赤として終了 |
+| `verify-ios-splash-not-default.mjs` | Capacitorデフォルト画像のまま出荷していないか（iOS・Contents.json基準） |
+| `verify-android-splash-not-default.mjs` | 同（Android・固定パス群のハッシュ比較） |
+| `check-splash-config.mjs` | Androidの引き伸ばし、背景色4箇所の一致を確認 |
+| `check-splash-safe-circle.mjs` | Expo方式向け。Android 12+の円形マスクで絵柄が切れないか |
+| `check-splash-template-drift.mjs` | 各アプリへコピーした検査が正本から古くなっていないか |
 | `lib/splash-manifest.mjs` | 正本の版と、配布対象ファイルを1か所で管理 |
 
 ```bash
 npm run splash:selftest  # 検査自体が壊れていないか確認
-npm run splash:generate  # 通常版・ダーク版を生成
-npm run splash:check     # 設定・素材・版ずれをまとめて確認
+npm run splash:check     # 設定（引き伸ばし・背景色）を確認
 ```
 
-Android / iOS の出荷ワークフローも `run-splash-gates.mjs --skip-drift` を実行します。
-CI内では正本との差を取る場所が無い場合があるため版ずれだけ省き、設定と素材は必ず検査します。
+出荷ワークフローは「原版の実在確認 → デフォルトのハッシュ記録 → 公式ツールで生成 →
+デフォルトのままでないか照合 → 設定検査」の順で実行します。
+背景色は `app.config.json` の `brand.splashBackgroundColor` から読みます
+（以前は `#0A0A0F` がCIに直書きされ、ブランド色が無視されていました）。
 
 ★**限界**: 全部緑でも、実機で見える色・大きさ・切り替わりの好みまでは分かりません。
 最後にiPhone・Android実機で1回ずつ目視し、未確認なら未確認のまま残します。

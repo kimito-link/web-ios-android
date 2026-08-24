@@ -62,10 +62,7 @@ on:
       - "scripts/verify-signing-material-path.mjs"
       - "scripts/verify-android-splash-not-default.mjs"
       - "scripts/verify-webdir-consistency.mjs"
-      - "scripts/generate-capacitor-splash.mjs"
       - "scripts/check-splash-config.mjs"
-      - "scripts/check-splash-dark-variant.mjs"
-      - "scripts/run-splash-gates.mjs"
       - "scripts/lib/splash-manifest.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # Play release. Same lesson as the iOS workflow path-filter fix:
@@ -178,17 +175,23 @@ jobs:
             fi
             cp "$MASTER" assets/icon-only.png
           fi
-          # スプラッシュソースは iOS と共用（generate-capacitor-splash.mjs は
-          # プラットフォーム非依存で assets/splash*.png を出力するだけ）。
-          node scripts/generate-capacitor-splash.mjs
+          # ★原版はリポにコミットされている前提（GOLDEN-RULES 原則7）。CI では生成しない。
+          #   2026-08-24まで generate-capacitor-splash.mjs が「無ければ単色を作る」動作をしていたが、
+          #   それは「原版が無い」というエラーを握りつぶし、誰もデザインしていない単色画面を
+          #   ゲート素通りで出荷させる装置になっていた（fail-closed の逆）。原版が無いなら赤で止める。
+          test -f assets/splash.png || { echo "::error::assets/splash.png（デザイン原版）が無い。store-assets のマスターをコミットすること"; exit 1; }
           # 生成「前」に、Capacitor デフォルトのスプラッシュ画像のハッシュを記録。
           node scripts/verify-android-splash-not-default.mjs --snapshot
-          npx @capacitor/assets generate --android --androidProject android --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
+          # 背景色は app.config.json のブランド値から読む（旧: '#0A0A0F' ハードコード）。
+          # ★値は「テーマの明暗」でなく**スプラッシュ画像の地色**に合わせる（GOLDEN-RULES 原則3）。
+          BG=$(node -p "JSON.parse(require('fs').readFileSync('app.config.json','utf8')).brand?.splashBackgroundColor ?? '#0A0A0F'")
+          BG_DARK=$(node -p "JSON.parse(require('fs').readFileSync('app.config.json','utf8')).brand?.splashBackgroundColorDark ?? '$BG'")
+          npx @capacitor/assets generate --android --androidProject android --assetPath assets --splashBackgroundColor "$BG" --splashBackgroundColorDark "$BG_DARK"
           # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
           node scripts/verify-android-splash-not-default.mjs --verify
           # ★androidScaleType 未設定(既定=引き伸ばし)を検出（2026-08-24追加）。
           #   実測: このキット利用リポの過半数が既定のまま=Androidだけ縦に伸びていた。
-          node scripts/run-splash-gates.mjs --skip-drift
+          node scripts/check-splash-config.mjs
 
       - name: Set Android versionName/versionCode from package.json and CI run number
         run: |

@@ -33,10 +33,9 @@ export const SPLASH_TEMPLATE_ORIGIN =
 export const SPLASH_TEMPLATE_FILES = Object.freeze([
   'lib/instrument-core.mjs',
   'lib/splash-manifest.mjs',
-  'generate-capacitor-splash.mjs',
   'check-splash-config.mjs',
-  'check-splash-dark-variant.mjs',
   'check-splash-safe-circle.mjs',
   'check-splash-template-drift.mjs',
-  'run-splash-gates.mjs',
+  'verify-ios-splash-not-default.mjs',
+  'verify-android-splash-not-default.mjs',
 ]);

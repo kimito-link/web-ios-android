@@ -43,10 +43,10 @@
     "decision": "スプラッシュ検査は新LPの動作確認カードと詳細診断へ統合し、内部計器のdeep実行・診断進捗・AI指示・出荷CIを同じ正本へ接続する。外部診断がアクセス確認画面を取得した回は赤や100点にせず未計測として分ける",
     "evidence": [
       "file:_docs/SPLASH-SCREEN-PLAYBOOK.md",
-      "file:templates/scripts/run-splash-gates.mjs",
+      "file:templates/scripts/check-splash-config.mjs",
       "file:templates/scripts/verify-security-score.mjs",
       "file:site/features/health-check/index.html",
-      "command:npm run splash:selftest (pass: config 7 / dark 4 / safe-circle 4 / drift 4 / runner)",
+      "command:npm run splash:selftest (pass: config 7 / safe-circle 4 / drift 4。2026-08-24にgenerate/dark-variant/runnerを廃止し公式@capacitor/assetsへ移行)",
       "command:npm run security:score (internal 100 / malwarecheck.site 100 on successful target fetch)",
       "command:npm run shindan (splash stage 6/6 / checkpoint fetch reported inconclusive)"
     ],

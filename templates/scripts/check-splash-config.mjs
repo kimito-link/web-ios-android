@@ -305,6 +305,21 @@ function main() {
     process.exit(selfTest() ? EXIT.PASS : EXIT.FAIL);
   }
 
+  // ★--dry-run: 判定は出さず「この検査自身が動く状態か」だけを見る。
+  //   site/claims.json の level:"auto" を名乗る条件（verify-claims-coverage.mjs RULE 3）。
+  //   検査本体を走らせないのは、キット自身には capacitor.config が無く（テンプレート集なので当然）、
+  //   実行すると常に🟡になり「配線の健全性」と「対象の状態」を区別できなくなるため。
+  if (argv.includes('--dry-run')) {
+    const ok = selfTest();
+    console.log(
+      ok
+        ? '[check-splash-config] --dry-run OK（検査自身が正しく赤/緑を出せることを確認）'
+        : '[check-splash-config] --dry-run 失敗',
+    );
+    console.log('★--dry-run が見ないこと: 対象リポの実際の合否。判定は --dry-run 無しで実行すること。');
+    process.exit(ok ? EXIT.PASS : EXIT.FAIL);
+  }
+
   const explicit = argv.includes('--config') ? argv[argv.indexOf('--config') + 1] : null;
   const configPath = findConfig(explicit);
 

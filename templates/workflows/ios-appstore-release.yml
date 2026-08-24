@@ -228,18 +228,20 @@ jobs:
             fi
             cp "$MASTER" assets/icon-only.png
           fi
-          # 起動時の「黒い間」にロゴを出すスプラッシュ（暗色背景）を生成。
-          # launchAutoHide:true（capacitor.config.json）の安全方式。assets/splash*.png を
-          # @capacitor/assets が各サイズへ展開し LaunchScreen に焼き込む。
-          node scripts/generate-capacitor-splash.mjs
+          # ★原版はリポにコミットされている前提（GOLDEN-RULES 原則7）。CI では生成しない。
+          #   assets/splash*.png を @capacitor/assets が各サイズへ展開し LaunchScreen に焼き込む。
+          test -f assets/splash.png || { echo "::error::assets/splash.png（デザイン原版）が無い。store-assets のマスターをコミットすること"; exit 1; }
           # 生成「前」に、Contents.json が参照する Capacitor デフォルト画像のハッシュを記録。
           node scripts/verify-ios-splash-not-default.mjs --snapshot
-          npx @capacitor/assets generate --ios --iosProject ios/App --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
+          # 背景色は app.config.json のブランド値から読む（旧: '#0A0A0F' ハードコード）。
+          BG=$(node -p "JSON.parse(require('fs').readFileSync('app.config.json','utf8')).brand?.splashBackgroundColor ?? '#0A0A0F'")
+          BG_DARK=$(node -p "JSON.parse(require('fs').readFileSync('app.config.json','utf8')).brand?.splashBackgroundColorDark ?? '$BG'")
+          npx @capacitor/assets generate --ios --iosProject ios/App --assetPath assets --splashBackgroundColor "$BG" --splashBackgroundColorDark "$BG_DARK"
           # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
           node scripts/verify-ios-splash-not-default.mjs --verify
-          # ★設定(androidScaleType/背景色)とダーク素材の中身を検査（2026-08-24追加）。
+          # ★設定(androidScaleType/背景色)を検査（2026-08-24追加）。
           #   iOS/Android どちらのビルドでも同じ capacitor.config を読むため、ここで一度だけ走らせれば足りる。
-          node scripts/run-splash-gates.mjs --skip-drift
+          node scripts/check-splash-config.mjs
 
       # 起動時の白フラッシュ対策: LaunchScreen 暗色化 + UIUserInterfaceStyle=Dark。
       # @capacitor/assets generate の「後」に当てる（assets が

@@ -82,10 +82,8 @@ const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
 const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'templates/scripts/check-splash-config.mjs']);
-const splashDark = firstExisting(['scripts/check-splash-dark-variant.mjs', 'templates/scripts/check-splash-dark-variant.mjs']);
 const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
 const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
-const splashRunner = firstExisting(['scripts/run-splash-gates.mjs', 'templates/scripts/run-splash-gates.mjs']);
 const shindanPage = firstExisting(['scripts/generate-shindan-version.mjs', 'templates/scripts/generate-shindan-version.mjs']);
 
 const results = [];
@@ -108,10 +106,8 @@ if (DEEP) {
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
   if (splashConfig) results.push(run('起動画面設定 selftest', splashConfig, ['--selftest']));
-  if (splashDark) results.push(run('起動画面ダーク版 selftest', splashDark, ['--selftest']));
   if (splashSafe) results.push(run('起動画面安全円 selftest', splashSafe, ['--selftest']));
   if (splashDrift) results.push(run('起動画面の配布版 selftest', splashDrift, ['--selftest']));
-  if (splashRunner) results.push(run('起動画面検査 runner selftest', splashRunner, ['--selftest']));
   if (shindanPage) results.push(run('診断進捗ページ selftest', shindanPage, ['--selftest']));
 }
 
