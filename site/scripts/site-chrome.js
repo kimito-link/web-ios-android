@@ -13,17 +13,12 @@
 
 (function () {
   var NAV_ITEMS = [
-    { href: '/check-shindan-version/', label: '✅ 更新・動作状況' },
-    { href: '/howto/', label: '🖼️ ゆっくり解説' },
-    { href: '/story/', label: '📖 完成ものがたり' },
-    { href: '/guide/', label: '📋 準備ガイド' },
+    { href: '/guide/', label: '📋 はじめる準備' },
+    { href: '/showcase/', label: '📱 公開・導入事例' },
     { href: '/troubleshooting/', label: '🩹 つまずいたら' },
-    { href: '/tax/', label: '💴 課金の税務' },
-    { href: '/walkthrough/', label: '📷 追体験' },
-    { href: '/learnings/', label: '📚 実証知見' },
-    { href: '/line-bot/', label: '💬 無応答ゼロ化' },
-    { href: '/line-bot-features/', label: '🖼️ 画像・動画・音声' },
-    { href: '/sitemap/', label: '🗺️ サイトマップ' }
+    { href: '/check-shindan-version/', label: '✅ 更新・動作状況' },
+    { href: '/ai-guide/', label: '🤖 AI向けガイド' },
+    { href: '/sitemap/', label: '🗺️ その他の説明' }
   ];
 
   // 現在地の判定は「そのnavリンクのパスが今のURLの先頭と一致するか」で行う。

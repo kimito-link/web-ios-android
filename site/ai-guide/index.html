@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI向け実行ガイド | web-ios-android アプリ公開キット</title>
+  <meta name="description" content="web-ios-androidキットを扱うAI向けに、目的、読む順番、必要な入力、実行手順、安全上の境界、完了条件を整理した実行ガイドです。">
+  <link rel="canonical" href="https://web-ios-android.vercel.app/ai-guide/">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="AI向け概要">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="../assets/css/common.css?v=2">
+  <style>
+    :root { --blue:#315efb; --ink:#171a2b; --muted:#596174; --line:#e1e5ee; --soft:#f6f7fb; --navy:#14213d; }
+    body { background: var(--soft); color: var(--ink); }
+    .hero { padding: 52px 20px; background: var(--navy); color: #fff; text-align: center; }
+    .hero strong { display: inline-block; padding: 5px 10px; border-radius: 999px; background: #ffffff18; font-size: .76rem; }
+    .hero h1 { margin: 12px 0 8px; font-size: clamp(1.8rem, 5vw, 2.8rem); }
+    .hero p { max-width: 760px; margin: auto; color: #d9e0ee; }
+    .wrap { width: calc(100% - 32px); max-width: 900px; margin: 0 auto; padding: 36px 0 70px; }
+    .notice { padding: 18px 20px; border: 1px solid #bbcafc; border-radius: 16px; background: #eef2ff; color: #2d438d; }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+    .toc a { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--blue); text-decoration: none; font-size: .8rem; font-weight: 800; }
+    .card { margin-top: 16px; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 8px 28px #14213d0a; }
+    .card h2 { margin-bottom: 10px; font-size: 1.25rem; }
+    .card h3 { margin: 18px 0 6px; font-size: 1rem; }
+    .card p, .card li { color: var(--muted); font-size: .9rem; }
+    .card ul, .card ol { display: grid; gap: 8px; padding-left: 1.3rem; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .flow div { padding: 12px 9px; border-radius: 12px; background: #f1f3fb; text-align: center; font-size: .78rem; font-weight: 800; }
+    pre { margin-top: 14px; padding: 18px; border-radius: 14px; background: #151a2e; color: #eef1ff; white-space: pre-wrap; overflow-wrap: anywhere; font: 500 .82rem/1.7 Consolas, "Noto Sans JP", monospace; }
+    code { padding: 2px 5px; border-radius: 5px; background: #edf0f8; color: #334ab5; }
+    .done { border-color: #b9e4d1; background: #f2fbf7; }
+    .danger { border-color: #f0c6ca; background: #fff7f7; }
+    .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .links a { padding: 9px 13px; border-radius: 999px; background: var(--blue); color: #fff; text-decoration: none; font-weight: 900; font-size: .82rem; }
+    @media(max-width:700px){.flow{grid-template-columns:1fr}.card{padding:19px}}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main>
+    <section class="hero">
+      <strong>FOR AI AGENTS</strong>
+      <h1>AI向け実行ガイド</h1>
+      <p>このページは商品の宣伝ではありません。キットを扱うAIが、何を読み、何を確認し、どの順番で実行し、どこまで終えればよいかを定義します。</p>
+    </section>
+    <div class="wrap">
+      <p class="notice"><b>最優先：</b>作業中のリポジトリにある指示書とユーザーの最新指示を優先してください。このページは汎用キットの入口であり、個別アプリの確定仕様を上書きしません。</p>
+      <nav class="toc" aria-label="ページ内メニュー"><a href="#purpose">目的</a><a href="#read-order">読む順番</a><a href="#inputs">必要な入力</a><a href="#workflow">実行手順</a><a href="#boundaries">禁止・境界</a><a href="#done">完了条件</a><a href="#report">報告形式</a></nav>
+
+      <section class="card" id="purpose">
+        <h2>1. 目的</h2>
+        <p>このキットは、個別アプリの設定を1か所へ集め、Web・iPhone・Android・Chrome拡張の公開準備と確認を、再実行できる形で進めるためのテンプレートです。</p>
+        <h3>このキットがしないこと</h3>
+        <ul><li>ユーザーに代わってアプリの目的や価格を決定する</li><li>本人確認、契約、支払い、ストア審査の承認を代行する</li><li>未確認の外部状態を「完了」や「正常」と推測する</li></ul>
+      </section>
+
+      <section class="card" id="read-order">
+        <h2>2. 読む順番</h2>
+        <ol><li><code>START-HERE.md</code> — 人とAIの開始地点</li><li>リポジトリ直下の <code>CLAUDE.md</code> / <code>AGENTS.md</code> — 作業規則</li><li><code>app.config.json</code> — アプリ固有の入力値</li><li>対象プラットフォームの説明書 — Web / iOS / Android / Chrome</li><li>現在の変更、診断結果、引き継ぎ文書 — 既存作業を壊さないため</li></ol>
+        <p>ファイルが存在しない場合は、存在しないことを報告し、同等の情報源をリポジトリ内で探してください。名前だけを推測して作成しないでください。</p>
+      </section>
+
+      <section class="card" id="inputs">
+        <h2>3. 必要な入力</h2>
+        <ul><li>アプリ名、短い説明、対象ユーザー</li><li>公開対象：Web / iPhone / Android / Chrome拡張</li><li>連絡先、運営者、公開ドメイン</li><li>課金の有無、広告の有無、扱うデータ</li><li>各ストアのアカウント・ID（取得済みのものだけ）</li></ul>
+        <p><b>質問ルール：</b>空欄を一度にすべて質問しないでください。現在の作業を止める入力だけを、理由と入力例を添えて1問ずつ確認します。仮の値を確定値として保存しません。</p>
+      </section>
+
+      <section class="card" id="workflow">
+        <h2>4. 実行手順</h2>
+        <div class="flow"><div>現状を読む</div><div>不足を分類</div><div>安全な作業を実行</div><div>検査・表示確認</div><div>人の作業を報告</div></div>
+        <ol>
+          <li>Git状態、既存ファイル、未完了作業を確認し、ユーザーの変更を保持する。</li>
+          <li><code>app.config.json</code>を検証し、確定値・未入力・仮の値を分ける。</li>
+          <li>対象プラットフォームだけを選び、自動化できる準備を実行する。</li>
+          <li>ビルド、診断、リンク、公開ページを確認する。測れないものは未確認として残す。</li>
+          <li>外部サービスへの送信・契約・課金・公開など、状態変更の前に必要な承認を確認する。</li>
+          <li>最後に、完了・未完了・問題・人が次に行うこと・確認URLをまとめる。</li>
+        </ol>
+      </section>
+
+      <section class="card danger" id="boundaries">
+        <h2>5. 禁止・安全上の境界</h2>
+        <ul><li>秘密情報、鍵、トークン、証明書の本文を公開ページ・ログ・回答へ出さない。</li><li>ストア送信、料金発生、アカウント作成、外部への連絡を、許可なく行わない。</li><li>未計測・対象外・認証不足を、成功として扱わない。</li><li>既存の未コミット変更を消去・巻き戻し・上書きしない。</li><li>別アプリの固有値、ドメイン、ID、スクリーンショットを流用しない。</li></ul>
+      </section>
+
+      <section class="card done" id="done">
+        <h2>6. 完了条件</h2>
+        <ul><li>対象プラットフォームとアプリ固有値が明確である。</li><li>必要な生成・設定・ビルド・診断が実行され、結果が確認できる。</li><li>公開する場合は本番URLが表示でき、主要導線が動く。</li><li>人の作業とAIの作業が分離され、残作業に担当者が付いている。</li><li>未確認項目、既知の問題、制約を隠していない。</li><li>変更が再実行できる形でソースと説明書に残っている。</li></ul>
+      </section>
+
+      <section class="card" id="report">
+        <h2>7. 最終報告の形式</h2>
+        <pre>結果：何が使える状態になったか
+
+完了：
+- 実行して確認できたこと
+
+未完了：
+- 残っていること／止まっている理由／担当
+
+問題：
+- 見つかった問題と影響
+
+次に人がすること：
+1. 具体的な画面・操作・入力
+
+確認URL：
+- 本体
+- 更新情報と動作チェック</pre>
+        <div class="links"><a href="../">人向けトップへ戻る</a><a href="../llms.txt">AI向けテキストを見る</a><a href="../check-shindan-version/">キットの動作状況</a></div>
+      </section>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../scripts/site-chrome.js"></script>
+</body>
+</html>

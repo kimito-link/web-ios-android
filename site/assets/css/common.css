@@ -15,7 +15,7 @@
  * ■ 目次（Ctrl+Fで見出しの記号を検索）
  *   基本リセット・共通ユーティリティ ............ 直後
  *   ヘッダー（ロゴ・PC横並びナビ） .............. ── ヘッダー ──
- *   ハンバーガーメニュー（幅1600px以下） ......... ── ハンバーガーメニュー ──
+ *   ハンバーガーメニュー（幅1100px以下） ......... ── ハンバーガーメニュー ──
  *   サイト共通フッター .......................... ── サイト共通フッター ──
  *   コマ（吹き出し＋画面。howto系ページ共通） .... ── コマ ──
  *   モックアップ画面の共通枠 .................... ── モックアップ画面の共通枠 ──
@@ -29,9 +29,9 @@
  *   AIへの指示 一覧（全ページ共通・フッター直前） .... ── AIへの指示 一覧 ──
  *
  * ■ ブレークポイント一覧（このファイル内。ページ固有<style>は含まない）
- *   max-width: 1600px … ヘッダーnavをハンバーガーに切り替え（11項目が横に収まらないため）
+ *   max-width: 1100px … ヘッダーnavをハンバーガーに切り替え
  *   max-width: 500px  … koma-talk（吹き出し）を縦積みに変更
- *   ※ LP（index.html）は独自<style>を持ち、ヘッダーのブレークポイントは768px。
+ *   ※ LP（index.html）は本文レイアウト用の追加ブレークポイントを持つ。
  *     common.cssとは別管理なので、ヘッダーの折り返し幅を変えるときは両方確認すること。
  * ─────────────────────────────────────────────────────────────
  */
@@ -101,15 +101,14 @@ header nav a.active { background: #667eea; color: white; }
 .share-to-ai-btn:active { transform: scale(0.97); }
 /* ハンバーガーが出る幅では nav が margin-left:auto を失うので、
    このボタン側の margin-left:auto は不要になるが、悪さもしないため単純化のため残す */
-@media (max-width: 1600px) {
+@media (max-width: 1100px) {
   .share-to-ai-btn { margin-left: 0; }
 }
 @media (max-width: 480px) {
   .share-to-ai-btn { padding: 7px 10px; font-size: 0.72rem; }
 }
 
-/* ── ハンバーガーメニュー（幅1600px以下でnavを折りたたむ。11項目のフルナビは
-   横1600px未満だと収まらないため、実質デスクトップでも既定でハンバーガー） ── */
+/* ── ハンバーガーメニュー（幅1100px以下でnavを折りたたむ） ── */
 .nav-toggle {
   display: none;
   margin-left: auto;
@@ -147,7 +146,7 @@ header nav a.active { background: #667eea; color: white; }
 .nav-toggle[aria-expanded="true"] span::before { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span::after { transform: translateY(-7px) rotate(-45deg); }
 
-@media (max-width: 1600px) {
+@media (max-width: 1100px) {
   .nav-toggle { display: flex; }
   header nav {
     display: none;

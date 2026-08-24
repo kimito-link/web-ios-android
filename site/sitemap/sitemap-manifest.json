@@ -8,7 +8,8 @@
       "links": [
         { "label": "🏠 トップ", "href": "../", "srcPath": "index.html" },
         { "label": "📋 準備ガイド", "href": "../guide/", "srcPath": "guide/index.html" },
-        { "label": "📖 完成ものがたり", "href": "../story/", "srcPath": "story/index.html" }
+        { "label": "📖 完成ものがたり", "href": "../story/", "srcPath": "story/index.html" },
+        { "label": "🤖 AI向け実行ガイド — 読む順番・入力・手順・完了条件", "href": "../ai-guide/", "srcPath": "ai-guide/index.html" }
       ]
     },
     {
