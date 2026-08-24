@@ -16,6 +16,9 @@
     { href: '/guide/', label: '📋 はじめる準備' },
     { href: '/showcase/', label: '📱 公開・導入事例' },
     { href: '/troubleshooting/', label: '🩹 つまずいたら' },
+    // 起動画面（スプラッシュ）の作り方はこのページ配下にある。
+    // メニューに無かったため「その他の説明」を開かないと辿り着けなかった（2026-08-25 追加）。
+    { href: '/features/health-check/', label: '🎬 起動画面と動作確認' },
     { href: '/check-shindan-version/', label: '✅ 更新・動作状況' },
     { href: '/ai-guide/', label: '🤖 AI向けガイド' },
     { href: '/sitemap/', label: '🗺️ その他の説明' }
