@@ -41,8 +41,10 @@ Ask only for information that blocks the current step. Ask one clear question at
 2. Validate app.config.json and separate confirmed, missing, and placeholder values.
 3. Run only the setup needed for selected platforms.
 4. Build, diagnose, and verify links and public pages.
-5. Request authority before external submission, payment, account creation, or messages.
-6. Report completed work, uncompleted work, problems, human actions, and verification URLs.
+5. For iPhone or Android, generate the splash assets, run `npm run splash:check`, and record the final real-device visual check separately.
+6. When a web site is published, run `npm run security:score`. It must return both internal preflight score 100 and malwarecheck.site live score 100.
+7. Request authority before external submission, payment, account creation, or messages.
+8. Report completed work, uncompleted work, problems, human actions, and verification URLs.
 
 ## Safety boundaries
 
@@ -50,12 +52,15 @@ Ask only for information that blocks the current step. Ask one clear question at
 - Never report unmeasured or inaccessible state as success.
 - Never delete or overwrite unrelated user changes.
 - Never reuse another app's domain, IDs, screenshots, or personal information.
+- The malwarecheck.site scan receives only the already-public URL. Never send secrets or local files. A score of 100 is not a guarantee of safety.
 
 ## Definition of done
 
 - The target app and target platforms are explicit.
 - Generated files, settings, builds, and checks have evidence.
+- For iPhone or Android, the splash static gates pass and the real-device visual result or its unverified status is explicit.
 - Public URLs and primary navigation work when deployment is in scope.
+- When web deployment is in scope, internal preflight and malwarecheck.site live scan both score 100.
 - Human actions and AI actions are clearly separated.
 - Unknowns, known issues, and limitations are visible.
 - The final report lists: result, completed, uncompleted, problems, next human actions, and verification URLs.

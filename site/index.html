@@ -122,6 +122,19 @@
     .feature-card p { color: var(--muted); font-size: .84rem; }
     .feature-card small { display: block; margin-top: 12px; color: var(--blue); font-weight: 900; }
 
+    .security-panel { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 24px; align-items: center; padding: 30px; border-radius: 22px; background: var(--navy); color: #fff; box-shadow: 0 16px 40px #14213d24; }
+    .security-panel h2 { margin: 6px 0 12px; }
+    .security-panel p { color: #d8deec; }
+    .security-flow { display: grid; gap: 10px; margin-top: 20px; list-style: none; counter-reset: security; }
+    .security-flow li { counter-increment: security; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; color: #eef2fb; font-size: .9rem; }
+    .security-flow li::before { content: counter(security); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; background: #ffffff18; color: var(--yellow); font-weight: 900; }
+    .security-score { padding: 24px; border: 1px solid #ffffff28; border-radius: 18px; background: #ffffff0d; text-align: center; }
+    .security-score strong { display: block; color: var(--yellow); font-size: clamp(2.5rem, 7vw, 4.2rem); line-height: 1; }
+    .security-score b { display: block; margin-top: 8px; }
+    .security-score small { display: block; margin-top: 9px; color: #bdc7da; }
+    .security-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+    .security-links a { padding: 9px 12px; border: 1px solid #ffffff40; border-radius: 999px; color: #fff; text-decoration: none; font-size: .78rem; font-weight: 900; }
+
     .version-wrap { max-width: 860px; margin: 0 auto; }
     .faq-list { max-width: 820px; margin: 0 auto; display: grid; gap: 10px; }
     .faq-card { padding: 0; overflow: hidden; }
@@ -138,7 +151,7 @@
     .trust-line { margin-top: 18px; color: #bfc8dc; font-size: .8rem; }
 
     @media (max-width: 880px) {
-      .hero-grid, .ai-split { grid-template-columns: 1fr; }
+      .hero-grid, .ai-split, .security-panel { grid-template-columns: 1fr; }
       .hero-visual { order: -1; }
       .characters img { width: 82px; }
       .characters img:nth-child(2) { width: 102px; }
@@ -266,6 +279,7 @@
             <div class="prompt-box" id="starter-prompt">このキットを使って、新しいアプリのセットアップを始めてください。
 最初に START-HERE.md、CLAUDE.md、app.config.json を読み、現在の状態を確認してください。
 不足している情報は一度に並べず、作業を止めるものだけ1問ずつ確認してください。
+Webを公開したら npm run security:score を実行し、内部先取りと malwarecheck.site 本体の両方が100点になるまで直してください。
 人の確認が必要な作業と、自動で進められる作業を分けて進め、最後に完了・未完了・次にすることを日本語でまとめてください。<button class="copy-button" type="button" data-copy-target="starter-prompt">開始文をコピー</button></div>
           </article>
           <aside class="ai-card">
@@ -321,9 +335,32 @@
         </div>
         <div class="feature-grid">
           <a class="feature-card" href="troubleshooting/"><span>🩹</span><h3>申請でつまずいたら</h3><p>却下やエラーの原因と、直して再申請する流れ。</p><small>詳しく見る →</small></a>
-          <a class="feature-card" href="features/health-check/"><span>🩺</span><h3>動作確認と引き継ぎ</h3><p>不具合の見つけ方と、前回の判断を次へ渡す仕組み。</p><small>詳しく見る →</small></a>
+          <a class="feature-card" href="features/health-check/"><span>🩺</span><h3>動作確認・引き継ぎ・起動画面</h3><p>不具合や前回の判断に加え、起動直後の画像の伸び・色ずれも確認。</p><small>詳しく見る →</small></a>
           <a class="feature-card" href="learnings/"><span>📚</span><h3>実際に分かったこと</h3><p>ストア公開までに起きた問題と、再発を防ぐ知見。</p><small>詳しく見る →</small></a>
           <a class="feature-card" href="sitemap/"><span>🗺️</span><h3>すべての説明ページ</h3><p>課金・税務・LINE・実画面ガイドなどの一覧。</p><small>一覧を見る →</small></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-white" aria-labelledby="security-title">
+      <div class="container">
+        <div class="security-panel">
+          <div>
+            <p class="section-kicker">公開前の安全確認</p>
+            <h2 id="security-title">内部で直して、malwarecheck.site本体でも再確認</h2>
+            <p>公開サイトの設定漏れを内部検査で先に見つけ、最後に外部の診断サービスへ公開URLだけを送って再確認します。</p>
+            <ol class="security-flow">
+              <li>不足しているセキュリティ設定や、公開してはいけないファイルを内部で確認</li>
+              <li>malwarecheck.site本体で同じ公開URLを実測</li>
+              <li>内部100点・本体100点の両方がそろったときだけ完了</li>
+            </ol>
+            <div class="security-links"><a href="features/health-check/#security-score">仕組みを詳しく見る</a><a href="https://malwarecheck.site/check/" target="_blank" rel="noopener">malwarecheck.siteを開く</a></div>
+          </div>
+          <aside class="security-score" aria-label="セキュリティ診断結果">
+            <strong>100</strong>
+            <b>本体を取得できた実測で100点確認</b>
+            <small>連続診断でVercelの確認画面が出た回は未計測として分けます。100点は外部から見える簡易診断であり、安全性を完全に保証するものではありません。</small>
+          </aside>
         </div>
       </div>
     </section>
@@ -345,6 +382,7 @@
       <div class="container">
         <div class="section-head"><p class="section-kicker">よくある質問</p><h2 id="faq-title">始める前の確認</h2></div>
         <div class="faq-list">
+          <details class="faq-card"><summary>リンクさん専用ですか？ ほかの人も使えますか？</summary><p>リンク専用ではありません。誰でも自分のアプリへ入れて、公開準備・バージョン・動作状況・セキュリティ診断を同じ形で確認できる共通キットです。公開URLの診断結果は誰でも見られますが、アプリ内部を変更するには、そのアプリのソースを扱える権限が必要です。</p></details>
           <details class="faq-card"><summary>プログラミング経験がなくても使えますか？</summary><p>人が行う操作は少なくしていますが、フォルダを扱えて、AIの作業結果を確認できることが前提です。分からない画面はスクリーンショットをAIへ渡して進められます。</p></details>
           <details class="faq-card"><summary>本当に全部自動ですか？</summary><p>いいえ。本人確認、開発者アカウントの作成・支払い、内容の判断、最終送信、審査結果の受け取りは人が行います。自動化できる作業と人の作業は上の一覧で分けています。</p></details>
           <details class="faq-card"><summary>ChatGPTやClaudeへ何を渡せばよいですか？</summary><p>フォルダを直接扱えるAIへ、展開したキット全体と、このページの開始文を渡してください。AI向け実行ガイドには読む順番と完了条件も記載しています。</p></details>

@@ -29,7 +29,8 @@
 | ★進化台帳（記録の1本の口） | [`templates/scripts/record-improvement.mjs`](../../templates/scripts/record-improvement.mjs) | `--selftest` 5ケース |
 | ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
 | ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
-| ★セキュリティスコア先取り（malwarecheck.site満点チェック） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 3ケース |
+| ★セキュリティスコア（内部先取り＋malwarecheck.site本体実測） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 4ケース |
+| ★起動画面（スプラッシュ）完全検査 | [`templates/scripts/run-splash-gates.mjs`](../../templates/scripts/run-splash-gates.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | ★設定・背景色・ダーク版・配布元との差を集約。実機目視は別に残す |
 | ★全文脈パケット＋判断の進化台帳 | [`templates/scripts/context-engine.mjs`](../../templates/scripts/context-engine.mjs) / [`context-evolution.json`](../../templates/scripts/context-evolution.json) | ★全追跡・未追跡ファイル、Git全履歴、現在差分、確定/却下/未確定を出典つきで1枚化 |
 | ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
@@ -264,13 +265,25 @@ node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.
 
 ---
 
-## 3.6 ★出荷前に「malwarecheck.site満点」を先取りする
+## 3.6 ★出荷前に「malwarecheck.site満点」を内部確認＋本体実測する
 
 → [**SECURITY-SCORE.md**](SECURITY-SCORE.md)
 
 ★malwarecheck.site の減点基準（セキュリティヘッダー・`.env`/`.git`露出等）を移植し、
+内部で先取りした後、malwarecheck.site 本体の公開診断APIでも公開URLを実測します。
 出荷前に同じ基準でセルフチェックする。★「公開URLへのGETのみ」の不変条件は継承済み
 （能動的な脆弱性テスト・ポートスキャン・総当たりはしない）。
+
+---
+
+## 3.6.1 ★起動直後の画像崩れを、設定と素材の両方から検査する
+
+→ [**SPLASH-SCREEN-PLAYBOOK.md**](../SPLASH-SCREEN-PLAYBOOK.md)
+
+★Capacitor用の2732×2732素材を生成し、Androidの引き伸ばし設定、背景色、
+ライト版とダーク版の実体差、各アプリへ配った検査の版ずれをまとめて確認します。
+`npm run splash:selftest` で検査自体を毒入り条件に当て、`npm run splash:check` で本体を測ります。
+★静的検査は実機の色味や見た目を保証しないため、最終目視は別の確認項目として残します。
 
 ---
 

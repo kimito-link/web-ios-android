@@ -32,5 +32,25 @@
     ],
     "outcome": "秘密候補は本文もhashも採らず、会話・外部サービス・実機は未取得と明記する境界をコード・説明ページ・LPで統一した",
     "supersedes": []
+  },
+  {
+    "id": "20260824-splash-security-lp-v1",
+    "recordedAt": "2026-08-24T16:15:00.000+09:00",
+    "version": "0.1.1",
+    "scope": "instruments-and-lp",
+    "status": "confirmed",
+    "problem": "新LPからスプラッシュ検査の説明が消え、malwarecheck.siteがVercelのアクセス確認画面を取得した71点をサイト本体の点数と誤認する余地があった",
+    "decision": "スプラッシュ検査は新LPの動作確認カードと詳細診断へ統合し、内部計器のdeep実行・診断進捗・AI指示・出荷CIを同じ正本へ接続する。外部診断がアクセス確認画面を取得した回は赤や100点にせず未計測として分ける",
+    "evidence": [
+      "file:_docs/SPLASH-SCREEN-PLAYBOOK.md",
+      "file:templates/scripts/run-splash-gates.mjs",
+      "file:templates/scripts/verify-security-score.mjs",
+      "file:site/features/health-check/index.html",
+      "command:npm run splash:selftest (pass: config 7 / dark 4 / safe-circle 4 / drift 4 / runner)",
+      "command:npm run security:score (internal 100 / malwarecheck.site 100 on successful target fetch)",
+      "command:npm run shindan (splash stage 6/6 / checkpoint fetch reported inconclusive)"
+    ],
+    "outcome": "一般向けLP、AI向け手順、診断ページ、配布スクリプト、iOS/Android CIが同じ起動画面検査を参照し、外部サービスの確認画面を製品の減点として誤報しない状態になった",
+    "supersedes": []
   }
 ]

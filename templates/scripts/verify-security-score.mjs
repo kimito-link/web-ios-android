@@ -11,8 +11,8 @@
  *
  * ★何を測るか（malwarecheck.site の WEIGHTS と1対1対応させたもの）
  *   本番URL(app.config.json の identity.productionDomain)へ実際にGETし、
- *   レスポンスヘッダとHTML本文を、malwarecheck.site の減点項目と同じ基準で判定する。
- *   ここで満点相当になれば、実際に malwarecheck.site で診断しても同じ結果になるはず。
+ *   レスポンスヘッダとHTML本文を同じ基準で先取り判定する。その後、既定では
+ *   malwarecheck.site 本体の公開診断APIでも同じURLを実測し、両方100点で緑にする。
  *
  * ■ 終了コード（instrument-core.mjs と同じ3値規約）
  *   0 = 減点0（満点相当） / 1 = 減点あり（直すべきものがある） / 2 = 測れなかった
@@ -20,11 +20,12 @@
  * ■ 使い方
  *   node templates/scripts/verify-security-score.mjs                # app.config.json から自動取得
  *   node templates/scripts/verify-security-score.mjs --url https://example.com
+ *   node templates/scripts/verify-security-score.mjs --local-only   # 外部診断を使わず先取り検査だけ
  *   node templates/scripts/verify-security-score.mjs --selftest      # 毒→赤を確認
  *
  * ■ この検査の限界（過信を防ぐ）
- *   - malwarecheck.site 本体が持つ実装（crt.sh照合・Pwned Passwords・SPF/DMARC等の外部API連携）
- *     までは再現していない。ヘッダ・HTML静的解析で完結する項目のみ。
+ *   - 内部先取りはヘッダ・HTML静的解析で完結する項目のみ。本体実測で不足分を補う。
+ *   - 本体実測へ送るのは公開URLだけ。秘密情報やローカルファイルは送らない。
  *   - 「兆候が無い」ことは「安全である」ことを意味しない（malwarecheck.site 自身の文言方針と同じ）。
  *   - これは能動的な脆弱性テストではない。SQLi/XSS等の実注入テストは行わない（不変条件）。
  * ───────────────────────────────────────────────────────────────────────────
@@ -38,8 +39,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
 
 const SELFTEST = process.argv.includes('--selftest');
+const LOCAL_ONLY = process.argv.includes('--local-only');
 const urlArgIdx = process.argv.indexOf('--url');
 const URL_OVERRIDE = urlArgIdx >= 0 ? process.argv[urlArgIdx + 1] : null;
+const MALWARECHECK_API = 'https://malwarecheck.site/api/scan';
 
 /** malwarecheck.site の packages/core/src/scoring/weights.ts と同じ値。
  *  ★正本はあちら。値を変えるときは向こうと揃える（移植元コメント参照）。 */
@@ -77,7 +80,7 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 8000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...opts, signal: ctrl.signal, redirect: 'manual' });
+    return await fetch(url, { redirect: 'manual', ...opts, signal: ctrl.signal });
   } finally {
     clearTimeout(t);
   }
@@ -157,6 +160,65 @@ async function scoreUrl(targetUrl, fetchImpl = fetchWithTimeout) {
   };
 }
 
+/**
+ * malwarecheck.site 本体の公開診断入口へ、対象の公開URLだけを送って実測する。
+ * 認証情報やローカルファイルは送らず、外部サービスが止まっている場合は
+ * 「満点」と扱わず inconclusive にする。
+ */
+async function scoreViaMalwarecheck(targetUrl) {
+  let res;
+  let data;
+  try {
+    res = await fetchWithTimeout(MALWARECHECK_API, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: targetUrl }),
+    }, 30000);
+    data = await res.json();
+  } catch (error) {
+    return { verdict: 'inconclusive', detail: `malwarecheck.site本体で測れませんでした: ${error.message}` };
+  }
+
+  if (!res.ok) {
+    return {
+      verdict: 'inconclusive',
+      detail: `malwarecheck.site本体が診断を完了できませんでした: ${data?.error || `HTTP ${res.status}`}`,
+    };
+  }
+  const scannedTitle = String(data?.meta?.title || '');
+  const scannedStatus = Number(data?.meta?.httpStatus);
+  if (
+    scannedStatus === 403
+    && /Vercel Security Checkpoint|Just a moment|Attention Required/i.test(scannedTitle)
+  ) {
+    return {
+      verdict: 'inconclusive',
+      detail: `対象サイト本体ではなくアクセス確認画面を取得しました（${scannedTitle} / HTTP ${scannedStatus}）。時間を空けて再実行してください`,
+    };
+  }
+  if (!Number.isFinite(data?.score)) {
+    return { verdict: 'inconclusive', detail: 'malwarecheck.site本体の応答にスコアがありません' };
+  }
+
+  const deductions = Array.isArray(data.checks)
+    ? data.checks.filter((check) => Number(check?.deduction) > 0).map((check) => ({
+        id: String(check.id || 'unknown'),
+        title: String(check.title || check.id || '確認項目'),
+        weight: Number(check.deduction),
+        detail: String(check.message || ''),
+      }))
+    : [];
+
+  return {
+    verdict: data.score === 100 ? 'pass' : 'fail',
+    score: data.score,
+    deductions,
+    scannedAt: data.scannedAt || '',
+    disclaimer: data.disclaimer || '',
+  };
+}
+
 /* ── --selftest ─────────────────────────────────────────── */
 if (SELFTEST) {
   const fails = [];
@@ -215,6 +277,23 @@ if (SELFTEST) {
     }
   }
 
+  // 毒4: 外部診断がVercelの確認画面を取得した結果を、対象サイトの減点として扱わない
+  {
+    const checkpointFetch = async () => new Response(JSON.stringify({
+      score: 71,
+      meta: { httpStatus: 403, title: 'Vercel Security Checkpoint' },
+      checks: [{ id: 'header-csp', title: 'CSP', deduction: 8 }],
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = checkpointFetch;
+    try {
+      const r = await scoreViaMalwarecheck('https://example.invalid.test');
+      if (r.verdict !== 'inconclusive') fails.push('アクセス確認画面を対象サイトの減点として扱った');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  }
+
   if (fails.length) {
     console.error('[verify-security-score] selftest 失敗（検知器が効いていません）:');
     for (const f of fails) console.error('  - ' + f);
@@ -250,23 +329,50 @@ if (result.verdict === 'inconclusive') {
   process.exit(EXIT.INCONCLUSIVE);
 }
 
-if (result.verdict === 'fail') {
-  const lines = result.deductions.map((d) => `${d.detail}（-${d.weight}点）`).join(' / ');
+const external = LOCAL_ONLY ? null : await scoreViaMalwarecheck(targetUrl);
+
+if (external?.verdict === 'inconclusive') {
+  console.log(formatProbeReport([{
+    probe: `malwarecheck.site本体の実測 (${targetUrl})`,
+    verdict: 'inconclusive',
+    detail: external.detail,
+    howToFix: 'ネット接続と malwarecheck.site の稼働を確認して再実行する。急ぐ場合だけ --local-only で先取り検査を行う',
+    limitation: '外部診断が測れない状態を満点とは扱わない',
+  }]));
+  process.exit(EXIT.INCONCLUSIVE);
+}
+
+if (result.verdict === 'fail' || external?.verdict === 'fail') {
+  const localLines = result.deductions.map((d) => `内部先取り: ${d.detail}（-${d.weight}点）`);
+  const externalLines = (external?.deductions || []).map((d) => `本体実測: ${d.title}（-${d.weight}点）`);
+  const lines = [...localLines, ...externalLines].join(' / ');
   console.log(formatProbeReport([{
     probe: `malwarecheck.site満点チェック (${targetUrl})`,
     verdict: 'fail',
-    evidence: { 推定スコア: result.score, 減点項目数: result.deductions.length },
+    evidence: {
+      内部先取りスコア: result.score,
+      'malwarecheck.site本体スコア': external?.score ?? '未実行',
+      減点項目数: result.deductions.length + (external?.deductions?.length || 0),
+    },
     detail: lines,
     howToFix: '減点項目のヘッダ・ファイル公開設定を直す（Vercel/Cloudflare Pages の場合は next.config / _headers 等）',
-    limitation: 'ヘッダ・HTML静的解析のみ。malwarecheck.site本体の全項目（crt.sh・SPF/DMARC等）は未再現',
+    limitation: '外部から見える範囲の簡易診断。サーバー内部の安全性や感染の有無を保証するものではない',
   }]));
   process.exit(EXIT.FAIL);
 }
 
+console.log(
+  `[verify-security-score] 内部先取り ${result.score}点 / malwarecheck.site本体 ${external?.score ?? '未実行'}点`
+  + `${external?.scannedAt ? ` / 実測 ${external.scannedAt}` : ''}`,
+);
 console.log(formatProbeReport([{
-  probe: `malwarecheck.site満点チェック (${targetUrl})`,
+  probe: `malwarecheck.site満点チェック（内部${result.score}点・本体${external?.score ?? '未実行'}点 / ${targetUrl}）`,
   verdict: 'pass',
-  evidence: { 推定スコア: result.score },
-  limitation: 'ヘッダ・HTML静的解析のみ。malwarecheck.site本体の全項目（crt.sh・SPF/DMARC等）は未再現。実際に malwarecheck.site へ投げての確認を推奨',
+  evidence: {
+    内部先取りスコア: result.score,
+    'malwarecheck.site本体スコア': external?.score ?? '未実行（--local-only）',
+    実測日時: external?.scannedAt || '内部先取りのみ',
+  },
+  limitation: external?.disclaimer || '外部から見える範囲の簡易診断であり、安全性や感染の有無を完全には保証しない',
 }]));
 process.exit(EXIT.PASS);

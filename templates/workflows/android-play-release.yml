@@ -63,6 +63,10 @@ on:
       - "scripts/verify-android-splash-not-default.mjs"
       - "scripts/verify-webdir-consistency.mjs"
       - "scripts/generate-capacitor-splash.mjs"
+      - "scripts/check-splash-config.mjs"
+      - "scripts/check-splash-dark-variant.mjs"
+      - "scripts/run-splash-gates.mjs"
+      - "scripts/lib/splash-manifest.mjs"
       # Submit-time helpers that change runtime behaviour of the
       # Play release. Same lesson as the iOS workflow path-filter fix:
       # any script the workflow actually runs must appear here or
@@ -182,6 +186,9 @@ jobs:
           npx @capacitor/assets generate --android --androidProject android --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
           # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
           node scripts/verify-android-splash-not-default.mjs --verify
+          # ★androidScaleType 未設定(既定=引き伸ばし)を検出（2026-08-24追加）。
+          #   実測: このキット利用リポの過半数が既定のまま=Androidだけ縦に伸びていた。
+          node scripts/run-splash-gates.mjs --skip-drift
 
       - name: Set Android versionName/versionCode from package.json and CI run number
         run: |

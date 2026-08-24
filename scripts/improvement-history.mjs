@@ -57,5 +57,9 @@ export const IMPROVEMENT_HISTORY = Object.freeze([
   Object.freeze({
     version: '0.1.0', metric: 'selftest-missing-diagnostics', value: 3,
     source: 'node templates/diagnostics/check-selftest-coverage.mjs templates/diagnostics（2026-08-23 実測・上限3ちょうど）'
+  }),
+  Object.freeze({
+    version: '0.1.1', metric: 'diagnostics-checks', value: 8,
+    source: '[auto] templates/diagnostics/check-*.mjs'
   })
 ]);

@@ -53,11 +53,19 @@
     "page": "/features/health-check/",
     "indexLabel": "🔒 セキュリティスコアを出荷前にチェックする",
     "title": "🤖 セキュリティスコアチェックをAIに実装させたい方へ",
-    "text": "このアプリのWebサイトに、出荷前セキュリティスコアのセルフチェックを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの SECURITY-SCORE.md を読んで、そこに書かれている通りに進めて。\n実装は templates/scripts/verify-security-score.mjs（依存ゼロ・純Node）をコピーして使う:\n  node verify-security-score.mjs\napp.config.json の identity.productionDomain を自動で読んでGETし、\nセキュリティヘッダー（HSTS/CSP/X-Frame-Options等）や .env・.git の露出を、\nmalwarecheck.site の減点基準と同じ項目でチェックする。\n★公開URLへのGETのみで、攻撃・侵入・総当たりは一切しない設計（不変条件）。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
-    "note": "※malwarecheck.site（外部サイトを診断するセキュリティチェックサービス）の減点基準を移植したもの。出荷前にこのスクリプトで満点相当を確認しておけば、実際にmalwarecheck.siteのようなサービスへ投げても減点されにくくなります。"
+    "text": "このアプリのWebサイトに、出荷前セキュリティスコアの完全チェックを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの SECURITY-SCORE.md を読んで、そこに書かれている通りに進めて。\n実装は templates/scripts/verify-security-score.mjs（依存ゼロ・純Node）をコピーして使う:\n  node verify-security-score.mjs\napp.config.json の identity.productionDomain を自動で読み、まずセキュリティヘッダーや .env・.git の露出を内部で先取り確認する。\n続けて malwarecheck.site 本体の公開診断APIへ公開URLだけを送り、本体スコアも実測する。\n内部100点・本体100点の両方がそろったときだけ完了にする。\n★秘密情報やローカルファイルは外部へ送らない。公開URLへの受動チェックだけで、攻撃・侵入・総当たりは一切しない。\n100点は外部から見える簡易診断の満点であり、安全性の保証とは書かない。",
+    "note": "※通常実行は内部先取りとmalwarecheck.site本体実測の2段階です。外部サービスを使えない場合の --local-only は、最終的な本体100点確認の代わりにはなりません。"
+  },
+  "splash-screen": {
+    "order": 8,
+    "page": "/features/health-check/",
+    "indexLabel": "🌅 起動直後の画像崩れを自動確認する",
+    "title": "🤖 起動画面の生成と検査をAIに実装させたい方へ",
+    "text": "このアプリの起動画面（スプラッシュ）を、web-ios-androidキットの正本に合わせて生成・検査して。\nhttps://github.com/kimito-link/web-ios-android/blob/main/_docs/SPLASH-SCREEN-PLAYBOOK.md\nを読み、templates/scripts/lib/splash-manifest.mjs の SPLASH_TEMPLATE_FILES に載っている全ファイルを scripts/ の同じ構成へ入れる。これには生成器、設定・ダーク版・安全円・配布版の各検査、まとめランナー、共通土台が含まれる。\npackage.json に splash:generate / splash:check / splash:selftest を配線し、まず npm run splash:selftest、次に npm run splash:generate、最後に npm run splash:check を実行する。\n赤は修正し、測れなかった項目を合格へ丸めない。Expoなら安全円検査も本体素材へ実行する。全部合格しても実機の見え方は判定できないため、iPhone・Androidで最後に1回ずつ目視し、未確認なら未確認と報告する。",
+    "note": "※自動検査は設定・画像・配布元との差を確認します。端末ごとの色味や大きさを保証するものではありません。"
   },
   "line-bot": {
-    "order": 8,
+    "order": 9,
     "page": "/line-bot/",
     "indexLabel": "💬 LINEのAI社員bot（無応答ゼロ化）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
@@ -65,7 +73,7 @@
     "note": ""
   },
   "line-bot-features": {
-    "order": 9,
+    "order": 10,
     "page": "/line-bot-features/",
     "indexLabel": "🖼️ LINE botに画像・動画・音声認識を追加する",
     "title": "🤖 このページをAIに実装させたい方へ",

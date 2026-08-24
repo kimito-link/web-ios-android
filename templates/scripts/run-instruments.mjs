@@ -4,6 +4,7 @@
  *
  *   node scripts/run-instruments.mjs [対象リポ]
  *   node scripts/run-instruments.mjs --deep [対象リポ]  # 各計器のselftestも実行
+ *   node scripts/run-instruments.mjs --security-url https://example.com [対象リポ]
  *
  * 0=全て測れて緑 / 1=赤あり / 2=測れなかった項目あり。
  */
@@ -20,9 +21,11 @@ function option(name, fallback = null) {
   const at = argv.lastIndexOf(name);
   return at >= 0 && at + 1 < argv.length ? argv[at + 1] : fallback;
 }
-const positional = argv.find((arg, index) => !arg.startsWith('-') && argv[index - 1] !== '--report');
+const VALUE_OPTIONS = new Set(['--report', '--security-url']);
+const positional = argv.find((arg, index) => !arg.startsWith('-') && !VALUE_OPTIONS.has(argv[index - 1]));
 const ROOT = resolve(positional || join(HERE, '..'));
 const REPORT = option('--report');
+const SECURITY_URL = option('--security-url');
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
 
 function firstExisting(paths) {
@@ -78,6 +81,11 @@ const improvement = firstExisting(['scripts/check-improvement.mjs']);
 const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
+const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'templates/scripts/check-splash-config.mjs']);
+const splashDark = firstExisting(['scripts/check-splash-dark-variant.mjs', 'templates/scripts/check-splash-dark-variant.mjs']);
+const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
+const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
+const splashRunner = firstExisting(['scripts/run-splash-gates.mjs', 'templates/scripts/run-splash-gates.mjs']);
 const shindanPage = firstExisting(['scripts/generate-shindan-version.mjs', 'templates/scripts/generate-shindan-version.mjs']);
 
 const results = [];
@@ -86,6 +94,11 @@ results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
 results.push(run('計器が走ったか', ran, ['--check']));
 if (drift) results.push(run('配布コードのドリフト', drift));
+results.push(run(
+  '公開サイトのセキュリティ満点チェック',
+  security,
+  SECURITY_URL ? ['--url', SECURITY_URL] : [],
+));
 
 if (DEEP) {
   results.push(run('全文脈パケット selftest', context, ['--selftest']));
@@ -94,6 +107,11 @@ if (DEEP) {
   results.push(run('統合入口 selftest', fileURLToPath(import.meta.url), ['--selftest']));
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
+  if (splashConfig) results.push(run('起動画面設定 selftest', splashConfig, ['--selftest']));
+  if (splashDark) results.push(run('起動画面ダーク版 selftest', splashDark, ['--selftest']));
+  if (splashSafe) results.push(run('起動画面安全円 selftest', splashSafe, ['--selftest']));
+  if (splashDrift) results.push(run('起動画面の配布版 selftest', splashDrift, ['--selftest']));
+  if (splashRunner) results.push(run('起動画面検査 runner selftest', splashRunner, ['--selftest']));
   if (shindanPage) results.push(run('診断進捗ページ selftest', shindanPage, ['--selftest']));
 }
 

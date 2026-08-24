@@ -90,12 +90,13 @@ async function importArray(path, key) {
   } catch { return []; }
 }
 
-function runMeasurement(root, reportPath) {
+function runMeasurement(root, reportPath, securityUrl = '') {
   const runner = firstExisting(root, [
     'scripts/run-instruments.mjs', 'templates/scripts/run-instruments.mjs'
   ]);
   if (!runner) return { attempted: false, exitCode: 2 };
-  const result = spawnSync(process.execPath, [runner, '--deep', '--report', reportPath, root], {
+  const securityArgs = securityUrl && securityUrl !== '/' ? ['--security-url', securityUrl] : [];
+  const result = spawnSync(process.execPath, [runner, '--deep', ...securityArgs, '--report', reportPath, root], {
     cwd: root, encoding: 'utf8', stdio: 'inherit', timeout: 15 * 60 * 1000
   });
   return { attempted: true, exitCode: Number.isInteger(result.status) ? result.status : 1 };
@@ -259,7 +260,7 @@ async function collect(root, webRoot, outputDir) {
   const homeUrl = String(option('--base-url') || (domain ? `https://${domain}` : '/')).replace(/\/$/, '') || '/';
   const version = String(pkg.version || config?.stores?.marketingVersion || '0.0.0');
   const reportPath = resolve(root, option('--report', '.instrument-report.json'));
-  const measurement = has('--measure') ? runMeasurement(root, reportPath) : { attempted: false, exitCode: null };
+  const measurement = has('--measure') ? runMeasurement(root, reportPath, homeUrl) : { attempted: false, exitCode: null };
   const instrumentReport = readJson(reportPath, null);
   const reportResults = Array.isArray(instrumentReport?.results) ? instrumentReport.results : [];
   const result = (needle) => reportResults.find((item) => String(item.label || '').includes(needle));
@@ -293,6 +294,7 @@ async function collect(root, webRoot, outputDir) {
     fileCheck(root, '完全版の統合入口', ['scripts/run-instruments.mjs', 'templates/scripts/run-instruments.mjs'], 'run-instruments.mjs をコピーする'),
     fileCheck(root, '全文脈エンジン', ['scripts/context-engine.mjs', 'templates/scripts/context-engine.mjs'], 'context-engine.mjs をコピーする'),
     fileCheck(root, '汎用診断ランナー', ['diagnostics/run.mjs', 'templates/diagnostics/run.mjs'], 'diagnostics/ をコピーする'),
+    fileCheck(root, '起動画面の完全検査', ['scripts/run-splash-gates.mjs', 'templates/scripts/run-splash-gates.mjs'], 'スプラッシュ検査一式をコピーする'),
     fileCheck(root, '進化台帳の門番', ['scripts/check-improvement.mjs', 'templates/scripts/check-improvement.mjs'], '進化台帳の3ファイルをコピーする')
   ]);
 
@@ -323,10 +325,20 @@ async function collect(root, webRoot, outputDir) {
 
   const security = stage('security', '公開前の安全確認', '診断ページを含む公開サイトを、安全側の基準で点検できるか。', [
     fileCheck(root, 'セキュリティ計器', ['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs'], 'verify-security-score.mjs をコピーする'),
-    fromResult('セキュリティ計器 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する')
+    fromResult('セキュリティ計器 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する'),
+    fromResult('公開サイトのセキュリティ満点チェック', '本番URLの実測記録なし', '本番URLを公開して npm run shindan を再実行する')
   ]);
 
-  const stages = [install, measured, evolved, continuity, publishing, security];
+  const splash = stage('splash', '起動画面の自己検査', '起動直後の画像崩れを見つける検査自体が、壊れずに赤・黄・緑を返せるか。', [
+    fileCheck(root, '起動画面の完全検査', ['scripts/run-splash-gates.mjs', 'templates/scripts/run-splash-gates.mjs'], 'スプラッシュ検査一式をコピーする'),
+    fromResult('起動画面設定 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する'),
+    fromResult('起動画面ダーク版 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する'),
+    fromResult('起動画面安全円 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する'),
+    fromResult('起動画面の配布版 selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する'),
+    fromResult('起動画面検査 runner selftest', '自己検査の実行記録なし', 'npm run shindan で自己検査を実行する')
+  ]);
+
+  const stages = [install, measured, evolved, continuity, publishing, splash, security];
   const checks = stages.flatMap((item) => item.checks);
   const counts = {
     pass: checks.filter((item) => item.status === 'pass').length,
@@ -345,7 +357,9 @@ async function collect(root, webRoot, outputDir) {
     };
   });
   const publicLatest = name === 'web-ios-android'
-    ? [
+      ? [
+        { version, label: result('公開サイトのセキュリティ満点チェック')?.verdict === 'pass' ? 'malwarecheck.site本体で公開サイトを100点確認' : 'malwarecheck.site本体で公開サイトを実測する仕組みを追加', value: '', unit: '' },
+        { version, label: '起動直後の画像崩れを自動確認する検査を追加', value: '', unit: '' },
         { version, label: '各アプリに更新情報と動作チェックページを追加', value: '', unit: '' },
         { version, label: '説明ページにも同じ更新情報を自動表示', value: '', unit: '' },
         { version, label: '前回の判断を引き継ぐ仕組みを追加', value: '', unit: '' }

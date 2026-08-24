@@ -1,16 +1,17 @@
-# 出荷前に「malwarecheck.site満点」を先取りする（AIが読む1枚）
+# 出荷前に「malwarecheck.site満点」を内部確認＋本体実測する（AIが読む1枚）
 
 > ★この1枚だけで着手できる粒度で書いてあります。
-> 移植元: `malwarecheck.site`（`packages/core/src/scoring/weights.ts` の減点表・
-> ヘッダ判定ロジック）。あちらは「他人のサイトを外部から診断するツール」、
-> こちらは「自分のアプリを出荷する前に、同じ基準で先取りチェックする道具」。
+> 内部先取り: `malwarecheck.site` の減点表・ヘッダ判定ロジックを移植。
+> 最終確認: `malwarecheck.site/api/scan` へ公開URLだけを送り、本体スコアも実測する。
 
 ---
 
 ## 0. 何をするものか
 
-`web-ios-android` キットで作ったWebサイトを実際に `malwarecheck.site` のようなセキュリティ診断
-サービスへ投げたときに減点されないよう、**同じ減点基準を出荷前に自分でチェック**する。
+`web-ios-android` キットで作ったWebサイトを、次の2段階で確認する。
+
+1. 同じ減点基準を内部スクリプトで先取りチェックする。
+2. `malwarecheck.site` 本体の公開診断APIでも実測し、両方100点のときだけ緑にする。
 
 ```bash
 node templates/scripts/verify-security-score.mjs
@@ -18,6 +19,9 @@ node templates/scripts/verify-security-score.mjs
 
 node templates/scripts/verify-security-score.mjs --url https://example.com
 # 任意のURLを直接指定する場合
+
+node templates/scripts/verify-security-score.mjs --url https://example.com --local-only
+# 外部サービスを使えないときの内部先取りのみ（本体100点の証明にはならない）
 ```
 
 ---
@@ -60,10 +64,9 @@ node templates/scripts/verify-security-score.mjs --url https://example.com
 | cookieInsecure | 6 | `Set-Cookie` に `Secure`/`HttpOnly` があるか |
 
 ★**この検査の限界**（`verify-security-score.mjs` の出力にも毎回明記される）:
-- `malwarecheck.site` 本体が持つ crt.sh照合・SPF/DMARC・Pwned Passwords連携等の
-  外部API依存項目は再現していない。ヘッダ・HTML静的解析で完結する項目のみ。
-- 「兆候が無い」は「安全」を意味しない。実際に `malwarecheck.site` へ投げての
-  確認も推奨する（このスクリプトはあくまで出荷前の先取りチェック）。
+- 内部先取りはヘッダ・HTML静的解析で完結する項目のみ。本体実測で不足分を補う。
+- 公開URLだけを外部サービスへ送る。秘密情報やローカルファイルは送らない。
+- 「100点」は外部から見える簡易診断の満点であり、安全性や感染の有無を保証しない。
 
 ---
 
@@ -99,8 +102,14 @@ async headers() {
 
 ```bash
 node templates/scripts/verify-security-score.mjs --selftest ; echo "exit=$?"   # 0であること
-node templates/scripts/verify-security-score.mjs                                # 実サイトに対して0であること
+node templates/scripts/verify-security-score.mjs                                # 内部100＋本体100で0
 ```
 
 ★**exit 2（inconclusive）が出た場合は「安全」ではなく「測れなかった」**。
-`app.config.json` の `identity.productionDomain` が空、またはデプロイ未完了の可能性が高い。
+`app.config.json` の `identity.productionDomain` が空、デプロイ未完了、または
+`malwarecheck.site` 本体が一時的に利用できない可能性がある。
+
+短時間に何度も外部診断すると、対象本体ではなく
+`Vercel Security Checkpoint` などのアクセス確認画面を取得する場合があります。
+その画面の71点などを対象サイトの点数として扱わず、「測れなかった」にします。
+時間を空けて再実行し、対象本体を取得した実測で100点になった場合だけ完了です。

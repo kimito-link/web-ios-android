@@ -237,6 +237,9 @@ jobs:
           npx @capacitor/assets generate --ios --iosProject ios/App --assetPath assets --splashBackgroundColor '#0A0A0F' --splashBackgroundColorDark '#0A0A0F'
           # 生成「後」に、出荷される画像が Capacitor デフォルトのままでないことを確認（事故防止ゲート）。
           node scripts/verify-ios-splash-not-default.mjs --verify
+          # ★設定(androidScaleType/背景色)とダーク素材の中身を検査（2026-08-24追加）。
+          #   iOS/Android どちらのビルドでも同じ capacitor.config を読むため、ここで一度だけ走らせれば足りる。
+          node scripts/run-splash-gates.mjs --skip-drift
 
       # 起動時の白フラッシュ対策: LaunchScreen 暗色化 + UIUserInterfaceStyle=Dark。
       # @capacitor/assets generate の「後」に当てる（assets が

@@ -244,6 +244,29 @@
         追加インストールも不要（Node標準機能だけで動きます）。
       </div>
 
+      <div class="rule-box" id="splash-check">
+        <h3>🌅 起動した最初の1秒も、自動で確認する</h3>
+        <p>
+          アプリを開いた直後に出る画像を<b>起動画面（スプラッシュ）</b>と呼びます。
+          このキットは、Androidだけ画像が縦に伸びる、明るい画面が一瞬光る、
+          通常版とダーク版が同じ画像になる、といった設定ミスを公開前に見つけます。
+        </p>
+        <table class="gate-table">
+          <thead><tr><th>自動で見ること</th><th>一般的な見え方</th></tr></thead>
+          <tbody>
+            <tr><td>画像の表示方法</td><td>Androidだけロゴが縦横に伸びる事故を防ぐ</td></tr>
+            <tr><td>背景色の一致</td><td>起動時に白や別の色が一瞬光る事故を見つける</td></tr>
+            <tr><td>通常版とダーク版</td><td>名前だけでなく、2枚の中身が本当に違うか確認する</td></tr>
+            <tr><td>配布元とのずれ</td><td>各アプリへコピーした古い検査が取り残されていないか確認する</td></tr>
+          </tbody>
+        </table>
+        <pre><code>npm run splash:check</code></pre>
+        <p class="note">
+          ★この自動検査は設定と画像ファイルを確認します。端末ごとの色味や大きさの好みまでは判定できないため、
+          全部合格した後もiPhone・Android実機で最後に1回だけ目視します。
+        </p>
+      </div>
+
       <div class="rule-box" id="layout-rule">
         <h3>📁 使う前に：どこに置くか（これだけ守れば自動で繋がります）</h3>
         <p>
@@ -334,13 +357,13 @@
 
       <div class="ai-box-slot" data-ai-key="diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
-      <div class="rule-box">
-        <h3>🔒 出荷前に「セキュリティ診断で満点」を先取りする</h3>
+      <div class="rule-box" id="security-score">
+        <h3>🔒 出荷前に「セキュリティ診断で満点」を内部確認＋本体実測する</h3>
         <p>
           セキュリティ診断サービス（<code>malwarecheck.site</code>など）に自分のWebサイトを投げると、
           セキュリティヘッダーの設定漏れや <code>.env</code> ファイルの公開放置などで
-          減点されることがあります。<b>出荷してから気づくのではなく、出荷前に同じ基準で
-          自分でチェックできる</b>ようにしたのがこの検査です。
+          減点されることがあります。そこで、<b>内部の先取り検査で直す場所を見つけ、
+          最後に malwarecheck.site 本体でも実測する</b>2段階の検査にしています。
         </p>
         <div class="illust illust-green">
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
@@ -348,7 +371,9 @@
             <div class="farr">→</div>
             <div class="fbox"><span class="fi">🔒</span>ヘッダー・<br>露出を確認</div>
             <div class="farr">→</div>
-            <div class="fbox ok"><span class="fi">💯</span>減点ゼロを<br>確認</div>
+            <div class="fbox"><span class="fi">🛡️</span>本体でも<br>実測</div>
+            <div class="farr">→</div>
+            <div class="fbox ok"><span class="fi">💯</span>両方100点を<br>確認</div>
           </div>
           <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">攻撃・侵入・総当たりは一切しません（外形の確認のみ）</div>
         </div>
@@ -357,10 +382,10 @@
           node templates/scripts/verify-security-score.mjs
         </div>
         <p class="note">
-          ★<b>公開URLへのGETのみ</b>で完結します。SQLi/XSSの実注入テストやポートスキャン、
-          パスワードの総当たりは<b>一切行いません</b>（セキュリティ診断サービス側の
-          設計方針をそのまま継承しています）。「兆候が無い」ことは「絶対安全」を
-          意味しない、という限界も検査結果に毎回明記されます。
+          ★<b>外部サービスへ送るのは公開URLだけ</b>です。秘密情報やローカルファイルは送りません。
+          SQLi/XSSの実注入テストやポートスキャン、パスワードの総当たりも<b>一切行いません</b>。
+          100点は外部から見える簡易診断の満点であり、「絶対安全」を意味しないことも
+          検査結果に毎回明記されます。
         </p>
       </div>
 
