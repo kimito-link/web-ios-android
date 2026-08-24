@@ -49,6 +49,8 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 | **Web→アプリDL導線の金型** | `templates/web/`（公式バッジ取得・出し分け・Smart App Banner・CSS） | `Exosome`（実装・ブラウザ検証済み） |
 | **出荷事故ゲート** | `templates/scripts/verify-ios-splash-not-default.mjs`（Capacitorデフォルトスプラッシュ防止）／`verify-android-signing-config.mjs`（未署名AAB防止）／`check-tracked-imports.mjs`（**新規ファイルのadd忘れ検出**=git clone直後でもimportが全解決するかをgit ls-filesだけで検査）。CI から呼ぶ | `Exosome`（CI で実証）／tracked-importsは `tsuioku-no-kirameki.com`（Vercel全デプロイ失敗の実事故から実装・実証） |
 | **AI自己検証（計器）の思想** | [`docs/ai-rules/04_SELF_VERIFICATION.md`](docs/ai-rules/04_SELF_VERIFICATION.md) — 製品自身に計器（挙動の自己申告）を埋め込み、AIが人間の目視なしで検証ループを回す6パターン（fail-soft/provenance・メタ診断=診断計器自体の網羅性契約テスト、を2026-07-16追加）。**新しいアプリを作るとき設計段階で読む** | `tsuioku-no-kirameki.com`（診断817秒→5ms・遅延実測等で実証） |
+| **計器の完全版（全文脈→検証→進化）** | [`_docs/instruments/CONTEXT-EVOLUTION.md`](_docs/instruments/CONTEXT-EVOLUTION.md) — 全追跡ファイル・Gitが表示する未追跡ファイル、Git全履歴、現在の変更、指示書、確定/却下/未確定の判断を出典つきで1枚化。`context-engine.mjs` と `run-instruments.mjs` をコードごと配布 | このキット自身（2026-08-24から自己利用） |
+| **各プログラム本体の診断・進化進捗ページ** | [`_docs/instruments/SHINDAN-VERSION-PAGE.md`](_docs/instruments/SHINDAN-VERSION-PAGE.md) — 新規アプリごとに本体URLの `/check-shindan-version/` を作り、導入・実測・履歴・公開の進捗と4状態、根拠、次の一手を表示。`setup-new-app` と Next.js `prebuild` から自動更新 | このキット自身（同じページを生成して自己利用） |
 | **プライバシーページ生成** | `templates/scripts/generate-privacy-page.mjs`（健康/Play 必須の公開URL・API非依存） | `Exosome` |
 | **設定の単一真実源** | `app.config.schema.json`（identity/stores/brand/contact/auth/businessModel/ownership の JSON Schema） | `Exosome` |
 | **却下対応KB（Fable学習素材）** | `_docs/apple-reject-knowledge-base.md` | `partnership_program_website/_docs/` |
@@ -71,6 +73,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 
 ## AIへのお願い（守ること）
 
+- **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
 - **品質ルールは「AI汎用ルール」に従う**（`../AI汎用ルール/` または同梱の `docs/ai-rules/`）。

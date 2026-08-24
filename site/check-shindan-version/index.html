@@ -1,0 +1,71 @@
+<!doctype html>
+  <html lang="ja"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>更新情報と動作チェック | アプリ公開キット</title>
+  <meta name="description" content="アプリ公開キットの最新版、準備の進み具合、動作確認の結果を分かりやすく表示します。">
+  <meta name="robots" content="index,follow"><meta name="theme-color" content="#315efb">
+  <style>
+  :root{--brand:#315efb;--accent:#11a36a;--ink:#1a1a2e;--muted:#5f6475;--line:#e2e5ec;--bg:#f7f7fb;--paper:#fff;--pass:#047857;--warn:#b45309;--fail:#b4232f;--unknown:#6b7280;--ring:#c43a45}*{box-sizing:border-box}html{color-scheme:light}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.7}a{color:inherit}.site-header{background:#fff;border-bottom:2px solid #eee}.site-header-inner{width:calc(100% - 32px);max-width:960px;margin:auto;min-height:68px;display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{display:flex;gap:11px;align-items:center;text-decoration:none;min-width:0}.brand-mark{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--brand);color:#fff;font-size:1.05rem;font-weight:900;flex:none}.brand-copy{display:grid;line-height:1.25}.brand-copy strong{font-size:.96rem}.brand-copy small{color:var(--muted);font-size:.72rem}.home-button{padding:9px 15px;border-radius:999px;background:var(--brand);color:#fff;text-decoration:none;font-weight:800;font-size:.82rem;white-space:nowrap}.wrap{width:calc(100% - 32px);max-width:960px;margin:auto;padding:36px 0 72px;overflow-wrap:anywhere}.intro{margin-bottom:22px}.intro h1{font-size:clamp(1.8rem,5vw,2.65rem);line-height:1.25;letter-spacing:-.035em;margin:0 0 10px}.intro p{margin:0;color:var(--muted)}.jump-links{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 24px}.jump-links a{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;text-decoration:none;color:var(--brand);font-size:.82rem;font-weight:800}.overview,.explain,.stage,.technical{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 28px #1a1a2e0a}.overview{padding:24px}.overview-top{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:24px;align-items:center}.eyebrow,.audience{margin:0 0 5px;color:var(--brand);font-weight:900;font-size:.75rem}.overview h2{font-size:clamp(1.45rem,4vw,2rem);margin:0 0 6px}.overview-message{color:var(--muted);margin:0}.ring{width:148px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring) calc(90 * 1%),#e5e7eb 0);position:relative;justify-self:end}.ring:before{content:"";position:absolute;inset:14px;border-radius:50%;background:#fff}.ring div{z-index:1;text-align:center}.ring strong{display:block;font-size:2.35rem;line-height:1}.ring span{color:var(--muted);font-size:.7rem;font-weight:800}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}.stat{padding:14px;border-radius:12px;background:#f7f8fb;border:1px solid var(--line)}.stat b{font-size:1.35rem;display:block}.stat span{font-size:.74rem;color:var(--muted);font-weight:800}.explain{padding:22px;margin-top:18px}.explain h2{font-size:1.2rem;margin:0 0 12px}.latest{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0;list-style:none}.latest li{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border-radius:12px;background:#f7f8fb;font-size:.84rem}.latest li span{min-width:0;text-align:right}.note{margin:14px 0 0;border-left:4px solid var(--brand);padding-left:13px;color:var(--muted);font-size:.86rem}.technical{margin-top:18px;padding:0;overflow:hidden}.technical>summary{cursor:pointer;padding:18px 22px;color:var(--brand);font-weight:900;list-style:none}.technical>summary::-webkit-details-marker{display:none}.technical>summary:before{content:"＋ ";}.technical[open]>summary:before{content:"－ ";}.technical-body{padding:0 20px 22px;border-top:1px solid var(--line)}.section-title{margin:22px 0 12px}.section-title h2{margin:0;font-size:1.12rem}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.stage{padding:20px;overflow:hidden}.stage-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.stage-head h2{font-size:1.05rem;margin:7px 0 0}.stage-head>strong{font-size:1.1rem}.status{display:inline-block;font-size:.7rem;font-weight:900;padding:3px 9px;border-radius:999px;background:#edf1f6;color:var(--unknown)}.stage-pass .status{background:#e8f7f0;color:var(--pass)}.stage-warning .status{background:#fff4d7;color:var(--warn)}.stage-fail .status{background:#ffeaec;color:var(--fail)}.stage>p{font-size:.84rem;color:var(--muted);min-height:3em}.bar{height:8px;border-radius:99px;background:#e7ebf1;overflow:hidden;margin:16px 0}.bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--brand),var(--accent))}.stage ul{list-style:none;margin:0;padding:0}.stage li{display:flex;gap:10px;padding:10px 0;border-top:1px solid #edf0f4}.stage li>span{font-weight:900}.stage li div{display:grid;gap:2px;min-width:0}.stage small{color:var(--muted)}.stage em{font-size:.76rem;color:var(--warn);font-style:normal;font-weight:800}.check-pass>span{color:var(--pass)}.check-fail>span{color:var(--fail)}.check-unmeasured>span,.check-warning>span{color:var(--warn)}.meta{margin-top:16px;color:var(--muted);font-size:.74rem}@media(max-width:700px){.site-header-inner{min-height:60px}.brand-copy small{display:none}.home-button{font-size:.75rem;padding:8px 11px}.wrap{padding-top:26px}.overview-top{grid-template-columns:1fr}.ring{justify-self:start;width:130px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.latest{grid-template-columns:1fr}.stage>p{min-height:0}}@media(max-width:390px){.brand-copy strong{font-size:.82rem}.overview,.explain{padding:18px}.stat{padding:12px}.latest li{display:grid}.latest li span{text-align:left}}
+  </style></head><body>
+  <header class="site-header"><div class="site-header-inner"><a class="brand" href="https://web-ios-android.vercel.app"><span class="brand-mark">ア</span><span class="brand-copy"><strong>アプリ公開キット</strong><small>更新情報と動作チェック</small></span></a><a class="home-button" href="https://web-ios-android.vercel.app">説明ページへ戻る</a></div></header>
+  <main class="wrap">
+    <section class="intro"><h1>更新情報と動作チェック</h1><p>最新版の内容と、公開に必要な準備がどこまで整っているかを確認できます。</p></section>
+    <nav class="jump-links" aria-label="ページ内メニュー"><a href="https://web-ios-android.vercel.app">キットの説明</a><a href="#updates">最新の更新</a><a href="#status">準備の状況</a></nav>
+    <section class="overview" id="status"><div class="overview-top"><div><p class="eyebrow">現在の準備状況</p><h2>v0.1.0 は 90% 確認済み</h2><p class="overview-message">確認が必要な項目が 1 件あります。詳しい内容は下で確認できます。</p></div><div class="ring" role="img" aria-label="確認の進み具合 90%"><div><strong>90%</strong><span>18 / 20 確認済み</span></div></div></div><div class="stats" aria-label="確認結果"><div class="stat"><b>18</b><span>確認できた項目</span></div><div class="stat"><b>0</b><span>確認中</span></div><div class="stat"><b>1</b><span>まだ未確認</span></div><div class="stat"><b>1</b><span>見つかった問題</span></div></div></section>
+    <section class="explain" id="updates" aria-labelledby="user-version-updates"><p class="audience">最新版</p><h2 id="user-version-updates">今回の更新内容</h2><ul class="latest"><li><b>v0.1.0</b><span>各アプリに更新情報と動作チェックページを追加</span></li><li><b>v0.1.0</b><span>説明ページにも同じ更新情報を自動表示</span></li><li><b>v0.1.0</b><span>前回の判断を引き継ぐ仕組みを追加</span></li></ul><p class="note">この内容はキットの説明ページにも同じ情報が表示されます。</p></section>
+    <details class="technical"><summary>詳しい確認内容を見る（開発者向け）</summary><div class="technical-body"><div class="section-title"><p class="audience">開発・確認用</p><h2>項目ごとの結果と、次にすること</h2></div><section class="grid">
+      <article class="stage stage-pass">
+        <div class="stage-head">
+          <div><span class="status">✓ 確認済み</span><h2>計器の導入</h2></div>
+          <strong>5/5</strong>
+        </div>
+        <p>診断を動かす土台が、本体リポジトリにそろっているか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="計器の導入 100%"><i style="width:100%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>3値判定の共通土台</b><small>scripts/lib/instrument-core.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>完全版の統合入口</b><small>templates/scripts/run-instruments.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>全文脈エンジン</b><small>templates/scripts/context-engine.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>汎用診断ランナー</b><small>templates/diagnostics/run.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>進化台帳の門番</b><small>scripts/check-improvement.mjs</small></div></li></ul>
+      </article>
+      <article class="stage stage-fail">
+        <div class="stage-head">
+          <div><span class="status">! 問題あり</span><h2>いまの状態を実測</h2></div>
+          <strong>2/3</strong>
+        </div>
+        <p>最後の計器実行が、文脈と製品状態を実際に測れたか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67" aria-label="いまの状態を実測 67%"><i style="width:67%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>計器レポート</b><small>2026-08-24T05:24:25.332Z</small></div></li><li class="check-pass"><span>✓</span><div><b>全文脈パケット</b><small>pass / exit 0</small></div></li><li class="check-fail"><span>!</span><div><b>汎用診断</b><small>fail / exit 1</small><em>次: 黄または赤の診断を確認する</em></div></li></ul>
+      </article>
+      <article class="stage stage-pass">
+        <div class="stage-head">
+          <div><span class="status">✓ 確認済み</span><h2>版ごとの進化</h2></div>
+          <strong>4/4</strong>
+        </div>
+        <p>何を良くするかを宣言し、同じ条件の実測と検証済み判断を次版へ渡せているか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="版ごとの進化 100%"><i style="width:100%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>改善指標の宣言</b><small>3 指標</small></div></li><li class="check-pass"><span>✓</span><div><b>実測履歴</b><small>3 件</small></div></li><li class="check-pass"><span>✓</span><div><b>現在版の実測</b><small>v0.1.0: 3 件</small></div></li><li class="check-pass"><span>✓</span><div><b>証拠つき判断</b><small>2 件</small></div></li></ul>
+      </article>
+      <article class="stage stage-warning">
+        <div class="stage-head">
+          <div><span class="status">△ 確認中</span><h2>計器の継続稼働</h2></div>
+          <strong>2/3</strong>
+        </div>
+        <p>計器を置いただけにせず、版が進んでも実際に走り続けているか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67" aria-label="計器の継続稼働 67%"><i style="width:67%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>停止検出の仕組み</b><small>scripts/check-instrument-ran.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>実行スタンプ</b><small>1 種</small></div></li><li class="check-unmeasured"><span>?</span><div><b>完全版の緑スタンプ</b><small>記録なし</small><em>次: 全計器を緑にして記録する</em></div></li></ul>
+      </article>
+      <article class="stage stage-pass">
+        <div class="stage-head">
+          <div><span class="status">✓ 確認済み</span><h2>本体への公開</h2></div>
+          <strong>3/3</strong>
+        </div>
+        <p>本体ドメイン配下の同じURLで、いつでも現在地を確認できるか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="本体への公開 100%"><i style="width:100%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>本番ドメイン</b><small>https://web-ios-android.vercel.app</small></div></li><li class="check-pass"><span>✓</span><div><b>診断ページ本体</b><small>site/check-shindan-version</small></div></li><li class="check-pass"><span>✓</span><div><b>自動更新の配線</b><small>package.json scripts</small></div></li></ul>
+      </article>
+      <article class="stage stage-pass">
+        <div class="stage-head">
+          <div><span class="status">✓ 確認済み</span><h2>公開前の安全確認</h2></div>
+          <strong>2/2</strong>
+        </div>
+        <p>診断ページを含む公開サイトを、安全側の基準で点検できるか。</p>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="公開前の安全確認 100%"><i style="width:100%"></i></div>
+        <ul><li class="check-pass"><span>✓</span><div><b>セキュリティ計器</b><small>templates/scripts/verify-security-score.mjs</small></div></li><li class="check-pass"><span>✓</span><div><b>セキュリティ計器 selftest</b><small>pass / exit 0</small></div></li></ul>
+      </article></section><p class="note">この割合は出来の良し悪しを採点したものではなく、確認が終わった項目の割合です。未確認の項目を、問題なしとして数えることはありません。</p><div class="meta">version 0.1.0 / commit 7ded3a48 / 更新 2026/08/24 15:16</div></div></details>
+  </main></body></html>

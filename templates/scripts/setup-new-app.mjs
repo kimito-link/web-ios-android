@@ -112,7 +112,7 @@ const customDomain = config.web?.deploy?.customDomain;
 const wantsDomainConnect = customDomain && !isPlaceholder(customDomain);
 const TOTAL = wantsDomainConnect ? 5 : 4;
 
-// --- Step 2: 資産生成(キット同梱の node スクリプトを使う。Python不要) ---
+// --- Step 2: 資産生成 + 本体内の診断進捗ページ生成 ---
 header('セットアップ手順');
 step(1, TOTAL, 'ストア資産(アイコン/スクショ等)を生成');
 const genAssets = path.join(__dirname, 'generate-store-assets.mjs');
@@ -121,6 +121,18 @@ if (fs.existsSync(genAssets)) {
   catch { warn('generate-store-assets.mjs が失敗。アイコン元画像(app.config brand.iconSource)を確認。'); }
 } else {
   warn('generate-store-assets.mjs が見つかりません(キットからコピーしてください)。');
+}
+
+const genShindan = path.join(__dirname, 'generate-shindan-version.mjs');
+if (fs.existsSync(genShindan)) {
+  try {
+    run(`node "${genShindan}"`);
+    ok(`本体の診断進捗ページを生成: https://${productionDomain}/check-shindan-version/`);
+  } catch {
+    warn('診断進捗ページの初期生成に失敗。node scripts/generate-shindan-version.mjs を再実行してください。');
+  }
+} else {
+  warn('generate-shindan-version.mjs が見つかりません(キットからコピーしてください)。');
 }
 
 // --- Step 3: Android 初期化案内(Capacitor優先。TWAはIAP不要な軽量アプリ向けの代替) ---

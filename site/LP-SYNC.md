@@ -10,10 +10,13 @@
 
 | 機能ページ | LP (`site/index.html`) 内の対応箇所 | 種別 |
 |---|---|---|
-| `features/health-check/`（けんこう診断・診断キット・常時診断・進化台帳・★4つ目の状態・セキュリティスコアを1本化したページ） | `<!-- ⑥ -->` `<!-- ⑥.3 -->` `<!-- ⑥.5 -->` `<!-- ⑥.7 -->` の4つの `.step.step-bonus`（`steps-grid` 内） | step 4個 |
+| `features/health-check/`（けんこう診断・診断キット・常時診断・進化台帳・全文脈と判断の継承・本体の診断進捗ページ・★4つ目の状態・セキュリティスコアを1本化したページ） | `<!-- ⑥ -->` `<!-- ⑥.3 -->` `<!-- ⑥.5 -->` `<!-- ⑥.7 -->` の4つの `.step.step-bonus`（`steps-grid` 内） | step 4個 |
 | ★4つ目の状態（見張り役そのものが動いていないことの検出） | ★新しいstepは作らず `⑥.5` の `.step-detail` 内に段落を追加（進化台帳の一部として説明する） | stepの中の1段落 |
+| 全文脈パケット＋判断の進化台帳（全ファイル・全Git履歴・確定/却下/未確定） | ★新しいstepは作らず `⑥.5` の見出し・`.step-detail` に統合（進化の閉ループとして説明する） | stepの中の2段落 |
+| 各アプリ本体の `/check-shindan-version/`（導入・実測・履歴・公開の視覚的進捗） | ★新しいstepは作らず `⑥.5` の見出し・`.step-detail` に統合し、キット自身の実物ページへリンク。LP上部の `data-shindan-version-summary` には同じレポートからユーザー向けバージョンアップ情報を描画 | stepの中の1段落＋実物導線＋動的バージョン情報 |
 | セキュリティスコア先取り（malwarecheck.site満点チェック、2026-08-24追加） | `⑥.7` の `.step.step-bonus`（`⑥.5`の直後・`⑦`の直前） | step 1個 |
-| 同上のAI指示（diagnostics / health-check / always-on-diagnostics / improvement-ledger / security-score） | `⑥.5`直後に3個・`⑥.7`直後に1個の計4個の `.ai-box-slot` | AI指示スロット（データ駆動） |
+| 起動画面（スプラッシュ）検査（2026-08-24追加。正本は別リポ `github/splash/`、方式ごとの作り方は `_docs/SPLASH-SCREEN-PLAYBOOK.md`） | `⑥.8` の `.step.step-bonus`（`⑥.7`の直後・`⑦`の直前） | step 1個 |
+| 同上のAI指示（diagnostics / health-check / always-on-diagnostics / improvement-ledger / context-evolution / shindan-version-page / security-score） | `⑥.5`直後に5個・`⑥.7`直後に1個の計6個の `.ai-box-slot` | AI指示スロット（データ駆動） |
 | `line-bot/`（LINE無応答ゼロ化） | `<!-- ⑧ -->` の `.step.step-bonus` 内、`.step-detail` 内の1段落 | stepの中の1段落 |
 | `line-bot-features/`（画像・動画・音声認識） | 同上、`.step-detail` 内の別の1段落 | stepの中の1段落 |
 | 同上2つのAI指示（line-bot / line-bot-features） | `apps/` 側の一覧に集約（LP本体には出していない） | — |

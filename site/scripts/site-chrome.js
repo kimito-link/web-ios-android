@@ -13,6 +13,7 @@
 
 (function () {
   var NAV_ITEMS = [
+    { href: '/check-shindan-version/', label: '✅ 更新・動作状況' },
     { href: '/howto/', label: '🖼️ ゆっくり解説' },
     { href: '/story/', label: '📖 完成ものがたり' },
     { href: '/guide/', label: '📋 準備ガイド' },

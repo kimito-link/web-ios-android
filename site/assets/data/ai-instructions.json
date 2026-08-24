@@ -1,5 +1,5 @@
 {
-  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger/security-score は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止。2026-08-24、security-score追加）。一覧では同じpageは代表1件のみ表示される。",
+  "_readme": "機能→AIへの指示文の対応表（正本）。scripts/ai-box.js がこれを読んで <div class=\"ai-box-slot\" data-ai-key=\"...\"> に描画する。手順書のパスが変わった／新しい機能が増えたときは、ここを直すだけで全ページに反映される。各ページへのHTML直書きはしない。order は「AIへの指示 一覧」（フッター付近の共通導線）に並べる順（小さいほど先）。page はその一覧から見出しページへ飛ぶリンク先（ルート相対）。indexLabel はその一覧に出す短いラベル（titleは各ページ見出し用で全部同じ文言になりがちなので別に持つ）。★textは全項目、web-ios-androidキットの中で作業している人にも、キットを使っていない別リポジトリの人にも同じ文面で通じる書き方にする（「このアプリに」ではなく「対象を明示させた上でGitHubから取得」の形。2026-08-22統一）。★diagnostics/health-check/always-on-diagnostics/improvement-ledger/context-evolution/shindan-version-page/security-score は同じ page (/features/health-check/) を指す＝『診断』に関する説明・AI指示・URL共有は1ディレクトリ1ページに集約している（2026-08-22、features/diagnostics/ を統合して廃止。2026-08-24、security-score・全文脈の進化ループ・本体の診断進捗ページを追加）。一覧では同じpageは代表1件のみ表示される。",
   "diagnostics": {
     "order": 1,
     "page": "/features/health-check/",
@@ -32,8 +32,24 @@
     "text": "このアプリに、バージョンを重ねるほど退化させない実測台帳の仕組みを入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの IMPROVEMENT-RULES.md を読んで、そこに書かれている通りに進めて。\n実装（判定・記録の口・門番）は templates/scripts/ に入っているのでコピーして使う:\ncheck-improvement.mjs / record-improvement.mjs / lib/improvement-ledger.mjs /\nimprovement-metrics.mjs / improvement-history.mjs。\n★指標テーブル（improvement-metrics.mjs）は空で始めて、実測してから足すこと。\n実測せずに方向（better）を宣言すると、正しくない向きを機械で固定してしまう。\nあわせて check-instrument-ran.mjs も入れて、門番がそもそも走っていない状態を検出して。\n配線は「検査が緑のときだけ記録が残る」形にする:\n  node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
     "note": "※実装コードごと配布済みです（2026-08-22〜）。★指標テーブルだけは空で配ります ── どの数字を測るかはアプリごとに違い、実測せずに方向を宣言すると正しく直した人を「退化させた」と誤判定して止めてしまうためです。"
   },
-  "security-score": {
+  "context-evolution": {
     "order": 5,
+    "page": "/features/health-check/",
+    "indexLabel": "🧭 全文脈を引き継ぎ、証拠つきで進化する計器を入れる",
+    "title": "🤖 「計器の完全版」をAIに実装させたい方へ",
+    "text": "このリポジトリに、web-ios-androidキットの『計器の完全版』を入れて。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの CONTEXT-EVOLUTION.md を読み、templates/scripts/ の次の3ファイルを scripts/ へコピーして使う:\ncontext-engine.mjs / context-evolution.json / run-instruments.mjs。\nまず node scripts/context-engine.mjs --write .instrument-context.md を実行し、\n全追跡ファイル・Gitが表示する未追跡ファイル、Git全履歴、現在の変更、指示書、数字の進化台帳、\n確定した判断・実測で却下した案・未確定の仮説を、出典つきの1枚で確認する。\nその後 node scripts/run-instruments.mjs --deep で全計器を最後まで測る。\n作業後は context-engine.mjs --record で、検証済みの結果を次回へ戻す。\nconfirmed / rejected は evidence 必須、まだ推測なら pending のままにすること。\n★.env・鍵・証明書・ローカル設定の本文やhashは収集しない。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して使える。）",
+    "note": "※『全文脈』はリポジトリから安全に取得できる範囲を全件計上する意味です。会話だけの判断・外部サービス・実機・秘密本文は取得せず、未取得を把握済みに混ぜません。"
+  },
+  "shindan-version-page": {
+    "order": 6,
+    "page": "/features/health-check/",
+    "indexLabel": "📊 本体に診断・進化の進捗ページを作る",
+    "title": "🤖 各プログラム本体に進捗ページを作りたい方へ",
+    "text": "このプログラム本体に /check-shindan-version/ を作って。\nhttps://github.com/kimito-link/web-ios-android/tree/main/_docs/instruments\nの SHINDAN-VERSION-PAGE.md を読み、templates/scripts/generate-shindan-version.mjs を scripts/ へコピーする。\nNext.js App Routerなら templates/next-app/app/check-shindan-version/ と\ntemplates/next-app/scripts/update-shindan-version.mjs も本体へ入れ、package.json の prebuild / shindan / shindan:update を配線する。\n静的サイトなら生成器に公開ルートを判定させ、check-shindan-version/index.html を作る。\n同じ report.json を唯一の公開データ源にし、利用者向けの短いバージョンアップ情報を本体LPへ、開発・確認用の詳しい診断と進化進捗を /check-shindan-version/ へ同時に反映する。\n進捗率は品質点にせず、導入・配線・実測・履歴・公開の確認できた節目だけを数える。\n完了 / 進行中 / 要対応 / 未計測を分け、未計測を完了に混ぜず、根拠と次の一手も表示する。\n公開レポートへ .env・鍵・トークン・絶対パス・診断の生ログを含めない。\n最後に npm run shindan を実行し、本体LPの更新情報と /check-shindan-version/ の両方が開き、同じ生成日時・版を表示することを確認する。",
+    "note": "※新規アプリのNext.js金型にはページ本体・LP用コンポーネント・ビルド前更新を同梱済みです。静的サイトにはページとLP埋め込み用 summary.js を同じレポートから生成します。"
+  },
+  "security-score": {
+    "order": 7,
     "page": "/features/health-check/",
     "indexLabel": "🔒 セキュリティスコアを出荷前にチェックする",
     "title": "🤖 セキュリティスコアチェックをAIに実装させたい方へ",
@@ -41,7 +57,7 @@
     "note": "※malwarecheck.site（外部サイトを診断するセキュリティチェックサービス）の減点基準を移植したもの。出荷前にこのスクリプトで満点相当を確認しておけば、実際にmalwarecheck.siteのようなサービスへ投げても減点されにくくなります。"
   },
   "line-bot": {
-    "order": 6,
+    "order": 8,
     "page": "/line-bot/",
     "indexLabel": "💬 LINEのAI社員bot（無応答ゼロ化）を入れる",
     "title": "🤖 このページをAIに実装させたい方へ",
@@ -49,7 +65,7 @@
     "note": ""
   },
   "line-bot-features": {
-    "order": 7,
+    "order": 9,
     "page": "/line-bot-features/",
     "indexLabel": "🖼️ LINE botに画像・動画・音声認識を追加する",
     "title": "🤖 このページをAIに実装させたい方へ",

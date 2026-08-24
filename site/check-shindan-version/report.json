@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-24T06:16:29.740Z",
+  "generatedAtLabel": "2026/08/24 15:16",
+  "commit": "7ded3a48",
+  "measurement": {
+    "attempted": false,
+    "exitCode": null
+  },
+  "app": {
+    "name": "web-ios-android",
+    "version": "0.1.0",
+    "homeUrl": "https://web-ios-android.vercel.app",
+    "diagnosisUrl": "https://web-ios-android.vercel.app/check-shindan-version/",
+    "primaryColor": "#315efb",
+    "accentColor": "#11a36a"
+  },
+  "progress": {
+    "completed": 18,
+    "total": 20,
+    "percent": 90
+  },
+  "counts": {
+    "pass": 18,
+    "warning": 0,
+    "fail": 1,
+    "unmeasured": 1
+  },
+  "stages": [
+    {
+      "id": "install",
+      "title": "計器の導入",
+      "summary": "診断を動かす土台が、本体リポジトリにそろっているか。",
+      "status": "pass",
+      "completed": 5,
+      "total": 5,
+      "percent": 100,
+      "checks": [
+        {
+          "label": "3値判定の共通土台",
+          "status": "pass",
+          "evidence": "scripts/lib/instrument-core.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "完全版の統合入口",
+          "status": "pass",
+          "evidence": "templates/scripts/run-instruments.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "全文脈エンジン",
+          "status": "pass",
+          "evidence": "templates/scripts/context-engine.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "汎用診断ランナー",
+          "status": "pass",
+          "evidence": "templates/diagnostics/run.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "進化台帳の門番",
+          "status": "pass",
+          "evidence": "scripts/check-improvement.mjs",
+          "nextAction": ""
+        }
+      ]
+    },
+    {
+      "id": "measurement",
+      "title": "いまの状態を実測",
+      "summary": "最後の計器実行が、文脈と製品状態を実際に測れたか。",
+      "status": "fail",
+      "completed": 2,
+      "total": 3,
+      "percent": 67,
+      "checks": [
+        {
+          "label": "計器レポート",
+          "status": "pass",
+          "evidence": "2026-08-24T05:24:25.332Z",
+          "nextAction": "npm run shindan を実行する"
+        },
+        {
+          "label": "全文脈パケット",
+          "status": "pass",
+          "evidence": "pass / exit 0",
+          "nextAction": ""
+        },
+        {
+          "label": "汎用診断",
+          "status": "fail",
+          "evidence": "fail / exit 1",
+          "nextAction": "黄または赤の診断を確認する"
+        }
+      ]
+    },
+    {
+      "id": "evolution",
+      "title": "版ごとの進化",
+      "summary": "何を良くするかを宣言し、同じ条件の実測と検証済み判断を次版へ渡せているか。",
+      "status": "pass",
+      "completed": 4,
+      "total": 4,
+      "percent": 100,
+      "checks": [
+        {
+          "label": "改善指標の宣言",
+          "status": "pass",
+          "evidence": "3 指標",
+          "nextAction": "実測してから better と why を宣言する"
+        },
+        {
+          "label": "実測履歴",
+          "status": "pass",
+          "evidence": "3 件",
+          "nextAction": "実測値と source を記録する"
+        },
+        {
+          "label": "現在版の実測",
+          "status": "pass",
+          "evidence": "v0.1.0: 3 件",
+          "nextAction": "現在版を実測する"
+        },
+        {
+          "label": "証拠つき判断",
+          "status": "pass",
+          "evidence": "2 件",
+          "nextAction": "検証後に confirmed / rejected を証拠つきで記録する"
+        }
+      ]
+    },
+    {
+      "id": "continuity",
+      "title": "計器の継続稼働",
+      "summary": "計器を置いただけにせず、版が進んでも実際に走り続けているか。",
+      "status": "warning",
+      "completed": 2,
+      "total": 3,
+      "percent": 67,
+      "checks": [
+        {
+          "label": "停止検出の仕組み",
+          "status": "pass",
+          "evidence": "scripts/check-instrument-ran.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "実行スタンプ",
+          "status": "pass",
+          "evidence": "1 種",
+          "nextAction": "緑の検査後に stamp を残す"
+        },
+        {
+          "label": "完全版の緑スタンプ",
+          "status": "unmeasured",
+          "evidence": "記録なし",
+          "nextAction": "全計器を緑にして記録する"
+        }
+      ]
+    },
+    {
+      "id": "publishing",
+      "title": "本体への公開",
+      "summary": "本体ドメイン配下の同じURLで、いつでも現在地を確認できるか。",
+      "status": "pass",
+      "completed": 3,
+      "total": 3,
+      "percent": 100,
+      "checks": [
+        {
+          "label": "本番ドメイン",
+          "status": "pass",
+          "evidence": "https://web-ios-android.vercel.app",
+          "nextAction": "app.config.json に productionDomain を設定する"
+        },
+        {
+          "label": "診断ページ本体",
+          "status": "pass",
+          "evidence": "site/check-shindan-version",
+          "nextAction": ""
+        },
+        {
+          "label": "自動更新の配線",
+          "status": "pass",
+          "evidence": "package.json scripts",
+          "nextAction": "prebuild と shindan スクリプトを追加する"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "公開前の安全確認",
+      "summary": "診断ページを含む公開サイトを、安全側の基準で点検できるか。",
+      "status": "pass",
+      "completed": 2,
+      "total": 2,
+      "percent": 100,
+      "checks": [
+        {
+          "label": "セキュリティ計器",
+          "status": "pass",
+          "evidence": "templates/scripts/verify-security-score.mjs",
+          "nextAction": ""
+        },
+        {
+          "label": "セキュリティ計器 selftest",
+          "status": "pass",
+          "evidence": "pass / exit 0",
+          "nextAction": ""
+        }
+      ]
+    }
+  ],
+  "evolution": {
+    "metricCount": 3,
+    "measurementCount": 3,
+    "currentVersionMeasured": true,
+    "decisionCounts": {
+      "confirmed": 1,
+      "rejected": 1,
+      "pending": 0
+    },
+    "latest": [
+      {
+        "version": "0.1.0",
+        "label": "selftest を持たない診断キットの検査",
+        "value": 3,
+        "unit": "本"
+      },
+      {
+        "version": "0.1.0",
+        "label": "selftest を持たない配布スクリプト",
+        "value": 8,
+        "unit": "本"
+      },
+      {
+        "version": "0.1.0",
+        "label": "診断キットの検査本数",
+        "value": 6,
+        "unit": "本"
+      }
+    ],
+    "publicLatest": [
+      {
+        "version": "0.1.0",
+        "label": "各アプリに更新情報と動作チェックページを追加",
+        "value": "",
+        "unit": ""
+      },
+      {
+        "version": "0.1.0",
+        "label": "説明ページにも同じ更新情報を自動表示",
+        "value": "",
+        "unit": ""
+      },
+      {
+        "version": "0.1.0",
+        "label": "前回の判断を引き継ぐ仕組みを追加",
+        "value": "",
+        "unit": ""
+      }
+    ]
+  },
+  "limitations": [
+    "進捗率は品質点ではなく、確認できた導入・配線・実測・履歴・公開の節目の割合です。",
+    "未計測は合格にも異常にも数えません。",
+    "秘密ファイル本文、トークン、鍵、絶対パスは公開レポートへ含めません。",
+    "外部サービス・実機・会話だけに残る判断は、証拠を記録するまで未取得です。"
+  ]
+}

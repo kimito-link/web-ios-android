@@ -74,6 +74,21 @@ const PAIRS = [
     label: '検査の実行記録（4つ目の状態）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-instrument-ran.mjs'),
     copies: [resolve(KIT_ROOT, 'scripts/check-instrument-ran.mjs')]
+  },
+  {
+    label: '全文脈と判断の進化台帳（入口）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/context-engine.mjs'),
+    copies: []
+  },
+  {
+    label: '完全版の計器（統合入口）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/run-instruments.mjs'),
+    copies: []
+  },
+  {
+    label: '本体の診断・進化進捗ページ（生成器）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/generate-shindan-version.mjs'),
+    copies: []
   }
 ];
 

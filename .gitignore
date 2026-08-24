@@ -1,4 +1,6 @@
 node_modules/
+.instrument-context.md
+.instrument-report.json
 _drafts/
 .DS_Store
 *.log

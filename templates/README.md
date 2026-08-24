@@ -11,8 +11,8 @@
 
 | パス | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
-| `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→Android初期化案内(Capacitor優先/IAP不要ならTWAも可)→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
-| `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
+| `scripts/setup-new-app.mjs` | **立ち上げウィザード(まずここ)**。app.config 検証→資産生成→本体の `/check-shindan-version/` 初期生成→Android初期化案内(Capacitor優先/IAP不要ならTWAも可)→Secrets/手動GUI一覧 | 無改変(app.config.json 駆動・`node scripts/setup-new-app.mjs --dry-run` 可) |
+| `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config、★診断進捗ページ `/check-shindan-version/` を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | [`expo-native/`](expo-native/README.md) | **React Native(Expo) をネイティブのまま両ストアに出す金型**(WebView 非依存)。iOS/Android のリリース CI + 署名注入 + Play グラフィック生成 + 資産名衝突テスト。**方式の選び分け(TWA/Capacitor/Expo)と地雷4件を README に集約** | `<PLAY_PACKAGE_NAME>`/`<APP_BUNDLE_ID>`/`<PRODUCTION_DOMAIN>` を置換。`*.mjs` は無改変 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
@@ -33,8 +33,16 @@
 | `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・iOS版(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
 | `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
+| `scripts/generate-capacitor-splash.mjs` | スプラッシュのマスター素材(`assets/splash.png`/`splash-dark.png`)を用意する(無ければブランド色で生成、既存は上書きしない)。★ios/android 両リリース CI が名指しで呼ぶのに、2026-08-24までキットに実体が無く、5リポがそれぞれ自力実装した結果5つとも中身が違っていた事故の再発防止 | **無改変**(`--out-dir` は検証用の脱出口。app.config.json の `brand.primaryColor`/`accentColor` を読む) |
+| `scripts/check-splash-config.mjs` | Android の `androidScaleType` 未設定(既定=引き伸ばし)と、背景色の4箇所不一致(白フラッシュ)を検査。Expo prebuild 方式では自動的に対象外(🟡)になる | **無改変**(`node scripts/run-splash-gates.mjs` から呼ばれる) |
+| `scripts/check-splash-dark-variant.mjs` | `splash.png`/`splash-dark.png` が**中身まで別画像**かをハッシュで検査。「ファイルは2つあるが同一データ」という、存在チェックでは見つからない事故を検出 | **無改変**(同上) |
+| `scripts/check-splash-safe-circle.mjs` | Expo prebuild 方式向け。Android 12+ の円形マスクでロゴが切れないか(透過PNGか・安全円の内側か)を検査。詳細は [`SPLASH-SCREEN-PLAYBOOK.md`](../_docs/SPLASH-SCREEN-PLAYBOOK.md) | **無改変**(同上) |
+| `scripts/run-splash-gates.mjs` | 上記スプラッシュ検査群をまとめて走らせる入口。終了コードは一番悪いものを返す(fail > inconclusive > pass) | **無改変**(`--allow-missing-dark`/`--config`/`--dir` で調整) |
+| `scripts/lib/splash-manifest.mjs` | スプラッシュ検査群の配布版と対象ファイル一覧(このキットが正本) | 無改変 |
 | `scripts/check-tracked-imports.mjs` | **新規ファイルの `git add` 忘れ検出ゲート**。git 追跡ファイルだけで相対 import が全解決するか静的検査= git clone 直後(CI/Vercel/ストアビルド)の実体を再現。ローカル検証は作業ツリー基準なので原理的に検出できない穴を塞ぐ。思想は [`../docs/ai-rules/04_SELF_VERIFICATION.md`](../docs/ai-rules/04_SELF_VERIFICATION.md) §5 | **無改変**(`TRACKED_IMPORT_ROOTS` env で対象限定可。CI の build 直後と pre-push に置く) |
 | `scripts/lib/instrument-core.mjs`<br>★[計器のやりとりはこちら](../_docs/instruments/README.md) | **検査の共通土台(依存ゼロ)**。★終了コードを3値にする(0=合格 / 1=測れた上での赤 / ★2=測れなかった)。`normalizeProbeResult` が★**根拠(evidence)なき pass を自動で inconclusive へ降格**＝「何も測っていないのに緑」を構造的に潰す(2026-08-17 に `audit-native-cta.mjs` が引数なしで「✅0件」と出した偽の緑と同じ型)。`runSelfTest` は毒→赤→finally復帰の定型。赤のときは3行(何が/直し方/★この検査の限界)を出す | **無改変**(新しい検査を書くときに import する。見本は `audit-native-cta.mjs --selftest`) |
+| `scripts/context-engine.mjs` / `scripts/context-evolution.json` / `scripts/run-instruments.mjs` | **計器の完全版入口**。全追跡・未追跡ファイル、Git全履歴、現在差分、指示書、確定/却下/未確定の判断を出典つきの1枚へ集約し、検証済みの学びだけを次回へ戻す。統合入口は途中が黄/赤でも止まらない | 3ファイルを `scripts/` へ**無改変でコピー**。`.instrument-context.md` は生成物なのでコミットしない |
+| `scripts/generate-shindan-version.mjs` | **各プログラム本体の診断・進化進捗ページ生成器**。Next.jsでも静的サイトでも `/check-shindan-version/` を作り、導入・実測・履歴・公開の進み具合、4状態、根拠、次の一手を表示 | **無改変**。`npm run shindan` で計測＋更新、ビルド前はレポートから自動更新。詳しくは [`../_docs/instruments/SHINDAN-VERSION-PAGE.md`](../_docs/instruments/SHINDAN-VERSION-PAGE.md) |
 | `diagnostics/`(**汎用診断キット**) | **どんなJS/TSリポにも使える出荷事故ゲート4本＋ランナー**。`node diagnostics/run.mjs <対象ディレクトリ>` で import未追跡・lockfile不一致・秘密情報の追跡漏れ・巨大ファイル追跡をまとめて検査。詳細は [`diagnostics/README.md`](diagnostics/README.md) | **無改変**(依存ゼロ。web-ios-androidキット外の任意リポにも `node <このキットのパス>/diagnostics/run.mjs .` でそのまま使える) |
 | `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
 | `scripts/setup-clerk-x-oauth.mjs` | **Clerk + X OAuth セットアップ補助**。app.config.json(+ブランドプリセット)を読んでチェックリスト表示 / `.env.local` ひな形追記 / Vercel 一括登録。`--write-env` / `--write-vercel` フラグで動作変更。`pk_test_` から開発用 Callback を自動デコード | **無改変**(app.config.json 駆動) |
@@ -62,6 +70,7 @@
 0. **Web 本体を作る**(まだ無ければ): `next-app/` を新リポの `apps/web/`(等)にコピーし、
    `{{...}}` を app.config.json の値で置換。Clerk を使うなら `next-app/README-clerk.md` に従い
    `@clerk/nextjs` を入れて `.template` を配置。Capacitor はこの Web を `server.url` で読む。
+   ★`app/check-shindan-version/` と `scripts/update-shindan-version.mjs` も一緒にコピーする。
 1. アプリのリポジトリで `app.config.json` を埋める(identity / brand / contact / businessModel / **auth**)。
 2. `capacitor.config.template.ts` の `{{...}}` を app.config.json の値に置換して
    そのリポの `capacitor.config.ts` を作る。
@@ -69,10 +78,12 @@
    - `{{iosScheme}}` = identity.iosScheme / `{{productionDomain}}` = identity.productionDomain
    - `{{rootDomain}}` = productionDomain のルート(例: app.example.com → example.com)
    - `{{backgroundColorARGB}}` = 起動下地色 ARGB8(金型実績は `#0A0A0FFF`)
-3. `scripts/patch-ios-launch-dark.mjs` と `workflows/ios-shell-guardrail.yml` をリポにコピー。
-4. `@capacitor/{cli,core,ios,android}` を devDependencies に追加。
-5. `npm install` → `npx cap add ios` / `npx cap add android`(Xcode / Android SDK が要る)。
-6. **リリースCI/スクリプト本体を partnership からコピー**(下記マッピング表)。
+3. `node scripts/setup-new-app.mjs` を実行し、`https://<本番ドメイン>/check-shindan-version/`
+   の初期ページが生成されたことを確認する。以後は `npm run shindan` で計測＋更新する。
+4. `scripts/patch-ios-launch-dark.mjs` と `workflows/ios-shell-guardrail.yml` をリポにコピー。
+5. `@capacitor/{cli,core,ios,android}` を devDependencies に追加。
+6. `npm install` → `npx cap add ios` / `npx cap add android`(Xcode / Android SDK が要る)。
+7. **リリースCI/スクリプト本体を partnership からコピー**(下記マッピング表)。
    配信前に輝度ゲートを通す → リリース CI で配信。
 
 ## リリースCI/スクリプトのコピー元マッピング(会議推奨=キットに二重保守しない)

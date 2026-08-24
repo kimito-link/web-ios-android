@@ -30,6 +30,28 @@ audit-native-cta.mjs を引数なしで実行
   → 何も走査せず「✅ 0件」と表示  ＝ ★偽の緑（commit fc3a8e3 で対処）
 ```
 
+### ★作業を始める前に「全文脈の入口」を作る
+
+計器を1本ずつ入れる前に、次の4ファイルも `templates/scripts/` から `scripts/` へコピーします。
+
+```
+context-engine.mjs          … 全ファイル・全Git履歴・現在の差分・判断台帳を1枚へ集約
+context-evolution.json      … 確定 / 却下 / 未確定の判断を証拠つきで残す台帳
+run-instruments.mjs         … 途中が黄/赤でも止まらず、全計器を最後まで測る入口
+generate-shindan-version.mjs … 本体の /check-shindan-version/ を生成・更新
+```
+
+```bash
+node scripts/context-engine.mjs --write .instrument-context.md
+node scripts/run-instruments.mjs --deep --report .instrument-report.json
+node scripts/generate-shindan-version.mjs
+```
+
+詳しい規約は [`CONTEXT-EVOLUTION.md`](CONTEXT-EVOLUTION.md) と
+[`SHINDAN-VERSION-PAGE.md`](SHINDAN-VERSION-PAGE.md)。
+★会話だけにある判断は自動取得できません。検証後の結果を `--record` で台帳へ戻して、
+次のAIが同じ地雷を踏まないところまでが1回の作業です。
+
 ---
 
 ## 1. いつ使うか
@@ -247,6 +269,8 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 node scripts/〜.mjs --selftest ; echo "exit=$?"   # ★0 であること
 # ★毒を入れて 1 になり、復元で 0 に戻ること（4章の手順で）
 node _docs/instruments/check-drift.mjs            # 土台が割れていないか
+node scripts/generate-shindan-version.mjs --selftest
+# ★本体の /check-shindan-version/ が開き、未計測を完了に数えていないこと
 ```
 
 ★**チェックリストを人の善意で運用しない。** 検査が赤くなる形にしてください。

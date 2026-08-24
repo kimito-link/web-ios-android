@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/update-shindan-version.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "shindan": "node scripts/update-shindan-version.mjs --measure",
+    "shindan:update": "node scripts/update-shindan-version.mjs"
   },
   "dependencies": {
     "next": "^15.1.6",

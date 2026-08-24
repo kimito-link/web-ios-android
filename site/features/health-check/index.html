@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット） | web-ios-android</title>
-  <meta name="description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットも、このページ1つで説明します。">
+  <title>アプリが自分で診断し、進み具合を見せ、全文脈を引き継いで進化する仕組み | web-ios-android</title>
+  <meta name="description" content="アプリの自己診断、視覚的な進捗ページ、出荷前検査、数字の進化台帳、全ソースファイル・Git全履歴・確定/却下/未確定の判断を出典つきで引き継ぐ「計器の完全版」を説明します。">
   <link rel="canonical" href="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット） | web-ios-android">
-  <meta property="og:description" content="このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる「退化させない・進化させる」仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットも、このページ1つで説明します。">
+  <meta property="og:title" content="アプリが自分で診断し、進み具合を見せ、全文脈を引き継いで進化する仕組み | web-ios-android">
+  <meta property="og:description" content="自己診断・視覚的な進捗ページ・出荷前検査・数字の台帳・全文脈の引き継ぎを1本の閉ループにした、計器の完全版。">
   <meta property="og:url" content="https://web-ios-android.vercel.app/features/health-check/">
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -20,15 +20,15 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "name": "アプリが自分で「けんこう診断」を出し、版を重ねるほど進化する仕組み（＋どんなプログラムにも使える診断キット）",
-        "description": "このキットで作るアプリには「体調メモ」の仕組みが入り、不具合のときAIが自分で数字を読んで原因を特定できます。さらに版ごとの実測値を台帳に残し、過去最良より悪化したら出荷前に止まる仕組みと、どんなJS/TSプログラムにも使える出荷前の汎用診断キットもあります。"
+        "name": "アプリが自分で診断し、進み具合を見せ、全文脈を引き継いで進化する仕組み",
+        "description": "自己診断・出荷前検査・数字の台帳・全文脈の引き継ぎに加え、ユーザー向け更新情報と確認用の詳細進捗を同じレポートから公開する計器の完全版です。"
       },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
           { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://web-ios-android.vercel.app/apps/" },
-          { "@type": "ListItem", "position": 3, "name": "けんこう診断と進化・診断キットの仕組み" }
+          { "@type": "ListItem", "position": 3, "name": "けんこう診断・全文脈・進化・診断キットの仕組み" }
         ]
       }
     ]
@@ -134,13 +134,13 @@
   <div class="hero-chars">
     <img src="../../images/tanunee-smile.png" alt="たぬ姉">
   </div>
-  <h1>できたアプリは、自分で<br><span>「けんこう診断」</span>を出し、版を重ねるほど進化する</h1>
-  <p>調子が悪いとき自分で調べて直すだけでなく、悪化を出荷前に止め、良くなった記録を積み重ねる。<br>
-  出荷前のコード検査（汎用診断キット）も、このページ1つにまとまっています。</p>
+  <h1>できたアプリは、自分で<br><span>「けんこう診断」</span>し、前回の続きから良くなっていく</h1>
+  <p>調子が悪いときは原因を見つけ、公開前には問題がないか確認し、これまでの判断を次回へ引き継ぎます。<br>
+  専門知識がなくても全体像が分かるように、実例から順に説明します。</p>
 </div>
 
 <nav class="breadcrumb" aria-label="パンくずリスト">
-  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断・進化・診断キットの仕組み
+  <a href="../../">ホーム</a> ＞ <a href="../../apps/">応用・実績</a> ＞ けんこう診断・全文脈・進化・診断キットの仕組み
 </nav>
 
 <div class="chapter">
@@ -406,6 +406,27 @@
         <tr>
           <td><code>verify-android-splash-not-default</code></td>
           <td>上のAndroid版。<code>cap add android</code> が置くプレースホルダ画像がそのまま残る事故を、同じ直接証拠方式で止める。</td>
+        </tr>
+        <tr>
+          <td><code>check-splash-config</code></td>
+          <td><b>Androidだけ起動画面が縦に伸びる。</b>
+          引き伸ばし設定（<code>androidScaleType</code>）の既定値は<b>「引き伸ばし」</b>で、
+          正方形の素材を縦長端末に敷くと歪む。iOS側は中央を切り抜くので、
+          放置すると<b>iOSとAndroidで見た目が食い違う</b>。
+          あわせて、背景色が4箇所で食い違っていないか（＝起動直後に一瞬まっ白がチラつく条件）も見る。</td>
+        </tr>
+        <tr>
+          <td><code>check-splash-dark-variant</code></td>
+          <td><b>ダークモード用の画像が、実はライト用と中身まで同一。</b>
+          生成スクリプトが同じデータを2回書いていると、ファイルは2つ存在するのに中身が同じになる。
+          <b>ファイルの存在チェックでは絶対に見つからない</b>ため、中身のハッシュを突き合わせて検出する。</td>
+        </tr>
+        <tr>
+          <td><code>check-splash-safe-circle</code></td>
+          <td><b>起動画面に「色の付いた円」だけが出る。</b>
+          Android 12以降は起動画面のアイコンを<b>円形に切り抜く</b>ため、
+          背景を焼き込んだ不透過の画像を渡すと全面が塗られて円になる。
+          素材が透過か、絵柄が安全円の内側かを確かめる。</td>
         </tr>
         <tr>
           <td><code>verify-android-signing-config</code></td>
@@ -746,6 +767,107 @@
       </div>
     </div>
     <div class="section-divider">
+      <h2>🧭 作業前に「全文脈」をつかみ、作業後の学びを次へ戻す</h2>
+      <div class="lead">
+        数字を測るだけでは、<b>なぜその直し方を選んだか・前に何を試して失敗したか</b>が残りません。
+        完全版の計器は、作業を始める前にリポジトリの過去と現在を出典つきの1枚へまとめ、
+        検証後の結果を次の作業へ戻します。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🗺️</span>全ソース・<br>Git全履歴</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🧠</span>確定・却下・<br>未確定を分離</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🧪</span>診断と実測で<br>確かめる</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">📚</span>証拠つきで<br>次回へ戻す</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">同じ失敗をもう一度提案せず、前回の続きから始められます</div>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">取得できる全文脈</span>
+        <p><b>Git追跡ファイルとGitが表示する未追跡ファイルを全件数え、Gitの全コミット件名、現在の変更、
+        指示書、設計・事故の記録、数字の進化台帳を1枚にします。</b>
+        各項目には元のファイルと行番号・hashが付くため、AIが要約だけで断定せず原文へ戻れます。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">知識を3つに分ける</span>
+        <p><code>confirmed</code>（証拠があり次回も守る）、<code>rejected</code>（実測で却下し、
+        もう繰り返さない）、<code>pending</code>（まだ仮説）を混ぜません。
+        <b>確定と却下は証拠が無いと台帳へ書けない</b>ので、推測がいつの間にか仕様になる事故を防ぎます。</p>
+      </div>
+
+      <div class="bad-tip">
+        🔐 <b>「全部読む」にも安全の境界があります。</b>
+        <code>.env</code>、鍵、証明書、ローカル設定は存在だけを数え、本文もhashも読みません。
+        会話だけの判断・外部サービス・実機は自動取得できないため、取得していないものを
+        「把握済み」や「正常」に混ぜません。
+      </div>
+
+      <div class="tip">
+        💡 <code>node scripts/run-instruments.mjs --deep --report .instrument-report.json</code> の1本で、全文脈パケット、汎用診断、
+        数字の進化台帳、計器が走ったか、各selftestを最後まで実行します。
+        途中が黄色や赤でも止まらず、最後に<b>赤 ＞ 測れなかった ＞ 緑</b>の順でまとめます。
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <h2>📊 そして、各アプリに「準備が何％まで進んだか」を出す</h2>
+      <div class="lead">
+        確認機能があっても、開発者しか結果を読めなければ進み具合は分かりません。
+        新しく作るすべてのアプリに、<b>最新版・準備状況・問題の有無が分かるページ</b>を標準で作ります。
+      </div>
+
+      <div class="illust illust-green">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🧪</span>動作を<br>確認</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">📄</span>公開用の<br>要約を生成</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">📊</span>本体で<br>進捗を表示</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">アプリ名・色・版・実測に合わせて、同じURL規則で自動生成</div>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">URLは全アプリ共通</span>
+        <p><code>https://&lt;アプリ本体のドメイン&gt;/check-shindan-version/</code> です。</p>
+        <p>たとえば <code>soushin-suggest.link</code> なら
+        <code>/check-shindan-version/</code>、<code>app.reply-suggest.link</code> でも
+        同じ <code>/check-shindan-version/</code> が本体の一部として作られます。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">今回の導入事例：送信サジェスト</span>
+        <p><a href="https://soushin-suggest.link/" target="_blank" rel="noopener" style="color:#667eea; font-weight:700;">soushin-suggest.link の本体LP</a>を具体例にします。</p>
+        <p>導入後は、利用者が知りたい短い更新情報を本体LPへ、詳しい動作確認を <code>/check-shindan-version/</code> へ、同じ情報から同時に反映します。</p>
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">進み具合と問題の有無を分ける</span>
+        <p><b>進み具合</b>は、必要な確認がいくつ終わったかを表します。
+        <b>現在の状態</b>は、確認済み／確認中／問題あり／まだ未確認の4つです。
+        そのため「まだ確認していない」を問題なしにせず、何が残っているかと次にすることまで分かります。</p>
+      </div>
+
+      <div class="tip">
+        💡 このキット自身にも同じ仕組みを適用しています。
+        固定の数字を説明文へ写さず、更新のたびに変わる実物を
+        <a href="../../check-shindan-version/" style="color:#667eea; font-weight:700;">更新情報と動作チェック</a>
+        で確認できます。Next.jsではApp Router、静的サイトでは <code>index.html</code> を生成します。
+      </div>
+
+      <div class="bad-tip">
+        🔐 公開するのは状態・件数・短い根拠だけです。
+        <code>.env</code>、トークン、鍵、絶対パス、診断の生ログは公開レポートへ入れません。
+      </div>
+    </div>
+
+    <div class="section-divider">
       <h2>💓 そもそも「重いテスト」を回さなくて済む形へ</h2>
       <div class="lead">
         ここまでの診断は、どれも<b>数秒</b>で終わります。いっぽう多くの現場には、
@@ -866,9 +988,11 @@
         <b>正しく直した人を「悪くした」と判定して止めてしまう</b>ためです。
       </div>
     </div>
-    <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    <div id="ai-instructions" class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="context-evolution" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="shindan-version-page" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
 
   </div>
 </div>

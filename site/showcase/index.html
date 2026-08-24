@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>このテンプレートで作ったアプリ一覧 | web-ios-android</title>
-  <meta name="description" content="web-ios-androidキットで実際にストア公開まで通ったアプリの実例一覧です。Web・iPhone・Androidへの展開実績を紹介します。">
+  <title>公開アプリ・導入事例 | web-ios-android</title>
+  <meta name="description" content="web-ios-androidキットで公開したアプリと、更新情報・動作状況を分かりやすく表示する導入事例を紹介します。">
   <link rel="canonical" href="https://web-ios-android.vercel.app/showcase/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="このテンプレートで作ったアプリ一覧 | web-ios-android">
-  <meta property="og:description" content="web-ios-androidキットで実際にストア公開まで通ったアプリの実例一覧です。Web・iPhone・Androidへの展開実績を紹介します。">
+  <meta property="og:title" content="公開アプリ・導入事例 | web-ios-android">
+  <meta property="og:description" content="公開アプリと、更新情報・動作状況を分かりやすく表示する導入事例です。">
   <meta property="og:url" content="https://web-ios-android.vercel.app/showcase/">
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -58,10 +58,11 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
     .sc-card img { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; object-fit: cover; }
+    .sc-icon-fallback { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center; background: linear-gradient(145deg, #edf0ff, #d9e8ff); font-size: 1.9rem; }
     .sc-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; }
     .sc-card p { font-size: 0.82rem; color: #666; margin-bottom: 9px; line-height: 1.6; }
     .sc-links { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sc-links a { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
+    .sc-links a, .sc-links span { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
     .lk-web { background: #667eea; color: white; }
     .lk-ios { background: #1a1a2e; color: white; }
     .lk-pend { background: #eee; color: #666; }
@@ -72,8 +73,8 @@
 <div id="site-header"></div>
 
 <div class="hero">
-  <h1>📱 このテンプレートで作ったアプリ</h1>
-  <p>実際にストア公開まで通った実例です</p>
+  <h1>📱 公開アプリ・導入事例</h1>
+  <p>公開実績と、最新版・準備状況・動作状況を見えるようにした具体例です</p>
 </div>
 
 <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -105,6 +106,18 @@
           <a href="https://fujisan01.com/" class="lk-web" target="_blank" rel="noopener">🌐 Web</a>
           <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="lk-ios" target="_blank" rel="noopener">🍎 App Store</a>
           <a class="lk-pend">▶ 準備中</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-card">
+      <div class="sc-icon-fallback" aria-hidden="true">📨</div>
+      <div>
+        <h3>送信サジェスト</h3>
+        <p>短い更新情報を本体LPへ、詳しい準備状況と動作チェックを専用ページへ、同じ情報から反映する導入事例。</p>
+        <div class="sc-links">
+          <a href="https://soushin-suggest.link/" class="lk-web" target="_blank" rel="noopener">🌐 本体を見る</a>
+          <span class="lk-pend">📊 診断ページ導入対象</span>
         </div>
       </div>
     </div>

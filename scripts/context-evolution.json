@@ -1,0 +1,36 @@
+[
+  {
+    "id": "20260824-context-loop-v1",
+    "recordedAt": "2026-08-24T12:50:00.000+09:00",
+    "version": "0.1.0",
+    "scope": "instruments",
+    "status": "confirmed",
+    "problem": "数字の進化台帳・診断・説明書・Git履歴が別々にあり、次の作業が過去の判断と現在の変更を一括で読む入口が無かった",
+    "decision": "全追跡/未追跡ファイル、Git全履歴、現在差分、指示書、確定/却下/未確定の判断を出典つきの文脈パケットへ集約し、全計器を途中停止せず実行する入口を正本として配る",
+    "evidence": [
+      "file:_docs/instruments/CONTEXT-EVOLUTION.md",
+      "file:templates/scripts/context-engine.mjs",
+      "file:templates/scripts/run-instruments.mjs",
+      "command:node templates/scripts/context-engine.mjs --selftest (pass)",
+      "command:node templates/scripts/run-instruments.mjs --selftest (pass)"
+    ],
+    "outcome": "全ファイルの計上、秘密候補の隔離、Git全履歴、証拠なし知識の拒否、却下案の継承、赤>黄>緑の集約を自己検査で固定した",
+    "supersedes": []
+  },
+  {
+    "id": "20260824-reject-omniscience-claim",
+    "recordedAt": "2026-08-24T12:50:00.000+09:00",
+    "version": "0.1.0",
+    "scope": "instruments",
+    "status": "rejected",
+    "problem": "『全文脈』を、AIが会話・外部サービス・実機・秘密情報まで自動で把握できるという意味で説明すると、取得していない状態を把握済みに混ぜる",
+    "decision": "全文脈はリポジトリから安全に取得できる範囲を全件計上する意味に限定し、未取得の外部状態と秘密本文を限界として毎回表示する",
+    "evidence": [
+      "file:_docs/instruments/CONTEXT-EVOLUTION.md",
+      "file:templates/scripts/context-engine.mjs",
+      "command:node templates/scripts/context-engine.mjs --check . (sensitive本文を読まず件数表示)"
+    ],
+    "outcome": "秘密候補は本文もhashも採らず、会話・外部サービス・実機は未取得と明記する境界をコード・説明ページ・LPで統一した",
+    "supersedes": []
+  }
+]

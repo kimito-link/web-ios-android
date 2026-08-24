@@ -30,6 +30,9 @@
 | ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
 | ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
 | ★セキュリティスコア先取り（malwarecheck.site満点チェック） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 3ケース |
+| ★全文脈パケット＋判断の進化台帳 | [`templates/scripts/context-engine.mjs`](../../templates/scripts/context-engine.mjs) / [`context-evolution.json`](../../templates/scripts/context-evolution.json) | ★全追跡・未追跡ファイル、Git全履歴、現在差分、確定/却下/未確定を出典つきで1枚化 |
+| ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
+| ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
 **配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
@@ -268,6 +271,24 @@ node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.
 ★malwarecheck.site の減点基準（セキュリティヘッダー・`.env`/`.git`露出等）を移植し、
 出荷前に同じ基準でセルフチェックする。★「公開URLへのGETのみ」の不変条件は継承済み
 （能動的な脆弱性テスト・ポートスキャン・総当たりはしない）。
+
+---
+
+## 3.7 ★全文脈を把握し、証拠のある学びだけで進化する
+
+→ [**CONTEXT-EVOLUTION.md**](CONTEXT-EVOLUTION.md)
+
+★全ファイル・全Git履歴・現在の変更・指示書・数字の台帳・確定/却下/未確定の判断を、
+出典へ戻れる1枚にする。秘密候補は本文もhashも読まない。
+★「自動で賢くなった」とは言わず、検証済みの結果だけを次回へ戻す閉ループ。
+
+## 3.8 ★各アプリ本体で、進み具合を見えるようにする
+
+→ [**SHINDAN-VERSION-PAGE.md**](SHINDAN-VERSION-PAGE.md)
+
+★新しいアプリには `/check-shindan-version/` を標準搭載します。
+進捗率は品質点ではなく、導入・配線・実測・履歴・公開の確認できた節目の割合です。
+黄（未計測）を緑に混ぜず、根拠と次の一手まで表示します。
 
 ---
 

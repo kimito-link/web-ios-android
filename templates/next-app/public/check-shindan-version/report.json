@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAtLabel": "未計測",
+  "commit": "未取得",
+  "app": {
+    "name": "{{displayName}}",
+    "version": "0.1.0",
+    "homeUrl": "/",
+    "diagnosisUrl": "/check-shindan-version/",
+    "primaryColor": "#315efb",
+    "accentColor": "#11a36a"
+  },
+  "progress": { "completed": 0, "total": 1, "percent": 0 },
+  "counts": { "pass": 0, "warning": 0, "fail": 0, "unmeasured": 1 },
+  "stages": [
+    {
+      "id": "initial",
+      "title": "最初の動作確認",
+      "summary": "セットアップ後に、このページへ最新の確認結果を表示します。",
+      "status": "unmeasured",
+      "completed": 0,
+      "total": 1,
+      "percent": 0,
+      "checks": [
+        { "label": "動作を確認", "status": "unmeasured", "evidence": "まだ確認していません", "nextAction": "npm run shindan を実行する" }
+      ]
+    }
+  ],
+  "evolution": { "latest": [] }
+}

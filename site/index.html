@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>アプリの面倒な手続きを自動化するテンプレート | Kimito-Link</title>
-  <meta name="description" content="Web・iPhone・Android・Chrome拡張のストア申請の面倒な手続きをAIと自動化が肩代わりするテンプレートキット。ダウンロードして名前を書き、AIに頼むだけで提出まで進みます。">
+  <meta name="description" content="Web・iPhone・Android・Chrome拡張のストア申請を自動化するテンプレートキット。各アプリ本体の診断進捗とバージョンアップ情報も同じ実測から自動公開します。">
   <link rel="canonical" href="https://web-ios-android.vercel.app/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="アプリの面倒な手続きを自動化するテンプレート | Kimito-Link">
-  <meta property="og:description" content="Web・iPhone・Android・Chrome拡張のストア申請の面倒な手続きをAIと自動化が肩代わりするテンプレートキット。ダウンロードして名前を書き、AIに頼むだけで提出まで進みます。">
+  <meta property="og:description" content="Web・iPhone・Android・Chrome拡張のストア申請を自動化するテンプレートキット。各アプリ本体の診断進捗とバージョンアップ情報も同じ実測から自動公開します。">
   <meta property="og:url" content="https://web-ios-android.vercel.app/">
   <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -560,10 +560,11 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
     .sc-card img { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; object-fit: cover; }
+    .sc-icon-fallback { width: 60px; height: 60px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center; background: linear-gradient(145deg, #edf0ff, #d9e8ff); font-size: 1.9rem; }
     .sc-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; }
     .sc-card p  { font-size: 0.82rem; color: #666; margin-bottom: 9px; line-height: 1.6; }
     .sc-links { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sc-links a { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
+    .sc-links a, .sc-links span { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
     .lk-web  { background: #667eea; color: white; }
     .lk-ios  { background: #1a1a2e; color: white; }
     .lk-pend { background: #eee; color: #aaa; }
@@ -747,6 +748,9 @@
         <span class="note">きみは『どんなアプリにしたいか』を考えるだけ。手続きはほとんどおまかせ（最初の登録と、最後の送信ボタンだけ自分で）！</span>」
       </div>
     </div>
+  </div>
+  <div data-shindan-version-summary data-report-url="check-shindan-version/report.json">
+    <a href="check-shindan-version/" style="display:block; margin:0 auto 28px; padding:18px; background:white; border-radius:16px; color:#4058c9; font-weight:900; text-align:center; text-decoration:none;">✅ キットの更新情報と動作状況を見る →</a>
   </div>
   <div class="steps-head">やることは ① ② ③ ④ だけ！</div>
 
@@ -1032,8 +1036,8 @@
       <div class="step-top">
         <div class="step-circle">📈</div>
         <div class="step-main">
-          <h3>更新するたびに、こっそり劣化させない<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
-          <p class="one-line">「直したつもり」を、体感ではなく数字で見張る</p>
+          <h3>前回の続きから迷わず進め、進み具合も見える<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">これまでの判断を引き継ぎ、準備が何％まで進んだか確認できます</p>
         </div>
         <div class="step-char">
           <img src="images/tanunee-smile.png" alt="たぬ姉">
@@ -1058,6 +1062,9 @@
         1回ずつは小さい変化なので、人が見比べても気づけません。★このキットは
         「前の版と比べる」のではなく<b>「今までで一番良かった版」と比べます</b>。
         じわじわ悪化して元の悪い状態に戻っても、必ず気づけます。
+        <br><br>★さらに完全版では、作業前に<b>これまでの変更・決めたこと・うまくいかなかった方法・まだ確認できていない点</b>を、出どころが分かる1枚へまとめます。
+        作業後は証拠のある結果だけを台帳へ戻すため、次のAIが同じ失敗を提案せず、
+        前回の続きから始められます。
         <div class="tip">
           💡 実例：ある配信ツールで、診断の読み込み速度を <b>817,000ミリ秒（約14分）→5ミリ秒</b> に改善。
           この改善が「本当に起きたこと」だと言えるのは、体感ではなく実際に測った数字を
@@ -1075,6 +1082,13 @@
           ★<b>測る項目そのものは、はじめは空っぽで届きます。</b>
           何を測るべきかはアプリごとに違うので、実際に測ってから足す作りです
           （測らずに「こちらが良い」と決めると、正しい修正を止めてしまうため）。
+          <br><br>★<code>.env</code>・鍵・ローカル設定の本文は読みません。会話だけの判断や
+          外部サービス・実機の状態も自動では取れないため、取っていないものを「把握済み」に混ぜません。
+          <br><br>★このキットで作った各アプリには <code>/check-shindan-version/</code> が作られます。
+          「確認済み・確認中・まだ未確認・見つかった問題」を分けて表示し、
+          残っている項目には「次に何をするか」も出します。
+          このキット自身の実物は <a href="check-shindan-version/" style="color:#667eea; font-weight:700;">更新情報と動作チェック</a> で確認できます。
+          仕組みを知りたい方は <a href="features/health-check/" style="color:#667eea; font-weight:700;">詳しい仕組みの説明</a> へ。
         </div>
       </div>
     </div>
@@ -1082,6 +1096,8 @@
     <div class="ai-box-slot" data-ai-key="health-check" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="always-on-diagnostics" data-ai-data-path="assets/data/ai-instructions.json"></div>
     <div class="ai-box-slot" data-ai-key="improvement-ledger" data-ai-data-path="assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="context-evolution" data-ai-data-path="assets/data/ai-instructions.json"></div>
+    <div class="ai-box-slot" data-ai-key="shindan-version-page" data-ai-data-path="assets/data/ai-instructions.json"></div>
 
     <!-- ⑥.7 出荷前にセキュリティ診断で満点を先取りする（おまけ） -->
     <div class="step step-bonus">
@@ -1114,6 +1130,40 @@
     </div>
 
     <div class="ai-box-slot" data-ai-key="security-score" data-ai-data-path="assets/data/ai-instructions.json"></div>
+
+    <!-- ⑥.8 起動画面（スプラッシュ）の崩れを出す前に見つける（おまけ） -->
+    <div class="step step-bonus">
+      <div class="step-top">
+        <div class="step-circle">🎬</div>
+        <div class="step-main">
+          <h3>アプリを開いた「最初の1秒」の崩れを、出す前に見つける<span class="badge-bonus">🎁 おまけ・安心材料</span></h3>
+          <p class="one-line">起動画面がAndroidだけ縦に伸びる・ダークモードで効かない、を機械で検出</p>
+        </div>
+        <div class="step-char">
+          <img src="images/tanunee-smile.png" alt="たぬ姉">
+          <span>たぬ姉</span>
+        </div>
+      </div>
+      <div class="illust illust-green" style="flex-direction:column; gap:10px; align-items:stretch;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">📱</span>設定と素材を<br>読むだけ</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">🎬</span>崩れる条件を<br>出す前に発見</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#aaa;">実機の見え方までは判定しません（最後は目で見る）</div>
+      </div>
+      <button class="toggle-btn" onclick="toggle(this)">▼ くわしく見る</button>
+      <div class="step-detail">
+        アプリを開いた最初の1秒に出る画面（スプラッシュ）は、設定を1つ書き忘れるだけで
+        Androidだけ縦に伸びたり、一瞬まっ白がチラついたりします。しかも
+        <strong>ファイルは正しく置かれているので、存在チェックでは見つかりません</strong>。
+        設定と素材そのものを読んで、崩れる条件になっていないかを機械で確かめます。
+        <div class="tip">💡 実際に9つのアプリへ当てたところ、<strong>無傷は1つだけ</strong>でした。
+        よくあるのは①Androidの引き伸ばし設定（既定値のままだと歪む）②ダーク用の画像が
+        ライト用と<strong>中身まで同一</strong>（2つあるので対応済みに見える）の2つです。
+        くわしくは <a href="features/health-check/" style="color:#667eea; font-weight:700;">けんこう診断の仕組みページ</a> へ。</div>
+      </div>
+    </div>
 
     <!-- ⑦ 知見を書き戻して、次はもっと早くなる（おまけ） -->
     <div class="step step-bonus">
@@ -1345,6 +1395,7 @@
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">アイコン・スクリーンショットの作成</span></div>
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">お店の説明文・画像の登録</span></div>
     <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">プライバシーポリシーのページ作成</span></div>
+    <div class="auto-row"><span class="badge badge-auto">✅ 自動</span><span class="auto-label">アプリごとの更新情報・動作チェックページ作成</span></div>
     <div class="auto-row"><span class="badge badge-once">✋ 初回のみ</span><span class="auto-label">広告・対象年齢の申告（Googleのサイトで）</span></div>
     <div class="auto-row"><span class="badge badge-once">✋ 初回のみ</span><span class="auto-label">コンテンツのレーティング設定</span></div>
     <div class="auto-row"><span class="badge badge-wait">⏳ 待つだけ</span><span class="auto-label">Apple・Google・Chromeの審査（iPhone: 1〜3日、Android・Chrome: 数日）</span></div>
@@ -1354,7 +1405,7 @@
 
 <!-- ショーケース -->
 <div class="showcase-wrap">
-  <div class="showcase-title">📱 このテンプレートで作ったアプリ <a href="showcase/" style="font-size:0.7rem; font-weight:700; color:#667eea; margin-left:8px;">一覧を見る →</a></div>
+  <div class="showcase-title">📱 公開アプリと導入事例 <a href="showcase/" style="font-size:0.7rem; font-weight:700; color:#667eea; margin-left:8px;">一覧を見る →</a></div>
   <div class="showcase-grid">
 
     <div class="sc-card">
@@ -1383,6 +1434,18 @@
       </div>
     </div>
 
+    <div class="sc-card">
+      <div class="sc-icon-fallback" aria-hidden="true">📨</div>
+      <div>
+        <h3>送信サジェスト</h3>
+        <p>最新版・準備の進み具合・動作状況を、製品ページと確認ページへ同時に表示する導入事例。</p>
+        <div class="sc-links">
+          <a href="https://soushin-suggest.link/" class="lk-web" target="_blank" rel="noopener">🌐 本体を見る</a>
+          <a href="https://soushin-suggest.link/check-shindan-version/" class="lk-web" target="_blank" rel="noopener">✅ 更新・動作状況</a>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1398,6 +1461,7 @@ function toggle(btn) {
 </script>
 <script src="scripts/site-chrome.js"></script>
 <script src="scripts/ai-box.js"></script>
+<script src="check-shindan-version/summary.js" defer></script>
 
 </body>
 </html>

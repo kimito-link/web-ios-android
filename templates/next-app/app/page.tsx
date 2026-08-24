@@ -1,3 +1,5 @@
+import { ShindanVersionSummary } from "../components/shindan-version-summary";
+
 // 金型トップページ。汎用 UI 部品（components/hero.tsx 等）を差し替えて LP を組む。
 // ここは最小の動作確認用。実アプリでは HeroSection / FaqSection などに置き換える。
 export default function Home() {
@@ -12,6 +14,7 @@ export default function Home() {
         <br />
         Clerk 認証を使う場合は <code>README-clerk.md</code> を参照してください。
       </p>
+      <ShindanVersionSummary />
     </main>
   );
 }
