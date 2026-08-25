@@ -117,6 +117,20 @@ const PAIRS = [
     copies: []
   },
   {
+    /*
+     * ★未コミット import ゲート。2026-08-25 に kimitolink-linktree が採用。
+     *   このファイルは lib/ を import しないので、パス差が無く★そのまま比較できる。
+     *
+     * ★採用時に配布元の欠陥が見つかった: コメント内の使用例（JSDoc の
+     *   `import ... from "./x"`）を実物と誤読して★嘘の赤を出していた。
+     *   linktree の実リポで実測して発覚 → 正本を直してから配った。
+     *   ＝ 配る前に「実物のリポで走らせる」と、配布物の欠陥が見つかる。
+     */
+    label: '未コミット import ゲート',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/check-tracked-imports.mjs'),
+    copies: [resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-tracked-imports.mjs')]
+  },
+  {
     label: '全文脈と判断の進化台帳（入口）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/context-engine.mjs'),
     copies: []

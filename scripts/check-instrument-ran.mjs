@@ -41,11 +41,22 @@
  *   node scripts/check-instrument-ran.mjs --stamp improvement   ★緑のときに記録
  *   node scripts/check-instrument-ran.mjs --check               ★放置を検出
  *   node scripts/check-instrument-ran.mjs --check --max-commits 20
+ *   node scripts/check-instrument-ran.mjs --check --max-days 14
  *   node scripts/check-instrument-ran.mjs --selftest            ★毒→赤を確認
  *
  * ■ ★配線の例（緑のときだけ記録が残る形にする）
  *   "check:improvement": "node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement"
  *   ★`&&` が要。赤なら stamp は打たれない＝放置すると距離が開いて鳴る。
+ *
+ * ■ ★2026-08-25追加: 「時間の経過」もOR条件で見る
+ *   commit距離だけを見る設計は意図的（上記コメント参照: 時刻はCIスケジュール・
+ *   タイムゾーンに左右されるが、commitは単調増加で信頼できる）。★この判断は変えない。
+ *   ただし「commitはほとんど無いが、何週間も誰も触っていない」ケース
+ *   （長期休暇・優先度低下等）は距離だけでは捕まらない。★distance と ★日数、
+ *   ★どちらか一方でも閾値を超えたら「走っていない」と鳴らす（OR条件）。
+ *   日数は stamp 時に記録済みの `at`（ISO8601）を使う。時刻そのものの信頼性への
+ *   懸念（上記）は、★distanceとのOR併用によって「日数だけで判定を決めない」ことで
+ *   吸収する（距離が近ければ、多少の時刻のブレがあっても誤って鳴らない）。
  *
  * ■ 終了コード（3値規約）
  *   0 = 走っている / 1 = 記録が壊れている / ★2 = ★走っていない（緑ではない）
@@ -58,7 +69,35 @@ import { execFileSync } from 'node:child_process';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, '..');
+
+/**
+ * ★リポジトリのrootを探す（1つ上固定にしない）。
+ *
+ * ★2026-08-25発見の実損: このファイルは通常「アプリ側リポの scripts/」に
+ *   コピーされる前提で「1つ上=root」と決め打っていた。ところが★このキット
+ *   自身のルートから直接実行すると、実体は templates/scripts/ にあるため
+ *   1つ上は templates/ になり、STAMP_FILE が templates/.instrument-ran.json という
+ *   ★別ファイルに書かれる。stampコマンドは「✅ 記録しました」と出力する一方、
+ *   リポ直下の .instrument-ran.json は一切更新されない★沈黙の書き込み先ズレだった
+ *   （このスクリプト自身が「走っていない」を検出する仕組みなのに、
+ *   自分の記録先を取り違えると本末転倒）。
+ * ★.git の有無で探す(package.jsonは「消費アプリのroot」にも「このキット自身のroot」
+ *   にも両方存在し区別できないため、リポジトリの境界として信頼できる.gitを使う)。
+ * @returns {string}
+ */
+function findRepoRoot(startDir) {
+  let dir = startDir;
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(join(dir, '.git'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break; // ★ドライブ直下まで来た(それ以上は上がれない)
+    dir = parent;
+  }
+  // ★.git が見つからなくても「1つ上」というこれまでの既定へfallback(挙動を壊さない)。
+  return resolve(startDir, '..');
+}
+
+const ROOT = findRepoRoot(HERE);
 const STAMP_FILE = join(ROOT, '.instrument-ran.json');
 
 const argv = process.argv.slice(2);
@@ -70,6 +109,8 @@ function opt(name) {
 
 /** ★何コミット離れたら「走っていない」とみなすか。 */
 const DEFAULT_MAX_COMMITS = 10;
+/** ★何日経ったら「走っていない」とみなすか（★未指定=null=日数では判定しない。既存動作を壊さない）。 */
+const DEFAULT_MAX_DAYS = null;
 
 /**
  * git を呼ぶ。★失敗は null（0やfalseにしない）。
@@ -110,8 +151,21 @@ function distanceFrom(sha, cwd = ROOT) {
   return Number.isFinite(n) ? { distance: n } : { distance: null, reason: '距離が数値になりません' };
 }
 
+/**
+ * ★記録された `at`（ISO8601）から経過日数を測る。
+ * ★Date.now() を直接使わず nowMs を引数化＝selftestが「今日の日付」に依存しない
+ *   （実行するたびに結果が変わる毒は、掟「状態に依存しない毒にする」に反する）。
+ * @returns {number|null} ★測れなければ null（0にしない）
+ */
+function daysSince(iso, nowMs) {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  return Math.floor((nowMs - t) / (1000 * 60 * 60 * 24));
+}
+
 /** ★判定の本体（selftest から直接呼べるよう純関数に寄せる）。 */
-function judge({ stamps, name, maxCommits, cwd = ROOT }) {
+function judge({ stamps, name, maxCommits, maxDays = null, nowMs = Date.now(), cwd = ROOT }) {
   if (stamps === null) {
     return {
       probe: '検査の実行', verdict: 'fail', evidence: null,
@@ -137,18 +191,34 @@ function judge({ stamps, name, maxCommits, cwd = ROOT }) {
       limitation: '★git のあるリポでのみ測れます'
     };
   }
-  if (distance > maxCommits) {
+  const days = daysSince(rec.at, nowMs);
+  const commitStale = distance > maxCommits;
+  // ★maxDaysが未指定(null)なら日数では判定しない＝呼び出し元が明示しない限り既存動作のまま。
+  const dayStale = maxDays != null && days !== null && days > maxDays;
+
+  if (commitStale || dayStale) {
+    const reasons = [];
+    if (commitStale) reasons.push(`${distance}コミット(閾値${maxCommits})`);
+    if (dayStale) reasons.push(`${days}日(閾値${maxDays}日)`);
     return {
       probe: '検査の実行', verdict: 'inconclusive',
-      evidence: { 検査: name, 最後に緑: rec.commit.slice(0, 8), 経過コミット: distance, 閾値: maxCommits },
-      detail: `★「${name}」が ${distance} コミットのあいだ緑になっていません（★悪化ではなく【走っていない】疑い）`,
+      evidence: {
+        検査: name, 最後に緑: rec.commit.slice(0, 8),
+        経過コミット: distance, コミット閾値: maxCommits,
+        経過日数: days, 日数閾値: maxDays
+      },
+      detail: `★「${name}」が${reasons.join(' / ')}のあいだ緑になっていません（★悪化ではなく【走っていない】疑い）`,
       howToFix: `検査を走らせる。赤で止まっているなら★それを直す（★放置された赤は緑と同じくらい危険）`,
       limitation: '★手で stamp を打てばだませます。うっかりを捕まえる仕掛けであって、意図的な回避は防ぎません'
     };
   }
   return {
     probe: '検査の実行', verdict: 'pass',
-    evidence: { 検査: name, 最後に緑: rec.commit.slice(0, 8), 経過コミット: distance, 閾値: maxCommits },
+    evidence: {
+      検査: name, 最後に緑: rec.commit.slice(0, 8),
+      経過コミット: distance, コミット閾値: maxCommits,
+      経過日数: days, 日数閾値: maxDays
+    },
     limitation: '★走ったことだけを見ます。検査の中身が正しいかは見ません'
   };
 }
@@ -191,6 +261,51 @@ if (has('--selftest')) {
         if (!head) return true;
         return judge({ stamps: { x: { commit: head } }, name: 'x', maxCommits: 10 }).verdict === 'pass';
       }
+    },
+    {
+      // ★2026-08-25追加: 日数がOR条件で効くか。
+      //   commit距離は0（誤検知の余地なし）でも、記録時刻が古ければ鳴ること。
+      //   nowMsを固定して渡す＝実行日に依存しない毒（状態に依存しない毒にする、の掟）。
+      name: '★commit距離は近くても日数超過なら鳴る（OR条件）',
+      poison: () => {}, restore: () => {},
+      isRed: () => {
+        const head = git(['rev-parse', 'HEAD']);
+        if (!head) return true;
+        const fixedNow = Date.parse('2026-08-25T00:00:00Z');
+        const oldAt = '2026-08-01T00:00:00Z'; // 24日前
+        return judge({
+          stamps: { x: { commit: head, at: oldAt } }, name: 'x',
+          maxCommits: 999, maxDays: 14, nowMs: fixedNow
+        }).verdict === 'inconclusive';
+      }
+    },
+    {
+      name: '★日数が閾値内なら誤検知しない（--max-daysを渡しても）',
+      poison: () => {}, restore: () => {},
+      isRed: () => {
+        const head = git(['rev-parse', 'HEAD']);
+        if (!head) return true;
+        const fixedNow = Date.parse('2026-08-25T00:00:00Z');
+        const recentAt = '2026-08-20T00:00:00Z'; // 5日前
+        return judge({
+          stamps: { x: { commit: head, at: recentAt } }, name: 'x',
+          maxCommits: 999, maxDays: 14, nowMs: fixedNow
+        }).verdict === 'pass';
+      }
+    },
+    {
+      name: '★--max-days未指定(null)なら日数がどれだけ古くても日数では鳴らない（既存動作を壊さない）',
+      poison: () => {}, restore: () => {},
+      isRed: () => {
+        const head = git(['rev-parse', 'HEAD']);
+        if (!head) return true;
+        const fixedNow = Date.parse('2026-08-25T00:00:00Z');
+        const veryOldAt = '2020-01-01T00:00:00Z';
+        return judge({
+          stamps: { x: { commit: head, at: veryOldAt } }, name: 'x',
+          maxCommits: 999, maxDays: null, nowMs: fixedNow
+        }).verdict === 'pass';
+      }
     }
   ]);
   if (!ok) {
@@ -198,7 +313,7 @@ if (has('--selftest')) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(EXIT.FAIL);
   }
-  console.log('[check-instrument-ran] selftest OK(記録なし/壊れ/迷子SHA を緑にしない / ★放置で鳴る / ★直近は誤検知しない)');
+  console.log('[check-instrument-ran] selftest OK(記録なし/壊れ/迷子SHA を緑にしない / ★放置で鳴る / ★直近は誤検知しない / ★日数もOR条件で鳴る・未指定なら影響しない)');
   process.exit(EXIT.PASS);
 }
 
@@ -221,11 +336,17 @@ if (stampName) {
 
 /* ── --check ────────────────────────────────────────────────── */
 const maxCommits = Number(opt('--max-commits') || DEFAULT_MAX_COMMITS);
+const maxDaysOpt = opt('--max-days');
+const maxDays = maxDaysOpt != null ? Number(maxDaysOpt) : DEFAULT_MAX_DAYS;
 const stamps = readStamps();
 const names = has('--name')
   ? [opt('--name')]
   : (stamps && Object.keys(stamps).length ? Object.keys(stamps) : ['improvement']);
 
-const results = names.map((n) => judge({ stamps, name: n, maxCommits: Number.isFinite(maxCommits) ? maxCommits : DEFAULT_MAX_COMMITS }));
+const results = names.map((n) => judge({
+  stamps, name: n,
+  maxCommits: Number.isFinite(maxCommits) ? maxCommits : DEFAULT_MAX_COMMITS,
+  maxDays: (maxDays != null && Number.isFinite(maxDays)) ? maxDays : null
+}));
 console.log(formatProbeReport(results, { label: 'check-instrument-ran' }));
 process.exit(computeExitCode(results));
