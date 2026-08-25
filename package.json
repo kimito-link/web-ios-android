@@ -29,6 +29,8 @@
     "security:score:selftest": "node templates/scripts/verify-security-score.mjs --selftest",
     "responsive:check": "node templates/scripts/verify-responsive-design.mjs site",
     "responsive:check:selftest": "node templates/scripts/verify-responsive-design.mjs --selftest",
+    "claims:provenance": "node scripts/verify-numeric-claims-provenance.mjs",
+    "claims:provenance:selftest": "node scripts/verify-numeric-claims-provenance.mjs --selftest",
     "splash:check": "node templates/scripts/check-splash-config.mjs",
     "splash:selftest": "node templates/scripts/check-splash-config.mjs --selftest && node templates/scripts/check-splash-safe-circle.mjs --selftest && node templates/scripts/check-splash-template-drift.mjs --selftest",
     "shindan": "node templates/scripts/generate-shindan-version.mjs --measure --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android",

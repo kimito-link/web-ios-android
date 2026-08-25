@@ -176,6 +176,7 @@
       AIがそのメモを読んで原因を特定し、修正まで進められます。
     </p>
 
+    <!-- 出典: _docs/instruments/ALWAYS-ON-DIAGNOSTICS.md:19,66 -->
     <div class="tip">
       💡 実例：ある配信ツールで「診断画面が固まる」不具合を、この体調メモの数字だけで原因特定。
       読み込みが817秒（約14分）もかかっていた原因を突き止め、0.005秒まで直した実績があります。
@@ -233,6 +234,8 @@
           <td><code>check-timing-instrumented</code></td>
           <td>★<b>「遅い」と言われる経路に、時間を測る計器が無い</b>もの。件数だけの計器では「何msかかったか」が分からず、遅さの報告に答えられません。実損として、計器の無い経路を推測で3回直そうとして3回とも外しました（増えたときだけ赤）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-timing-instrumented.mjs:6-14（2026-08-23実損） -->
+        <!-- 出典: templates/diagnostics/check-instruments-reachable.mjs:6-24（2026-08-25実損） -->
         <tr>
           <td><code>check-instruments-reachable</code></td>
           <td>★<b>計器が「あるのに動かない」</b>もの。分岐の片側でしか作られない値を計器が参照していると、例外に飲まれて<b>1件も記録されません</b>。<b>計器が無いなら「無い」と分かりますが、あるのに動かないと「0件だから正常」と読み違えます</b>（実際にそう報告してしまった事故から作りました）。</td>
@@ -385,6 +388,7 @@
         </p>
       </div>
 
+      <!-- 出典: _docs/instruments/SHARING-LOOP-DESIGN.md:18,22,25,53,58（症状ID7件・索引245件・3ヶ月で登録1件） -->
       <div class="rule-box">
         <h3>★「共有するほど不具合が減る」を成り立たせる1本</h3>
         <p>
@@ -392,6 +396,7 @@
           その言葉で<b>過去の原因の索引</b>を引ければ、次に同じ症状を見た人は
           <b>調べ直す往復が要りません</b>。これが「共有するほど減る」の中身です。
         </p>
+        <!-- 出典: _docs/instruments/SHARING-LOOP-DESIGN.md:18,22,25 -->
         <p>
           ところが実測すると、症状ID 7件で索引を引いて
           <b>ヒット率は 0%</b> でした。索引には245件の登録があるのに、
@@ -403,6 +408,7 @@
           <b>緑になります</b>（実演で 0% → 100% を確認済み）。
           ＝ <b>正しい方向にだけ報われる</b>形にしてあります。
         </p>
+        <!-- 出典: _docs/instruments/IMPROVEMENT-RULES.md:177,205,240 / SHARING-LOOP-DESIGN.md:52 -->
         <p class="note">
           ★「登録して」と頼む仕組みにはしません。頼む形（オプトイン）は
           このキットで<b>3ヶ月で登録1件のまま死んだ</b>実績があります。
@@ -645,6 +651,7 @@
         「測れていない」を「正常」に混ぜません。</p>
       </div>
 
+      <!-- 出典: _docs/instruments/README.md:230（掟⑪、計器100個の実績） -->
       <div class="bad-tip">
         ⚠️ <b>計器を増やすほど良い、ではありません。</b>
         実例では計器を100個まで増やしましたが、実際に原因を突き止めたのはごく一部でした。
@@ -669,6 +676,7 @@
         別のブラウザ窓に出荷物だけを読ませて、そこで測ります。</p>
       </div>
 
+      <!-- 出典: _docs/instruments/MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md:36,66-68（857人ぶんの合成） -->
       <div class="rule-box">
         <span class="rule-no">鍵 2</span>
         <p><b>必要なのは「実データ」ではなく「実規模」。</b>
@@ -676,6 +684,7 @@
         本物の配信を待つ必要はありません。</p>
       </div>
 
+      <!-- 出典: _docs/instruments/MEASURE-WHEN-DIAGNOSTICS-WONT-OPEN.md:90-93（nth-child(n+25)の実文） -->
       <div class="rule-box">
         <span class="rule-no">鍵 3</span>
         <p><b>「効いているはずの対策」の実文を読む。</b>
@@ -800,6 +809,7 @@
         実際に測った数字だけを並べて説明できるからです。
       </div>
 
+      <!-- 出典: _docs/instruments/IMPROVEMENT-RULES.md:167-173 / SHARING-LOOP-DESIGN.md:52 -->
       <div class="rule-box">
         <span class="rule-no">★台帳自体が死ぬ</span>
         <p><b>台帳を作っても、手で書く数字は書き忘れた瞬間に死にます。</b>
@@ -985,6 +995,7 @@
         それは本当に必要なのか——<b>実際に数えてみました</b>。
       </div>
 
+      <!-- 出典: soushin-suggest.link/_docs/NO-SUITE-DESIGN.md §1-1/1-2（2026-08-24実測、姉妹リポジトリの一次記録） -->
       <div class="bad-tip">
         ⚠️ <b>実測（2026-08-24・実在の製品）。</b>アプリを起動する検査が<b>76本・1回22分</b>ありました。
         最後の完走で出た赤4本を1つずつ読んだところ、<b>製品の不具合は0件</b>。

@@ -35,6 +35,7 @@
 | ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
 | ★レスポンシブ設計の静的先取り＋実ブラウザ実測の使い分け | [`templates/scripts/verify-responsive-design.mjs`](../../templates/scripts/verify-responsive-design.mjs) / [`RESPONSIVE-CHECK.md`](RESPONSIVE-CHECK.md) | ★2026-08-25 配布開始。`--selftest` 3ケース。正式判定は実ブラウザ実測に委ねる |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
+| ★数値主張の出典スクリーニング | [`scripts/verify-numeric-claims-provenance.mjs`](../../scripts/verify-numeric-claims-provenance.mjs) | ★2026-08-25配布開始。`site/**/*.html`全体の「実際に○件」等の数値主張に`<!-- 出典: -->`コメントがあるか軽く検査。`verify-claims-coverage.mjs`（LPのdata-claim 9件限定）とは別物。`--selftest` 4ケース |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
 **配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
@@ -69,6 +70,11 @@ tsuioku の instrument-core.mjs  vs  キットの instrument-core.mjs
 - `web-ios-android`（このリポ・2026-08-17）: `audit-native-cta.mjs` を引数なしで実行 →
   何も走査せず「✅ 0件」と表示（`fc3a8e3` で対処）
 - `tsuioku-no-kirameki.com`（2026-08-21）: 検査53本のうち `--selftest` 0本・`exit 2` 0本
+- `soushin-suggest.link`（2026-08-24・`_docs/NO-SUITE-DESIGN.md` §1-1/1-2）:
+  アプリを起動する重いテスト**76本・1回22分**を完走させても、見つかった製品の不具合は**0件**
+  （赤4本のうち3本は検査の期待値が古い・1本は検査自体の不具合）。同じ期間に実際に見つかった
+  **本物の不具合5件**は、オーナーの実機報告3件と製品が吐いた診断ログ2件から見つかった
+  ＝**重いテストが見つけたものは0件**（LP `site/features/health-check/index.html` に転記時の出典）
 
 ---
 

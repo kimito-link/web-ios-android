@@ -102,6 +102,10 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
      と書く前に、その数字を出したコマンド・ファイル・日付を1つでも挙げられるか自問する。
      挙げられない具体的な数字は、断定せず一般的な説明に言い換える（「よくあるのは〜」
      「〜することがあります」等）か、実際にコマンドを実行してその場で数字を作る。
+     `npm run claims:provenance` で `site/**/*.html` 全体を対象に、出典コメント
+     （`<!-- 出典: ... -->`）の無い数値主張を機械的にスクリーニングできる
+     （`verify-claims-coverage.mjs` はLPの`data-claim`9件専用の別物）。
+     数値・実績を書いたら実行し、出典コメントを添えてから完了と報告する。
   4. **最高品質**: 手を抜いた近似実装で済ませず、既存の計器規約
      （[`_docs/instruments/HANDOFF-new-app.md`](_docs/instruments/HANDOFF-new-app.md) の3値exit・
      selftest・fail-closed）に沿った、他のアプリにも配布できる水準で作る。

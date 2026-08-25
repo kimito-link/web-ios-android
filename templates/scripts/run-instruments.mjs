@@ -82,6 +82,7 @@ const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
 const responsive = firstExisting(['scripts/verify-responsive-design.mjs', 'templates/scripts/verify-responsive-design.mjs']);
+const claimsProvenance = firstExisting(['scripts/verify-numeric-claims-provenance.mjs']);
 const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'templates/scripts/check-splash-config.mjs']);
 const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
 const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
@@ -99,6 +100,7 @@ results.push(run(
   SECURITY_URL ? ['--url', SECURITY_URL] : [],
 ));
 results.push(run('レスポンシブ設計の静的先取りチェック', responsive));
+if (claimsProvenance) results.push(run('数値主張の出典スクリーニング', claimsProvenance));
 
 if (DEEP) {
   results.push(run('全文脈パケット selftest', context, ['--selftest']));
@@ -108,6 +110,7 @@ if (DEEP) {
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
   if (responsive) results.push(run('レスポンシブ計器 selftest', responsive, ['--selftest']));
+  if (claimsProvenance) results.push(run('数値主張スクリーニング selftest', claimsProvenance, ['--selftest']));
   if (splashConfig) results.push(run('起動画面設定 selftest', splashConfig, ['--selftest']));
   if (splashSafe) results.push(run('起動画面安全円 selftest', splashSafe, ['--selftest']));
   if (splashDrift) results.push(run('起動画面の配布版 selftest', splashDrift, ['--selftest']));
