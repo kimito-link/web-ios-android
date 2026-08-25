@@ -16,11 +16,19 @@ on:
     paths:
       - 'scripts/patch-ios-launch-dark.mjs'
       - '.github/workflows/ios-shell-guardrail.yml'
+      # 2026-08-25: 検出ロジックはpatch-ios-launch-dark.mjs専用のまま(未検証の
+      # 新パターンは追加しない)だが、AppDelegate.swift/Podfileの直接編集は
+      # 原則6「作り分けない」が本来カバーすべき範囲。少なくとも変更時に
+      # このガードが走る(=人間の目に留まる)よう trigger path だけ広げる。
+      - 'ios/App/App/AppDelegate.swift'
+      - 'ios/App/Podfile'
   push:
     branches: [main]
     paths:
       - 'scripts/patch-ios-launch-dark.mjs'
       - '.github/workflows/ios-shell-guardrail.yml'
+      - 'ios/App/App/AppDelegate.swift'
+      - 'ios/App/Podfile'
   workflow_dispatch: {}
 
 permissions:

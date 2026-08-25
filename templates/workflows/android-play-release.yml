@@ -245,15 +245,21 @@ jobs:
       # iOS の IPA バージョン検証ゲートと対称: AAB に焼き込まれた versionName が
       # package.json と一致しているかをアップロード前に確認する（出荷ミス防止）。
       - name: Verify AAB versionName before upload
+        # 2026-08-25: aapt2 dump badging が失敗した場合、以前は警告のみで続行していた
+        #（＝versionName不一致を検出する唯一のゲートが、ツール互換性の問題で丸ごと無効化され、
+        #   気付かれずに出荷される穴だった）。★測れなかった＝緑ではない、の原則どおり、
+        #   抽出自体に失敗した場合もexit 1にしてfail-closedにする（このキットの3値exit規約：
+        #   0=合格/1=測れた上での赤/2=測れなかった、のうち本ステップはCIをここで止める必要が
+        #   あるため単純にfailにまとめる）。代替抽出経路(aapt2 dump xmltree等)の追加は
+        #   実機のaapt2出力形式を検証してから行う(2026-08-25時点は未検証のため見送り)。
         run: |
           set -euo pipefail
           AAB_PATH="android/app/build/outputs/bundle/release/app-release.aab"
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/36.0.0"
-          UNZIP_DIR="$(mktemp -d)"
-          unzip -q "$AAB_PATH" -d "$UNZIP_DIR" base/manifest/AndroidManifest.xml
           GOT="$("$BUILD_TOOLS/aapt2" dump badging "$AAB_PATH" 2>/dev/null | grep -oE "versionName='[^']*'" | head -1 | sed -E "s/versionName='([^']*)'/\1/" || true)"
           if [ -z "$GOT" ]; then
-            echo "::warning::aapt2 dump badging で versionName を取得できませんでした（AAB形式のため一部ツールで非対応の場合あり）。gradle側の設定を信頼して続行します。"
+            echo "::error::aapt2 dump badging で versionName を取得できませんでした。測れなかった状態のまま出荷しないため停止します(AAB形式非対応の古いbuild-toolsを使っている場合はBUILD_TOOLSのバージョンを見直してください)。"
+            exit 1
           elif [ "$GOT" != "$MARK_VER" ]; then
             echo "::error::AAB の versionName ($GOT) が package.json ($MARK_VER) と一致しません。"
             exit 1

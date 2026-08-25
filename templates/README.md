@@ -35,6 +35,10 @@
 | `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/verify-webdir-consistency.mjs` | capacitor.config.tsのwebDirとCIの「Prepare webDir」生成先の不一致検出(`_docs/CAPACITOR-GOLDEN-RULES.md`原則8)。2026-07-04 kimito resend実戦でwebDir不一致により7回連続Androidビルド失敗した地雷への対策 | **無改変**(ios-appstore-release.yml・android-play-release.yml 両方が呼ぶ) |
 | `scripts/verify-signing-material-path.mjs` | CIが書き込む署名鍵の場所とbuild.gradleが読む場所の不一致検出(同原則9)。android-patch-signing.mjsの前段で走らせ、鍵ファイル欠落を1階層目で検出 | **無改変**(android-play-release.yml が呼ぶ) |
+| `scripts/verify-app-config-schema.mjs` | app.config.json が app.config.schema.json に適合しているかの検証(ajv使用)。壊れた設定がリリーススクリプトへ素通りするのを防ぐ | **無改変**(`npm run config:schema`。`run-instruments.mjs` から自動実行) |
+| `scripts/android-cert-expiry-check.mjs` | Android upload keystore(.jks)の有効期限をkeytoolでローカル抽出(apple-cert-expiry-check.mjsのAndroid版)。期限内に無音失効すると bundleRelease が予告なく失敗する | **無改変**(`workflows/android-cert-expiry.yml` が呼ぶ) |
+| `scripts/verify-assetlinks-published.mjs` | 本番URLの `/.well-known/assetlinks.json` が実際に取得でき、`package_name` が app.config.json と一致するかをfetchで検証(TWA/App Links疎通確認)。指紋のミスは判定しない(限界を出力に明記) | **無改変**(`npm run assetlinks:check`。`run-instruments.mjs` から自動実行) |
+| `scripts/verify-external-links.mjs` | site/内の外部リンク(ストアバッジ・GitHubリンク等)の到達性をlinkinatorでチェック。実測でplay.google.com/console/*等の認証必須URLを誤検知することを確認し除外リスト(AUTH_GATED_DOMAINS)化 | **無改変**(`npm run links:external`。実行に時間がかかるため`run-instruments.mjs`には含めず`scheduled-quality-check.yml`の週次のみ) |
 | `scripts/check-splash-config.mjs` | Android の `androidScaleType` 未設定(既定=引き伸ばし)と、背景色の4箇所不一致(白フラッシュ)を検査。Expo prebuild 方式では自動的に対象外(🟡)になる | **無改変**(リリースCIが直接呼ぶ) |
 | `scripts/check-splash-safe-circle.mjs` | Expo prebuild 方式向け。Android 12+ の円形マスクでロゴが切れないか(透過PNGか・安全円の内側か)を検査。詳細は [`SPLASH-SCREEN-PLAYBOOK.md`](../_docs/SPLASH-SCREEN-PLAYBOOK.md) | **無改変**(同上) |
 | `scripts/lib/splash-manifest.mjs` | スプラッシュ検査群の配布版と対象ファイル一覧(このキットが正本) | 無改変 |
@@ -44,6 +48,8 @@
 | `scripts/generate-shindan-version.mjs` | **各プログラム本体の診断・進化進捗ページ生成器**。Next.jsでも静的サイトでも `/check-shindan-version/` を作り、導入・実測・履歴・公開の進み具合、4状態、根拠、次の一手を表示 | **無改変**。`npm run shindan` で計測＋更新、ビルド前はレポートから自動更新。詳しくは [`../_docs/instruments/SHINDAN-VERSION-PAGE.md`](../_docs/instruments/SHINDAN-VERSION-PAGE.md) |
 | `diagnostics/`(**汎用診断キット**) | **どんなJS/TSリポにも使える出荷事故ゲート4本＋ランナー**。`node diagnostics/run.mjs <対象ディレクトリ>` で import未追跡・lockfile不一致・秘密情報の追跡漏れ・巨大ファイル追跡をまとめて検査。詳細は [`diagnostics/README.md`](diagnostics/README.md) | **無改変**(依存ゼロ。web-ios-androidキット外の任意リポにも `node <このキットのパス>/diagnostics/run.mjs .` でそのまま使える) |
 | `../app.config.schema.json` | app.config.json の JSON Schema(全スクリプトの単一真実源) | 無改変(リポ直下に置く) |
+| `../lighthouserc.json` | **Lighthouse CI設定**(性能/アクセシビリティ/SEO/ベストプラクティスの閾値)。`scheduled-quality-check.yml` が使う。2026-08-25新設 | リポ直下にコピー。サイト固有の閾値に調整可(既定: a11y≥0.9はerror、他はwarn) |
+| `web/apple-app-site-association.example`<br>+ `web/README-universal-links.md` | **iOS Universal Links金型**。Android版`android-twa/assetlinks.json.example`の対。サーバ配信時の拡張子なし・Content-Type・リダイレクト禁止等のApple固有の注意点をREADMEに集約。2026-08-25新設 | `_README`削除の上`<appleTeamId>.<bundleId>`を埋め、`/.well-known/apple-app-site-association`として配信 |
 | `scripts/setup-clerk-x-oauth.mjs` | **Clerk + X OAuth セットアップ補助**。app.config.json(+ブランドプリセット)を読んでチェックリスト表示 / `.env.local` ひな形追記 / Vercel 一括登録。`--write-env` / `--write-vercel` フラグで動作変更。`pk_test_` から開発用 Callback を自動デコード | **無改変**(app.config.json 駆動) |
 | `auth/brand-preset.schema.json` | **ブランド認証プリセットの JSON Schema**。1ブランド分の Clerk + X OAuth 設定の構造定義(秘密は env 名参照のみ) | 無改変 |
 | `auth/brands/kimito-link.json` | **Kimito-Link ブランドの認証プリセット**(実証済み)。Clerk ドメイン・X scope・X アプリ共有方針・env 名を集約。`auth.brandPreset: "kimito-link"` で継承 | **無改変**(値はブランド固定) |
@@ -101,7 +107,8 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 | `.github/workflows/android-play-release.yml`(Capacitor版・金型 templates/workflows/ が正) | `.github/workflows/` | `env: PLAY_PACKAGE_NAME` / `APP_NAME` |
 | **F** `.github/workflows/ios-blackscreen-check.yml`(輝度ゲート本体・Pには無い) | `.github/workflows/` | `APP_BUNDLE_ID` + 発明B3点(下記) |
 | **F** `.github/workflows/ios-shell-guardrail.yml`(or 本キットの汎用版) | `.github/workflows/` | 無改変 |
-| 本キット `templates/workflows/scheduled-quality-check.yml`(公開サイトのセキュリティ・レスポンシブ定期チェック。2026-08-25新設) | `.github/workflows/` | 無改変(app.config.json駆動)。既定Web(Vercel)はGit連携自動デプロイでCIを挟まないため、デプロイ手段を問わず定期実行する形にした |
+| 本キット `templates/workflows/scheduled-quality-check.yml`(公開サイトのセキュリティ・レスポンシブ・Lighthouse定期チェック。2026-08-25新設、Lighthouseは同日追加) | `.github/workflows/` | 無改変(app.config.json駆動)。既定Web(Vercel)はGit連携自動デプロイでCIを挟まないため、デプロイ手段を問わず定期実行する形にした。Lighthouseはlighthouserc.jsonが無ければステップごとskip |
+| 本キット `templates/workflows/android-cert-expiry.yml`(Android upload keystoreの有効期限監視。apple-cert-expiry.ymlのAndroid版。2026-08-25新設) | `.github/workflows/` | 無改変(android-play-release.yml と同じsecretsを再利用。追加secret不要) |
 | **P** `scripts/lib/asc-api.mjs` / `scripts/lib/play-api.mjs` | `scripts/lib/` | 無改変(env で制御) |
 | **P** `scripts/appstore-submit.mjs` / `scripts/play-publish.mjs` | `scripts/` | 冒頭の `BUNDLE_ID`/`PACKAGE` 既定値 |
 | **F** `scripts/release-bump.mjs`(版+SWキャッシュ bump・Pは別命名) | `scripts/` | SWキャッシュ regex の prefix |

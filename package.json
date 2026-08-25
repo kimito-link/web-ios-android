@@ -31,12 +31,22 @@
     "responsive:check:selftest": "node templates/scripts/verify-responsive-design.mjs --selftest",
     "claims:provenance": "node scripts/verify-numeric-claims-provenance.mjs",
     "claims:provenance:selftest": "node scripts/verify-numeric-claims-provenance.mjs --selftest",
+    "config:schema": "node templates/scripts/verify-app-config-schema.mjs",
+    "config:schema:selftest": "node templates/scripts/verify-app-config-schema.mjs --selftest",
+    "assetlinks:check": "node templates/scripts/verify-assetlinks-published.mjs",
+    "assetlinks:check:selftest": "node templates/scripts/verify-assetlinks-published.mjs --selftest",
+    "links:external": "node templates/scripts/verify-external-links.mjs site",
+    "links:external:selftest": "node templates/scripts/verify-external-links.mjs --selftest",
     "splash:check": "node templates/scripts/check-splash-config.mjs",
     "splash:selftest": "node templates/scripts/check-splash-config.mjs --selftest && node templates/scripts/check-splash-safe-circle.mjs --selftest && node templates/scripts/check-splash-template-drift.mjs --selftest",
     "shindan": "node templates/scripts/generate-shindan-version.mjs --measure --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android",
     "shindan:update": "node templates/scripts/generate-shindan-version.mjs --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "linkinator": "^8.0.4",
     "sharp": "^0.34.5"
   }
 }

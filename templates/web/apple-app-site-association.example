@@ -1,0 +1,12 @@
+{
+  "_README": "iOS Universal Links設定（金型）。2026-08-25新設（計器の水平思考調査で『Android版assetlinks.json.exampleはあるがiOS版が無い』と判明したため）。これを本番サイトの /.well-known/apple-app-site-association として配信すると、Safari等で該当ドメインのリンクをタップしたとき、ブラウザではなくこのiOSアプリが直接開く（Universal Links）。_README キーは配信前に必ず削除すること（AASAは純粋なJSONで、コメント用の余分なキーがあってもApple側の検証には通るが、慣習として削る）。拡張子は付けない・Content-Typeはapplication/jsonで配信すること（サーバ設定側の注意。詳細はtemplates/web/README-universal-links.mdを参照）。",
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "<appleTeamId>.<identity.bundleId> 例: ABCDE12345.com.example.myapp",
+        "paths": ["*"]
+      }
+    ]
+  }
+}
