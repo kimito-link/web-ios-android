@@ -1,0 +1,76 @@
+{
+  "_readme": "「実際に使った例」の正本。site/scripts/showcase.js がこれを読んで LP(index.html) の .showcase-slot と showcase/index.html の .showcase-grid-slot に描画する。新しいアプリを公開したら、ここに1件追記するだけで両方に自動反映される（HTML側は直書きしない）。★status は実データで確認できたものだけを入れる（誇張しない）: 'live' = 却下履歴なく現在ダウンロード可能、'in_review' = 審査待ち・未公開、'rejected' = 却下済み（掲載しない。実績として誇示しない）。裏取り元: 各リポの app.config.json の stores.ascAppId / stores.playPackageName、および 2026-08-25 に実際のApp Store Connect / Google Play Consoleのスクリーンショットで確認したステータス。",
+  "apps": [
+    {
+      "id": "yukkuri-exosome",
+      "name": "ゆっくりエクソソーム",
+      "description": "毎日のセルフケアを習慣化するアプリ。Web・iPhone・Androidを同時展開。",
+      "icon": "images/yukkuri-exosome-icon.png",
+      "status": "live",
+      "webUrl": "https://yukkuri-exosome.link/",
+      "iosUrl": "https://apps.apple.com/jp/app/id6775201794",
+      "androidUrl": "https://play.google.com/store/apps/details?id=com.kimito.link.yukkuriexosome"
+    },
+    {
+      "id": "fujisan-compass",
+      "name": "富士山コンパス",
+      "description": "現在地から富士山の方角をリアルタイムで表示するコンパスアプリ。",
+      "icon": "images/fujisan-icon.png",
+      "status": "live",
+      "webUrl": "https://fujisan01.com/",
+      "iosUrl": "https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076"
+    },
+    {
+      "id": "reversehack-partner",
+      "name": "リバースハック",
+      "description": "パートナープログラムの案内サイト。Web・iPhone・Androidを同時展開。",
+      "icon": null,
+      "iconEmoji": "🔥",
+      "status": "live",
+      "webUrl": "https://partner.reverse-re-birth-hack.com/",
+      "iosUrl": "https://apps.apple.com/jp/app/id6769407908",
+      "androidUrl": "https://play.google.com/store/apps/details?id=com.reversehack.partner"
+    },
+    {
+      "id": "web-health-check",
+      "name": "君斗りんくのWEBサイト健康診断",
+      "description": "自分のWebサイトの状態を、けんこう診断と同じ仕組みで確認できるアプリ。",
+      "icon": null,
+      "iconEmoji": "🩺",
+      "status": "live",
+      "webUrl": "https://app.web-health-check.link/",
+      "iosUrl": "https://apps.apple.com/jp/app/id6779860644",
+      "androidUrl": "https://play.google.com/store/apps/details?id=com.kimito.link.webhealthcheck"
+    },
+    {
+      "id": "soushin-suggest",
+      "name": "送信サジェスト",
+      "description": "短い更新情報を本体LPへ、詳しい準備状況と動作チェックを専用ページへ、同じ情報から反映する導入例。",
+      "icon": null,
+      "iconEmoji": "📨",
+      "status": "live",
+      "webUrl": "https://soushin-suggest.link/",
+      "extraLinks": [
+        { "label": "更新・動作状況", "url": "https://soushin-suggest.link/check-shindan-version/" }
+      ]
+    },
+    {
+      "id": "malwarecheck-site",
+      "name": "マルウェアチェック.site",
+      "description": "WebサイトのURLを入れるだけで、マルウェア感染疑いや不審なリダイレクトを簡易診断するサービス。",
+      "icon": null,
+      "iconEmoji": "🛡️",
+      "status": "in_review",
+      "webUrl": "https://malwarecheck.site/"
+    },
+    {
+      "id": "kimito-link",
+      "name": "kimito.link（キミトリンク）",
+      "description": "複数のリンクを1つにまとめて紹介するリンクツリー型のアプリ。",
+      "icon": null,
+      "iconEmoji": "🔗",
+      "status": "in_review",
+      "webUrl": "https://kimito.link/"
+    }
+  ]
+}

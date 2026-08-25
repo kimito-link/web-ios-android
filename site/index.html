@@ -114,6 +114,10 @@
     .example-card p { margin: 12px 0; color: var(--muted); font-size: .86rem; }
     .mini-links { display: flex; flex-wrap: wrap; gap: 8px; }
     .mini-links a { padding: 6px 9px; border-radius: 999px; background: #eff2ff; color: #4058c9; text-decoration: none; font-size: .76rem; font-weight: 900; }
+    .mini-pend { padding: 2px 8px; border-radius: 999px; background: #f2f2f2; color: #888; font-size: .72rem; font-weight: 700; display: inline-block; }
+    .showcase-more { text-align: center; margin-top: 18px; }
+    .showcase-more a { color: #4058c9; font-weight: 800; text-decoration: none; font-size: .9rem; }
+    .showcase-error { text-align: center; color: var(--muted); grid-column: 1 / -1; }
 
     .feature-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
     .feature-card { display: block; padding: 20px; text-decoration: none; }
@@ -322,23 +326,8 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
           <h2 id="examples-title">実際に使った例</h2>
           <p>宣伝文だけでなく、公開先や動作状況を確認できるものを掲載しています。</p>
         </div>
-        <div class="examples">
-          <article class="example-card">
-            <div class="example-top"><img src="images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム"><h3>ゆっくりエクソソーム</h3></div>
-            <p>Web・iPhone・Androidへ展開したセルフケアアプリ。</p>
-            <div class="mini-links"><a href="https://yukkuri-exosome.link/" target="_blank" rel="noopener">Webを見る</a><a href="https://apps.apple.com/jp/app/id6775201794" target="_blank" rel="noopener">App Store</a></div>
-          </article>
-          <article class="example-card">
-            <div class="example-top"><img src="images/fujisan-icon.png" alt="富士山コンパス"><h3>富士山コンパス</h3></div>
-            <p>現在地から富士山の方角を表示するコンパスアプリ。</p>
-            <div class="mini-links"><a href="https://fujisan01.com/" target="_blank" rel="noopener">Webを見る</a><a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" target="_blank" rel="noopener">App Store</a></div>
-          </article>
-          <article class="example-card">
-            <div class="example-top"><div class="example-icon" aria-hidden="true">📨</div><h3>送信サジェスト</h3></div>
-            <p>製品ページと動作チェックページへ、同じ更新情報を表示した導入例。</p>
-            <div class="mini-links"><a href="https://soushin-suggest.link/" target="_blank" rel="noopener">製品を見る</a><a href="https://soushin-suggest.link/check-shindan-version/" target="_blank" rel="noopener">更新・動作状況</a></div>
-          </article>
-        </div>
+        <div class="examples showcase-slot" data-variant="lp" data-showcase-data-path="assets/data/showcase.json"></div>
+        <p class="showcase-more"><a href="showcase/">公開アプリの一覧をすべて見る →</a></p>
       </div>
     </section>
 
@@ -443,6 +432,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 
   <div id="site-footer"></div>
   <script src="scripts/site-chrome.js"></script>
+  <script src="scripts/showcase.js"></script>
   <script src="check-shindan-version/summary.js" defer></script>
   <script>
     document.addEventListener('click', function (event) {
