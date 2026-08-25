@@ -21,9 +21,9 @@
  *    に沿って自然言語処理の再発明はしない）。
  *
  * ■ 終了コード（instrument-core.mjs と同じ3値規約）
- *   0 = 検出した数値主張すべてに出典コメントがある
+ *   0 = 検出した数値主張すべてに出典コメントがある（日付があれば鮮度も基準内）
  *   1 = 使わない（自然言語検出は誤検知が多いため、いきなり赤にはしない設計。下記参照）
- *   2 = 出典コメントの無い数値主張が見つかった（要確認。緑ではない）
+ *   2 = 出典コメントの無い数値主張、または出典が古すぎる（要確認。緑ではない）
  *
  * ★出典なしを FAIL(1) ではなく INCONCLUSIVE(2) にしている理由:
  *   正規表現ベースの自然言語検出は誤検知が多い（バージョン番号・価格・日付等を
@@ -31,6 +31,17 @@
  *   死んだ「一括強制のゲート」と同じ失敗を繰り返す（_docs/instruments/README.md
  *   掟⑥参照）。★「検査自体は走った・出典なしの候補が何件ある」を必ず報告し、
  *   最終判断は人・AIのレビューに委ねる。
+ *
+ * ■ ★2026-08-26追加: 出典コメントの日付（鮮度）
+ *   出典コメントは元々「<!-- 出典: パス -->」形式のみで、いつ実測・確認したかの
+ *   情報を持たなかった。実際にsite/内の既存コメントを調査したところ、
+ *   「（2026-08-23実損）」のようにYYYY-MM-DD形式の日付が自然言語の注記内に
+ *   既に散在していた（構造化された規約ではなく、書き手の自然な慣習）。
+ *   ★この既存の慣習に乗り、コメント内にYYYY-MM-DD形式の日付があれば任意で
+ *   拾って鮮度判定する。日付が無いコメントは従来通り「出典あり」として合格
+ *   （既存コメントの大半を書き換えさせない・後方互換）。
+ *   閾値は180日（半年）。実績数値は半年経てば再確認の価値が生まれるという
+ *   一般的なレビューサイクルに基づく（会議での複数案の中で最も標準的だった値）。
  *
  * ■ 使い方
  *   node scripts/verify-numeric-claims-provenance.mjs
@@ -72,6 +83,25 @@ function listHtmlFiles(dir) {
 const CLAIM_KEYWORDS = /実際に|実例|実績|実測/;
 const NUMBER_WITH_COUNTER = /\d[\d,]*(?:\.\d+)?\s*(?:本|分|件|回|日間?|個|%|倍|秒|ミリ秒|人|ヶ月|か月)/;
 const PROVENANCE_COMMENT = /<!--\s*出典\s*:/;
+/** ★出典コメント内のYYYY-MM-DD形式の日付（任意）。既存の慣習「（2026-08-23実損）」等を拾う。 */
+const PROVENANCE_DATE = /\b(\d{4})-(\d{2})-(\d{2})\b/;
+/** ★何日経ったら出典が「古すぎる」とみなすか。 */
+const STALE_DAYS_THRESHOLD = 180;
+
+/**
+ * ★出典コメントの近傍テキストから最初のYYYY-MM-DD日付を拾い、経過日数を返す。
+ *   日付が見つからなければnull（＝鮮度判定の対象外。日付なしコメントは今まで通り合格）。
+ * @param {string} nearbyText
+ * @param {number} nowMs
+ * @returns {number|null}
+ */
+function staleDays(nearbyText, nowMs) {
+  const m = nearbyText.match(PROVENANCE_DATE);
+  if (!m) return null;
+  const t = Date.parse(`${m[1]}-${m[2]}-${m[3]}T00:00:00Z`);
+  if (!Number.isFinite(t)) return null;
+  return Math.floor((nowMs - t) / (1000 * 60 * 60 * 24));
+}
 
 /**
  * 1ファイルを走査し、出典コメントの無い数値主張候補を返す。
@@ -84,7 +114,12 @@ function blankOutBlocks(text, blockRegex) {
   return text.replace(blockRegex, (match) => match.replace(/[^\n]/g, ''));
 }
 
-function scanFile(filePath) {
+/**
+ * @param {string} filePath
+ * @param {number} nowMs ★Date.now()を直接使わない。selftestが実行日に依存しない毒にするため引数化
+ * @returns {Array<{line: number, text: string, reason: 'missing'|'stale', staleDays?: number}>}
+ */
+function scanFile(filePath, nowMs) {
   const raw = readFileSync(filePath, 'utf8');
   let body = blankOutBlocks(raw, /<style[\s\S]*?<\/style>/gi);
   body = blankOutBlocks(body, /<script[\s\S]*?<\/script>/gi);
@@ -102,10 +137,15 @@ function scanFile(filePath) {
     const nearby = lines.slice(windowStart, windowEnd).join('\n');
 
     if (!PROVENANCE_COMMENT.test(nearby)) {
-      findings.push({
-        line: i + 1,
-        text: line.trim().slice(0, 120),
-      });
+      findings.push({ line: i + 1, text: line.trim().slice(0, 120), reason: 'missing' });
+      continue;
+    }
+
+    // ★出典コメントはあるので合格候補。日付が併記されていれば鮮度を見る
+    //   （日付が無ければここで判定を打ち切り＝従来通り合格。後方互換）。
+    const days = staleDays(nearby, nowMs);
+    if (days !== null && days > STALE_DAYS_THRESHOLD) {
+      findings.push({ line: i + 1, text: line.trim().slice(0, 120), reason: 'stale', staleDays: days });
     }
   }
   return findings;
@@ -115,7 +155,7 @@ function rel(p) {
   return p.split(ROOT).join('').replace(/^[\/\\]+/, '');
 }
 
-function scanAll(siteDir) {
+function scanAll(siteDir, nowMs = Date.now()) {
   const files = listHtmlFiles(siteDir);
   if (files.length === 0) {
     return { verdict: 'inconclusive', detail: `HTMLが1件も見つかりませんでした: ${rel(siteDir)}` };
@@ -123,7 +163,7 @@ function scanAll(siteDir) {
 
   const perFile = [];
   for (const f of files) {
-    const findings = scanFile(f);
+    const findings = scanFile(f, nowMs);
     if (findings.length > 0) perFile.push({ file: rel(f), findings });
   }
 
@@ -176,6 +216,43 @@ if (SELFTEST) {
     mkdirSync(emptyDir);
     const r4 = scanAll(emptyDir);
     if (r4.verdict !== 'inconclusive') fails.push(`対象0件を緑にした(得た: ${r4.verdict})`);
+
+    // ★2026-08-26追加: 出典の鮮度判定。nowMsを固定し実行日に依存しない毒にする
+    //   （instrument-core.mjs runSelfTestの掟「状態に依存しない毒にする」に従う）。
+    const FIXED_NOW = Date.parse('2026-08-26T00:00:00Z');
+
+    // 毒5: 出典コメントに古い日付（閾値超）→ inconclusiveで検知するはず
+    writeFileSync(join(tmpDir, 'stale.html'), `<html><body>
+      <!-- 出典: _docs/example.md（2026-01-01実測） -->
+      <p>実際に検査したところ、76本のテストで不具合が3件見つかりました。</p>
+    </body></html>`);
+    const r5 = scanAll(tmpDir, FIXED_NOW);
+    if (r5.verdict !== 'inconclusive' || r5.perFile[0]?.findings[0]?.reason !== 'stale') {
+      fails.push(`古い出典日付を検知できない(得た: verdict=${r5.verdict}, findings=${JSON.stringify(r5.perFile)})`);
+    }
+    rmSync(join(tmpDir, 'stale.html'));
+
+    // 毒なし: 出典コメントの日付が閾値内 → passのはず（誤検知しない）
+    writeFileSync(join(tmpDir, 'fresh.html'), `<html><body>
+      <!-- 出典: _docs/example.md（2026-08-01実測） -->
+      <p>実際に検査したところ、76本のテストで不具合が3件見つかりました。</p>
+    </body></html>`);
+    const r6 = scanAll(tmpDir, FIXED_NOW);
+    if (r6.verdict !== 'pass') {
+      fails.push(`閾値内の出典日付を誤検知した(得た: verdict=${r6.verdict}, findings=${JSON.stringify(r6.perFile)})`);
+    }
+    rmSync(join(tmpDir, 'fresh.html'));
+
+    // 毒なし: 日付の無い出典コメント → 従来通りpassのはず（後方互換・既存コメントを壊さない）
+    writeFileSync(join(tmpDir, 'no-date.html'), `<html><body>
+      <!-- 出典: _docs/example.md -->
+      <p>実際に検査したところ、76本のテストで不具合が3件見つかりました。</p>
+    </body></html>`);
+    const r7 = scanAll(tmpDir, FIXED_NOW);
+    if (r7.verdict !== 'pass') {
+      fails.push(`日付なし出典コメントを誤検知した(得た: verdict=${r7.verdict}, findings=${JSON.stringify(r7.perFile)})`);
+    }
+    rmSync(join(tmpDir, 'no-date.html'));
   } finally {
     try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* best-effort */ }
   }
@@ -185,7 +262,7 @@ if (SELFTEST) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(EXIT.FAIL);
   }
-  console.log('[verify-numeric-claims-provenance] selftest OK');
+  console.log('[verify-numeric-claims-provenance] selftest OK（出典なし検知・誤検知なし・CSSノイズ除外・対象0件・古い出典検知・閾値内は誤検知なし・日付なしは後方互換で合格）');
   process.exit(EXIT.PASS);
 }
 
@@ -208,20 +285,26 @@ if (result.verdict === 'inconclusive' && !result.perFile) {
 }
 
 if (result.verdict === 'inconclusive') {
-  const totalFindings = result.perFile.reduce((sum, f) => sum + f.findings.length, 0);
-  const lines = result.perFile
-    .flatMap((f) => f.findings.map((find) => `${f.file}:${find.line} 「${find.text}」`))
+  const allFindings = result.perFile.flatMap((f) => f.findings.map((find) => ({ ...find, file: f.file })));
+  const missingCount = allFindings.filter((f) => f.reason === 'missing').length;
+  const staleCount = allFindings.filter((f) => f.reason === 'stale').length;
+  const lines = allFindings
+    .map((find) => find.reason === 'stale'
+      ? `${find.file}:${find.line} 「${find.text}」（出典が${find.staleDays}日前・閾値${STALE_DAYS_THRESHOLD}日）`
+      : `${find.file}:${find.line} 「${find.text}」（出典なし）`)
     .join(' / ');
   console.log(formatProbeReport([{
     probe: '数値主張の出典スクリーニング',
     verdict: 'inconclusive',
-    evidence: { 走査ファイル数: result.scannedFiles, 出典なし候補: totalFindings },
+    evidence: { 走査ファイル数: result.scannedFiles, 出典なし候補: missingCount, 出典が古い候補: staleCount },
     detail: lines,
-    howToFix: '実際に主張の裏付け（_docs/配下のKB・git履歴・実行コマンドの出力）を確認し、'
+    howToFix: '出典なし: 実際に主張の裏付け（_docs/配下のKB・git履歴・実行コマンドの出力）を確認し、'
       + '出典があれば直前に <!-- 出典: パス --> を追加する。裏付けが無ければ、断定を避けた一般的な表現に言い換える'
-      + '（例:「よくあるのは〜」）。誤検知（バージョン番号・価格等）ならこの検査の対象外として無視してよい。',
+      + '（例:「よくあるのは〜」）。誤検知（バージョン番号・価格等）ならこの検査の対象外として無視してよい。'
+      + `出典が古い: 実際に再確認し、出典コメント内の日付をYYYY-MM-DD形式で最新の確認日に更新する。`,
     limitation: '正規表現による軽量スクリーニングで、数値の正しさは判定しない。誤検知（バージョン番号・日付等）を含みうる。'
-      + '出典コメントが無いことを機械的に検知するだけで、最終判断は人・AIのレビューに委ねる設計（CLAUDE.md「4つの基準」参照）',
+      + '出典コメントが無いこと・出典コメント内の日付が古いことを機械的に検知するだけで、最終判断は人・AIのレビューに委ねる設計'
+      + '（CLAUDE.md「4つの基準」参照）。日付のない出典コメントは鮮度判定の対象外＝従来通り合格',
   }]));
   process.exit(EXIT.INCONCLUSIVE);
 }
