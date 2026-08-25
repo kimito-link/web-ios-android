@@ -30,7 +30,7 @@
 | ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
 | ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
 | ★セキュリティスコア（内部先取り＋malwarecheck.site本体実測） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 4ケース |
-| ★起動画面（スプラッシュ）完全検査 | [`templates/scripts/run-splash-gates.mjs`](../../templates/scripts/run-splash-gates.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | ★設定・背景色・ダーク版・配布元との差を集約。実機目視は別に残す |
+| 起動画面（スプラッシュ）の設定検査 | [`templates/scripts/check-splash-config.mjs`](../../templates/scripts/check-splash-config.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | 引き伸ばし設定と背景色の不一致を見る。★画像生成は公式 `@capacitor/assets` に任せ自作しない（2026-08-25方針）。実機目視は別に残す |
 | ★全文脈パケット＋判断の進化台帳 | [`templates/scripts/context-engine.mjs`](../../templates/scripts/context-engine.mjs) / [`context-evolution.json`](../../templates/scripts/context-evolution.json) | ★全追跡・未追跡ファイル、Git全履歴、現在差分、確定/却下/未確定を出典つきで1枚化 |
 | ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
