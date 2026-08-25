@@ -69,13 +69,12 @@ Apple は「足りないものを1つずつ」しか教えてくれないので�
 - **原因**: `apps/mobile/package.json` に Capacitor 依存を足したのに lockfile を更新していない。CI は `--frozen-lockfile`。
 - **直し方**: `pnpm install --lockfile-only` → commit。
 
-### B3. スプラッシュ生成スクリプトがコピー元のロゴパスを参照している
-- **症状**: `Generate or reuse 1024 app icon + splash` で `Error: logo not found: .../client/public/logo-reversehack.png`。
-- **原因**: `generate-capacitor-splash.mjs` の `LOGO_SRC` が**コピー元アプリ**のパス（Vite 系 `client/public/...`）のままハードコード。新アプリは Next.js 系 `apps/web/public/...` 等で構成が違う。
-- **直し方**: ロゴ候補を配列で複数フォールバックにし、新アプリの実パス（作成済みアイコン
-  `store-assets/source/icon-source-1024.png` を第一候補に）を入れる。背景色も新アプリのブランド色に。
-- **教訓**: コピー元のスクリプトには「コピー元固有のハードコードパス」が必ず残る。新アプリの
-  ディレクトリ構成（client/ か apps/web/ か）に合わせて grep して洗う。
+### B3. スプラッシュ原版（assets/splash.png）が無いとCIが赤で止まる（★2026-08-24方式に更新済み）
+- **症状**: リリースCIの起動画面生成ステップで `::error::assets/splash.png（デザイン原版）が無い。store-assets のマスターをコミットすること` が出て `exit 1`。
+- **原因**: `assets/splash.png`（2732×2732以上のデザイン原版）がリポジトリにコミットされていない。
+- **直し方**: `assets/splash.png` を用意してコミットする（`brand.splashBackgroundColorDark` があればダーク用 `assets/splash-dark.png` も）。全サイズへの展開は公式ツール `@capacitor/assets generate` に任せる（自作の生成コードは書かない）。
+- **★旧方式からの変更点（2026-08-24）**: 以前は `generate-capacitor-splash.mjs` という自作スクリプトが「原版が無ければ単色画像を自動生成する」フォールバック動作をしていたが、これは「原版が無い」というエラーを握りつぶし、誰もデザインしていない単色画面をゲート素通りで出荷させる装置になっていた（fail-closedの逆）。現行のワークフロー（`templates/workflows/android-play-release.yml`・`ios-appstore-release.yml`）は原版が無ければ即座に赤で止める設計に変更済み。`generate-capacitor-splash.mjs` というスクリプト名は現在のキットには存在しない。
+- **教訓**: 「無ければ自動生成する」という親切設計が、実は品質チェックを素通りさせる穴になることがある。出荷ゲートは「測れなかったら赤」が正しく、「測れなかったら適当に埋めて緑」は危険（`_docs/instruments/README.md` の3値exit規約と同じ思想）。
 
 ### B4. Export IPA で「Provisioning profile doesn't include signing certificate」
 - **症状**: `Export IPA` で `error: exportArchive Provisioning profile "..." doesn't include signing certificate "Apple Distribution: ..."`、exit 70。

@@ -33,6 +33,8 @@
 | `scripts/verify-android-signing-config.mjs` | bundleRelease 前に signingConfig を検証(未署名 AAB 出荷防止ゲート) | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/verify-ios-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・iOS版(`--snapshot`/`--verify`) | **無改変**(ios-appstore-release.yml が呼ぶ) |
 | `scripts/verify-android-splash-not-default.mjs` | Capacitor デフォルトスプラッシュ出荷防止ゲート・Android版(`--snapshot`/`--verify`。iOSと違いマニフェスト無しの固定パス群を直接ハッシュ比較) | **無改変**(android-play-release.yml が呼ぶ) |
+| `scripts/verify-webdir-consistency.mjs` | capacitor.config.tsのwebDirとCIの「Prepare webDir」生成先の不一致検出(`_docs/CAPACITOR-GOLDEN-RULES.md`原則8)。2026-07-04 kimito resend実戦でwebDir不一致により7回連続Androidビルド失敗した地雷への対策 | **無改変**(ios-appstore-release.yml・android-play-release.yml 両方が呼ぶ) |
+| `scripts/verify-signing-material-path.mjs` | CIが書き込む署名鍵の場所とbuild.gradleが読む場所の不一致検出(同原則9)。android-patch-signing.mjsの前段で走らせ、鍵ファイル欠落を1階層目で検出 | **無改変**(android-play-release.yml が呼ぶ) |
 | `scripts/check-splash-config.mjs` | Android の `androidScaleType` 未設定(既定=引き伸ばし)と、背景色の4箇所不一致(白フラッシュ)を検査。Expo prebuild 方式では自動的に対象外(🟡)になる | **無改変**(リリースCIが直接呼ぶ) |
 | `scripts/check-splash-safe-circle.mjs` | Expo prebuild 方式向け。Android 12+ の円形マスクでロゴが切れないか(透過PNGか・安全円の内側か)を検査。詳細は [`SPLASH-SCREEN-PLAYBOOK.md`](../_docs/SPLASH-SCREEN-PLAYBOOK.md) | **無改変**(同上) |
 | `scripts/lib/splash-manifest.mjs` | スプラッシュ検査群の配布版と対象ファイル一覧(このキットが正本) | 無改変 |
@@ -99,6 +101,7 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 | `.github/workflows/android-play-release.yml`(Capacitor版・金型 templates/workflows/ が正) | `.github/workflows/` | `env: PLAY_PACKAGE_NAME` / `APP_NAME` |
 | **F** `.github/workflows/ios-blackscreen-check.yml`(輝度ゲート本体・Pには無い) | `.github/workflows/` | `APP_BUNDLE_ID` + 発明B3点(下記) |
 | **F** `.github/workflows/ios-shell-guardrail.yml`(or 本キットの汎用版) | `.github/workflows/` | 無改変 |
+| 本キット `templates/workflows/scheduled-quality-check.yml`(公開サイトのセキュリティ・レスポンシブ定期チェック。2026-08-25新設) | `.github/workflows/` | 無改変(app.config.json駆動)。既定Web(Vercel)はGit連携自動デプロイでCIを挟まないため、デプロイ手段を問わず定期実行する形にした |
 | **P** `scripts/lib/asc-api.mjs` / `scripts/lib/play-api.mjs` | `scripts/lib/` | 無改変(env で制御) |
 | **P** `scripts/appstore-submit.mjs` / `scripts/play-publish.mjs` | `scripts/` | 冒頭の `BUNDLE_ID`/`PACKAGE` 既定値 |
 | **F** `scripts/release-bump.mjs`(版+SWキャッシュ bump・Pは別命名) | `scripts/` | SWキャッシュ regex の prefix |
@@ -107,6 +110,19 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 | **E** `scripts/play-diagnose.mjs`(SA 403 切り分け) / `play-review-check.mjs`(本番準備チェック) | `scripts/` | 無改変 |
 | **E** `scripts/asc-rejection-handle.mjs`(ASC リジェクト分類→返信テンプレ) | `scripts/` | 無改変(テンプレは `app-review-replies/`) |
 | **E** `scripts/asc-inspect-listing.mjs`(**READ-ONLY** で ASC 掲載文 dump) | `scripts/` | 無改変 |
+| コピー元要確認 `scripts/apple-cert-expiry-check.mjs`(証明書/プロファイル失効チェック。`apple-cert-expiry.yml` が呼ぶ) | `scripts/` | 無改変(ASC API 秘密鍵で自動列挙) |
+| コピー元要確認 `scripts/asc-patch-review-detail.mjs`(審査提出前の詳細情報パッチ。`ios-pre-submission-lint.yml` が呼ぶ) | `scripts/` | 未確認 |
+| コピー元要確認 `scripts/generate-app-icons.mjs`(アイコン一括生成のフォールバック。マスターアイコン未コミット時のみ到達) | `scripts/` | 未確認 |
+| コピー元要確認 `scripts/generate-release-notes.mjs`(リリースノート生成。ios/android両CIとも`\|\| true`でソフトフェイル化済み) | `scripts/` | 未確認 |
+| コピー元要確認 `scripts/strip-comments.mjs`(`ios-shell-guardrail.yml` が呼ぶ。無ければ素のgrepにフォールバックする設計) | `scripts/` | 未確認 |
+| コピー元要確認 `scripts/verify-reviewer-account.mjs`(審査提出前ゲート。`ios-appstore-release.yml` から無条件で呼ばれる必須ステップ) | `scripts/` | 未確認 |
+
+> ⚠️ 上記6本は2026-08-25の監査で「ワークフローYAMLから参照されているがこの表に記載が無い」
+> ことが判明したもの。**実体は`templates/scripts/`に置かない設計方針そのものは正しい**（§冒頭参照）が、
+> コピー元（partnership/fujisan/Exosomeのどれか）が未確認のため、実際にコピーする前に
+> `partnership_program_website`等で同名ファイルの実在を確認すること。特に
+> `verify-reviewer-account.mjs`はフォールバックなしの必須呼び出しのため、
+> コピーを忘れると新規アプリのCIが`MODULE_NOT_FOUND`で赤落ちする。
 
 > ⚠️ コピー元が P と F で分かれるのは、P=認証込みのリリースCI完成形 / F=黒画面ゲート+版bumpの
 > 汎用版(プレイブックは F ベース)という分担のため。**コピー前に実物の存在を確認**してから cp すること

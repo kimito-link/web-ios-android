@@ -67,7 +67,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 
 ## 個別ページ
 
-紹介ページ: [`../../site/features/diagnostics/`](../../site/features/diagnostics/index.html)（サイト内で「診断キット」の仕組みを説明する独立ページ）。
+紹介ページ: [`../../site/features/health-check/`](../../site/features/health-check/index.html)（「🔍 出荷する前に、コードそのものを検査する『診断キット』」節。★2026-08-22に独立ページ`site/features/diagnostics/`から統合済み。旧パスへのリンクは張らないこと）。
 
 ---
 

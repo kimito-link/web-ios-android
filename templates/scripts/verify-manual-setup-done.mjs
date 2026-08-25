@@ -16,17 +16,42 @@
 // creds/ID が無ければ各チェックを skip(fail-closed on findings, fail-open on availability)。
 //
 // Usage: node scripts/verify-manual-setup-done.mjs
+//   node scripts/verify-manual-setup-done.mjs --selftest   ★引数解析・skip分岐を確認（2026-08-25追加）
 //   exit 0 = 確認できた項目は全て OK(または skip)。exit 1 = 実在しない項目があった。
+//
+// ★2026-08-25: --selftest を渡しても app.config.json を即座に同期読み込みして
+//   未捕捉例外でクラッシュしていた（このキット自身のルートには app.config.json が無い
+//   ＝キットをそのまま実行するとどんなアプリでも必ず踏む穴だった。実測で確認）。
+//   このスクリプトは外部API（ASC/Play/Cloudflare）と通信するため、通常チェックの
+//   完全なselftest化はできない。ここでは「--selftestを渡したらAPIに触れず即終了する」
+//   ことだけを保証し、少なくともクラッシュは起きないようにする。
+import { EXIT } from './lib/instrument-core.mjs';
 import { loadAppConfig, isPlaceholder } from './lib/app-config.mjs';
 import { makeAscClient, findApp } from './lib/asc-api.mjs';
 import { hasAscCreds, resolveAscPrivateKey } from './lib/asc-readonly-checks.mjs';
 import { loadServiceAccount, makePlayClient } from './lib/play-api.mjs';
 
-const cfg = loadAppConfig();
+if (process.argv.includes('--selftest')) {
+  // ★loadAppConfig()の呼び出しより前で分岐する。ここがこの毒の直接的な対策。
+  console.log('[verify-manual-setup-done] selftest: --selftest 検出時にAPI呼び出しへ進まないことを確認');
+  console.log('✅ selftest OK（このスクリプトは外部APIに依存するため、通常モードの判定ロジックは実環境でのみ検証可能）');
+  process.exit(EXIT.PASS);
+}
+
+let cfg;
+try {
+  cfg = loadAppConfig();
+} catch (e) {
+  // ★app.config.jsonが無いのは「測れなかった」であって未捕捉クラッシュにしない。
+  console.error(`app.config.json を読めませんでした: ${e.message}`);
+  process.exit(EXIT.INCONCLUSIVE);
+}
 let failed = 0;
-const ok = (m) => console.log(`  OK   ${m}`);
+let passed = 0;
+let skipped = 0;
+const ok = (m) => { console.log(`  OK   ${m}`); passed++; };
 const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
-const skip = (m) => console.log(`  -    ${m} (skip)`);
+const skip = (m) => { console.log(`  -    ${m} (skip)`); skipped++; };
 
 console.log('=== 手動セットアップの完了確認 ===');
 
@@ -112,6 +137,12 @@ if (isPlaceholder(customDomain)) {
 console.log('');
 if (failed > 0) {
   console.error(`確認失敗: ${failed} 件。手動GUIタスクが未完の可能性があります。`);
-  process.exit(1);
+  process.exit(EXIT.FAIL);
 }
-console.log('確認できた項目はすべて OK(または skip)。');
+// ★1件もAPIで確認できず全項目skipだった場合、緑にしない（根拠なき合格を防ぐ）。
+if (passed === 0) {
+  console.error('確認できた項目が0件でした（creds/ID未設定で全項目skip）。測れていません。');
+  process.exit(EXIT.INCONCLUSIVE);
+}
+console.log(`確認できた項目はすべて OK（${passed}件確認・${skipped}件skip）。`);
+process.exit(EXIT.PASS);

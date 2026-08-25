@@ -83,6 +83,7 @@ const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
 const responsive = firstExisting(['scripts/verify-responsive-design.mjs', 'templates/scripts/verify-responsive-design.mjs']);
 const claimsProvenance = firstExisting(['scripts/verify-numeric-claims-provenance.mjs']);
+const docImplCoverage = firstExisting(['scripts/verify-doc-impl-coverage.mjs']);
 const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'templates/scripts/check-splash-config.mjs']);
 const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
 const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
@@ -101,6 +102,9 @@ results.push(run(
 ));
 results.push(run('レスポンシブ設計の静的先取りチェック', responsive));
 if (claimsProvenance) results.push(run('数値主張の出典スクリーニング', claimsProvenance));
+// ★docImplCoverageはinstrument-core.mjsの3値exit規約に未対応（--selftest無し、2026-08-25時点）。
+//   通常実行はしつつ、selftest呼び出しは追加しない（無い機能を呼ぶと誤った結果になる）。
+if (docImplCoverage) results.push(run('ドキュメント⇔実装カバレッジ', docImplCoverage));
 
 if (DEEP) {
   results.push(run('全文脈パケット selftest', context, ['--selftest']));
