@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <!-- 基本メタ情報・SEO・SNSシェア用（og:*）・構造化データ(JSON-LD) -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>アプリの面倒な手続きを自動化するテンプレート | Kimito-Link</title>
@@ -665,9 +666,10 @@
     <p class="time-note">残りの時間は「どんなアプリにしよう？」を考えるだけ 💭</p>
   </div>
 
+  <!-- 必須の4ステップ（①ダウンロード→②名前を書く→③AIに頼む→④送信）。ここまでで人の作業は完了 -->
   <div class="steps-grid">
 
-    <!-- ① -->
+    <!-- ① ダウンロード -->
     <div class="step">
       <div class="step-top">
         <div class="step-circle">①</div>
@@ -697,7 +699,7 @@
       </div>
     </div>
 
-    <!-- ② -->
+    <!-- ② 名前を書く -->
     <div class="step">
       <div class="step-top">
         <div class="step-circle">②</div>
@@ -730,7 +732,7 @@
       </div>
     </div>
 
-    <!-- ③ -->
+    <!-- ③ AIに頼む -->
     <div class="step">
       <div class="step-top">
         <div class="step-circle">③</div>
@@ -762,7 +764,7 @@
       </div>
     </div>
 
-    <!-- ④ -->
+    <!-- ④ 送信して待つ -->
     <div class="step">
       <div class="step-top">
         <div class="step-circle">④</div>
@@ -802,6 +804,7 @@
 
     </div><!-- /steps-grid（①〜④） -->
 
+    <!-- ここから⑤〜⑧「おまけ機能」。必須の4ステップとは違い、読まなくても①〜④だけで進められる -->
     <div class="steps-head-sub">※ここから先は「やらなくていいけど、知っておくと安心」な話です</div>
     <div class="steps-grid">
 
@@ -1143,7 +1146,7 @@
         どのAIモデルが画像・動画・音声それぞれを担当しているか、対応モデル一覧は
         <a href="line-bot-features/">画像・動画・音声認識のページ</a> へ。</div>
       </div>
-    </div>
+    </div><!-- /steps-grid（⑤〜⑧おまけ） -->
 
     <!-- AIへの開始文（コピペ用） -->
     <div class="ai-box">
@@ -1208,9 +1211,10 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
   </div>
 </div><!-- /main-wrap -->
 
-<!-- 下段：もっと知りたい ＋ 自動リスト -->
+<!-- 下段：もっと知りたい ＋ 自動リスト。2カラムで「関連ページ一覧」と「自動化の詳細一覧」を並べる -->
 <div class="bottom-wrap">
 
+  <!-- 左カラム: 各機能ページへのリンク集（お店ごとの追体験・困りごと別ページなど） -->
   <div>
     <div style="font-size:1rem; font-weight:900; margin-bottom:14px;">📚 もっと知りたい方へ</div>
     <div class="more-cards">
@@ -1315,6 +1319,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
     </div>
   </div>
 
+  <!-- 右カラム: 自動化される作業の一覧 ＋ セキュリティ/レスポンシブの実測結果パネル -->
   <div>
     <div class="auto-box" style="margin-bottom:20px;">
       <div class="auto-title">🤖 自動でやってくれること一覧</div>
@@ -1373,7 +1378,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 
 </div><!-- /bottom-wrap -->
 
-<!-- ショーケース（実際に使った例） -->
+<!-- ショーケース（実際に使った例）。中身は showcase.js が assets/data/showcase.json を読んで実行時に描画する（HTML側に個別のカードは書かない） -->
 <div class="showcase-wrap">
   <div class="showcase-title">📱 実際に使った例</div>
   <div class="examples showcase-slot" data-variant="lp" data-showcase-data-path="assets/data/showcase.json"></div>
@@ -1410,16 +1415,21 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 <div id="site-footer"></div>
 
 <script>
+// 各ステップカードの「▼ くわしく見る」開閉（.step-detail の表示/非表示を切り替える）
 function toggle(btn) {
   const detail = btn.nextElementSibling;
   const isOpen = detail.classList.toggle('open');
   btn.textContent = isOpen ? '▲ 閉じる' : '▼ くわしく見る';
 }
+
+// 「コピー」ボタン（data-copy-target属性を持つ要素）のクリックを一括で拾い、
+// 対応する要素のテキストをクリップボードへコピーする（AIに渡す開始文など）
 document.addEventListener('click', function (event) {
   var button = event.target.closest('[data-copy-target]');
   if (!button) return;
   var target = document.getElementById(button.getAttribute('data-copy-target'));
   if (!target) return;
+  // コピー用ボタン自体の文字（「コピー」等）が混ざらないよう、クローン上で除去してから読む
   var clone = target.cloneNode(true);
   clone.querySelectorAll('button').forEach(function (node) { node.remove(); });
   navigator.clipboard.writeText(clone.textContent.trim()).then(function () {
@@ -1427,6 +1437,7 @@ document.addEventListener('click', function (event) {
     button.textContent = 'コピーしました';
     setTimeout(function () { button.textContent = original; }, 1500);
   }, function () {
+    // クリップボード権限が無い環境など。失敗を偽って「コピーしました」とは出さない
     button.textContent = 'コピーできません';
   });
 });
