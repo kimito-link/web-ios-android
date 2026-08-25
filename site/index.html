@@ -95,6 +95,9 @@
 
     .ai-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 22px; align-items: stretch; }
     .ai-card { padding: 26px; }
+    .migrate-note { margin-top: 22px; padding: 22px 26px; border-radius: 18px; background: #f4f6ff; border: 1px solid #dde2fb; }
+    .migrate-kicker { font-weight: 900; color: #4058c9; font-size: .85rem; margin-bottom: 8px; }
+    .migrate-note p:not(.migrate-kicker) { color: #333; font-size: .9rem; line-height: 1.9; }
     .ai-card h3 { margin-bottom: 8px; }
     .ai-card p { color: var(--muted); font-size: .9rem; }
     .prompt-box { position: relative; margin-top: 16px; padding: 20px 20px 58px; border-radius: 14px; background: #151a2e; color: #f2f4ff; white-space: pre-wrap; font: 500 .88rem/1.75 "Consolas", "Noto Sans JP", monospace; }
@@ -316,6 +319,11 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
             </div>
           </aside>
         </div>
+        <div class="migrate-note">
+          <p class="migrate-kicker">Manusなど、他のAIサービスから移ってきた方へ</p>
+          <p>Manus・Genspark・ChatGPTのタスク機能などは、指示するとAIが裏側でアプリを作ってくれる点は同じです。違うのは、<b>作業の置き場所</b>です。それらのサービスはAIの作業がサービスの中に閉じていますが、このキットは<b>あなたのパソコンの中にある、ふつうのフォルダ</b>で作業します。だから、いま使っているAIの契約をやめても、フォルダごと残ります。作ったものを別のAI（Claude Code・Codexなど、フォルダを開けるAI）に渡せば、続きからそのまま作業できます。</p>
+        </div>
+        </div>
       </div>
     </section>
 
@@ -415,6 +423,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
           <details class="faq-card"><summary>プログラミング経験がなくても使えますか？</summary><p>人が行う操作は少なくしていますが、フォルダを扱えて、AIの作業結果を確認できることが前提です。分からない画面はスクリーンショットをAIへ渡して進められます。</p></details>
           <details class="faq-card"><summary>本当に全部自動ですか？</summary><p>いいえ。本人確認、開発者アカウントの作成・支払い、内容の判断、最終送信、審査結果の受け取りは人が行います。自動化できる作業と人の作業は上の一覧で分けています。</p></details>
           <details class="faq-card"><summary>ChatGPTやClaudeへ何を渡せばよいですか？</summary><p>フォルダを直接扱えるAIへ、展開したキット全体と、このページの開始文を渡してください。AI向け実行ガイドには読む順番と完了条件も記載しています。</p></details>
+          <details class="faq-card"><summary>Manusなど、他のAIサービスから移りたいのですが？</summary><p>Manus・Genspark・ChatGPTのタスク機能などは、AIの作業がそのサービスの中に閉じています。このキットは、あなたのパソコンのふつうのフォルダで作業するので、契約をやめてもフォルダごと手元に残ります。Claude Code・Codexなど、フォルダを開けるAIへこのキットを渡せば、同じ進め方で続けられます。</p></details>
           <details class="faq-card"><summary>審査に必ず通りますか？</summary><p>合否は各ストアの審査です。このキットは提出準備・確認・修正を助けますが、承認を保証するものではありません。</p></details>
         </div>
       </div>
