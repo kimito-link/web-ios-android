@@ -95,7 +95,7 @@ const results = [];
 results.push(run('全文脈パケット', context, ['--write', '.instrument-context.md', ROOT]));
 results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
-results.push(run('計器が走ったか', ran, ['--check']));
+results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
 if (drift) results.push(run('配布コードのドリフト', drift));
 results.push(run(
   '公開サイトのセキュリティ満点チェック',
