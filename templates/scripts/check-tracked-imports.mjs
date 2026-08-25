@@ -30,9 +30,74 @@ const TEST_FILE = /\.(test|spec)\.[a-z]+$/;
 
 // ---- 純ロジック(fs/git 非依存・単体テスト可) ----------------------------------
 
+/**
+ * ★コメントを「同じ長さの空白」に潰す（行番号がずれないように）。
+ *
+ * ★2026-08-25 に kimitolink-linktree で実測した誤検知:
+ *   e2e/auth.config.ts の JSDoc に
+ *     *   import { getTestAuth } from "./auth.config";
+ *   という**使用例**が書かれているだけで「未追跡ファイルを import している」と赤になった
+ *   （実際にはそのファイル自身であり、git に追跡もされている）。
+ *
+ *   ヘッダは「JSDoc 型参照は除外」と書いていたが、除外していたのは
+ *   `{import('./x').Foo}` の形だけで、★コメント内の `import ... from` は素通りだった。
+ *
+ * ★これは掟①そのもの: 生テキストに正規表現を当てる検査は、通す方向にも
+ *   見落とす方向にも同じように壊れる。ここでは「★誤って赤にする」方向に壊れていた。
+ *   赤が嘘だと、本物の赤が信用されなくなる（オオカミ少年）。
+ *
+ * ★文字列リテラルは潰さない（`const s = "// not a comment"` を壊さないため）。
+ *
+ * @param {string} text
+ * @returns {string} コメントを空白に置換したテキスト（長さ・改行位置は元のまま）
+ */
+export function blankOutComments(text) {
+  const s = String(text || '');
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    const next = s[i + 1];
+    // 文字列リテラル（' " `）はそのまま通す
+    if (c === "'" || c === '"' || c === '`') {
+      const quote = c;
+      out += c;
+      i++;
+      while (i < s.length) {
+        if (s[i] === '\\') { out += s[i] + (s[i + 1] ?? ''); i += 2; continue; }
+        out += s[i];
+        if (s[i] === quote) { i++; break; }
+        i++;
+      }
+      continue;
+    }
+    // 行コメント（改行は残す）
+    if (c === '/' && next === '/') {
+      while (i < s.length && s[i] !== '\n') { out += ' '; i++; }
+      continue;
+    }
+    // ブロックコメント（改行は残す＝行番号がずれない）
+    if (c === '/' && next === '*') {
+      out += '  ';
+      i += 2;
+      while (i < s.length && !(s[i] === '*' && s[i + 1] === '/')) {
+        out += s[i] === '\n' ? '\n' : ' ';
+        i++;
+      }
+      out += '  ';
+      i += 2;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
 /** @param {string} text @returns {{ specifier: string, line: number }[]} */
 export function extractRelativeImportSpecifiers(text) {
-  const s = String(text || '');
+  // ★コメントを潰してから当てる（使用例の import を実物と読み違えない）。
+  const s = blankOutComments(text);
   const out = [];
   const isRelative = (spec) => spec.startsWith('./') || spec.startsWith('../');
   const lineAt = (index) => s.slice(0, index).split('\n').length;
@@ -103,15 +168,90 @@ export function findUntrackedImports(files, trackedFiles) {
 // process.argv[1] を file:// URL に正規化して比較する(node標準の url.pathToFileURL)。
 // 手作りのパス文字列比較(resolve + pathname置換)は Windows でスラッシュ方向/ドライブレターの
 // 大小差により一致せず isMain=false のまま exit 0 で抜ける偽陽性を生む(2026-07-06実測・ai-hub selftest fixtureで検出)。
+/**
+ * ★selftest（毒→赤）。2026-08-25 追加。
+ *
+ * ★なぜ足したか: この検査は「コメント内の使用例」を実物の import と誤読して
+ *   ★嘘の赤を出していた（kimitolink-linktree で実測）。直したが、
+ *   selftest が無ければ次に同じ壊れ方をしても誰も気付けない。
+ *   ★掟②「exit 2 を持っていることと、守れていることは別」。
+ *
+ * ★毒は状態に依存しない（実ファイルを触らず、文字列を純関数に食わせる）。
+ */
+function selftest() {
+  const cases = [
+    {
+      name: '毒1: 本物の未追跡 import を検出できる',
+      text: "import { a } from './missing';\n",
+      tracked: ['src/app.ts'],
+      from: 'src/app.ts',
+      wantViolation: true
+    },
+    {
+      name: '毒2: ★JSDoc の使用例を実物と誤読しない（今回の誤検知そのもの）',
+      text: '/**\n *   import { getTestAuth } from "./auth.config";\n */\nexport const x = 1;\n',
+      tracked: ['e2e/auth.config.ts'],
+      from: 'e2e/auth.config.ts',
+      wantViolation: false
+    },
+    {
+      name: '毒3: ★行コメントに書いた import も拾わない',
+      text: "// import { a } from './missing';\nexport const x = 1;\n",
+      tracked: ['src/app.ts'],
+      from: 'src/app.ts',
+      wantViolation: false
+    },
+    {
+      name: '毒4: ★文字列リテラル内の // でコメント判定を壊さない',
+      text: "const url = 'https://example.com';\nimport { a } from './missing';\n",
+      tracked: ['src/app.ts'],
+      from: 'src/app.ts',
+      wantViolation: true
+    },
+    {
+      name: '毒5: 追跡済みへの import は赤にしない（誤検知しない）',
+      text: "import { a } from './util';\n",
+      tracked: ['src/app.ts', 'src/util.ts'],
+      from: 'src/app.ts',
+      wantViolation: false
+    }
+  ];
+
+  const fails = [];
+  for (const c of cases) {
+    const got = findUntrackedImports([{ path: c.from, text: c.text }], new Set(c.tracked));
+    const hasViolation = got.length > 0;
+    if (hasViolation !== c.wantViolation) {
+      fails.push(
+        `${c.name}: 期待=${c.wantViolation ? '赤' : '緑'} / 実際=${hasViolation ? '赤' : '緑'}`
+      );
+    }
+  }
+  if (fails.length > 0) {
+    console.error('[check-tracked-imports] 🔴 selftest 失敗:');
+    for (const f of fails) console.error(`  - ${f}`);
+    process.exit(1);
+  }
+  console.log(`[check-tracked-imports] ✅ selftest 合格（${cases.length}件: 本物は赤・コメントは緑）`);
+  process.exit(0);
+}
+
 const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
 if (isMain) {
+  if (process.argv.includes('--selftest')) selftest();
+
   let all;
   try {
     all = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
       .split('\n').map((s) => s.trim()).filter(Boolean);
-  } catch {
-    console.log('[check-tracked-imports] gitリポジトリでない(skip)。');
-    process.exit(0);
+  } catch (e) {
+    // ★2026-08-25: ここは以前 exit 0（緑）だった。
+    //   git が無い/壊れている＝**一度も検査していない**のであって「問題なし」ではない。
+    //   ★「測れなかった」は 2。0 と混ぜない（掟②・件数0の緑こそ最も危険）。
+    console.error('[check-tracked-imports] 🟡 git ls-files を実行できませんでした（★緑ではありません）。');
+    console.error(`[check-tracked-imports] → 理由: ${e && e.message}`);
+    console.error('[check-tracked-imports] → 測れるようにするには: git リポジトリのルートで実行してください。');
+    process.exit(2);
   }
   const trackedSet = new Set(all);
   const roots = String(process.env.TRACKED_IMPORT_ROOTS || '').split(',').map((s) => s.trim()).filter(Boolean);
