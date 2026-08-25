@@ -94,28 +94,82 @@ export function blankOutComments(text) {
   return out;
 }
 
+/**
+ * ★「文字列の中に書かれたコード」を潰す。
+ *
+ *   `const sample = "import { a } from './missing';"` のように、
+ *   ★import 文を**データとして**持つコードがある（テストの fixture が典型）。
+ *   これを実物の import と読むと、存在しないファイルを指していると誤検知する。
+ *
+ * ★2026-08-25 実測: この検査に selftest を足した直後、CI で
+ *   ★**自分自身の selftest fixture を「未追跡を import している」と赤にした**（3件）。
+ *   ローカルでは緑だった——★まだ commit していなかったので git ls-files に載らず、
+ *   自分自身が検査対象外だったため。＝「ローカルで緑」は「CIで緑」を意味しない。
+ *
+ *   ★この検査は git 追跡ファイルだけを見るので、
+ *     ★**新規ファイルは commit するまで自分自身を検査できない**という性質がある。
+ *     ローカルの緑を信用しすぎないこと。
+ *
+ * ★ネストした引用符（"..." の中の '...'）は外側だけを見れば十分。
+ *   import 文の解析にしか使わないので、中身を空白にすれば誤検知は消える。
+ *
+ * @param {string} text コメントを潰した後のテキスト
+ * @returns {string} 文字列リテラルの中身を空白にしたテキスト（長さは保つ）
+ */
+export function blankOutStringContents(text) {
+  const s = String(text || '');
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === "'" || c === '"' || c === '`') {
+      const quote = c;
+      out += c;
+      i++;
+      while (i < s.length) {
+        if (s[i] === '\\') { out += '  '; i += 2; continue; }
+        if (s[i] === quote) { out += quote; i++; break; }
+        // ★改行は残す（行番号がずれない）
+        out += s[i] === '\n' ? '\n' : ' ';
+        i++;
+      }
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
 /** @param {string} text @returns {{ specifier: string, line: number }[]} */
 export function extractRelativeImportSpecifiers(text) {
   // ★コメントを潰してから当てる（使用例の import を実物と読み違えない）。
   const s = blankOutComments(text);
+  // ★ただし import 文そのものの引用符は残す必要があるので、
+  //   「文字列の中身を潰した版」は**別に**作り、そちらで
+  //   「そもそも import 文が文字列の中にあるか」を判定する。
+  const sBlank = blankOutStringContents(s);
+  /** ★その位置の import が、文字列リテラルの内側なら無視する。 */
+  const insideString = (idx) => sBlank[idx] === ' ' && s[idx] !== ' ';
   const out = [];
   const isRelative = (spec) => spec.startsWith('./') || spec.startsWith('../');
   const lineAt = (index) => s.slice(0, index).split('\n').length;
   let m;
   // import/export ... from '...'(複数行可)
+  // ★insideString(m.index): その import 文自体が文字列リテラルの中にあるなら data であって import ではない。
   const staticRe = /\b(?:import|export)\b[^;'"]*?\bfrom\s*(['"])((?:(?!\1).)*)\1/g;
   while ((m = staticRe.exec(s)) != null) {
-    if (isRelative(m[2])) out.push({ specifier: m[2], line: lineAt(m.index) });
+    if (isRelative(m[2]) && !insideString(m.index)) out.push({ specifier: m[2], line: lineAt(m.index) });
   }
   // 副作用 import '...';
   const sideEffectRe = /\bimport\s*(['"])((?:(?!\1).)*)\1\s*;/g;
   while ((m = sideEffectRe.exec(s)) != null) {
-    if (isRelative(m[2])) out.push({ specifier: m[2], line: lineAt(m.index) });
+    if (isRelative(m[2]) && !insideString(m.index)) out.push({ specifier: m[2], line: lineAt(m.index) });
   }
   // 動的 import('...')。JSDoc 型参照(閉じ括弧直後に `.識別子` が続く)は除外。
   const dynamicRe = /\bimport\s*\(\s*(['"])((?:(?!\1).)*)\1\s*\)(\.[a-zA-Z_$])?/g;
   while ((m = dynamicRe.exec(s)) != null) {
-    if (isRelative(m[2]) && !m[3]) out.push({ specifier: m[2], line: lineAt(m.index) });
+    if (isRelative(m[2]) && !m[3] && !insideString(m.index)) out.push({ specifier: m[2], line: lineAt(m.index) });
   }
   return out;
 }
@@ -213,6 +267,17 @@ function selftest() {
       text: "import { a } from './util';\n",
       tracked: ['src/app.ts', 'src/util.ts'],
       from: 'src/app.ts',
+      wantViolation: false
+    },
+    {
+      // ★2026-08-25 CI で実際に踏んだ: この検査自身の selftest fixture
+      //   （文字列として持っている import 文）を実物と読んで自分を赤にした。
+      //   ローカルで緑だったのは、まだ commit しておらず git ls-files に
+      //   自分が載っていなかったから。★ローカルの緑を信用しすぎない。
+      name: '★文字列リテラルの中の import 文を実物と読まない（自分の fixture で自爆しない）',
+      text: 'const sample = "import { a } from \'./missing\';";\nexport const x = 1;\n',
+      tracked: ['scripts/gate.mjs'],
+      from: 'scripts/gate.mjs',
       wantViolation: false
     }
   ];
