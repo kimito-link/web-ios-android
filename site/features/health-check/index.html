@@ -97,6 +97,28 @@
       margin-top: 8px; font-size: 0.82rem; color: #555; line-height: 1.7;
     }
 
+    /* 実際のアプリの起動画面（見本）。
+       auto-fit + minmax で、スマホ2列・デスクトップ4列まで自動で並ぶ（横スクロールを出さない）。 */
+    .splash-ref-title { margin: 28px 0 8px; font-size: 1.02rem; color: #1a1a2e; }
+    .splash-gallery {
+      display: grid; gap: 14px; margin: 14px 0 18px;
+      grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    }
+    .splash-gallery figure { margin: 0; }
+    .splash-gallery img {
+      display: block; width: 100%; height: auto; max-width: 100%;
+      border-radius: 10px; border: 1px solid #e7eaf0; background: #f7f9fc;
+    }
+    .splash-gallery figcaption {
+      margin-top: 6px; font-size: 0.74rem; color: #555; line-height: 1.6;
+    }
+    /* 地色の実測値を色見本で示す（数字だけだと人が想像できないため）。 */
+    .splash-gallery .sw {
+      display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+      margin-right: 4px; vertical-align: baseline; border: 1px solid transparent;
+    }
+    .splash-gallery .sw-b { border-color: #c9ced8; }
+
     .code-block {
       background: #1a1a2e; color: #e8e8f0; border-radius: 10px;
       padding: 14px 16px; font-family: 'SFMono-Regular', Consolas, monospace;
@@ -320,6 +342,81 @@
         <p class="note">
           ★この自動検査は設定と画像ファイルを確認します。端末ごとの色味や大きさの好みまでは判定できないため、
           全部合格した後もiPhone・Android実機で最後に1回だけ目視します。
+        </p>
+
+        <h4 class="splash-ref-title">実際のアプリの起動画面（2026-08-27 実機で撮影・地色は実測）</h4>
+        <p>
+          「きちんと出ている起動画面」がどういうものかを、実機の画面録画から取り出しました。
+          <b>地色は画像から実際に測った値</b>です（推測ではありません）。
+          並べてみると、有名アプリほど<b>やっていることは少ない</b>と分かります。
+        </p>
+
+        <div class="splash-gallery">
+          <figure>
+            <img src="../../images/splash-examples/threads.jpg" alt="Threads の起動画面。黒地の中央に白いロゴ、下部に from Meta の表記" loading="lazy" width="330" height="717">
+            <figcaption><b>Threads</b><br><span class="sw" style="background:#000000"></span>#000000<br>中央にロゴ＋下に提供元</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/abema.jpg" alt="ABEMA の起動画面。黒地の中央に10周年ロゴ、右下に読み込み中の印" loading="lazy" width="330" height="717">
+            <figcaption><b>ABEMA</b><br><span class="sw" style="background:#000000"></span>#000000<br>中央にロゴ＋下に待ちの印</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/photoroom.jpg" alt="Photoroom の起動画面。ほぼ黒の地に中央のロゴだけ" loading="lazy" width="330" height="717">
+            <figcaption><b>Photoroom</b><br><span class="sw" style="background:#111113"></span>#111113<br>中央にロゴだけ（淡く現れる）</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/docomo.jpg" alt="My docomo の起動画面。白地の中央にロゴ、下に社名" loading="lazy" width="330" height="717">
+            <figcaption><b>My docomo</b><br><span class="sw sw-b" style="background:#FEFEFE"></span>#FEFEFE<br>中央にロゴ＋下に社名</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/voicy.jpg" alt="Voicy の起動画面。白地に上部のロゴと中央の待ちの印" loading="lazy" width="330" height="717">
+            <figcaption><b>Voicy</b><br><span class="sw sw-b" style="background:#FEFEFE"></span>#FEFEFE<br>上にロゴ＋中央に待ちの印</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/wash.jpg" alt="WASHハウス の起動画面。白地の中央にロゴ" loading="lazy" width="330" height="717">
+            <figcaption><b>WASHハウス</b><br><span class="sw sw-b" style="background:#FEFEFE"></span>#FEFEFE<br>アイコンが拡大して繋がる</figcaption>
+          </figure>
+          <figure>
+            <img src="../../images/splash-examples/ponta.jpg" alt="Ponta の起動画面。白地にロゴとマスコットのイラスト" loading="lazy" width="330" height="717">
+            <figcaption><b>Ponta</b><br><span class="sw sw-b" style="background:#FEFEFE"></span>#FEFEFE<br>ロゴ＋マスコットの絵</figcaption>
+          </figure>
+        </div>
+
+        <table class="gate-table">
+          <thead><tr><th>7本を並べて分かったこと</th><th>設計への意味</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>地色は「真っ黒」か「ほぼ白」だけ</b><br>実測は #000000 / #111113 / #FEFEFE の3種類しかなかった</td>
+              <td>凝った色やグラデーションは使われていません。<b>ブランド色1色</b>で十分です</td>
+            </tr>
+            <tr>
+              <td><b>置くものはロゴ1つ。多くて社名か待ちの印</b></td>
+              <td>キャッチコピー・説明文・ボタンは<b>1本もありません</b>。読ませる画面ではありません</td>
+            </tr>
+            <tr>
+              <td><b>ロゴは中央、大きすぎない</b></td>
+              <td>端まで広げず、周囲に十分な余白を取ります</td>
+            </tr>
+            <tr>
+              <td><b>1〜2秒で消える</b><br>録画7本はいずれも4〜7秒で、起動画面はその一部だけ</td>
+              <td>長く見せる画面ではありません。<b>「読み込み中です」と伝えるだけ</b>の役目です</td>
+            </tr>
+            <tr>
+              <td>★<b>Instagram には起動画面が無かった</b><br>8本目はホーム画面から直接コンテンツへ入った</td>
+              <td>起動が十分速ければ<b>無くてもよい</b>。必須ではありません</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="note">
+          ★<b>やってはいけないことも、この7本が示しています。</b>
+          文字を詰め込む・地色と画像の色を食い違わせる・ロゴを画面いっぱいに広げる——
+          どれも1本もやっていません。<b>「地色1色＋中央にロゴ」から外れたら、まず疑ってください。</b>
+        </p>
+        <p class="note">
+          ★<b>画像は見本であり、著作権は各社に帰属します。</b>
+          設計の参考として実機の見え方を記録したものです。真似すべきは<b>構図と情報量</b>であって、
+          ロゴやデザインそのものではありません。
         </p>
       </div>
 
