@@ -97,10 +97,12 @@
       （レスポンスヘッダに`x-robots-tag: noindex, nofollow`を確認）
 - [x] 生成された`site/hub/index.html`（実際のHTML）を目視し、KB本文・エラー実文言・
       triggersが出力されていない（パスと件数のみ）ことを2026-08-26に確認済み
-- [ ] **Cloudflare Accessを`/hub/*`に設定するようユーザーに依頼する**（GUI操作、自動化不可。
-      2026-08-26時点で未依頼。依頼済み・未設定の間はnoindexのみで実質公開状態であることを
-      ユーザーに明示すること）
-- [ ] 上記Access設定が完了したかをユーザーに確認する（未確認のまま作業完了報告をしない）
+- [x] Cloudflare Accessを`/hub/*`に設定済み（2026-08-26、ユーザーと画面を見ながら
+      共同設定。セルフホストアプリケーション`kimito-skill.link`・パス`hub`・
+      ポリシー「本人のみ許可」＝メール`info@best-trust.biz`のみ許可）
+- [x] 設定完了後、`curl -I https://kimito-skill.link/hub/`で未認証アクセスが
+      `302 Found`＋Cloudflare Accessログイン画面へのリダイレクトになることを確認済み
+      （設定前は`200 OK`で中身が直接見えていた）
 
 ## 地雷（詳細は設計書G項）
 
