@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T13:53:12.348Z",
-  "generatedAtLabel": "2026/08/24 22:53",
-  "commit": "e0fea62e",
+  "generatedAt": "2026-08-26T02:12:40.970Z",
+  "generatedAtLabel": "2026/08/26 11:12",
+  "commit": "05b67569",
   "measurement": {
-    "attempted": true,
-    "exitCode": 2
+    "attempted": false,
+    "exitCode": null
   },
   "app": {
     "name": "web-ios-android",
@@ -16,15 +16,15 @@
     "accentColor": "#11a36a"
   },
   "progress": {
-    "completed": 23,
+    "completed": 17,
     "total": 26,
-    "percent": 88
+    "percent": 65
   },
   "counts": {
-    "pass": 23,
+    "pass": 17,
     "warning": 0,
     "fail": 0,
-    "unmeasured": 3
+    "unmeasured": 9
   },
   "stages": [
     {
@@ -78,27 +78,27 @@
       "id": "measurement",
       "title": "いまの状態を実測",
       "summary": "最後の計器実行が、文脈と製品状態を実際に測れたか。",
-      "status": "warning",
-      "completed": 2,
+      "status": "unmeasured",
+      "completed": 0,
       "total": 3,
-      "percent": 67,
+      "percent": 0,
       "checks": [
         {
           "label": "計器レポート",
-          "status": "pass",
-          "evidence": "2026-08-24T13:53:12.337Z",
+          "status": "unmeasured",
+          "evidence": "レポートなし",
           "nextAction": "npm run shindan を実行する"
         },
         {
           "label": "全文脈パケット",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "実行記録なし",
+          "nextAction": "全文脈パケットを再生成する"
         },
         {
           "label": "汎用診断",
           "status": "unmeasured",
-          "evidence": "inconclusive / exit 2",
+          "evidence": "実行記録なし",
           "nextAction": "黄または赤の診断を確認する"
         }
       ]
@@ -200,10 +200,10 @@
       "id": "splash",
       "title": "起動画面の自己検査",
       "summary": "起動直後の画像崩れを見つける検査自体が、壊れずに赤・黄・緑を返せるか。",
-      "status": "pass",
-      "completed": 4,
+      "status": "warning",
+      "completed": 1,
       "total": 4,
-      "percent": 100,
+      "percent": 25,
       "checks": [
         {
           "label": "起動画面の設定検査",
@@ -213,21 +213,21 @@
         },
         {
           "label": "起動画面設定 selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "自己検査の実行記録なし",
+          "nextAction": "npm run shindan で自己検査を実行する"
         },
         {
           "label": "起動画面安全円 selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "自己検査の実行記録なし",
+          "nextAction": "npm run shindan で自己検査を実行する"
         },
         {
           "label": "起動画面の配布版 selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "自己検査の実行記録なし",
+          "nextAction": "npm run shindan で自己検査を実行する"
         }
       ]
     },
@@ -236,9 +236,9 @@
       "title": "公開前の安全確認",
       "summary": "診断ページを含む公開サイトを、安全側の基準で点検できるか。",
       "status": "warning",
-      "completed": 2,
+      "completed": 1,
       "total": 3,
-      "percent": 67,
+      "percent": 33,
       "checks": [
         {
           "label": "セキュリティ計器",
@@ -248,14 +248,14 @@
         },
         {
           "label": "セキュリティ計器 selftest",
-          "status": "pass",
-          "evidence": "pass / exit 0",
-          "nextAction": ""
+          "status": "unmeasured",
+          "evidence": "自己検査の実行記録なし",
+          "nextAction": "npm run shindan で自己検査を実行する"
         },
         {
           "label": "公開サイトのセキュリティ満点チェック",
           "status": "unmeasured",
-          "evidence": "inconclusive / exit 2",
+          "evidence": "本番URLの実測記録なし",
           "nextAction": "本番URLを公開して npm run shindan を再実行する"
         }
       ]

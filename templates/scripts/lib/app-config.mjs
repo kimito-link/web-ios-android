@@ -11,8 +11,29 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// scripts/lib/ から見て 2 つ上がリポジトリ root(= app.config.json のある場所)。
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+// scripts/lib/ から見て 2 つ上がリポジトリ root(= app.config.json のある場所) —
+// 配布先アプリでの想定レイアウト(<アプリroot>/scripts/lib/app-config.mjs)。
+//
+// ★2026-08-26修正: web-ios-android キット自身は templates/scripts/lib/ から
+//   このファイルを直接 import するため、上記の「2つ上」が templates/ になってしまい
+//   app.config.json(リポジトリ root)を見失っていた(cfg()が例外を握りつぶしfallbackを
+//   返すため、この不一致は静かに"未設定"として素通りしていた=fail-closed違反の実損)。
+//   両レイアウトに対応するため、まず素直な2つ上を試し、無ければ祖先を遡って
+//   app.config.json を探す(findRepoRoot型・.gitと同じ考え方)。
+function resolveRoot() {
+  const naive = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+  if (fs.existsSync(path.join(naive, 'app.config.json'))) return naive;
+  let dir = naive;
+  for (let i = 0; i < 6; i++) {
+    if (fs.existsSync(path.join(dir, 'app.config.json'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return naive; // 見つからなければ従来通りの場所(エラーメッセージがそこを指す)
+}
+
+const ROOT = resolveRoot();
 const CONFIG_PATH = path.join(ROOT, 'app.config.json');
 
 let _cache = null;
