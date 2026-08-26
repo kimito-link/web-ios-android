@@ -10,10 +10,17 @@
  *   設計: _docs/DESIGN-lp-first-domain-connect-2026-07-13.md
  *
  * 認証:
- *   CLOUDFLARE_API_TOKEN 環境変数を使う（ローカルの wrangler login セッションはこのスクリプトの
- *   REST API直叩きには使えないため、ローカルでも一時的にトークンを環境変数へ設定して実行する）。
+ *   CLOUDFLARE_API_TOKEN と CLOUDFLARE_ACCOUNT_ID 環境変数を使う（ローカルの wrangler login
+ *   セッションはこのスクリプトのREST API直叩きには使えないため、ローカルでも一時的にトークンを
+ *   環境変数へ設定して実行する）。
  *   実行冒頭で GET /user/tokens/verify によりトークンの有効性を確認し、無効ならその場で失敗する
  *   （fail-closed。空値トークンのまま進めて事故る過去事故と同型のミスを防ぐ）。
+ *
+ * ★2026-08-26修正: Cloudflare Pages APIは /accounts/:account_id/pages/projects/:name/domains
+ *   がエンドポイントで、account_id セグメントが無いと "No route for that URI" で404になる
+ *   （実機で発見。kimito-skill.link接続時に実際にこのエラーで失敗した）。
+ *   account_idは `wrangler pages project list` 等で確認できるほか、Cloudflareダッシュボードの
+ *   URL（https://dash.cloudflare.com/<account_id>/...）からも読み取れる。
  *
  * 使い方:
  *   node templates/scripts/connect-domain.mjs --project <name> --domain <example.com>
@@ -84,6 +91,13 @@ async function main() {
     console.error('  FAIL  CLOUDFLARE_API_TOKEN が未設定です。');
     process.exit(1);
   }
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  if (!accountId) {
+    console.error('  FAIL  CLOUDFLARE_ACCOUNT_ID が未設定です。');
+    console.error('        Cloudflareダッシュボードのゾーン概要ページの右サイドバー、または');
+    console.error('        `npx wrangler pages project list` 実行時に使ったIDを設定してください。');
+    process.exit(1);
+  }
 
   if (dryRun) {
     console.log('  DRY   実際のAPI呼び出しは行いません（トークン検証も省略）。');
@@ -92,14 +106,14 @@ async function main() {
 
   await verifyToken(token);
 
-  const already = await isDomainAlreadyAttached(token, projectName, domain);
+  const already = await isDomainAlreadyAttached(token, accountId, projectName, domain);
   if (already) {
     console.log('  OK    既にこのドメインは接続済みです（冪等・何もしません）。');
     return;
   }
 
-  await attachDomain(token, projectName, domain);
-  await pollUntilActive(token, projectName, domain, timeoutSec);
+  await attachDomain(token, accountId, projectName, domain);
+  await pollUntilActive(token, accountId, projectName, domain, timeoutSec);
   console.log(`  OK    https://${domain} で公開されています。`);
 }
 
@@ -117,20 +131,28 @@ async function verifyToken(token) {
   console.log('  OK    トークンは有効です。');
 }
 
-/** 既にこのドメインがプロジェクトに接続済みか確認する（冪等性のため）。 */
-async function isDomainAlreadyAttached(token, projectName, domain) {
-  const res = await fetch(`${API_BASE}/pages/projects/${encodeURIComponent(projectName)}/domains`, {
+/**
+ * 既にこのドメインがプロジェクトに接続「済み＝有効」か確認する（冪等性のため）。
+ *
+ * ★2026-08-26修正: 存在確認だけで「済み」と早期returnしていたため、
+ *   ドメインがぶら下がっているが status が pending（SSL発行待ち）のときも
+ *   「既に接続済み・何もしません」と誤判定し、pollUntilActiveへ進まなかった
+ *   （実機で発見。kimito-skill.link接続時にCNAME検証待ちの間、この関数のせいで
+ *   ポーリングが一度も走らなかった）。★status === 'active' まで見て判定する。
+ */
+async function isDomainAlreadyAttached(token, accountId, projectName, domain) {
+  const res = await fetch(`${API_BASE}/accounts/${encodeURIComponent(accountId)}/pages/projects/${encodeURIComponent(projectName)}/domains`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return false;
   const body = await res.json().catch(() => null);
   const list = body?.result || [];
-  return list.some((d) => d?.name === domain);
+  return list.some((d) => d?.name === domain && d?.status === 'active');
 }
 
 /** ドメインをプロジェクトに接続する。 */
-async function attachDomain(token, projectName, domain) {
-  const res = await fetch(`${API_BASE}/pages/projects/${encodeURIComponent(projectName)}/domains`, {
+async function attachDomain(token, accountId, projectName, domain) {
+  const res = await fetch(`${API_BASE}/accounts/${encodeURIComponent(accountId)}/pages/projects/${encodeURIComponent(projectName)}/domains`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -148,12 +170,12 @@ async function attachDomain(token, projectName, domain) {
 }
 
 /** SSL発行完了までポーリングする。タイムアウトしても再実行可能な冪等設計。 */
-async function pollUntilActive(token, projectName, domain, timeoutSec) {
+async function pollUntilActive(token, accountId, projectName, domain, timeoutSec) {
   const start = Date.now();
   const intervalMs = 5000;
   while ((Date.now() - start) / 1000 < timeoutSec) {
     const res = await fetch(
-      `${API_BASE}/pages/projects/${encodeURIComponent(projectName)}/domains/${encodeURIComponent(domain)}`,
+      `${API_BASE}/accounts/${encodeURIComponent(accountId)}/pages/projects/${encodeURIComponent(projectName)}/domains/${encodeURIComponent(domain)}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     const body = await res.json().catch(() => null);
