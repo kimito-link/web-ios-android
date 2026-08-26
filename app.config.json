@@ -69,11 +69,11 @@
   },
 
   "web": {
-    "_note": "独自ドメインをCloudflare Pagesに接続したい場合だけ書く。Vercel Git連携だけで公開するなら省略可。",
+    "_note": "独自ドメインをCloudflare Pagesに接続したい場合だけ書く。Vercel Git連携だけで公開するなら省略可。★このキット自身はweb-ios-android.vercel.appからkimito-skill.link（Cloudflare Pages）へ2026-08-26に移行するため、キット自身の値としてここを埋めている（テンプレとして配る値ではない。新規アプリを作る人はこのセクションを自分の値に書き換えること）。",
     "deploy": {
       "provider": "cloudflare-pages",
-      "projectName": "<Cloudflare Pagesのプロジェクト名>",
-      "customDomain": null
+      "projectName": "kimito-skill",
+      "customDomain": "kimito-skill.link"
     }
   },
 

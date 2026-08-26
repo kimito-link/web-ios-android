@@ -28,3 +28,6 @@ kimitolink-line/
 
 .vercel
 .env*.local
+
+# Lighthouse CI のローカル実行で生成されるレポート（毎回変わる生成物）。
+.lighthouseci/

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ストア申請 実証知見まとめ | Kimito-Link</title>
   <meta name="description" content="君斗りんくのWEBサイト健康診断で iOS/Android/Chrome 申請まで通した知見。キット運用の教科書。">
-  <link rel="canonical" href="https://web-ios-android.vercel.app/learnings/">
+  <link rel="canonical" href="https://kimito-skill.link/learnings/">
   <meta property="og:type" content="article">
   <meta property="og:title" content="ストア申請 実証知見まとめ | Kimito-Link">
   <meta property="og:description" content="君斗りんくのWEBサイト健康診断で iOS/Android/Chrome 申請まで通した知見。キット運用の教科書。">
-  <meta property="og:url" content="https://web-ios-android.vercel.app/learnings/">
-  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta property="og:url" content="https://kimito-skill.link/learnings/">
+  <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="../favicon.png">
   <script type="application/ld+json">
@@ -20,8 +20,8 @@
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
-          { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://web-ios-android.vercel.app/apps/" },
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://kimito-skill.link/" },
+          { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://kimito-skill.link/apps/" },
           { "@type": "ListItem", "position": 3, "name": "実証知見まとめ" }
         ]
       }
@@ -214,9 +214,10 @@
         <li>✅ 本当: でも<b>公式の申請APIがある</b>。API経由なら審査送信まで全自動でできる</li>
         <li>✗ 誤り: 前者から「だから提出できない」と結論すること</li>
       </ul>
+      <!-- 出典: scripts/chrome/publish-cws-node.mjs（package.json の publish:cws。--check/--upload-onlyを付けなければ審査提出まで実行） -->
       <p>
         <b>「画面を操作できない」と「提出できない」は別の話</b>でした。
-        実際にはコマンド1本（<code>--publish</code> 付き）で審査キューに入ります。
+        実際にはコマンド1本（<code>npm run publish:cws</code>）で審査キューに入ります。
       </p>
       <h3>ややこしいのは、ストアごとに「自動化の境界」が逆なこと</h3>
       <table>
@@ -260,6 +261,7 @@
         <li>「この軽量版が使われるはず」→ 機能フラグはONでも、その分岐に<b>到達していなかった</b></li>
         <li>「AIの出力が悪い」→ AIは別の文を返していて、<b>後処理が定型文に差し替えていた</b></li>
       </ul>
+      <!-- 出典: _docs/runtime-truth-verification-knowledge-base.md:61,92 -->
       <p>
         3回とも、コードは十分に読み込んだ上で外しています。
         解決したのは、<b>実際に送信されている中身を1回だけ丸ごと覗いた</b>ときでした。
@@ -355,7 +357,7 @@
       </p>
       <ul>
         <li>数える場所を<b>段ごとに</b>置く: 受け取ったN件 → 保存したN件 → 表示したN件。<b>減った段が壊れている場所</b></li>
-        <li>遅さは<b>実測ミリ秒</b>で持つ（「重い気がする」ではなく「2.7秒」）</li>
+        <li>遅さは<b>実測ミリ秒</b>で持つ（「重い気がする」ではなく、実際に測った秒数で言う）</li>
         <li>出力は<b>コピペ1枚</b>にまとめる。AIはそれを読むだけで切り分けられる</li>
       </ul>
       <p>

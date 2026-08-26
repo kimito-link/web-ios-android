@@ -92,7 +92,12 @@
       '<div class="ai-index-links">\n' +
       rows.map(function (row) {
         var label = row.entry.indexLabel || row.entry.title.replace(/^🤖\s*/, '');
-        return '  <a href="' + row.entry.page + '#ai-instructions">' + escapeHtml(label) + '</a>';
+        // ★pageが既に #アンカー を含む場合（例: splash-screenの /features/health-check/#splash-check）、
+        //   単純連結すると二重ハッシュ（#splash-check#ai-instructions）になりジャンプ先が壊れる
+        //   （2026-08-25発見・実測: 表示4行中1行が無効URLになっていた）。
+        //   pageのアンカーを優先し、#ai-instructionsは付けない。
+        var href = row.entry.page.indexOf('#') >= 0 ? row.entry.page : row.entry.page + '#ai-instructions';
+        return '  <a href="' + href + '">' + escapeHtml(label) + '</a>';
       }).join('\n') +
       '\n</div>';
   }

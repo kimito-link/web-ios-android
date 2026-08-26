@@ -684,6 +684,188 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
 }
 
 // ----------------------------------------------------------------------------
+// CHECK 19 — インストール済みCapacitorプラグイン vs Info.plistのusage-description欠落
+//   2026-08-25追加（計器の水平思考調査で確定）。
+//
+// 【なぜ要るか】
+//   カメラ・位置情報・連絡先等にアクセスするCapacitorプラグインを追加したのに、
+//   対応する NSCameraUsageDescription 等の usage-description キーを Info.plist に
+//   書き忘れると、Apple審査で即却下される（Guideline 5.1.1）。CHECK 1〜18には
+//   この突き合わせが1つも無く、プラグイン追加時に人力でInfo.plistを思い出す
+//   運用に頼っていた。
+//
+// 【対応表の考え方】
+//   公式 @capacitor/* プラグインのうち、iOS側でOS権限ダイアログを要するものだけを
+//   対象にする（例: @capacitor/preferences は権限不要なので対象外）。
+//   対応表は Capacitor公式ドキュメント(capacitorjs.com/docs/apis)のiOS設定セクションが
+//   一次ソース。新しいプラグインが追加されたら PLUGIN_PERMISSIONS に足すだけで済む形にする。
+// ----------------------------------------------------------------------------
+{
+  /** @type {Record<string, {keys: string[], label: string}>} */
+  const PLUGIN_PERMISSIONS = {
+    '@capacitor/camera': { keys: ['NSCameraUsageDescription', 'NSPhotoLibraryUsageDescription'], label: 'カメラ/フォトライブラリ' },
+    '@capacitor/geolocation': { keys: ['NSLocationWhenInUseUsageDescription'], label: '位置情報' },
+    '@capacitor/contacts': { keys: ['NSContactsUsageDescription'], label: '連絡先' },
+    '@capacitor/microphone': { keys: ['NSMicrophoneUsageDescription'], label: 'マイク' },
+    '@capacitor/local-notifications': { keys: [], label: 'ローカル通知（usage-description不要、UNUserNotificationCenterで許可を取る）' },
+    '@capacitor/push-notifications': { keys: [], label: 'プッシュ通知（usage-description不要）' },
+    '@capacitor-community/bluetooth-le': { keys: ['NSBluetoothAlwaysUsageDescription'], label: 'Bluetooth' },
+    '@capacitor-community/speech-recognition': { keys: ['NSSpeechRecognitionUsageDescription', 'NSMicrophoneUsageDescription'], label: '音声認識' },
+    '@capacitor/filesystem': { keys: [], label: 'ファイルシステム（usage-description不要、サンドボックス内アクセスのため）' },
+    '@capacitor/motion': { keys: ['NSMotionUsageDescription'], label: 'モーションセンサー' },
+  };
+
+  const infoPlist19 = readFile('ios/App/App/Info.plist');
+  const capDeps = { ...(pkg?.dependencies || {}), ...(pkg?.devDependencies || {}) };
+  const installed = Object.keys(capDeps).filter((k) => k in PLUGIN_PERMISSIONS);
+
+  if (installed.length === 0) {
+    skip('plugin-usage-description', 'usage-description が要るCapacitorプラグインの依存が無い');
+  } else if (infoPlist19 == null) {
+    skip('plugin-usage-description', 'ios/App/App/Info.plist が無い(CI で cap copy 後に生成。生成後に再実行すること)');
+  } else {
+    const missing = [];
+    for (const dep of installed) {
+      const { keys, label } = PLUGIN_PERMISSIONS[dep];
+      for (const key of keys) {
+        const hasKey = new RegExp(`<key>\\s*${key}\\s*</key>`).test(infoPlist19);
+        if (!hasKey) missing.push(`${dep}(${label}) → ${key}`);
+      }
+    }
+    if (missing.length > 0) {
+      fail(
+        'plugin-usage-description',
+        '5.1.1',
+        `インストール済みプラグインが要求するusage-descriptionキーがInfo.plistに無い: ${missing.join(', ')}。` +
+          'このまま提出すると審査で権限ダイアログの文言不備として却下されうる。' +
+          'ios/App/App/Info.plist に該当キーと説明文字列を追加すること',
+      );
+    } else {
+      ok('plugin-usage-description', `${installed.length}件のプラグイン依存を確認、usage-description欠落なし`);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 20 — インストール済みCapacitorプラグイン vs Play Data SafetyのCSV記載漏れ
+//   2026-08-25追加（計器の水平思考調査で確定）。
+//
+// 【なぜ要るか】
+//   play-fill-data-safety.mjs は store-assets/play/data-safety.csv の内容を
+//   そのままAPIへ送るだけで、その内容がアプリの実際の権限（＝インストール済み
+//   Capacitorプラグイン）と一致しているかは一切見ていなかった。カメラ等の
+//   プラグインを追加したのにCSVを更新し忘れると、Data Safety宣言が実態と
+//   ズレたまま公開され、Playポリシー違反（不正確な宣言）のリスクになる。
+//
+// 【対応表の考え方とlimitation】
+//   プラグイン→PSL(Play Safety Labels)データ種別の対応は「このプラグインを
+//   使うなら通常この種別を収集する可能性が高い」という★保守的な最小対応のみ。
+//   実際に収集するかどうか（ローカル処理のみで送信しない等）はコードを読まないと
+//   分からないため、★ここでは「プラグインがあるのにCSVに関連PSLコードが
+//   1つも無い」ケースだけをwarn（fail にはしない＝機械では判定しきれないため）。
+// ----------------------------------------------------------------------------
+{
+  /** @type {Record<string, {pslCodes: string[], label: string}>} */
+  const PLUGIN_TO_PSL = {
+    '@capacitor/camera': { pslCodes: ['PSL_PHOTOS', 'PSL_VIDEOS'], label: 'カメラ/フォトライブラリ' },
+    '@capacitor/geolocation': { pslCodes: ['PSL_APPROX_LOCATION', 'PSL_PRECISE_LOCATION'], label: '位置情報' },
+    '@capacitor/contacts': { pslCodes: ['PSL_CONTACTS'], label: '連絡先' },
+    '@capacitor/microphone': { pslCodes: ['PSL_AUDIO'], label: 'マイク' },
+  };
+
+  const csvPath20 = process.env.PLAY_DATA_SAFETY_CSV_PATH
+    || path.join(ROOT, 'store-assets', 'play', 'data-safety.csv');
+  const csv20 = readFile(path.relative(ROOT, csvPath20).split(path.sep).join('/'));
+  const capDeps20 = { ...(pkg?.dependencies || {}), ...(pkg?.devDependencies || {}) };
+  const installed20 = Object.keys(capDeps20).filter((k) => k in PLUGIN_TO_PSL);
+
+  if (installed20.length === 0) {
+    skip('data-safety-plugin-match', 'Data Safety対応が要るCapacitorプラグインの依存が無い');
+  } else if (csv20 == null) {
+    skip('data-safety-plugin-match', `${path.relative(ROOT, csvPath20)} が無い(CHECK 17の配線検査を先に見ること)`);
+  } else {
+    const missingDeclarations = [];
+    for (const dep of installed20) {
+      const { pslCodes, label } = PLUGIN_TO_PSL[dep];
+      const anyDeclared = pslCodes.some((code) => csv20.includes(code));
+      if (!anyDeclared) missingDeclarations.push(`${dep}(${label})`);
+    }
+    if (missingDeclarations.length > 0) {
+      warn(
+        'data-safety-plugin-match',
+        'Play Data Safety',
+        `インストール済みプラグインに対応するData Safety宣言がCSVに見当たらない: ${missingDeclarations.join(', ')}。` +
+          '実際にデータを収集・送信しているなら宣言漏れの可能性がある。Play Console > Data Safety で該当種別を確認すること。' +
+          '★このチェックは「宣言0件」だけを検出し、宣言内容(収集目的等)の正しさは判定しない',
+      );
+    } else {
+      ok('data-safety-plugin-match', `${installed20.length}件のプラグインに対応するData Safety宣言をCSV内に確認`);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 21 — 生成済みストア画像の実寸がストア要件どおりか
+//   2026-08-25追加（計器の水平思考調査で確定）。
+//
+// 【なぜ要るか】
+//   generate-store-assets.mjs / capture-appstore-screenshots.mjs / capture-play-screenshots.mjs
+//   はサイズをハードコードして生成するが、生成後の実ファイルがその寸法どおりに
+//   出力されたかを検証する仕組みがCHECK 1〜20に無かった。テンプレ改修や
+//   フォント差し替え等でSVG→PNG変換のサイズが崩れても、提出直前まで気付けない。
+//
+// 【対象外にした理由】
+//   Apple/Googleの「現在の必須サイズ一覧」を自動追従する仕組みはここでは作らない
+//   （公式ページのスクレイピングは壊れやすく車輪の再発明になる）。あくまで
+//   「このキットが生成すると謳っているサイズどおりに実際出力されたか」の
+//   ドリフト検知に限定する。ストア側の要件変更自体はcapture-*.mjsのコメントを
+//   人力で見直す運用のまま。
+// ----------------------------------------------------------------------------
+{
+  const REQUIRED_SIZES = [
+    { rel: 'og-image.png', width: 1200, height: 630, label: 'Open Graph image' },
+    { rel: 'store-assets/play/feature-graphic.png', width: 1024, height: 500, label: 'Play feature graphic' },
+  ];
+
+  let sharpMod;
+  try {
+    sharpMod = await import('sharp');
+  } catch {
+    skip('store-asset-dimensions', 'sharp が未インストール(devDependenciesに追加すること)');
+  }
+
+  if (sharpMod) {
+    const sharp = sharpMod.default;
+    const present = REQUIRED_SIZES.filter((s) => fs.existsSync(path.join(ROOT, s.rel)));
+    if (present.length === 0) {
+      skip('store-asset-dimensions', 'og-image.png / feature-graphic.png のいずれも未生成(generate-store-assets.mjs 未実行なら可)');
+    } else {
+      const mismatches = [];
+      for (const s of present) {
+        try {
+          const meta = await sharp(path.join(ROOT, s.rel)).metadata();
+          if (meta.width !== s.width || meta.height !== s.height) {
+            mismatches.push(`${s.rel}(${s.label}): 期待 ${s.width}x${s.height} / 実際 ${meta.width}x${meta.height}`);
+          }
+        } catch (e) {
+          mismatches.push(`${s.rel}(${s.label}): 読み取り失敗(${e && e.message})`);
+        }
+      }
+      if (mismatches.length > 0) {
+        fail(
+          'store-asset-dimensions',
+          'Store asset requirements',
+          `生成済み画像の実寸がテンプレの想定サイズと不一致: ${mismatches.join(' / ')}。` +
+            'generate-store-assets.mjs のSVGテンプレか変換処理を確認し、再生成すること',
+        );
+      } else {
+        ok('store-asset-dimensions', `${present.length}件の生成済み画像の実寸を確認、想定どおり`);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Output
 // ----------------------------------------------------------------------------
 console.log('');

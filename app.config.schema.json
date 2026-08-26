@@ -3,10 +3,11 @@
   "title": "AppConfig",
   "description": "Per-app identity and store metadata. Single source of truth for spawn-new-app and store automation scripts.",
   "type": "object",
-  "required": ["identity", "stores", "brand", "contact", "auth", "businessModel", "ownership"],
+  "required": ["identity", "stores", "brand", "contact", "businessModel", "ownership"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
+    "_README": { "type": "string", "description": "テンプレ冒頭の案内文（値の検証対象外）" },
 
     "identity": {
       "type": "object",
@@ -93,11 +94,24 @@
       }
     },
 
-    "businessModel": {
+    "chrome": {
       "type": "object",
-      "required": ["kind", "hasInAppPurchase", "hasSubscription", "hasPaidContent", "summaryEn", "summaryJa"],
+      "description": "Chrome拡張も作る場合の設定。省略可(作らないなら enabled:false か省略)",
       "additionalProperties": false,
       "properties": {
+        "_note": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "itemId": { "type": "string", "description": "Chromeウェブストアの拡張ID(32文字)。初回だけ手動で作って控える" },
+        "manifestPath": { "type": "string" }
+      }
+    },
+
+    "businessModel": {
+      "type": "object",
+      "required": ["hasInAppPurchase", "hasSubscription", "hasPaidContent", "summaryEn", "summaryJa"],
+      "additionalProperties": false,
+      "properties": {
+        "_note": { "type": "string" },
         "kind": { "type": "string", "enum": ["b2b-referral", "b2c-saas", "b2c-content", "informational", "b2b-saas", "marketplace"] },
         "hasInAppPurchase": { "type": "boolean" },
         "hasSubscription": { "type": "boolean" },
@@ -126,6 +140,7 @@
       "additionalProperties": false,
       "description": "Web公開に関する追加設定。省略可(Vercel Git連携デプロイのみで完結する場合は不要)",
       "properties": {
+        "_note": { "type": "string" },
         "deploy": {
           "type": "object",
           "additionalProperties": false,
@@ -144,6 +159,7 @@
       "additionalProperties": false,
       "description": "LINE公式アカウントでAI応答するbotの設定。省略可(LINE bot自体を作らないなら不要)。実体は templates/line-bot/",
       "properties": {
+        "_note": { "type": "string" },
         "enabled": { "type": "boolean", "description": "trueならLINE bot機能を有効化(templates/line-bot/を使う)" },
         "botCharacterName": { "type": "string", "description": "LINE上で応答するキャラクター名(persona.mdに反映)" },
         "cloudflareAccountId": { "type": ["string", "null"], "description": "wrangler.toml の account_id" },

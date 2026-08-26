@@ -30,10 +30,12 @@
 | ★指標・実測値の雛形 | [`improvement-metrics.mjs`](../../templates/scripts/improvement-metrics.mjs) / [`improvement-history.mjs`](../../templates/scripts/improvement-history.mjs) | ★**空で配る**（実測してから足す） |
 | ★4つ目の状態「走っていない」 | [`templates/scripts/check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs) | `--selftest` 5ケース |
 | ★セキュリティスコア（内部先取り＋malwarecheck.site本体実測） | [`templates/scripts/verify-security-score.mjs`](../../templates/scripts/verify-security-score.mjs) | ★2026-08-24 配布開始。`--selftest` 4ケース |
-| 起動画面（スプラッシュ）の設定検査 | [`templates/scripts/check-splash-config.mjs`](../../templates/scripts/check-splash-config.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | 引き伸ばし設定と背景色の不一致を見る。★画像生成は公式 `@capacitor/assets` に任せ自作しない（2026-08-25方針）。実機目視は別に残す |
+| ★起動画面（スプラッシュ）完全検査 | [`templates/scripts/check-splash-config.mjs`](../../templates/scripts/check-splash-config.mjs) / [`check-splash-safe-circle.mjs`](../../templates/scripts/check-splash-safe-circle.mjs) / [`SPLASH-SCREEN-PLAYBOOK.md`](../SPLASH-SCREEN-PLAYBOOK.md) | ★設定・背景色・安全円を検査。★画像生成は公式 `@capacitor/assets` に任せ自作しない（2026-08-25方針）。実機目視は別に残す。★2026-08-25: 以前あった集約ランナー`run-splash-gates.mjs`は「公式ツールで足りる範囲を自作していた」ため廃止済み（`site/assets/data/ai-instructions.json`の`splash-screen`本文参照）。復活させないこと |
 | ★全文脈パケット＋判断の進化台帳 | [`templates/scripts/context-engine.mjs`](../../templates/scripts/context-engine.mjs) / [`context-evolution.json`](../../templates/scripts/context-evolution.json) | ★全追跡・未追跡ファイル、Git全履歴、現在差分、確定/却下/未確定を出典つきで1枚化 |
 | ★完全版の統合入口 | [`templates/scripts/run-instruments.mjs`](../../templates/scripts/run-instruments.mjs) | ★途中が黄/赤でも止まらず全計器を実行し、赤>黄>緑で集約 |
+| ★レスポンシブ設計の静的先取り＋実ブラウザ実測の使い分け | [`templates/scripts/verify-responsive-design.mjs`](../../templates/scripts/verify-responsive-design.mjs) / [`RESPONSIVE-CHECK.md`](RESPONSIVE-CHECK.md) | ★2026-08-25 配布開始。`--selftest` 3ケース。正式判定は実ブラウザ実測に委ねる |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
+| ★数値主張の出典スクリーニング | [`scripts/verify-numeric-claims-provenance.mjs`](../../scripts/verify-numeric-claims-provenance.mjs) | ★2026-08-25配布開始。`site/**/*.html`全体の「実際に○件」等の数値主張に`<!-- 出典: -->`コメントがあるか軽く検査。`verify-claims-coverage.mjs`（LPのdata-claim 9件限定）とは別物。`--selftest` 4ケース |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
 **配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
@@ -68,6 +70,11 @@ tsuioku の instrument-core.mjs  vs  キットの instrument-core.mjs
 - `web-ios-android`（このリポ・2026-08-17）: `audit-native-cta.mjs` を引数なしで実行 →
   何も走査せず「✅ 0件」と表示（`fc3a8e3` で対処）
 - `tsuioku-no-kirameki.com`（2026-08-21）: 検査53本のうち `--selftest` 0本・`exit 2` 0本
+- `soushin-suggest.link`（2026-08-24・`_docs/NO-SUITE-DESIGN.md` §1-1/1-2）:
+  アプリを起動する重いテスト**76本・1回22分**を完走させても、見つかった製品の不具合は**0件**
+  （赤4本のうち3本は検査の期待値が古い・1本は検査自体の不具合）。同じ期間に実際に見つかった
+  **本物の不具合5件**は、オーナーの実機報告3件と製品が吐いた診断ログ2件から見つかった
+  ＝**重いテストが見つけたものは0件**（LP `site/features/health-check/index.html` に転記時の出典）
 
 ---
 
@@ -302,6 +309,17 @@ node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.
 ★新しいアプリには `/check-shindan-version/` を標準搭載します。
 進捗率は品質点ではなく、導入・配線・実測・履歴・公開の確認できた節目の割合です。
 黄（未計測）を緑に混ぜず、根拠と次の一手まで表示します。
+
+---
+
+## 3.8.1 ★レスポンシブ設計を抜け漏れなくチェックする
+
+→ [**RESPONSIVE-CHECK.md**](RESPONSIVE-CHECK.md)
+
+★崩れやすいCSSパターン（固定px幅・viewport欠如・メディアクエリ不在・overflow-x制御なし・
+極小フォント）を静的解析で先取りします。★車輪の再発明はしない: 「実際にどう見えるか」の
+正式判定は自前で再実装せず、実ブラウザ実測（`responsive-check`スキル、または業界標準の
+Playwright）に委ねます。静的解析はあくまで軽量な先取りゲートという位置づけです。
 
 ---
 

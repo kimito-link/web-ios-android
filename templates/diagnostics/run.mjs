@@ -47,9 +47,25 @@ const CHECKS = [
   //   実際の不具合5件はオーナーの報告と★製品自身の診断ログから見つかっていた。
   //   ⟹ 重い検査を減らすなら、その前に「沈黙と正常を区別できる」ことが要る。
   { name: 'check-heartbeat-present', path: join(__dirname, 'check-heartbeat-present.mjs') },
+  // ★計器が【あるのに動かない】ものを探す(2026-08-25追加)。
+  //   実損: 位置を測る計器が「分岐の片側でしか定義されない変数」を参照し、
+  //   try に飲まれて【1件も記録されないまま】「原因が分かった」と報告した。
+  //   ★計器が無いなら「無い」と分かる。あるのに動かないと沈黙を正常と読む。
+  { name: 'check-instruments-reachable', path: join(__dirname, 'check-instruments-reachable.mjs') },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
+  // ★selfTarget(templates/diagnostics自身)は、このキット最大の検査置き場
+  //   templates/scripts(2026-08-25時点16本)を最初から対象外にしていた。
+  //   実損: verify-ios-splash-not-default.mjs等5本の--selftest不備(問題1)は
+  //   人力の手動監査でしか見つからず、この計器では一度も検出されなかった。
+  //   ★2箇所目として固定で追加する(selfTargetDir=diagnostics.json宣言と独立、
+  //   このキット自身が常に見る先。対象リポのdiagnostics.json宣言では上書きしない)。
+  {
+    name: 'check-selftest-coverage(scripts)',
+    path: join(__dirname, 'check-selftest-coverage.mjs'),
+    selfTargetDir: join(__dirname, '..', 'scripts'),
+  },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
@@ -86,6 +102,7 @@ for (const check of CHECKS) {
 
     const scanDir = check.kitRoot
       ? join(__dirname, '..', '..')
+      : check.selfTargetDir ? check.selfTargetDir
       : check.selfTarget ? (declaredChecks || __dirname) : TARGET_DIR;
     const extraArgs = (check.selfTarget && declaredChecks && declaredPattern)
       ? ['--pattern', declaredPattern] : [];

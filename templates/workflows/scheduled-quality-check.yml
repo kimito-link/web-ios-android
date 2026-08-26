@@ -1,0 +1,65 @@
+# 【金型テンプレート】公開サイトの品質を定期チェック（セキュリティスコア・レスポンシブ設計・Lighthouse）
+#
+# 移植元: web-ios-android キット新規実装（2026-08-25。設計: _docs/instruments/SECURITY-SCORE.md / RESPONSIVE-CHECK.md）
+#
+# 背景:
+#   security:score（malwarecheck.site基準の出荷前セキュリティチェック）と
+#   responsive:check（レスポンシブ設計の静的先取りチェック）は、iOS/Androidの
+#   出荷事故ゲートと違い、デプロイ手段（Vercel/Cloudflare Pages等）を問わず
+#   どのCIワークフローにも配線されていなかった（2026-08-25の監査で発見）。
+#   このキットが既定で使うVercelはGit連携の自動デプロイでCIステップを挟まないため、
+#   デプロイ後に別トリガーで定期チェックする形にする。
+#   Lighthouse（性能・アクセシビリティ・SEO・ベストプラクティス計測）も同時に
+#   2026-08-25の計器抜け漏れ調査で「一度も計測されていない」ことが判明したため追加。
+#   Chrome起動を伴い実行時間が長いため、毎push実行ではなくこの週次チェックに含める。
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/scheduled-quality-check.yml` にコピー。
+# 2. app.config.json の identity.productionDomain が正しく設定されていることを確認する
+#    （このワークフローはそこから対象URLを読む。追加のSecret登録は不要）。
+# 3. lighthouserc.json をリポ直下にコピーする（サイト固有の閾値に調整可）。
+# 4. 必要なら cron のスケジュールを変更する（既定: 週1回・月曜9時JST）。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   なし（app.config.json駆動・外部認証不要のチェックのみ）
+name: scheduled-quality-check
+
+on:
+  schedule:
+    # 月曜 0:00 UTC = 月曜 9:00 JST
+    - cron: "0 0 * * 1"
+  workflow_dispatch: {}
+
+concurrency:
+  group: scheduled-quality-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Security score (内部先取り + malwarecheck.site本体実測)
+        run: node templates/scripts/verify-security-score.mjs
+
+      - name: Responsive design (静的先取りチェック)
+        run: node templates/scripts/verify-responsive-design.mjs site
+
+      - name: Install Lighthouse CI (lighthouserc.json が無ければこのステップごとskip)
+        if: hashFiles('lighthouserc.json') != ''
+        run: npm install --no-save @lhci/cli@^0.15.1
+
+      - name: Lighthouse (performance / accessibility / SEO / best-practices)
+        if: hashFiles('lighthouserc.json') != ''
+        run: npx lhci autorun --config=lighthouserc.json
+
+      - name: External links (site/内のストアバッジ等・外部リンクの到達性)
+        run: |
+          npm install --no-save linkinator@^8.0.4
+          node templates/scripts/verify-external-links.mjs site

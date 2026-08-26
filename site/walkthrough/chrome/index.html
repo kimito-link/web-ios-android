@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chrome Web Store 追体験（実画面つき） | Kimito-Link</title>
   <meta name="description" content="Chrome 拡張の Web Store 申請で人間が触る画面だけ。build-zip + publish-cws の2コマンド自動化。">
-  <link rel="canonical" href="https://web-ios-android.vercel.app/walkthrough/chrome/">
+  <link rel="canonical" href="https://kimito-skill.link/walkthrough/chrome/">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Chrome Web Store 追体験（実画面つき） | Kimito-Link">
   <meta property="og:description" content="Chrome 拡張の Web Store 申請で人間が触る画面だけ。build-zip + publish-cws の2コマンド自動化。">
-  <meta property="og:url" content="https://web-ios-android.vercel.app/walkthrough/chrome/">
-  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta property="og:url" content="https://kimito-skill.link/walkthrough/chrome/">
+  <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="../../favicon.png">
   <script type="application/ld+json">
@@ -20,8 +20,8 @@
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
-          { "@type": "ListItem", "position": 2, "name": "ストア申請の追体験", "item": "https://web-ios-android.vercel.app/walkthrough/" },
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://kimito-skill.link/" },
+          { "@type": "ListItem", "position": 2, "name": "ストア申請の追体験", "item": "https://kimito-skill.link/walkthrough/" },
           { "@type": "ListItem", "position": 3, "name": "Chrome Web Store" }
         ]
       }
@@ -92,6 +92,7 @@
 
     <div class="hero">
       <h1>Chrome Web Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
+      <!-- 出典: docs/CHROME-WEBSTORE.md:57（初回15分）、scripts/chrome/build-zip.ps1・publish-cws.ps1（実在確認済み） -->
       <p class="sub">実際に拡張を申請したときの画面で、同じ手順をなぞれるよ。<br>初回 OAuth セットアップ（約15分）のあとは、ふだんの更新は<b>コマンド2つ</b>で審査提出まで自動。<br>説明文や画像を直す日は、画面を自動でなぞる<b>別ルート</b>(下の⑥)に切り替えると速い。</p>
       <div class="progress">
         <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span><span>⑥ 画像/説明の編集</span>

@@ -45,7 +45,18 @@ const PAIRS = [
   {
     label: '計器の土台',
     canonical: resolve(KIT_ROOT, 'templates/scripts/lib/instrument-core.mjs'),
-    copies: [resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/lib/instrument-core.mjs')]
+    /*
+     * ★kimitolink-linktree は 2026-08-24 に採用（＝この土台の★収穫元でもあるリポ）。
+     *   normalizeProbeResult の核（根拠なき pass の降格）は元々
+     *   kimitolink-linktree/scripts/lib/diag-core.mjs:18 から収穫したもの。
+     *   ★発明はあちらが先で、キットが汎用化して selftest/limitation を足した。
+     *   採用の動機は、その良い型が★自リポ内では diag.mjs 1本にしか適用されておらず、
+     *   他20本以上の計器が恩恵ゼロだったこと。
+     */
+    copies: [
+      resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/lib/instrument-core.mjs'),
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/instrument-core.mjs')
+    ]
   },
   {
     label: '進化台帳（判定）',
@@ -58,22 +69,66 @@ const PAIRS = [
      *   （空の表で偽の緑になる穴を塞ぐため・2026-08-22 に実測で確認）。
      *   tsuioku をキット版へ寄せたときに、そのパスもここへ足す。
      */
-    copies: [resolve(KIT_ROOT, 'scripts/lib/improvement-ledger.mjs')]
+    copies: [
+      resolve(KIT_ROOT, 'scripts/lib/improvement-ledger.mjs'),
+      // ★kimitolink-linktree は 2026-08-24 に採用（キット外で初の採用先）。
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/improvement-ledger.mjs')
+    ]
+  },
+  {
+    label: '進化台帳（鮮度）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/improvement-staleness.mjs'),
+    copies: [resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/improvement-staleness.mjs')]
   },
   {
     label: '進化台帳（門番）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-improvement.mjs'),
-    copies: [resolve(KIT_ROOT, 'scripts/check-improvement.mjs')]
+    copies: [
+      resolve(KIT_ROOT, 'scripts/check-improvement.mjs'),
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-improvement.mjs')
+    ]
   },
   {
     label: '進化台帳（記録の口）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/record-improvement.mjs'),
-    copies: [resolve(KIT_ROOT, 'scripts/record-improvement.mjs')]
+    copies: [
+      resolve(KIT_ROOT, 'scripts/record-improvement.mjs'),
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/record-improvement.mjs')
+    ]
   },
   {
     label: '検査の実行記録（4つ目の状態）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-instrument-ran.mjs'),
     copies: [resolve(KIT_ROOT, 'scripts/check-instrument-ran.mjs')]
+  },
+  {
+    /*
+     * ★2026-08-24 追加。kimitolink-linktree が毒テストで実損を見つけ、
+     *   キット版でも同じ毒（signingConfig 行のコメントアウト）で exit 0 を
+     *   再現してから両方直した。★配る側が壊れていると全新規アプリに配られる。
+     *
+     * ★実コードは同一だが import パスだけ違う（キットは ./lib、
+     *   プロダクトは scripts/app 配下なので ../lib）。
+     *   codeOnly 比較はこの1行の差を「割れ」と見なすため、ここには入れない。
+     *   ★入れるなら先にパスの持ち方を揃えること。
+     */
+    label: '署名ゲート（★パス差のため比較対象外・手で同期）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/verify-android-signing-config.mjs'),
+    copies: []
+  },
+  {
+    /*
+     * ★未コミット import ゲート。2026-08-25 に kimitolink-linktree が採用。
+     *   このファイルは lib/ を import しないので、パス差が無く★そのまま比較できる。
+     *
+     * ★採用時に配布元の欠陥が見つかった: コメント内の使用例（JSDoc の
+     *   `import ... from "./x"`）を実物と誤読して★嘘の赤を出していた。
+     *   linktree の実リポで実測して発覚 → 正本を直してから配った。
+     *   ＝ 配る前に「実物のリポで走らせる」と、配布物の欠陥が見つかる。
+     */
+    label: '未コミット import ゲート',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/check-tracked-imports.mjs'),
+    copies: [resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-tracked-imports.mjs')]
   },
   {
     label: '全文脈と判断の進化台帳（入口）',

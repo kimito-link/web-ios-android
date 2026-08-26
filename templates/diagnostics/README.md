@@ -29,6 +29,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-symptom-index.mjs` | 症状の言葉から原因の索引を引けるか | `SYMPTOMS.md` 等。無ければskip |
 | `check-timing-instrumented.mjs` | 「遅い」と言われる経路に**時間**を測る計器があるか | `.ahk/.js/.mjs/.ts/.cs/.py` |
 | `check-heartbeat-present.mjs` | ★製品が「異常なし」を自分で名乗れるか（心拍） | ログを書く製品のみ。書かなければskip |
+| `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
 
 ### ★`check-heartbeat-present` がなぜ要るか（2026-08-24・実損）
@@ -66,7 +67,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 
 ## 個別ページ
 
-紹介ページ: [`../../site/features/diagnostics/`](../../site/features/diagnostics/index.html)（サイト内で「診断キット」の仕組みを説明する独立ページ）。
+紹介ページ: [`../../site/features/health-check/`](../../site/features/health-check/index.html)（「🔍 出荷する前に、コードそのものを検査する『診断キット』」節。★2026-08-22に独立ページ`site/features/diagnostics/`から統合済み。旧パスへのリンクは張らないこと）。
 
 ---
 

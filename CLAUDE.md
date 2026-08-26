@@ -42,12 +42,12 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 
 | 欲しい自動化 | キット内の場所 | 出典（金型の元） |
 |---|---|---|
-| **iOS/Android リリースCI** | `templates/workflows/`（ios/android release・poll・lint・cert-expiry） | `partnership_program_website` / `fujisan-clean` |
+| **iOS/Android リリースCI** | `templates/workflows/`（ios/android release・poll・lint・cert-expiry。Android cert-expiryは2026-08-25新設でapple-cert-expiry.ymlの対） | `partnership_program_website` / `fujisan-clean`（Android cert-expiryはこのキット自身） |
 | **iOS/Android リリーススクリプト** | `templates/scripts/*.mjs`（appstore-submit / play-publish / asc-* / lint-pre-submission / generate-store-assets 等）＋ `templates/scripts/lib/` | `partnership_program_website`（一部 `Exosome` と同一） |
 | **Android TWA（mac 不要）** | `templates/android-twa/`（twa-manifest・署名注入・Windows用 ps1） | `Exosome` / `partnership_program_website` |
 | **Capacitor 設定の金型** | `templates/capacitor/capacitor.config.template.ts` | `partnership` / 富士山 / `Exosome`（server.url 連動型） |
-| **Web→アプリDL導線の金型** | `templates/web/`（公式バッジ取得・出し分け・Smart App Banner・CSS） | `Exosome`（実装・ブラウザ検証済み） |
-| **出荷事故ゲート** | `templates/scripts/verify-ios-splash-not-default.mjs`（Capacitorデフォルトスプラッシュ防止）／`verify-android-signing-config.mjs`（未署名AAB防止）／`check-tracked-imports.mjs`（**新規ファイルのadd忘れ検出**=git clone直後でもimportが全解決するかをgit ls-filesだけで検査）。CI から呼ぶ | `Exosome`（CI で実証）／tracked-importsは `tsuioku-no-kirameki.com`（Vercel全デプロイ失敗の実事故から実装・実証） |
+| **Web→アプリDL導線の金型** | `templates/web/`（公式バッジ取得・出し分け・Smart App Banner・CSS・iOS Universal Links金型=`apple-app-site-association.example`） | `Exosome`（実装・ブラウザ検証済み）／Universal Linksはこのキット自身（2026-08-25新設。Android版`assetlinks.json.example`の対） |
+| **出荷事故ゲート** | `templates/scripts/verify-ios-splash-not-default.mjs`／`verify-android-splash-not-default.mjs`（Capacitorデフォルトスプラッシュ防止）／`verify-android-signing-config.mjs`（未署名AAB防止）／`verify-webdir-consistency.mjs`（capacitor.config.tsのwebDirとCI生成先の不一致防止＝原則8）／`verify-signing-material-path.mjs`（署名鍵の配置パス不一致防止＝原則9）／`check-tracked-imports.mjs`（**新規ファイルのadd忘れ検出**=git clone直後でもimportが全解決するかをgit ls-filesだけで検査）／`verify-app-config-schema.mjs`（**壊れたapp.config.jsonの素通り防止**=ajvでapp.config.schema.jsonと照合。2026-08-25新設）／`verify-assetlinks-published.mjs`（**assetlinks.json未配信・package_name不一致の検出**=本番URLへの実fetchで疎通確認。2026-08-25新設）。CI から呼ぶ | `Exosome`（CI で実証）／tracked-importsは `tsuioku-no-kirameki.com`（Vercel全デプロイ失敗の実事故から実装・実証）／webdir-consistencyとsigning-material-pathは`kimito resend`（2026-07-04実戦、`_docs/CAPACITOR-GOLDEN-RULES.md`原則8・9）／app-config-schemaはこのキット自身（2026-08-25の計器抜け漏れ調査で発見・実装） |
 | **AI自己検証（計器）の思想** | [`docs/ai-rules/04_SELF_VERIFICATION.md`](docs/ai-rules/04_SELF_VERIFICATION.md) — 製品自身に計器（挙動の自己申告）を埋め込み、AIが人間の目視なしで検証ループを回す6パターン（fail-soft/provenance・メタ診断=診断計器自体の網羅性契約テスト、を2026-07-16追加）。**新しいアプリを作るとき設計段階で読む** | `tsuioku-no-kirameki.com`（診断817秒→5ms・遅延実測等で実証） |
 | **計器の完全版（全文脈→検証→進化）** | [`_docs/instruments/CONTEXT-EVOLUTION.md`](_docs/instruments/CONTEXT-EVOLUTION.md) — 全追跡ファイル・Gitが表示する未追跡ファイル、Git全履歴、現在の変更、指示書、確定/却下/未確定の判断を出典つきで1枚化。`context-engine.mjs` と `run-instruments.mjs` をコードごと配布 | このキット自身（2026-08-24から自己利用） |
 | **各プログラム本体の診断・進化進捗ページ** | [`_docs/instruments/SHINDAN-VERSION-PAGE.md`](_docs/instruments/SHINDAN-VERSION-PAGE.md) — 新規アプリごとに本体URLの `/check-shindan-version/` を作り、導入・実測・履歴・公開の進捗と4状態、根拠、次の一手を表示。`setup-new-app` と Next.js `prebuild` から自動更新 | このキット自身（同じページを生成して自己利用） |
@@ -73,6 +73,42 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 
 ## AIへのお願い（守ること）
 
+- **最終目的（2026-08-25 確立）: 100年後も楽できる設計・ユーザーにとってのUI/UX最大化。**
+  何を作る・直すときも、最後にこの2つに照らして判断する:
+  - **100年後も楽できるか**: 今だけ動けばよい近道（自前の脆い判定ロジック、
+    ハードコードした一覧、抜け漏れのあるチェック）を選ばない。後から見た人・
+    未来の自分・別のAIが同じ手間を繰り返さずに済む形にする。
+  - **ユーザーのUI/UXが最大化されているか**: 内部の都合（実装のしやすさ）を
+    優先して、ユーザーが見る画面・触る導線を犠牲にしない。
+  この2つを実現するための具体的な手段が、次の4つの基準。
+- **新しい機能・検査を作るときの4つの基準（2026-08-25 確立）。**
+  何かを新しく実装するとき、この4つを満たしてから「できました」と報告する:
+  1. **抜け漏れなく完璧に**: 対象の全項目を洗い出してから作る。「主要なものだけ」で
+     止めない。移植元・仕様書・公式基準がある場合はその**全項目リスト**と実装を突き合わせ、
+     足りない項目は「未実装」と明記する（暗黙に省略しない）。
+  2. **車輪の再発明をしない**: 既に業界標準・公式ツール・公式APIがある領域は、
+     自前でロジックを再実装せず、可能な限りそちらに乗る（例: セキュリティヘッダー診断なら
+     Mozilla Observatory / OWASP Secure Headers Project、依存脆弱性なら `npm audit` 等）。
+     自前実装は「標準ツールが無い／使えない領域を埋める先取りチェック」に限定し、
+     その旨をコメントに明記する。
+  3. **完膚なきまでの裏取り**: 実装した検査・機能は、実際に動かして結果を確認してから
+     完了と報告する。「動くはず」で終わらせない。可能なら実サイト・実データに対して
+     実行し、想定通りの判定になることを確認する（[reality-checker](../CLAUDE.md) エージェントに
+     委任してもよい）。
+     ★**数値・実績を書くときは、必ず出典（KB・git履歴・実測コマンドの出力）に紐付ける**
+     （2026-08-25 確立）。「実際に9つのアプリへ当てたところ無傷は1つだけ」のような
+     具体的な実績主張を、実測ログもKBの記録も無いまま書いてLPに載せてしまった事故が
+     実際にあった（ユーザー指摘で発覚・削除）。「〜という実績があります」「実例：〜」
+     と書く前に、その数字を出したコマンド・ファイル・日付を1つでも挙げられるか自問する。
+     挙げられない具体的な数字は、断定せず一般的な説明に言い換える（「よくあるのは〜」
+     「〜することがあります」等）か、実際にコマンドを実行してその場で数字を作る。
+     `npm run claims:provenance` で `site/**/*.html` 全体を対象に、出典コメント
+     （`<!-- 出典: ... -->`）の無い数値主張を機械的にスクリーニングできる
+     （`verify-claims-coverage.mjs` はLPの`data-claim`9件専用の別物）。
+     数値・実績を書いたら実行し、出典コメントを添えてから完了と報告する。
+  4. **最高品質**: 手を抜いた近似実装で済ませず、既存の計器規約
+     （[`_docs/instruments/HANDOFF-new-app.md`](_docs/instruments/HANDOFF-new-app.md) の3値exit・
+     selftest・fail-closed）に沿った、他のアプリにも配布できる水準で作る。
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。

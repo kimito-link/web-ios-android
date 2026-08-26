@@ -81,6 +81,11 @@ const improvement = firstExisting(['scripts/check-improvement.mjs']);
 const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
+const responsive = firstExisting(['scripts/verify-responsive-design.mjs', 'templates/scripts/verify-responsive-design.mjs']);
+const claimsProvenance = firstExisting(['scripts/verify-numeric-claims-provenance.mjs']);
+const appConfigSchema = firstExisting(['scripts/verify-app-config-schema.mjs', 'templates/scripts/verify-app-config-schema.mjs']);
+const assetlinksPublished = firstExisting(['scripts/verify-assetlinks-published.mjs', 'templates/scripts/verify-assetlinks-published.mjs']);
+const docImplCoverage = firstExisting(['scripts/verify-doc-impl-coverage.mjs']);
 const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'templates/scripts/check-splash-config.mjs']);
 const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
 const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
@@ -90,13 +95,20 @@ const results = [];
 results.push(run('全文脈パケット', context, ['--write', '.instrument-context.md', ROOT]));
 results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
-results.push(run('計器が走ったか', ran, ['--check']));
+results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
 if (drift) results.push(run('配布コードのドリフト', drift));
 results.push(run(
   '公開サイトのセキュリティ満点チェック',
   security,
   SECURITY_URL ? ['--url', SECURITY_URL] : [],
 ));
+results.push(run('レスポンシブ設計の静的先取りチェック', responsive));
+if (claimsProvenance) results.push(run('数値主張の出典スクリーニング', claimsProvenance));
+if (appConfigSchema) results.push(run('app.config.jsonのスキーマ適合', appConfigSchema));
+if (assetlinksPublished) results.push(run('assetlinks.jsonの公開疎通', assetlinksPublished));
+// ★docImplCoverageはinstrument-core.mjsの3値exit規約に未対応（--selftest無し、2026-08-25時点）。
+//   通常実行はしつつ、selftest呼び出しは追加しない（無い機能を呼ぶと誤った結果になる）。
+if (docImplCoverage) results.push(run('ドキュメント⇔実装カバレッジ', docImplCoverage));
 
 if (DEEP) {
   results.push(run('全文脈パケット selftest', context, ['--selftest']));
@@ -105,6 +117,10 @@ if (DEEP) {
   results.push(run('統合入口 selftest', fileURLToPath(import.meta.url), ['--selftest']));
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
+  if (responsive) results.push(run('レスポンシブ計器 selftest', responsive, ['--selftest']));
+  if (claimsProvenance) results.push(run('数値主張スクリーニング selftest', claimsProvenance, ['--selftest']));
+  if (appConfigSchema) results.push(run('app.config.jsonスキーマ計器 selftest', appConfigSchema, ['--selftest']));
+  if (assetlinksPublished) results.push(run('assetlinks疎通計器 selftest', assetlinksPublished, ['--selftest']));
   if (splashConfig) results.push(run('起動画面設定 selftest', splashConfig, ['--selftest']));
   if (splashSafe) results.push(run('起動画面安全円 selftest', splashSafe, ['--selftest']));
   if (splashDrift) results.push(run('起動画面の配布版 selftest', splashDrift, ['--selftest']));

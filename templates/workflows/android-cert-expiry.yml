@@ -1,0 +1,155 @@
+# 【金型テンプレート】Android アップロード鍵（.jks）期限監視
+#
+# 移植元: web-ios-android キット新規実装（2026-08-25。apple-cert-expiry.yml のAndroid版）
+#
+# Android アップロード鍵の有効期限を週1回（月曜午前9時JST）チェックし、
+# 30日以内に期限切れになる場合は自動 GitHub Issue 化する。
+#
+# 背景:
+#   android-play-release.yml には署名鍵の「使用」（storeFile/keystore.propertiesの
+#   配置検証=verify-signing-material-path.mjs）はあるが、「期限」チェックは無かった。
+#   upload鍵は自己署名で数十年有効に発行するのが一般的だが、組織のセキュリティ
+#   ポリシーで短い有効期限のkeystoreを発行された場合、無音で失効し bundleRelease が
+#   予告なく失敗する（apple-cert-expiry.ymlが防いでいるのと同型のリスク）。
+#
+# 設計:
+#   - 既存 ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PROPERTIES secrets を再利用
+#     （追加 secret 0 個）
+#   - keytool（JDK同梱の公式ツール）でローカル完結。外部API呼び出し無し
+#   - 重複 Issue は alias + 警告窓を含む title で de-dupe（apple版と同じパターン）
+#
+# ── このテンプレの使い方 ──────────────────────────────────────────
+# 1. このファイルをアプリリポの `.github/workflows/android-cert-expiry.yml` にコピー。
+# 2. アプリ固有値の置換は不要（android-play-release.yml と同じ secrets を再利用）。無改変で使える。
+# 3. scripts/android-cert-expiry-check.mjs を templates/scripts/ からコピー。
+#
+# ── 必要な GitHub Secrets ────────────────────────────────────────
+#   ANDROID_KEYSTORE_BASE64       android-play-release.yml と同じ（追加不要）
+#   ANDROID_KEYSTORE_PROPERTIES   android-play-release.yml と同じ（追加不要）
+name: android-cert-expiry
+
+on:
+  schedule:
+    # 月曜 0:00 UTC = 月曜 9:00 JST
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      warning_days:
+        description: "Threshold (days) for opening an issue"
+        required: false
+        default: "30"
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: android-cert-expiry
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Restore keystore + extract store password
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 未設定。Android配布しないリポなら正常(このジョブはskip扱いで終了)。"
+            echo "SKIP_CHECK=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > /tmp/upload-key.jks
+          STORE_PW="$(printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" | grep -E '^storePassword=' | head -1 | cut -d= -f2-)"
+          ALIAS="$(printf '%s\n' "$ANDROID_KEYSTORE_PROPERTIES" | grep -E '^keyAlias=' | head -1 | cut -d= -f2-)"
+          if [ -z "$STORE_PW" ]; then
+            echo "::error::ANDROID_KEYSTORE_PROPERTIES から storePassword を抽出できませんでした。"
+            exit 1
+          fi
+          echo "ANDROID_KEYSTORE_STORE_PASSWORD=$STORE_PW" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_ALIAS=${ALIAS:-upload}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PATH=/tmp/upload-key.jks" >> "$GITHUB_ENV"
+
+      - name: Check keystore expiry
+        if: ${{ env.SKIP_CHECK != '1' }}
+        run: node scripts/android-cert-expiry-check.mjs > expiry-report.json
+        env:
+          WARNING_DAYS: ${{ inputs.warning_days || '30' }}
+
+      - name: Clean up keystore copy
+        if: always()
+        run: rm -f /tmp/upload-key.jks
+
+      - name: Create or update issue for expiring keystore
+        if: ${{ env.SKIP_CHECK != '1' && success() }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('expiry-report.json', 'utf8'));
+            core.info(`Expiry check: ${JSON.stringify(report)}`);
+
+            if (!report.warnings || report.warnings.length === 0) {
+              core.info(`No keystore within ${report.warningDays} days of expiry. OK.`);
+              return;
+            }
+
+            for (const w of report.warnings) {
+              const title = `[Cert expiry] ${w.kind}: ${w.name} expires in ${w.daysRemaining}d (${w.expirationDate.slice(0,10)})`;
+              const search = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "[Cert expiry] ${w.kind}: ${w.name}"`,
+              });
+              if (search.data.total_count > 0) {
+                core.info(`Issue already exists for ${w.kind} ${w.id}. Skipping.`);
+                continue;
+              }
+
+              const body = [
+                `**Kind:** \`${w.kind}\``,
+                `**Alias:** ${w.name}`,
+                `**Expires:** ${w.expirationDate}`,
+                `**Days remaining:** ${w.daysRemaining}`,
+                ``,
+                `⚠️ 期限切れまで **${w.daysRemaining} 日**。期限内にkeystoreを再発行しないと`,
+                `Android release workflow が bundleRelease の署名で失敗します。`,
+                ``,
+                `### Rotation steps`,
+                `1. 新しい upload keystore を発行する（\`keytool -genkeypair\` または`,
+                `   \`templates/android-twa/create-android-keystore.ps1\` を使う）`,
+                `2. \`[Convert]::ToBase64String([IO.File]::ReadAllBytes('new-upload-key.jks'))\``,
+                `   の出力を \`gh secret set ANDROID_KEYSTORE_BASE64\` で更新`,
+                `3. \`gh secret set ANDROID_KEYSTORE_PROPERTIES\` で新しいパスワード/aliasを更新`,
+                `4. Google Play Console で新しい upload key の証明書を登録`,
+                `   （Play App Signing 利用時は Play Console 側の鍵は変わらないため、`,
+                `   アップロード鍵の更新リクエストのみで済む場合がある。手順は`,
+                `   https://support.google.com/googleplay/android-developer/answer/9842756 を参照）`,
+                `5. \`gh workflow run android-play-release\` で動作確認`,
+                ``,
+                `_Auto-created by \`.github/workflows/android-cert-expiry.yml\`._`,
+                `_Detected at: ${report.timestamp}._`,
+              ].join('\n');
+
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['ci-failure', 'cert-expiry'],
+              });
+              core.info(`Created issue #${created.data.number}: ${created.data.html_url}`);
+            }

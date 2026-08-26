@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>公開アプリ・導入事例 | web-ios-android</title>
   <meta name="description" content="web-ios-androidキットで公開したアプリと、更新情報・動作状況を分かりやすく表示する導入事例を紹介します。">
-  <link rel="canonical" href="https://web-ios-android.vercel.app/showcase/">
+  <link rel="canonical" href="https://kimito-skill.link/showcase/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="公開アプリ・導入事例 | web-ios-android">
   <meta property="og:description" content="公開アプリと、更新情報・動作状況を分かりやすく表示する導入事例です。">
-  <meta property="og:url" content="https://web-ios-android.vercel.app/showcase/">
-  <meta property="og:image" content="https://web-ios-android.vercel.app/images/logo.png">
+  <meta property="og:url" content="https://kimito-skill.link/showcase/">
+  <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="../favicon.png">
   <link rel="stylesheet" href="../assets/css/common.css?v=1">
@@ -26,8 +26,8 @@
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://web-ios-android.vercel.app/" },
-          { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://web-ios-android.vercel.app/apps/" },
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://kimito-skill.link/" },
+          { "@type": "ListItem", "position": 2, "name": "応用・実績", "item": "https://kimito-skill.link/apps/" },
           { "@type": "ListItem", "position": 3, "name": "作ったアプリ一覧" }
         ]
       }
@@ -65,7 +65,9 @@
     .sc-links a, .sc-links span { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-decoration: none; }
     .lk-web { background: #667eea; color: white; }
     .lk-ios { background: #1a1a2e; color: white; }
+    .lk-android { background: #01875f; color: white; }
     .lk-pend { background: #eee; color: #666; }
+    .showcase-error { text-align: center; color: #666; grid-column: 1 / -1; }
   </style>
 </head>
 <body>
@@ -82,52 +84,13 @@
 </nav>
 
 <div class="showcase-wrap">
-  <div class="showcase-grid">
-
-    <div class="sc-card">
-      <img src="../images/yukkuri-exosome-icon.png" alt="ゆっくりエクソソーム">
-      <div>
-        <h3>ゆっくりエクソソーム</h3>
-        <p>毎日のセルフケアを習慣化するアプリ。Web・iPhone・Android を同時リリース。</p>
-        <div class="sc-links">
-          <a href="https://yukkuri-exosome.link/" class="lk-web" target="_blank" rel="noopener">🌐 Web</a>
-          <a href="https://apps.apple.com/jp/app/id6775201794" class="lk-ios" target="_blank" rel="noopener">🍎 App Store</a>
-          <a class="lk-pend">▶ 審査中</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="sc-card">
-      <img src="../images/fujisan-icon.png" alt="富士山コンパス">
-      <div>
-        <h3>富士山コンパス</h3>
-        <p>今いる場所から富士山の方角をリアルタイムで表示するコンパスアプリ。</p>
-        <div class="sc-links">
-          <a href="https://fujisan01.com/" class="lk-web" target="_blank" rel="noopener">🌐 Web</a>
-          <a href="https://apps.apple.com/jp/app/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%82%B3%E3%83%B3%E3%83%91%E3%82%B9/id6745198076" class="lk-ios" target="_blank" rel="noopener">🍎 App Store</a>
-          <a class="lk-pend">▶ 準備中</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="sc-card">
-      <div class="sc-icon-fallback" aria-hidden="true">📨</div>
-      <div>
-        <h3>送信サジェスト</h3>
-        <p>短い更新情報を本体LPへ、詳しい準備状況と動作チェックを専用ページへ、同じ情報から反映する導入事例。</p>
-        <div class="sc-links">
-          <a href="https://soushin-suggest.link/" class="lk-web" target="_blank" rel="noopener">🌐 本体を見る</a>
-          <span class="lk-pend">📊 診断ページ導入対象</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  <div class="showcase-grid showcase-slot" data-variant="full" data-showcase-data-path="../assets/data/showcase.json"></div>
 </div>
 
 <div id="site-footer"></div>
 
 <script src="../scripts/site-chrome.js"></script>
 <script src="../scripts/ai-box.js"></script>
+<script src="../scripts/showcase.js"></script>
 </body>
 </html>
