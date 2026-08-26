@@ -92,7 +92,12 @@ async function main() {
 
 function runWrangler(args) {
   return new Promise((resolve) => {
-    const child = spawn('npx', args, { stdio: 'inherit' });
+    // ★2026-08-26修正: Windowsでは npx は npx.cmd(バッチファイル)であり、
+    //   shell:true 無しの spawn('npx', ...) は ENOENT で即失敗する(実機で発見。
+    //   デプロイ失敗の実エラーではなく、コマンドが起動すらしていなかった)。
+    //   argsは固定パターン(wrangler pages deploy <dir> --project-name <name>)のみで
+    //   ユーザー入力を直接シェル解釈させる経路にはならないため、shell:trueで許容する。
+    const child = spawn('npx', args, { stdio: 'inherit', shell: process.platform === 'win32' });
     child.on('close', (code) => resolve(code === 0));
     child.on('error', () => resolve(false));
   });

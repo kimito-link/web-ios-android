@@ -92,9 +92,9 @@
 
 ### ★リスク対応の完了判定（機械的チェックが緑でも、これを飛ばして「完了」と報告しないこと）
 
-- [x] `site/_headers`に`/hub/*`への`X-Robots-Tag: noindex`をローカルで作成済み。
-      **未確認**: デプロイ後に`curl -I https://kimito-skill.link/hub/`で実際のレスポンス
-      ヘッダを確認すること（次回デプロイ後に必須）
+- [x] `site/_headers`に`/hub/*`への`X-Robots-Tag: noindex`が実際に反映されていることを
+      2026-08-26、本番デプロイ後に`curl -I https://kimito-skill.link/hub/`で確認済み
+      （レスポンスヘッダに`x-robots-tag: noindex, nofollow`を確認）
 - [x] 生成された`site/hub/index.html`（実際のHTML）を目視し、KB本文・エラー実文言・
       triggersが出力されていない（パスと件数のみ）ことを2026-08-26に確認済み
 - [ ] **Cloudflare Accessを`/hub/*`に設定するようユーザーに依頼する**（GUI操作、自動化不可。

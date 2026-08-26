@@ -118,7 +118,9 @@ function isAlreadyLoggedIn() {
 /** `wrangler login` を子プロセスとして起動し、終了コードで成否を返す。 */
 function runWranglerLogin() {
   return new Promise((resolve) => {
-    const child = spawn('npx', ['wrangler', 'login'], { stdio: 'inherit' });
+    // ★2026-08-26修正: Windowsのnpxはnpx.cmdでありshell:true無しはENOENT
+    // (deploy-cloudflare-pages.mjsと同型のバグ。実機で発見)。
+    const child = spawn('npx', ['wrangler', 'login'], { stdio: 'inherit', shell: process.platform === 'win32' });
     child.on('close', (code) => resolve(code === 0));
     child.on('error', () => resolve(false));
   });
