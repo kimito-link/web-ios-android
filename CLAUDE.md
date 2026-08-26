@@ -5,6 +5,9 @@
 
 ---
 
+## このリポの2つの役割（2026-08-26追記）
+①アプリ提出自動化キット（本項以下、このファイルの主題）②kimito-skill.linkの玄関——`site/hub/`が`../ai-hub/index.json`を読んで生成する横断知見ダッシュボード（`npm run hub:page`）。横断知見の正本は常に`../ai-hub`。このリポはai-hubを動かさず窓口を被せるだけ（設計: `_docs/DESIGN-ai-hub-consolidation-2026-08-26.md`）。
+
 ## このテンプレは何をするものか
 
 **1つのテンプレで Chrome拡張・Web・iOS・Android の4つにアプリを自動展開する。**

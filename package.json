@@ -23,9 +23,9 @@
     "context:selftest": "node templates/scripts/context-engine.mjs --selftest",
     "context:record": "node templates/scripts/context-engine.mjs --record .",
     "instrument": "node templates/scripts/run-instruments.mjs --deep --report .instrument-report.json .",
-    "instrument:site": "node templates/scripts/run-instruments.mjs --deep --security-url https://web-ios-android.vercel.app --report .instrument-report.json .",
+    "instrument:site": "node templates/scripts/run-instruments.mjs --deep --security-url https://kimito-skill.link --report .instrument-report.json .",
     "instrument:selftest": "node templates/scripts/run-instruments.mjs --selftest",
-    "security:score": "node templates/scripts/verify-security-score.mjs --url https://web-ios-android.vercel.app",
+    "security:score": "node templates/scripts/verify-security-score.mjs --url https://kimito-skill.link",
     "security:score:selftest": "node templates/scripts/verify-security-score.mjs --selftest",
     "responsive:check": "node templates/scripts/verify-responsive-design.mjs site",
     "responsive:check:selftest": "node templates/scripts/verify-responsive-design.mjs --selftest",
@@ -39,8 +39,13 @@
     "links:external:selftest": "node templates/scripts/verify-external-links.mjs --selftest",
     "splash:check": "node templates/scripts/check-splash-config.mjs",
     "splash:selftest": "node templates/scripts/check-splash-config.mjs --selftest && node templates/scripts/check-splash-safe-circle.mjs --selftest && node templates/scripts/check-splash-template-drift.mjs --selftest",
-    "shindan": "node templates/scripts/generate-shindan-version.mjs --measure --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android",
-    "shindan:update": "node templates/scripts/generate-shindan-version.mjs --root . --out site/check-shindan-version --base-url https://web-ios-android.vercel.app --name web-ios-android"
+    "shindan": "node templates/scripts/generate-shindan-version.mjs --measure --root . --out site/check-shindan-version --base-url https://kimito-skill.link --name web-ios-android",
+    "shindan:update": "node templates/scripts/generate-shindan-version.mjs --root . --out site/check-shindan-version --base-url https://kimito-skill.link --name web-ios-android",
+    "hub:page": "node scripts/generate-hub-dashboard.mjs --root . --out site/hub",
+    "hub:page:selftest": "node scripts/generate-hub-dashboard.mjs --selftest",
+    "check:hub-freshness": "node scripts/check-hub-page-freshness.mjs --root . --data site/hub/hub-data.json",
+    "check:hub-freshness:selftest": "node scripts/check-hub-page-freshness.mjs --selftest",
+    "deploy:site": "npm run hub:page && npm run shindan:update && node templates/scripts/deploy-cloudflare-pages.mjs --dir site"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

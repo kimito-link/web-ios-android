@@ -1,0 +1,1531 @@
+{
+  "generatedFrom": "ai-hub/index.json",
+  "generatedAt": "2026-08-26T02:06:43.055Z",
+  "entryCount": 51,
+  "doctorOk": true,
+  "doctorProblems": [],
+  "doctorWarnings": [
+    "gate-ios-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
+    "gate-android-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
+    "gate-lint-pre-submission: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
+    "gate-doc-impl-coverage: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
+    "gate-site-health: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
+    "kb-apple-reject: summary が80字超（1行厳守）",
+    "kb-extension-popup-perf-fixes: summary が80字超（1行厳守）",
+    "kb-soushin-false-green: summary が80字超（1行厳守）",
+    "kb-soushin-windows-landmines: summary が80字超（1行厳守）",
+    "kb-soushin-shipped-real-data: summary が80字超（1行厳守）",
+    "kb-surechigai-symptoms: summary が80字超（1行厳守）",
+    "kb-soushin-dpi-wrong-monitor: summary が80字超（1行厳守）",
+    "kb-line-bot-cloudflare-workers: summary が80字超（1行厳守）",
+    "未インデックスの検証資産: ai-shain-worker/scripts/check-frames.mjs（index化を検討）",
+    "未インデックスの検証資産: dns-osint-pro-ver2.0/scripts/check-fast.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-identity.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-local.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-state-freshness.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-surface.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-login-env.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-login-selenium.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-native-visible.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-oidc-discovery.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-sanity-surface.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-site-structure.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/verify-x-bearer-token.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot/scripts/check-bot-silence.mjs（index化を検討）",
+    "未インデックスの検証資産: malwarecheck.site/scripts/check-native-visible.mjs（index化を検討）",
+    "未インデックスの検証資産: malwarecheck.site/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: malwarecheck.site/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: malwarecheck.site/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/check-native-visible.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/verify-prod-line-admin-fallback.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/verify-prod-line-chat-accounts.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/verify-production-public.mjs（index化を検討）",
+    "未インデックスの検証資産: partnership_program_website/scripts/verify-reviewer-account.mjs（index化を検討）",
+    "未インデックスの検証資産: reply-copilot-openrouter-v2/scripts/check-dist-write-path.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/verify-android-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: sakkino.link/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-hub-registered.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-lockfile-sync.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-selftest-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-suite-freshness.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-symptom-index.mjs（index化を検討）",
+    "未インデックスの検証資産: splash/templates/scripts/check-splash-config.mjs（index化を検討）",
+    "未インデックスの検証資産: splash/templates/scripts/check-splash-dark-variant.mjs（index化を検討）",
+    "未インデックスの検証資産: splash/templates/scripts/check-splash-template-drift.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-doc-links.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-esm-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-hermes-unsafe-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-instrument-ran.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-native-unsafe-dom.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-splash-safe-circle.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/verify-bundle-has-clerk-key.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/verify-reviewer-account.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link-deploy-886aeff/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link-deploy-886aeff/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link-deploy-886aeff/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/check-layer.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/check-no-secrets-in-dist.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/check-root-cause-claim.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/verify-bump.mjs（index化を検討）",
+    "未インデックスの検証資産: tsuioku-no-kirameki.com/scripts/verify-deploy.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/check-brand-store-ready.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/check-native-visible.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-fixed-ui-014.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-fixed-ui-completion.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-it-maxed.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-keyword-dom.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-reputation-parity.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-app/scripts/verify-retire-routes-015.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check.link/scripts/check-dist-leaks.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/check-instrument-ran.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/verify-claims-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/verify-internal-links.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/verify-numeric-claims-provenance.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-instrument-ran.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-config.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-safe-circle.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-template-drift.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-app-config-schema.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-assetlinks-published.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-external-links.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-responsive-design.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-security-score.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-signing-material-path.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
+  ],
+  "doctorProblemCount": 0,
+  "doctorWarningCount": 106,
+  "shelves": [
+    {
+      "id": "shipping",
+      "title": "アプリ提出",
+      "entries": [
+        {
+          "id": "gate-tracked-imports",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/check-tracked-imports.mjs",
+          "tags": [
+            "shipping",
+            "ci",
+            "import",
+            "verify",
+            "gate"
+          ],
+          "summary": "git追跡ファイルだけでimport解決するか=clone直後を再現。add忘れ検出",
+          "triggers": [
+            "Cannot find module",
+            "Module not found",
+            "Vercel build failed"
+          ],
+          "selftest": "ai-hub/selftest/fixtures/tracked-imports/",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-android-signing",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-android-signing-config.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "signing",
+            "verify",
+            "gate"
+          ],
+          "summary": "未署名AAB出荷防止。build.gradleのsigningConfig release参照を検査",
+          "triggers": [
+            "signingConfig",
+            "unsigned",
+            "AAB",
+            "未署名"
+          ],
+          "selftest": "ai-hub/selftest/fixtures/android-signing/",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-ios-splash",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-ios-splash-not-default.mjs",
+          "tags": [
+            "shipping",
+            "ios",
+            "splash",
+            "verify",
+            "gate"
+          ],
+          "summary": "iOSデフォルトスプラッシュ出荷防止。sha256で既定画像を検出(--snapshot/--verify)",
+          "triggers": [
+            "splash",
+            "スプラッシュ",
+            "default splash"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-android-splash",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-android-splash-not-default.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "splash",
+            "verify",
+            "gate"
+          ],
+          "summary": "Androidデフォルトスプラッシュ出荷防止。固定パス群を直接ハッシュ比較",
+          "triggers": [
+            "splash",
+            "スプラッシュ"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-lint-pre-submission",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/lint-pre-submission.mjs",
+          "tags": [
+            "shipping",
+            "ios",
+            "review",
+            "verify",
+            "gate"
+          ],
+          "summary": "Apple却下ベクタ8チェック。却下KBのガイドライン番号に対応・app.config駆動",
+          "triggers": [
+            "Guideline",
+            "却下",
+            "rejected",
+            "pre-submission",
+            "CHECK 2 だけが取り残されていた",
+            "capacitor.config.json を決め打ちで読んでcapが常にnull",
+            "skip表示すら出さずに丸ごと消滅",
+            "bundle-id-consistency",
+            "appId抽出が最初の1件しか見ない",
+            "旧IDを行コメントで残す",
+            "plugins の中の appId が先にある",
+            "誤一致で緑になると出荷ゲートが素通りする"
+          ],
+          "verified": "2026-08-07"
+        },
+        {
+          "id": "gate-doc-impl-coverage",
+          "kind": "gate",
+          "path": "web-ios-android/scripts/verify-doc-impl-coverage.mjs",
+          "tags": [
+            "shipping",
+            "doc",
+            "drift",
+            "verify",
+            "gate"
+          ],
+          "summary": "doc⇔code ドリフト検証。<!-- impl: path#marker --> 注記を機械検証",
+          "triggers": [
+            "impl:",
+            "drift",
+            "ドリフト",
+            "未実装"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-apple-reject",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/apple-reject-knowledge-base.md",
+          "tags": [
+            "ios",
+            "store-review",
+            "reject",
+            "overclaim"
+          ],
+          "summary": "Apple却下→原因→実際に通った返信文。診断/測定系の表示と実態の乖離(§2.3型)も収録。複製先: kimitolink-linktree/_docs/(同名)",
+          "triggers": [
+            "Guideline 2.1",
+            "Guideline 4.2",
+            "Guideline 4.8",
+            "App Review",
+            "Resolution Center",
+            "却下",
+            "表示と実態の乖離",
+            "実測を超える表示",
+            "一般化 断定 AI",
+            "第三者由来 観測 未測定",
+            "禁句リスト fail-closed",
+            "効果保証 引用実測 ガード",
+            "store-guard blocking",
+            "measured vs displayed",
+            "authTabs",
+            "scrollToSelector",
+            "Billing Portal準備中",
+            "frame-appstore-screenshots",
+            "3.1.3(e)",
+            "3.1.3(f)",
+            "calls to action for purchase outside of the app",
+            "価格表を見る",
+            "デモアカウント @*** が Clerk に存在しません",
+            "does not exist or you do not have access to it"
+          ],
+          "verified": "2026-08-19"
+        },
+        {
+          "id": "kb-first-submission-blockers",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/FIRST-SUBMISSION-blockers.md",
+          "tags": [
+            "ios",
+            "android",
+            "store-review",
+            "blocker"
+          ],
+          "summary": "初回提出ブロッカー8個+Android C1-C7+ASC UI手動項目。症状=実文言つき",
+          "triggers": [
+            "Team ID",
+            "lockfile",
+            "contentRights",
+            "contentRightsDeclaration",
+            "provisioning",
+            "appDataUsages",
+            "published answers to your app's data usages",
+            "初回提出",
+            "国または地域が選択されていません",
+            "広告 IDの申告が不完全です",
+            "verify-reviewer-account.mjs"
+          ],
+          "verified": "2026-07-07"
+        },
+        {
+          "id": "kb-capacitor-golden",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/CAPACITOR-GOLDEN-RULES.md",
+          "tags": [
+            "capacitor",
+            "ios",
+            "android",
+            "webview"
+          ],
+          "summary": "黒画面を二度と起こさない6原則。server.url連動型の掟",
+          "triggers": [
+            "黒画面",
+            "white screen",
+            "server.url",
+            "allowNavigation"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-release-pipeline",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/release-pipeline-playbook.md",
+          "tags": [
+            "ci",
+            "release",
+            "ios",
+            "android"
+          ],
+          "summary": "CI/CD(GitHub Actions)の全ステップ。証明書/署名/upload/審査",
+          "triggers": [
+            "release workflow",
+            "リリースCI",
+            "not found on the default branch",
+            "workflow does not exist",
+            "gh secret get",
+            "if: secrets context",
+            "actionlint",
+            "12日間実走していなかった"
+          ],
+          "verified": "2026-07-16"
+        },
+        {
+          "id": "kb-google-play-playbook",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/google-play-submission-playbook.md",
+          "tags": [
+            "android",
+            "store-review",
+            "data-safety"
+          ],
+          "summary": "Play提出。データセーフティ申告+リリースノート+asset upload+配信国/広告ID申告",
+          "triggers": [
+            "Data Safety",
+            "データの安全性",
+            "Play Console",
+            "国または地域が選択されていません",
+            "広告 IDの申告が不完全です"
+          ],
+          "verified": "2026-07-07"
+        },
+        {
+          "id": "kb-pre-submission-checklist",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/pre-submission-compliance-checklist.md",
+          "tags": [
+            "shipping",
+            "checklist",
+            "ci"
+          ],
+          "summary": "CI自動化の可能性を度数化(高/中/低)。impl注記対象(doc-impl-coverageが検証)",
+          "triggers": [
+            "compliance",
+            "当てはまり度"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-automation-max-design",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/automation-maximization-design.md",
+          "tags": [
+            "automation",
+            "design",
+            "shipping"
+          ],
+          "summary": "個別リポ版の出荷パイプライン自動化設計。手動ゲート見逃しを構造的にゼロに",
+          "triggers": [
+            "自動化最大化",
+            "手動ゲート"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "agent-store-guard",
+          "kind": "agent",
+          "path": "ai-hub/agents/store-guard.md",
+          "deployedTo": "~/.claude/agents/store-guard.md",
+          "tags": [
+            "ios",
+            "android",
+            "store-review",
+            "subagent"
+          ],
+          "summary": "ストア審査官。却下KB/blockers/lintを束ね提出前後を審査・返信文起草",
+          "triggers": [
+            "Guideline",
+            "Resolution Center",
+            "Metadata Rejected",
+            "却下",
+            "提出前チェック"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-gate-false-green-linktree",
+          "kind": "kb",
+          "path": "kimitolink-linktree/_docs/GATE-FALSE-GREEN-2026-08-24.md",
+          "tags": [
+            "test",
+            "gate",
+            "false-green",
+            "selftest",
+            "poison",
+            "android",
+            "capacitor",
+            "clerk"
+          ],
+          "summary": "linktreeの出荷門番3本が偽の緑だった実例（署名/地色/審査員垢）。毒テストで踏み外した3型つき",
+          "triggers": [
+            "OK（署名済み AAB が生成されます）",
+            "OK（全ての地色が一致）",
+            "signingConfig check",
+            "verify-android-signing-config",
+            "verify-splash-bg-consistency",
+            "verify-reviewer-account",
+            "CLERK_SECRET_KEY_PROD",
+            "審査員デモ垢を検証【できていません】",
+            "ERR_MODULE_NOT_FOUND",
+            "毒が入ったことを確認してから読む",
+            "偽の緑"
+          ],
+          "verified": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "id": "line",
+      "title": "LINE bot",
+      "entries": [
+        {
+          "id": "kb-line-bot-cloudflare-workers",
+          "kind": "kb",
+          "path": "web-ios-android/templates/line-bot/README.md",
+          "tags": [
+            "line",
+            "bot",
+            "cloudflare-workers",
+            "d1",
+            "fail-closed",
+            "llm"
+          ],
+          "summary": "LINE公式アカウントAI社員bot金型。Cloudflare Workers+D1、Groq→Gemini→Workers AIの3段フォールバックで無応答ゼロ化、fail-closed設計。出典: line-harness-oss(ai-shain.link実運用)",
+          "triggers": [
+            "LINE公式アカウント",
+            "line-bot",
+            "無応答ゼロ化",
+            "replyToken",
+            "fail-closed",
+            "LINEで会話できるAI社員"
+          ],
+          "verified": "2026-08-26"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "title": "計器・出荷ゲート",
+      "entries": [
+        {
+          "id": "gate-tracked-imports",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/check-tracked-imports.mjs",
+          "tags": [
+            "shipping",
+            "ci",
+            "import",
+            "verify",
+            "gate"
+          ],
+          "summary": "git追跡ファイルだけでimport解決するか=clone直後を再現。add忘れ検出",
+          "triggers": [
+            "Cannot find module",
+            "Module not found",
+            "Vercel build failed"
+          ],
+          "selftest": "ai-hub/selftest/fixtures/tracked-imports/",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-android-signing",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-android-signing-config.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "signing",
+            "verify",
+            "gate"
+          ],
+          "summary": "未署名AAB出荷防止。build.gradleのsigningConfig release参照を検査",
+          "triggers": [
+            "signingConfig",
+            "unsigned",
+            "AAB",
+            "未署名"
+          ],
+          "selftest": "ai-hub/selftest/fixtures/android-signing/",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-ios-splash",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-ios-splash-not-default.mjs",
+          "tags": [
+            "shipping",
+            "ios",
+            "splash",
+            "verify",
+            "gate"
+          ],
+          "summary": "iOSデフォルトスプラッシュ出荷防止。sha256で既定画像を検出(--snapshot/--verify)",
+          "triggers": [
+            "splash",
+            "スプラッシュ",
+            "default splash"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-android-splash",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-android-splash-not-default.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "splash",
+            "verify",
+            "gate"
+          ],
+          "summary": "Androidデフォルトスプラッシュ出荷防止。固定パス群を直接ハッシュ比較",
+          "triggers": [
+            "splash",
+            "スプラッシュ"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-lint-pre-submission",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/lint-pre-submission.mjs",
+          "tags": [
+            "shipping",
+            "ios",
+            "review",
+            "verify",
+            "gate"
+          ],
+          "summary": "Apple却下ベクタ8チェック。却下KBのガイドライン番号に対応・app.config駆動",
+          "triggers": [
+            "Guideline",
+            "却下",
+            "rejected",
+            "pre-submission",
+            "CHECK 2 だけが取り残されていた",
+            "capacitor.config.json を決め打ちで読んでcapが常にnull",
+            "skip表示すら出さずに丸ごと消滅",
+            "bundle-id-consistency",
+            "appId抽出が最初の1件しか見ない",
+            "旧IDを行コメントで残す",
+            "plugins の中の appId が先にある",
+            "誤一致で緑になると出荷ゲートが素通りする"
+          ],
+          "verified": "2026-08-07"
+        },
+        {
+          "id": "gate-doc-impl-coverage",
+          "kind": "gate",
+          "path": "web-ios-android/scripts/verify-doc-impl-coverage.mjs",
+          "tags": [
+            "shipping",
+            "doc",
+            "drift",
+            "verify",
+            "gate"
+          ],
+          "summary": "doc⇔code ドリフト検証。<!-- impl: path#marker --> 注記を機械検証",
+          "triggers": [
+            "impl:",
+            "drift",
+            "ドリフト",
+            "未実装"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "gate-site-health",
+          "kind": "gate",
+          "path": "tsuioku-no-kirameki.com/scripts/site-health.mjs",
+          "tags": [
+            "web",
+            "links",
+            "verify",
+            "gate"
+          ],
+          "summary": "内部リンク切れ/canonical・og:url整合を静的検査(--checkでexit1)",
+          "triggers": [
+            "broken link",
+            "404",
+            "リンク切れ",
+            "canonical"
+          ],
+          "mustSyncWith": "web-ios-android/templates/scripts/check-tracked-imports.mjs",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-self-verification",
+          "kind": "kb",
+          "path": "web-ios-android/docs/ai-rules/04_SELF_VERIFICATION.md",
+          "tags": [
+            "verify",
+            "instrument",
+            "self-verification"
+          ],
+          "summary": "計器の思想5パターン。製品に自己申告を埋めAIが人の目視なしで検証。diag/gateの根拠",
+          "triggers": [
+            "計器",
+            "自己検証",
+            "status:live",
+            "偽陽性"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "agent-reality-checker",
+          "kind": "agent",
+          "path": "ai-hub/agents/reality-checker.md",
+          "deployedTo": "~/.claude/agents/reality-checker.md",
+          "tags": [
+            "verify",
+            "gate",
+            "false-positive",
+            "subagent"
+          ],
+          "summary": "検証の判定役。gate/計器を実行しD章5規則で証拠なき緑を却下。Edit/Write無し",
+          "triggers": [
+            "動いたはず",
+            "テスト緑",
+            "本当に動いてる",
+            "inconclusive",
+            "偽陽性"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-soushin-false-green",
+          "kind": "kb",
+          "path": "soushin-suggest.link/_docs/SYMPTOMS.md",
+          "tags": [
+            "test",
+            "gate",
+            "false-green",
+            "selftest",
+            "poison"
+          ],
+          "summary": "「壊れているから緑」の検査の型。exit 2 を緑に数える/コメントに一致する/自己検査が呼ばれない/毒が空振り。実例と対処（linktree実例はkb-gate-false-green-linktree）",
+          "triggers": [
+            "検査は緑なのに直っていない",
+            "false green",
+            "偽の緑",
+            "exit 2",
+            "INCONCLUSIVE",
+            "測れなかった",
+            "error-unmatch",
+            "selftest",
+            "自己検査",
+            "毒テスト",
+            "既知の赤",
+            "SS-08",
+            "SS-07",
+            "SS-09",
+            "SS-10",
+            "SS-11",
+            "スイートの赤4本"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-gate-false-green-linktree",
+          "kind": "kb",
+          "path": "kimitolink-linktree/_docs/GATE-FALSE-GREEN-2026-08-24.md",
+          "tags": [
+            "test",
+            "gate",
+            "false-green",
+            "selftest",
+            "poison",
+            "android",
+            "capacitor",
+            "clerk"
+          ],
+          "summary": "linktreeの出荷門番3本が偽の緑だった実例（署名/地色/審査員垢）。毒テストで踏み外した3型つき",
+          "triggers": [
+            "OK（署名済み AAB が生成されます）",
+            "OK（全ての地色が一致）",
+            "signingConfig check",
+            "verify-android-signing-config",
+            "verify-splash-bg-consistency",
+            "verify-reviewer-account",
+            "CLERK_SECRET_KEY_PROD",
+            "審査員デモ垢を検証【できていません】",
+            "ERR_MODULE_NOT_FOUND",
+            "毒が入ったことを確認してから読む",
+            "偽の緑"
+          ],
+          "verified": "2026-08-25"
+        },
+        {
+          "id": "gate-hub-page-freshness",
+          "kind": "gate",
+          "path": "web-ios-android/scripts/check-hub-page-freshness.mjs",
+          "tags": [
+            "hub",
+            "dashboard",
+            "freshness",
+            "verify",
+            "gate"
+          ],
+          "summary": "kimito-skill.link/hub/の生成が14日超で古いと警告。3値exit(0/1/2)",
+          "triggers": [
+            "check:hub-freshness",
+            "hub-data.json",
+            "この地図は何日前"
+          ],
+          "selftest": "web-ios-android/scripts/check-hub-page-freshness.mjs --selftest",
+          "verified": "2026-08-26"
+        }
+      ]
+    },
+    {
+      "id": "council",
+      "title": "会議・設計ハーネス",
+      "entries": [
+        {
+          "id": "howto-council",
+          "kind": "howto",
+          "path": "COUNCIL-HOWTO.md",
+          "tags": [
+            "council",
+            "meeting",
+            "llm",
+            "howto"
+          ],
+          "summary": "マルチLLM会議ハーネスの正本。モデル一覧・召集ルール・env・地雷",
+          "triggers": [
+            "会議",
+            "発散",
+            "批判",
+            "裏取り",
+            "council",
+            "does not exist or you do not have access to it",
+            "maxOutputTokens",
+            "回答が途中で切れる"
+          ],
+          "verified": "2026-08-19"
+        },
+        {
+          "id": "howto-fable-3step",
+          "kind": "howto",
+          "path": "FABLE-3STEP-HOWTO.md",
+          "tags": [
+            "fable",
+            "design",
+            "workflow",
+            "howto"
+          ],
+          "summary": "3段構え(会議→Fable設計→実装は別モデル)の正本。/council-fable の実行体",
+          "triggers": [
+            "3段構え",
+            "Fable",
+            "設計させて",
+            "機械的な完了判定チェックリスト",
+            "実装ハンドオフ"
+          ],
+          "verified": "2026-07-08"
+        },
+        {
+          "id": "harness-meeting",
+          "kind": "harness",
+          "path": "tsuioku-no-kirameki.com/scripts/meeting.mjs",
+          "tags": [
+            "council",
+            "llm",
+            "harness"
+          ],
+          "summary": "汎用会議ハーネス本体。--q/--out・動的ルーティング・heavy-slotセマフォ",
+          "triggers": [
+            "会議で回して",
+            "meeting.mjs"
+          ],
+          "mustSyncWith": "kimitolink-linktree/scripts/design-council.mjs",
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "script-council-cleanup",
+          "kind": "script",
+          "path": "tsuioku-no-kirameki.com/scripts/council-cleanup.mjs",
+          "tags": [
+            "council",
+            "cleanup",
+            "health"
+          ],
+          "summary": "会議後ゾンビ掃除。run.exe/llama-server.exe kill, ollama本体は触らない",
+          "triggers": [
+            "PCが重い",
+            "固まる",
+            "VRAM",
+            "ゾンビ"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "handoff-cloudflare-workers-ai",
+          "kind": "handoff",
+          "path": "HANDOFF-cloudflare-workers-ai.md",
+          "tags": [
+            "cloudflare",
+            "llm",
+            "council"
+          ],
+          "summary": "Cloudflare Workers AI連携。nemotron/glm/kimi。会議の5系統目",
+          "triggers": [
+            "Cloudflare",
+            "Workers AI",
+            "nemotron"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-nextjs-openrouter-pitfalls",
+          "kind": "kb",
+          "path": "ai-health-check.link/docs/KB-nextjs-openrouter-pitfalls.md",
+          "tags": [
+            "nextjs",
+            "openrouter",
+            "llm",
+            "cache",
+            "build"
+          ],
+          "summary": "OpenRouter推論系モデル空回答対策・dev中build破損・24hキャッシュ生存の3地雷。症状=実文言つき",
+          "triggers": [
+            "Reasoning is mandatory for this endpoint and cannot be disabled",
+            "finish_reason:\"length\"",
+            "Cannot find module './611.js'",
+            "デプロイしたのに変わってない",
+            "反映されていない",
+            "revalidate"
+          ],
+          "verified": "2026-07-08"
+        },
+        {
+          "id": "kb-line-bot-cloudflare-workers",
+          "kind": "kb",
+          "path": "web-ios-android/templates/line-bot/README.md",
+          "tags": [
+            "line",
+            "bot",
+            "cloudflare-workers",
+            "d1",
+            "fail-closed",
+            "llm"
+          ],
+          "summary": "LINE公式アカウントAI社員bot金型。Cloudflare Workers+D1、Groq→Gemini→Workers AIの3段フォールバックで無応答ゼロ化、fail-closed設計。出典: line-harness-oss(ai-shain.link実運用)",
+          "triggers": [
+            "LINE公式アカウント",
+            "line-bot",
+            "無応答ゼロ化",
+            "replyToken",
+            "fail-closed",
+            "LINEで会話できるAI社員"
+          ],
+          "verified": "2026-08-26"
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "title": "横断知見・その他",
+      "entries": [
+        {
+          "id": "kb-clerk-x-oauth-e2e",
+          "kind": "kb",
+          "path": "web-ios-android/_docs/clerk-x-oauth-e2e-verification-playbook.md",
+          "tags": [
+            "auth",
+            "clerk",
+            "oauth",
+            "e2e"
+          ],
+          "summary": "Clerk X OAuth無人E2E検証。ログイン判定偽陽性・1タップ導線URL食い違い等5事故",
+          "triggers": [
+            "ログイン判定偽陽性",
+            "disallowed_useragent",
+            "X OAuth",
+            "Clerk"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "handoff-kioku-mcp",
+          "kind": "handoff",
+          "path": "HANDOFF-kioku-mcp.md",
+          "tags": [
+            "mcp",
+            "memory",
+            "sqlite"
+          ],
+          "summary": "記憶MCP(追憶の記録)。FTS5日本語不可→trigram必須・sqlite-vec cosine飽和・ASCIIパス",
+          "triggers": [
+            "FTS5",
+            "trigram",
+            "sqlite-vec",
+            "cosine",
+            "日本語部分一致"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "handoff-hatsunote-mcp",
+          "kind": "handoff",
+          "path": "HANDOFF-hatsunote-mcp.md",
+          "tags": [
+            "mcp",
+            "notes"
+          ],
+          "summary": "初期化ノート(note-taking + MCP)の引き継ぎ",
+          "triggers": [
+            "hatsunote",
+            "初期化ノート"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-ai-general-rules",
+          "kind": "kb",
+          "path": "AI汎用ルール",
+          "tags": [
+            "policy",
+            "rules",
+            "harness"
+          ],
+          "summary": "正本ポリシー群(AI_HARNESS_OPERATION/TOKEN_SAVING_POLICY等)のディレクトリ",
+          "triggers": [
+            "汎用ルール",
+            "harness operation",
+            "token saving"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-henshin-cors-fix-handoff",
+          "kind": "kb",
+          "path": "henshin-hisho/backend/CORS-FIX-HANDOFF.md",
+          "tags": [
+            "cors",
+            "cloudflare",
+            "wrangler",
+            "capacitor",
+            "ios-review"
+          ],
+          "summary": "WebViewオリジンCORS却下の根治。CORSヘルパのコピー部分適用・secretのコード既定上書き・壊れたCLOUDFLARE_API_TOKEN",
+          "triggers": [
+            "has been blocked by CORS policy",
+            "No 'Access-Control-Allow-Origin' header is present",
+            "Authentication error [code: 10000]",
+            "Unset the CLOUDFLARE_API_TOKEN environment variable",
+            "受信箱が永遠に空",
+            "henshinhisho://localhost",
+            "APP_ALLOWED_ORIGIN"
+          ],
+          "verified": "2026-07-10"
+        },
+        {
+          "id": "defect-example-spec-stale-copy",
+          "kind": "kb",
+          "path": "kimitolink-linktree/_docs/defects/DEFECT-20260716-example-spec-stale-copy.md",
+          "tags": [
+            "e2e",
+            "playwright",
+            "stale-test",
+            "lp"
+          ],
+          "summary": "example.spec.tsがLPリニューアル(PR#175)前の旧文言を検証し続け陳腐化していた",
+          "triggers": [
+            "Locator: getByText('キミとつながるシンセカイ')",
+            "element(s) not found",
+            "キミとつながるシンセカイ"
+          ],
+          "verified": "2026-07-16"
+        },
+        {
+          "id": "defect-signin-hydration-mismatch",
+          "kind": "kb",
+          "path": "kimitolink-linktree/_docs/defects/DEFECT-20260716-signin-hydration-mismatch.md",
+          "tags": [
+            "hydration",
+            "clerk",
+            "sign-in",
+            "ssr"
+          ],
+          "summary": "/sign-in/でReactハイドレーション不一致。HeaderNavAuth/ClerkScripts周辺、原因未確定",
+          "triggers": [
+            "Encountered a script tag while rendering React component",
+            "Hydration failed because the server rendered HTML didn't match the client",
+            "Scripts inside React components are never executed when rendering on the client"
+          ],
+          "verified": "2026-07-16"
+        },
+        {
+          "id": "handoff-e2e-monkey-test-strategy",
+          "kind": "handoff",
+          "path": "kimitolink-linktree/_docs/E2E-SMOKE-MONKEY-TEST-STRATEGY-IMPLEMENTATION-HANDOFF.md",
+          "tags": [
+            "e2e",
+            "playwright",
+            "ci",
+            "branch-protection",
+            "vercel-analytics"
+          ],
+          "summary": "E2E/スモーク/モンキー戦略の実装ハンドオフ。段階1-3完了+Lightpandaハング根治+storageStateオリジン不一致解決(PR#210)",
+          "triggers": [
+            "Failed to load resource: the server responded with a status of 404",
+            "_vercel/insights/script.js",
+            "required_pull_request_reviews",
+            "monkey-dashboard.spec.ts",
+            "SKIP_CLERK_MIDDLEWARE",
+            "The operation was canceled.",
+            "Running 18 tests using 1 worker",
+            "lightpanda 30分 ハング",
+            "stdio pipe 未drain デッドロック",
+            "パイプバッファ 64KB",
+            "pw.on(\"close\") await 永久に待つ",
+            "e2e-authenticated",
+            "branch protection",
+            "storageStateにaccounts.google.com Cookie",
+            "secretsに入れる前にstorageStateを検査",
+            "storageStateはオリジンが一致しないと機能しない",
+            "手元では通るのにCIだけ赤い",
+            "canaryまで含めて必ず落ちる",
+            "同一オリジンであること",
+            "ログアウトを含むE2Eがstorageを使い捨てにする"
+          ],
+          "verified": "2026-08-07"
+        },
+        {
+          "id": "agent-harvester",
+          "kind": "agent",
+          "path": "ai-hub/agents/harvester.md",
+          "deployedTo": "~/.claude/agents/harvester.md",
+          "tags": [
+            "knowledge",
+            "index",
+            "harvest",
+            "subagent"
+          ],
+          "summary": "収穫役(唯一の書き役)。正本KB追記→index追記→doctor締め。3件以内",
+          "triggers": [
+            "収穫",
+            "harvest",
+            "KBに追記",
+            "index更新"
+          ],
+          "verified": "2026-07-06"
+        },
+        {
+          "id": "kb-gha-cost-traps",
+          "kind": "kb",
+          "path": "ai-hub/kb/github-actions-cost-traps.md",
+          "tags": [
+            "github-actions",
+            "ci",
+            "cost",
+            "billing",
+            "trap"
+          ],
+          "summary": "Actionsが静かに金を食う地雷群（切上課金/緑の偽装/未有効機能/起動前死/無制限/action追従切れ）と直し方",
+          "triggers": [
+            "Actions",
+            "課金",
+            "請求",
+            "spending limit",
+            "無料枠",
+            "continue-on-error",
+            "cron",
+            "69ドル",
+            "超過",
+            "invalid leading UTF-8 octet",
+            "0s failure",
+            "actionlintバグ",
+            "readFileSync utf8 ワークフローYAML 破壊"
+          ],
+          "verified": "2026-08-07"
+        },
+        {
+          "id": "script-ci-audit",
+          "kind": "script",
+          "path": "ai-hub/bin/ci-audit.mjs",
+          "tags": [
+            "github-actions",
+            "ci",
+            "cost",
+            "audit",
+            "script"
+          ],
+          "summary": "全リポのActionsを監査し金を食う/壊れたワークフローを検出（--json可・fail-closed）",
+          "triggers": [
+            "ci-audit",
+            "ワークフロー監査",
+            "課金 調べ",
+            "壊れてるCI",
+            "FAKE_GREEN"
+          ],
+          "verified": "2026-07-31"
+        },
+        {
+          "id": "script-slop-scan",
+          "kind": "script",
+          "path": "ai-hub/bin/slop-scan.mjs",
+          "tags": [
+            "typescript",
+            "lint",
+            "tech-debt",
+            "scan",
+            "anti-slop"
+          ],
+          "summary": "型の根拠を捨てたTSパターンを横断計数（as unknown as / Reflect / Record<_,any> / @ts-ignore）。検知のみ",
+          "triggers": [
+            "as unknown as",
+            "@ts-ignore",
+            "@ts-nocheck",
+            "Record<string, any>",
+            "anti-slop",
+            "型キャスト"
+          ],
+          "verified": "2026-08-17"
+        },
+        {
+          "id": "kb-anti-slop-adoption",
+          "kind": "kb",
+          "path": "ANTI-SLOP-ADOPTION-ASSESSMENT.md",
+          "tags": [
+            "typescript",
+            "lint",
+            "oxlint",
+            "eslint",
+            "adoption",
+            "decision"
+          ],
+          "summary": "anti-slop(Oxlint15本)を全体導入しない判断と実測。SAFETYコメント0件/typeof がSSR判定を巻き込む",
+          "triggers": [
+            "anti-slop",
+            "oxlint",
+            "require-safety-comment",
+            "no-runtime-typeof",
+            "typescript-eslint"
+          ],
+          "verified": "2026-08-17"
+        },
+        {
+          "id": "kb-web-perf-diagnosis",
+          "kind": "kb",
+          "path": "tsuioku-no-kirameki.com/docs/kb-web-perf-diagnosis.md",
+          "tags": [
+            "performance",
+            "dom",
+            "memory",
+            "diagnosis",
+            "chrome-devtools",
+            "virtualization"
+          ],
+          "summary": "「重い/固まる/黒い」の測り方。3点測定でリークと作りすぎを区別・DOM1500の相場・枠は残す中身LODの型",
+          "triggers": [
+            "重い",
+            "固まる",
+            "応答しない",
+            "メモリリーク",
+            "DOMノード",
+            "Performance.getMetrics",
+            "ヒープスナップショット",
+            "content-visibility",
+            "loading=lazy",
+            "仮想化",
+            "virtualization",
+            "longtask",
+            "要素数が多い",
+            "Lighthouse DOM size",
+            "panel-black",
+            "status-slow",
+            "lane-heavy-race"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-extension-popup-perf-fixes",
+          "kind": "kb",
+          "path": "dns-osint-pro-ver2.0/docs/POPUP-PERF-2026-06-05.md",
+          "tags": [
+            "performance",
+            "dom",
+            "chrome-extension",
+            "mv3",
+            "popup",
+            "remediation"
+          ],
+          "summary": "MV3拡張popupの重さ 真因A〜I(実location付)と直し方。二度描画/非表示リスト/rAF空回り/appendChild逐次/reduced-motion",
+          "triggers": [
+            "popup 重い",
+            "フリーズ",
+            "カクつく",
+            "rAF",
+            "requestAnimationFrame",
+            "appendChild",
+            "レイアウトスラッシング",
+            "content-visibility",
+            "prefers-reduced-motion",
+            "innerHTML 再構築",
+            "二度描画"
+          ],
+          "verified": "2026-08-18"
+        },
+        {
+          "id": "kb-kimito-link-symlink-multisite-safety",
+          "kind": "kb",
+          "path": "kimito-link/src/_docs/SYMLINK-AND-MULTISITE-SAFETY.md",
+          "tags": [
+            "deploy",
+            "xserver",
+            "symlink",
+            "bash"
+          ],
+          "summary": "Xserverデプロイの誤削除防止＋安全確認スクリプトのset -u地雷。git pullのみが基本形",
+          "triggers": [
+            "web_entries[@]: 未割り当ての変数です",
+            "unbound variable",
+            "symlink_target_ok",
+            "安全確認は成功しているのに反映されない",
+            "check-server-deploy-safety.sh"
+          ],
+          "verified": "2026-08-19"
+        },
+        {
+          "id": "kb-external-decision-surface-policy",
+          "kind": "kb",
+          "path": "ai-hub/kb/external-decision-surface-governance.md",
+          "tags": [
+            "knowledge",
+            "governance",
+            "decision-surface",
+            "harvest",
+            "measurement"
+          ],
+          "summary": "外部知能の観測→候補→ルール→廃止、反例・鮮度・成果計測・因果境界の正本",
+          "triggers": [
+            "外部知能",
+            "Decision Surface",
+            "使うほど育つ",
+            "キャッシュ率",
+            "知見をルール化"
+          ],
+          "verified": "2026-08-21"
+        },
+        {
+          "id": "kb-shiori-symptom-verdicts",
+          "kind": "kb",
+          "path": "reply-copilot-openrouter-v2/lib/symptomVerdicts.js",
+          "tags": [
+            "shiori",
+            "symptom",
+            "diagnosis",
+            "chatwork",
+            "reply-copilot"
+          ],
+          "summary": "しおり/返信サジェストの症状ID定義。0件と未観測を分ける",
+          "triggers": [
+            "sender-split-broken",
+            "selector-degraded",
+            "suggest-unmeasured",
+            "suggest-parse-empty",
+            "suggest-api-error",
+            "suggest-zero-unknown",
+            "transform-no-change",
+            "保存が効かなくなっています",
+            "相手の発言が保存されない",
+            "返信候補が0件",
+            "生成数: 0個",
+            "マイチャット 誤検知"
+          ],
+          "verified": "2026-08-21"
+        },
+        {
+          "id": "kb-soushin-blank-list",
+          "kind": "kb",
+          "path": "soushin-suggest.link/_docs/BLANK-TRUTH.md",
+          "tags": [
+            "autohotkey",
+            "listview",
+            "blank",
+            "repaint",
+            "win32"
+          ],
+          "summary": "一覧が真っ白になる白化の正本。11回再発し5回の修正が外れた。真因は描画ではなく WS_VISIBLE=0 の戻し忘れ。棄却済みの説も列挙",
+          "triggers": [
+            "一覧が真っ白",
+            "白化",
+            "リストが表示されない",
+            "履歴が空になる",
+            "ListView blank",
+            "WS_VISIBLE",
+            "ink=0",
+            "paintLost",
+            "noEffect",
+            "LVM_SETVIEW",
+            "InvalidateRect 効かない",
+            "再描画しても直らない",
+            "SS-01",
+            "SS-02"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-soushin-windows-landmines",
+          "kind": "kb",
+          "path": "soushin-suggest.link/CLAUDE.md",
+          "tags": [
+            "windows",
+            "powershell",
+            "gitbash",
+            "encoding",
+            "ahk"
+          ],
+          "summary": "Windows/PS5.1/Git Bash の地雷集。BOM無し日本語ps1・パイプ後の$?・MSYSがバックスラッシュを食う・Ahk2Exeを Git Bash から呼ぶ",
+          "triggers": [
+            "BOM",
+            "文字化け",
+            "mojibake",
+            "構文エラー なのに その行は正しい",
+            "Failed to compile:",
+            "ヒアドキュメント",
+            "PS5.1",
+            "$? パイプ",
+            "MSYS",
+            "Git Bash バックスラッシュ",
+            "Ahk2Exe 固まる",
+            "UTF-8 1バイト",
+            "SS-06"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-soushin-shipped-real-data",
+          "kind": "kb",
+          "path": "soushin-suggest.link/_docs/RELEASE-CHECKLIST.md",
+          "tags": [
+            "release",
+            "leak",
+            "privacy",
+            "git",
+            "skip-worktree"
+          ],
+          "summary": "配布zipに実データが14版混入した事故と再発防止。skip-worktree は git add -f / clone / --no-skip-worktree で静かに外れる",
+          "triggers": [
+            "skip-worktree",
+            "実データ 混入",
+            "カード番号",
+            "配布zip",
+            "購入者に古い版",
+            "DOWNLOAD_URL",
+            "snippets.ini",
+            "SS-03",
+            "SS-04",
+            "版名が同じでも中身が違う",
+            "SS-05"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-surechigai-symptoms",
+          "kind": "kb",
+          "path": "surechigai-romi.link/docs/symptoms.md",
+          "tags": [
+            "surechigai",
+            "symptom",
+            "cdn",
+            "ogp",
+            "splash",
+            "auth",
+            "diagnostics"
+          ],
+          "summary": "すれ違ひ通信の症状カタログ。★「ローカルは正しいのに配信が古い」型を1週間で3回踏んだ。OGPが200のまま0バイト / スプラッシュが20件中5件だけ旧版 / ボタンが無反応でエラーも出ない",
+          "triggers": [
+            "SG-01",
+            "SG-02",
+            "SG-03",
+            "SG-04",
+            "SG-05",
+            "SG-06",
+            "OGPが出ない",
+            "シェアしても画像が真っ白",
+            "サムネイルが表示されない",
+            "スプラッシュがおかしい",
+            "起動画面が前のまま",
+            "直したのに反映されない",
+            "押しても反応しない",
+            "Buttons were unresponsive",
+            "ログインできない",
+            "Threadsに共有できない",
+            "テストは通っているのに直らない",
+            "ゲートが緑なのにおかしい",
+            "デプロイしたのに変わらない",
+            "cf-cache-status: HIT",
+            "200 image/png 0バイト",
+            "createdSessionId"
+          ],
+          "verified": "2026-08-23"
+        },
+        {
+          "id": "kb-soushin-dpi-wrong-monitor",
+          "kind": "kb",
+          "path": "soushin-suggest.link/_docs/SYMPTOMS.md",
+          "tags": [
+            "autohotkey",
+            "dpi",
+            "multi-monitor",
+            "win32",
+            "gui-position"
+          ],
+          "summary": "押した画面と違うモニタに窓が出る。真因は Gui.Move へ渡す座標を自前でDPIスケールで割り戻していたこと。Per-Monitor V2(-4)宣言下では WinMove は実ピクセルを受け取るので割り戻しは不要(車輪の再発明)。過去の『1.5倍に着地する』観測はDPI認識が効いていない状態でのもの。SetThreadDpiAwarenessContext はスレッド単位でタイマー由来の疑似スレッドに引き継がれない。",
+          "triggers": [
+            "他の画面でたちあがりました",
+            "押した画面と違うモニタに出る",
+            "別のモニタに表示される",
+            "４にでる",
+            "5でやると4にでる",
+            "マルチモニタ 位置がずれる",
+            "DPI 150% 位置がずれる",
+            "Gui.Move 座標がずれる",
+            "WinMove wrong monitor",
+            "SetThreadDpiAwarenessContext",
+            "Per-Monitor V2",
+            "GetMonitorInfo 論理座標",
+            "lchPos",
+            "lchLanded",
+            "lchScale",
+            "SS-13"
+          ],
+          "verified": "2026-08-26"
+        },
+        {
+          "id": "script-generate-hub-dashboard",
+          "kind": "script",
+          "path": "web-ios-android/scripts/generate-hub-dashboard.mjs",
+          "tags": [
+            "hub",
+            "dashboard",
+            "generator",
+            "script"
+          ],
+          "summary": "ai-hub/index.json+doctorを読みkimito-skill.link/hub/を生成。ai-hub不在はexit1(fail-closed)",
+          "triggers": [
+            "hub:page",
+            "generate-hub-dashboard",
+            "ai-hub/index.json が見つかりません"
+          ],
+          "verified": "2026-08-26"
+        }
+      ]
+    }
+  ],
+  "emptyShelves": [
+    "動画・SNS",
+    "ローカルLLM"
+  ],
+  "todos": [
+    {
+      "priority": 1,
+      "title": "sakkino.link（IAP実装済み・開発中）の次の一手を決める",
+      "reason": "課金導線が既にあるプロジェクトの中で最もマネタイズに近い。ai-hub未登録のため状況を再確認し、リリースまでの障害物を洗い出す",
+      "evidence": "2026-08-26調査: 「用途不明5リポジトリ」判定でIAP・独自iOSキーボード/共有拡張を実装済みと確認"
+    },
+    {
+      "priority": 2,
+      "title": "Cloudflare Accessを /hub/* に設定する",
+      "reason": "このダッシュボードはnoindexのみで、Access未設定の間は実質公開状態（GUI操作のため自動化不可）",
+      "evidence": "_docs/IMPLEMENTATION-HANDOFF-ai-hub-consolidation-2026-08-26.md のリスク対応チェックリスト参照"
+    },
+    {
+      "priority": 4,
+      "title": "未整理の棚（動画・SNS・ローカルLLM）に登録できる資産を探す",
+      "reason": "該当タグのエントリがindex.jsonに0件のため、この棚は空のまま表示されている",
+      "evidence": "ai-hub/index.json"
+    },
+    {
+      "priority": 5,
+      "title": "ai-hub doctorの警告106件（未インデックス資産など）を精査する",
+      "reason": "緊急ではないが、資産が増えるほど探しにくくなる",
+      "evidence": "node ai-hub/bin/hub.mjs doctor"
+    }
+  ]
+}

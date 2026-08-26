@@ -1,0 +1,157 @@
+<!-- 生成物・手編集禁止。正本は ai-hub/index.json。再生成は npm run hub:page -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>ai-hub ダッシュボード</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { font-size: 1.4rem; }
+  .meta { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .meta.stale { color: #b00; font-weight: bold; }
+  .shelf { margin-bottom: 1.5rem; }
+  .shelf h2 { font-size: 1.05rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+  .count { color: #888; font-weight: normal; font-size: 0.9rem; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 0.2rem 0; font-size: 0.9rem; }
+  code { background: #f4f4f4; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  .kind { color: #888; font-size: 0.8rem; }
+  .empty-note { color: #888; font-style: italic; font-size: 0.85rem; }
+  .doctor { padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+  .doctor.ok { background: #e8f5e9; }
+  .doctor.ng { background: #ffebee; }
+  .todo-section { background: #fff8e1; border: 1px solid #ffe0a3; border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1.5rem; }
+  .todo-section h2 { margin-top: 0; font-size: 1.1rem; }
+  .todo-list { padding-left: 1.3rem; margin: 0; }
+  .todo { margin-bottom: 0.8rem; }
+  .todo-title { font-weight: 600; }
+  .todo-reason { color: #555; font-size: 0.88rem; }
+  .todo-evidence { color: #999; font-size: 0.78rem; }
+  .todo-empty { color: #2e7d32; }
+</style>
+</head>
+<body>
+<p><a href="/">← kimito-skill.link トップへ</a></p>
+<h1>ai-hub ダッシュボード</h1>
+<p class="meta" id="freshness-note" data-generated-at="2026-08-26T02:06:43.055Z">
+  生成: 2026-08-26T02:06:43.055Z（entries=51）
+  <!-- 出典: ai-hub/bin/hub.mjs doctor --json 実行結果、生成時刻はこのスクリプト実行時刻 -->
+</p>
+<div class="doctor ok">
+  doctor: ✓ OK（問題0件・警告106件）
+  <!-- 出典: ai-hub/bin/hub.mjs doctor --json -->
+</div>
+<section class="todo-section">
+  <h2>🎯 次にやるべきこと（優先順位順・機械的に検出）</h2>
+      <ol class="todo-list">
+        <li class="todo priority-1">
+          <div class="todo-title">sakkino.link（IAP実装済み・開発中）の次の一手を決める</div>
+          <div class="todo-reason">課金導線が既にあるプロジェクトの中で最もマネタイズに近い。ai-hub未登録のため状況を再確認し、リリースまでの障害物を洗い出す</div>
+          <div class="todo-evidence">出典: 2026-08-26調査: 「用途不明5リポジトリ」判定でIAP・独自iOSキーボード/共有拡張を実装済みと確認</div>
+        </li>
+        <li class="todo priority-2">
+          <div class="todo-title">Cloudflare Accessを /hub/* に設定する</div>
+          <div class="todo-reason">このダッシュボードはnoindexのみで、Access未設定の間は実質公開状態（GUI操作のため自動化不可）</div>
+          <div class="todo-evidence">出典: _docs/IMPLEMENTATION-HANDOFF-ai-hub-consolidation-2026-08-26.md のリスク対応チェックリスト参照</div>
+        </li>
+        <li class="todo priority-4">
+          <div class="todo-title">未整理の棚（動画・SNS・ローカルLLM）に登録できる資産を探す</div>
+          <div class="todo-reason">該当タグのエントリがindex.jsonに0件のため、この棚は空のまま表示されている</div>
+          <div class="todo-evidence">出典: ai-hub/index.json</div>
+        </li>
+        <li class="todo priority-5">
+          <div class="todo-title">ai-hub doctorの警告106件（未インデックス資産など）を精査する</div>
+          <div class="todo-reason">緊急ではないが、資産が増えるほど探しにくくなる</div>
+          <div class="todo-evidence">出典: node ai-hub/bin/hub.mjs doctor</div>
+        </li>
+      </ol>
+</section>
+<p class="empty-note">整理中（まだ登録資産なし）: 動画・SNS / ローカルLLM</p>
+      <section class="shelf">
+        <h2>アプリ提出 <span class="count">(15)</span></h2>
+        <ul>
+        <li><code>ai-hub/agents/store-guard.md</code> <span class="kind">agent</span></li>
+        <li><code>kimitolink-linktree/_docs/GATE-FALSE-GREEN-2026-08-24.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/apple-reject-knowledge-base.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/automation-maximization-design.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/CAPACITOR-GOLDEN-RULES.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/FIRST-SUBMISSION-blockers.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/google-play-submission-playbook.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/pre-submission-compliance-checklist.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/release-pipeline-playbook.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/scripts/verify-doc-impl-coverage.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/check-tracked-imports.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/lint-pre-submission.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-android-signing-config.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-android-splash-not-default.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-ios-splash-not-default.mjs</code> <span class="kind">gate</span></li>
+        </ul>
+      </section>
+      <section class="shelf">
+        <h2>LINE bot <span class="count">(1)</span></h2>
+        <ul>
+        <li><code>web-ios-android/templates/line-bot/README.md</code> <span class="kind">kb</span></li>
+        </ul>
+      </section>
+      <section class="shelf">
+        <h2>計器・出荷ゲート <span class="count">(12)</span></h2>
+        <ul>
+        <li><code>ai-hub/agents/reality-checker.md</code> <span class="kind">agent</span></li>
+        <li><code>kimitolink-linktree/_docs/GATE-FALSE-GREEN-2026-08-24.md</code> <span class="kind">kb</span></li>
+        <li><code>soushin-suggest.link/_docs/SYMPTOMS.md</code> <span class="kind">kb</span></li>
+        <li><code>tsuioku-no-kirameki.com/scripts/site-health.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/docs/ai-rules/04_SELF_VERIFICATION.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/scripts/check-hub-page-freshness.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/scripts/verify-doc-impl-coverage.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/check-tracked-imports.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/lint-pre-submission.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-android-signing-config.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-android-splash-not-default.mjs</code> <span class="kind">gate</span></li>
+        <li><code>web-ios-android/templates/scripts/verify-ios-splash-not-default.mjs</code> <span class="kind">gate</span></li>
+        </ul>
+      </section>
+      <section class="shelf">
+        <h2>会議・設計ハーネス <span class="count">(7)</span></h2>
+        <ul>
+        <li><code>ai-health-check.link/docs/KB-nextjs-openrouter-pitfalls.md</code> <span class="kind">kb</span></li>
+        <li><code>COUNCIL-HOWTO.md</code> <span class="kind">howto</span></li>
+        <li><code>FABLE-3STEP-HOWTO.md</code> <span class="kind">howto</span></li>
+        <li><code>HANDOFF-cloudflare-workers-ai.md</code> <span class="kind">handoff</span></li>
+        <li><code>tsuioku-no-kirameki.com/scripts/council-cleanup.mjs</code> <span class="kind">script</span></li>
+        <li><code>tsuioku-no-kirameki.com/scripts/meeting.mjs</code> <span class="kind">harness</span></li>
+        <li><code>web-ios-android/templates/line-bot/README.md</code> <span class="kind">kb</span></li>
+        </ul>
+      </section>
+      <section class="shelf">
+        <h2>横断知見・その他 <span class="count">(24)</span></h2>
+        <ul>
+        <li><code>ai-hub/agents/harvester.md</code> <span class="kind">agent</span></li>
+        <li><code>ai-hub/bin/ci-audit.mjs</code> <span class="kind">script</span></li>
+        <li><code>ai-hub/bin/slop-scan.mjs</code> <span class="kind">script</span></li>
+        <li><code>ai-hub/kb/external-decision-surface-governance.md</code> <span class="kind">kb</span></li>
+        <li><code>ai-hub/kb/github-actions-cost-traps.md</code> <span class="kind">kb</span></li>
+        <li><code>AI汎用ルール</code> <span class="kind">kb</span></li>
+        <li><code>ANTI-SLOP-ADOPTION-ASSESSMENT.md</code> <span class="kind">kb</span></li>
+        <li><code>dns-osint-pro-ver2.0/docs/POPUP-PERF-2026-06-05.md</code> <span class="kind">kb</span></li>
+        <li><code>HANDOFF-hatsunote-mcp.md</code> <span class="kind">handoff</span></li>
+        <li><code>HANDOFF-kioku-mcp.md</code> <span class="kind">handoff</span></li>
+        <li><code>henshin-hisho/backend/CORS-FIX-HANDOFF.md</code> <span class="kind">kb</span></li>
+        <li><code>kimito-link/src/_docs/SYMLINK-AND-MULTISITE-SAFETY.md</code> <span class="kind">kb</span></li>
+        <li><code>kimitolink-linktree/_docs/defects/DEFECT-20260716-example-spec-stale-copy.md</code> <span class="kind">kb</span></li>
+        <li><code>kimitolink-linktree/_docs/defects/DEFECT-20260716-signin-hydration-mismatch.md</code> <span class="kind">kb</span></li>
+        <li><code>kimitolink-linktree/_docs/E2E-SMOKE-MONKEY-TEST-STRATEGY-IMPLEMENTATION-HANDOFF.md</code> <span class="kind">handoff</span></li>
+        <li><code>reply-copilot-openrouter-v2/lib/symptomVerdicts.js</code> <span class="kind">kb</span></li>
+        <li><code>soushin-suggest.link/_docs/BLANK-TRUTH.md</code> <span class="kind">kb</span></li>
+        <li><code>soushin-suggest.link/_docs/RELEASE-CHECKLIST.md</code> <span class="kind">kb</span></li>
+        <li><code>soushin-suggest.link/_docs/SYMPTOMS.md</code> <span class="kind">kb</span></li>
+        <li><code>soushin-suggest.link/CLAUDE.md</code> <span class="kind">kb</span></li>
+        <li><code>surechigai-romi.link/docs/symptoms.md</code> <span class="kind">kb</span></li>
+        <li><code>tsuioku-no-kirameki.com/docs/kb-web-perf-diagnosis.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/_docs/clerk-x-oauth-e2e-verification-playbook.md</code> <span class="kind">kb</span></li>
+        <li><code>web-ios-android/scripts/generate-hub-dashboard.mjs</code> <span class="kind">script</span></li>
+        </ul>
+      </section>
+</body>
+</html>
