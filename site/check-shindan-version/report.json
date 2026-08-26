@@ -10,8 +10,8 @@
   "app": {
     "name": "web-ios-android",
     "version": "0.1.1",
-    "homeUrl": "https://web-ios-android.vercel.app",
-    "diagnosisUrl": "https://web-ios-android.vercel.app/check-shindan-version/",
+    "homeUrl": "https://kimito-skill.link",
+    "diagnosisUrl": "https://kimito-skill.link/check-shindan-version/",
     "primaryColor": "#315efb",
     "accentColor": "#11a36a"
   },
@@ -179,7 +179,7 @@
         {
           "label": "本番ドメイン",
           "status": "pass",
-          "evidence": "https://web-ios-android.vercel.app",
+          "evidence": "https://kimito-skill.link",
           "nextAction": "app.config.json に productionDomain を設定する"
         },
         {

@@ -4,10 +4,10 @@
 
 ## Canonical pages
 
-- Human landing page: https://web-ios-android.vercel.app/
-- AI execution guide: https://web-ios-android.vercel.app/ai-guide/
-- Current version and checks: https://web-ios-android.vercel.app/check-shindan-version/
-- All documentation: https://web-ios-android.vercel.app/sitemap/
+- Human landing page: https://kimito-skill.link/
+- AI execution guide: https://kimito-skill.link/ai-guide/
+- Current version and checks: https://kimito-skill.link/check-shindan-version/
+- All documentation: https://kimito-skill.link/sitemap/
 
 ## Purpose
 
