@@ -52,6 +52,11 @@ const CHECKS = [
   //   try に飲まれて【1件も記録されないまま】「原因が分かった」と報告した。
   //   ★計器が無いなら「無い」と分かる。あるのに動かないと沈黙を正常と読む。
   { name: 'check-instruments-reachable', path: join(__dirname, 'check-instruments-reachable.mjs') },
+  // ★「コンソールが無いと固まる」書き方が残っていないか(2026-08-26追加)。
+  //   実損: ビルドが Compress-Archive から【返ってこなく】なり、配布作業が止まった。
+  //   ★エラーも stderr も空。1KB でも固まるので「重いから遅い」と誤診した。
+  //   真因は進捗バーの描画で、抑止1行で 402ms に戻った。
+  { name: 'check-silent-hang-guard', path: join(__dirname, 'check-silent-hang-guard.mjs') },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
