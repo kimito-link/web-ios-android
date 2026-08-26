@@ -114,11 +114,40 @@ target = int(size * safe_ratio / (2 ** 0.5))              # 正方形を円に�
 |---|---|
 | ネイティブ splash の `backgroundColor` | `#E2EDF7` |
 | アプリ本体のルート地色 | `#E2EDF7` |
-| PWA `manifest.json` の `background_color` | `#E2EDF7` |
+| PWA `manifest.json` の `background_color` | ★下の警告を読むこと |
 | Web のスプラッシュ画像の地色 | `#E2EDF7` |
 
 ★`surechigai` は**4箇所のうちネイティブだけが濃紺**で、
 起動直後に濃紺→ほぼ白へ切り替わっていた。
+
+> ### ⚠️ ★PWA の `background_color` は「揃える」より「置かない」が正解のことがある
+>
+> **iOS 16.4 以降、`display:standalone` かつ manifest に `background_color` があると、
+> iOS は manifest 由来の“単色塗り”を優先し、`apple-touch-startup-image` を無視します。**
+> 画像もタグも正しく配信されていても使われません。
+>
+> ★実損（kimito.link 2026-07-31・実機動画で特定）:
+> ホーム画面に追加した PWA を開くと、マスコットのスプラッシュではなく
+> **「ただ青いだけ」の画面**が約0.75秒出ていた。実機の実測色 RGB(0,57,112) が
+> スプラッシュ画像の地色 RGB(0,66,123)=`#00427B` と**一致しなかった**のが決め手で、
+> 出ていたのは画像ではなく単色塗りだと分かった。
+> → `background_color` を**出さない**ことで解決（`theme_color` は
+>   ステータスバー色なので残してよい）。
+>
+> ★つまりこの表の「4箇所を揃える」が効くのは
+> **ネイティブ／本体地色／Web 画像の3箇所**です。
+> PWA の manifest だけは「★ロゴ入りの起動画像を出したいなら置かない」を選びます。
+> （逆に、起動画像を用意せず単色でよいなら置いて揃える。**狙いによって正解が変わる**）
+>
+> ★検査（2026-08-27 追加）:
+> ```
+> node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#00427B'
+> ```
+>
+> ★**この検査が緑でも、手元のアイコンが直るとは限りません。**
+> iOS は追加済み PWA の manifest を強くキャッシュするため、デプロイ後に
+> **アイコンを削除 → Safari から再度「ホーム画面に追加」**しないと反映されません。
+> （2026-08-27、実機動画が白いままだった原因はサーバーではなくこれでした）
 
 さらに、JS 側でスプラッシュを握ると滑らかになる:
 
@@ -182,7 +211,14 @@ node scripts/check-splash-safe-circle.mjs              # 本体
 | `check-splash-config.mjs` | Androidの引き伸ばし、背景色4箇所の一致を確認 |
 | `check-splash-safe-circle.mjs` | Expo方式向け。Android 12+の円形マスクで絵柄が切れないか |
 | `check-splash-template-drift.mjs` | 各アプリへコピーした検査が正本から古くなっていないか |
+| `check-pwa-splash.mjs` | ★**ホーム画面に追加した PWA** の起動画面（上の5本は全て App Store 版向けで、PWA を見る検査は1本も無かった） |
 | `lib/splash-manifest.mjs` | 正本の版と、配布対象ファイルを1か所で管理 |
+
+★**「どちらの起動画面か」を必ず区別すること。**
+ユーザーが「起動画面が出ない」と言うとき、それが
+**App Store のアプリ**なのか**ホーム画面に追加した PWA** なのかで、見る場所も直し方も別物です。
+2026-08-27 に実機動画をもらって初めて、後者を検査する計器が
+**1本も無かった**と分かりました（困っていたのは後者の方でした）。
 
 ```bash
 npm run splash:selftest  # 検査自体が壊れていないか確認
