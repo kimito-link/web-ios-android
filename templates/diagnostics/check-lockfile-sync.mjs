@@ -8,11 +8,28 @@
 //   `npm ci` すると lockfile 基準で解決されるため、そこで初めて壊れる。
 //
 // 対応: npm の package-lock.json(lockfileVersion 2/3、packages形式)のみ。
-//   yarn.lock/pnpm-lock.yaml は対象外(将来拡張の余地。無ければ skip)。
+//   yarn.lock/pnpm-lock.yaml は対象外。
+//
+// ───────────────────────────────────────────────────────────────────────────
+// ★2026-08-27: 「対象外(skip)」を exit 0（緑）で返していたのを exit 2 に変えた。
+//
+//   【実損】surechigai-romi.link は pnpm 運用（pnpm-lock.yaml がある）。
+//     この検査は package-lock.json しか見ないので
+//     「package-lock.json が無い(skip)」と表示して ★exit 0 を返していた。
+//     ＝ ★**一度も照合していないのに緑**。
+//     「調べて問題なし」と「そもそも調べていない」が区別できていなかった。
+//
+//   【なぜ fail(1) ではなく inconclusive(2) か】
+//     pnpm を使うのは正しい選択であって、製品の不具合ではない。
+//     赤にすると常時赤になり、本物の赤が埋もれる（オオカミ少年）。
+//     ★「測れなかった」は 2。0 と混ぜないことだけが重要。
+//
+//   ★掟: 件数0の緑こそ最も危険。
+// ───────────────────────────────────────────────────────────────────────────
 //
 // 使い方:
 //   node diagnostics/check-lockfile-sync.mjs [対象ディレクトリ]  # 省略時はcwd
-//   exit 0 = 整合 / exit 1 = 不一致検出(fail-closed)。
+//   exit 0 = 整合(照合できた) / exit 1 = 不一致検出(fail-closed) / ★exit 2 = 照合できなかった
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -46,19 +63,23 @@ if (isMain) {
   const lockPath = join(TARGET_DIR, 'package-lock.json');
 
   if (!existsSync(pkgPath)) {
-    console.log('[check-lockfile-sync] package.json が無い(skip)。Node以外のプロジェクトの可能性。');
-    process.exit(0);
+    console.error('[check-lockfile-sync] 🟡 package.json が無いため照合できませんでした(★緑ではありません)。');
+    console.error('[check-lockfile-sync] → Node プロジェクトのルートで実行してください。');
+    process.exit(2);
   }
   if (!existsSync(lockPath)) {
-    console.log('[check-lockfile-sync] package-lock.json が無い(skip)。yarn/pnpm、または未install。');
-    process.exit(0);
+    console.error('[check-lockfile-sync] 🟡 package-lock.json が無いため照合できませんでした(★緑ではありません)。');
+    console.error('[check-lockfile-sync] → この検査は npm 専用です。pnpm/yarn なら別手段で確認するか、npm install してください。');
+    console.error('[check-lockfile-sync] ★この検査が判定しないこと: pnpm-lock.yaml / yarn.lock の整合性は見ません。');
+    process.exit(2);
   }
 
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
   const lock = JSON.parse(readFileSync(lockPath, 'utf8'));
   if (!lock.packages) {
-    console.log('[check-lockfile-sync] lockfileVersion 1形式(packagesテーブル無し)のため対象外(skip)。');
-    process.exit(0);
+    console.error('[check-lockfile-sync] 🟡 lockfileVersion 1形式のため照合できませんでした(★緑ではありません)。');
+    console.error('[check-lockfile-sync] → npm install で lockfileVersion 2/3 に更新してください。');
+    process.exit(2);
   }
 
   const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };

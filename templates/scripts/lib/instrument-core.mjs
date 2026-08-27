@@ -44,6 +44,15 @@
 
 /** ★終了コードの約束。★このファイルをコピーすれば、web-ios-androidキットを
  *  使っていない他のリポジトリでもそのまま同じ規約で使える(依存ゼロ・純Node)。 */
+/**
+ * ★証拠が「いつ測ったものか」を見て、古ければ印を付ける閾値（ミリ秒）。
+ *
+ * ★収穫元: surechigai-romi.link/scripts/lib/instrument-core.mjs（2026-08-27 に正本へ取り込み）。
+ *   ★合格そのものは取り消さない。「古い」は「無効」ではない。
+ *   ただし★古い緑を新しい緑と同じ見た目にはしない（経過秒を必ず出す）。
+ */
+const STALE_MS = 60 * 1000;
+
 export const EXIT = Object.freeze({
   /** 合格。★根拠(evidence)を伴うときだけ名乗れる。 */
   PASS: 0,
@@ -90,6 +99,15 @@ export function normalizeProbeResult(raw) {
   }
   if (verdict !== 'pass' && verdict !== 'fail' && verdict !== 'inconclusive') {
     verdict = 'inconclusive';
+  }
+
+  // ★証拠に verifiedAt があれば、古さを測って印を付ける（合格は取り消さない）。
+  if (evidence && typeof evidence.verifiedAt === 'string') {
+    const at = Date.parse(evidence.verifiedAt);
+    if (!Number.isNaN(at) && Date.now() - at > STALE_MS) {
+      evidence.stale = true;
+      evidence.staleSec = Math.round((Date.now() - at) / 1000);
+    }
   }
 
   return {
@@ -155,6 +173,14 @@ export function formatProbeReport(results, opts = {}) {
   if (!fails.length && !unk.length) {
     const ev = pass.length ? `(根拠あり ${pass.length}件)` : '';
     lines.push(`${label}✅ 合格 ${ev}`);
+    // ★古い証拠での合格は、経過時間を必ず出す（新しい緑と見分けが付かなくしない）。
+    for (const r of pass) {
+      if (r.evidence?.stale) {
+        lines.push(
+          `${label}⏳ ${r.probe}: ★${r.evidence.staleSec}秒前の証拠です（今の状態ではありません）`
+        );
+      }
+    }
   }
   return lines.join('\n');
 }

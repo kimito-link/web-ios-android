@@ -55,7 +55,16 @@ const PAIRS = [
      */
     copies: [
       resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/lib/instrument-core.mjs'),
-      resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/instrument-core.mjs')
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/instrument-core.mjs'),
+      /*
+       * ★surechigai-romi.link は 2026-08-27 に登録。
+       *   ここは★逆方向だった: surechigai の方が正本より進んでおり、
+       *   証拠の古さを測る stale 検知（3件のテスト付き）を独自に持っていた。
+       *   ★実コードを比べたら「正本にしか無い行」はゼロ＝完全な上位互換だったので、
+       *   消すのではなく★正本へ取り込んでから登録した。
+       *   ＝ 割れているコピーを見つけたら、どちらが正しいかを先に測ること。
+       */
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/instrument-core.mjs')
     ]
   },
   {
@@ -128,7 +137,33 @@ const PAIRS = [
      */
     label: '未コミット import ゲート',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-tracked-imports.mjs'),
-    copies: [resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-tracked-imports.mjs')]
+    /*
+     * ★sakkino.link は 2026-08-27 に同期（それまで★検査が1行も走っていなかった）。
+     *   isMain の判定が手作りのパス比較で、Windows + 日本語パスだと
+     *   「デスクトップ」がURLエンコードのまま比較され必ず false になり、
+     *   ★本体が丸ごとスキップされたまま exit 0 を返していた。
+     *   ＝ 出力ゼロの緑。実測で発覚。
+     *
+     * ★surechigai-romi.link は既に pathToFileURL 版で正しく走っているため、
+     *   実コードが一致するかをここで見る。
+     */
+    copies: [
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-tracked-imports.mjs'),
+      resolve(GH_ROOT, 'sakkino.link/scripts/check-tracked-imports.mjs')
+    ]
+  },
+  {
+    /*
+     * ★lockfile 照合。2026-08-27 に「対象外(skip)」を exit 0 → exit 2 に変えた。
+     *   surechigai は pnpm 運用のため package-lock.json が無く、
+     *   ★一度も照合していないのに緑を返していた（実測）。
+     */
+    label: 'lockfile 照合',
+    canonical: resolve(KIT_ROOT, 'templates/diagnostics/check-lockfile-sync.mjs'),
+    copies: [
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/diagnostics/check-lockfile-sync.mjs'),
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/diagnostics/check-lockfile-sync.mjs')
+    ]
   },
   {
     label: '全文脈と判断の進化台帳（入口）',
