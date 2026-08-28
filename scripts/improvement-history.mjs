@@ -61,5 +61,21 @@ export const IMPROVEMENT_HISTORY = Object.freeze([
   Object.freeze({
     version: '0.1.1', metric: 'diagnostics-checks', value: 8,
     source: '[auto] templates/diagnostics/check-*.mjs'
+  }),
+  Object.freeze({
+    version: '0.1.2', metric: 'diagnostics-checks', value: 10,
+    source: '[auto] templates/diagnostics/check-*.mjs'
+  }),
+  Object.freeze({
+    version: '0.1.2', metric: 'selftest-missing-diagnostics', value: 2,
+    source: '[auto] node templates/diagnostics/check-selftest-coverage.mjs templates/diagnostics --count'
+  }),
+  Object.freeze({
+    version: '0.1.2', metric: 'selftest-missing-scripts', value: 1,
+    source: '[auto] node templates/diagnostics/check-selftest-coverage.mjs templates/scripts --count'
+  }),
+  Object.freeze({
+    version: '0.1.2', metric: 'drift-unregistered', value: 0,
+    source: '[auto] node _docs/instruments/check-drift-coverage.mjs --count'
   })
 ]);

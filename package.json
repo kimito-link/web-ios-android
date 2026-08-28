@@ -1,6 +1,6 @@
 {
   "name": "web-ios-android",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "zip:cws": "node scripts/chrome/build-zip-node.mjs",

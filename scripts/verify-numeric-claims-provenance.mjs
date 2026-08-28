@@ -52,7 +52,7 @@ import { readFileSync, existsSync, readdirSync, writeFileSync, mkdtempSync, mkdi
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { EXIT, formatProbeReport, runSelfTest } from '../templates/scripts/lib/instrument-core.mjs';
+import { EXIT, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');

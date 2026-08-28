@@ -1,6 +1,12 @@
 # Chrome Web Store 公開スクリプト (アップロード + 審査提出)
 # 君斗りんくのWEBサイト健康診断 & OSINT Helper
 #
+# ★コンソールの無い環境（CI・AIハーネス・タスクスケジューラ）で【固まって返ってこない】
+#   のを止める。Invoke-RestMethod は進捗バーを描こうとするが、描く先が無いと待ち続ける。
+#   実測: 既定=返ってこない / 抑止あり=402ms(1KB)・669ms(1.5MB)。
+#   ★審査提出が「無反応で止まった」ように見える事故の原因になる。
+$ProgressPreference = 'SilentlyContinue'
+#
 # Chrome Web Store API v1.1 で zip をアップロードし、審査に提出する。
 # iOS の Transporter / Android の Play Developer API に相当。審査の「通過」は
 # Google 側の処理なので自動化対象外 (提出までを自動化する)。
