@@ -52,7 +52,15 @@ const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
  *   下げないと「上限に余裕がある」状態が続き、また静かに伸びる。
  *   （check-selftest-coverage.mjs の KNOWN_MISSING_SELFTEST_MAX と同じ運用）
  */
-export const KNOWN_MAX_STALE_DAYS = 51;
+export const KNOWN_MAX_STALE_DAYS = 7;
+/*
+ * ★履歴（下げた記録を残す。上げるときも必ず理由を書くこと）
+ *   2026-08-29  51 → 7
+ *     51日だったのは tsuioku の check-tracked-imports。寄せる前に測ったら
+ *     ★単に古いのではなく【別実装】（ロジックを src/lib/ へ切り出し・専用テストあり・
+ *     実測で緑）だった。正本で上書きすると構造が壊れるので比較対象から外した。
+ *     ＝★「一番古い＝一番壊れている」ではない。測ってから決める。
+ */
 
 /*
  * ★isMain（2026-08-28 追加）: PAIRS を他の検査から import できるようにしたので、
@@ -226,8 +234,24 @@ export const PAIRS = [
       resolve(GH_ROOT, 'sakkino.link/scripts/check-tracked-imports.mjs'),
       // ★2026-08-28 追加（登録漏れ）。上のコメントが「surechigai は正しく走っている」と
       //   書いているのに、★実際には登録されていなかった＝見ていなかった。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-tracked-imports.mjs'),
-      resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/check-tracked-imports.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-tracked-imports.mjs')
+      /*
+       * ★tsuioku-no-kirameki.com は【外した】（2026-08-29・実測して判断）。
+       *
+       *   放置日数 51日で最長だったので直そうとしたが、寄せる前に測ったら
+       *   ★単に古いのではなく【別実装】だった:
+       *     正本 340行 / tsuioku 79行。判定ロジックを src/lib/trackedImports.js に
+       *     切り出し、★専用テスト(trackedImports.test.js)まで持っている。
+       *   実測: `npm run check:tracked-imports` は緑（782ファイル・未追跡0件）。
+       *   ＝壊れて放置されていたのではなく、リファクタされた別系統。
+       *
+       *   ★正本で上書きすると、切り出した構造とテストが壊れる。
+       *   ⟹ 行比較の対象から外す（署名ゲートと同じ扱い）。
+       *
+       *   ★ただし tsuioku 側には --selftest が無い（毒で赤くなるか誰も確かめていない）。
+       *     これは別途 tsuioku 側で足すべき宿題として残す。
+       *     ここに登録し直すのは、両者の構造を揃える判断をしたときだけ。
+       */
     ]
   },
   {

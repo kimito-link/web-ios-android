@@ -128,6 +128,22 @@ export const EXCLUDED = Object.freeze([
      */
     match: (p) => basename(p) === 'verify-android-signing-config.mjs',
     why: '★import パス差で常に割れる（check-drift 側が意図的に対象外。手で同期）'
+  },
+  {
+    /*
+     * tsuioku-no-kirameki.com/scripts/check-tracked-imports.mjs
+     *
+     * ★【別実装】なので行比較の対象にしない（2026-08-29・実測して判断）。
+     *   正本 340行 / tsuioku 79行。判定ロジックを src/lib/trackedImports.js へ
+     *   切り出し、★専用テストまで持っている。実測で緑（782ファイル・未追跡0件）。
+     *   ＝壊れて放置されていたのではなく、リファクタされた別系統。
+     *   ★正本で上書きすると、切り出した構造とテストが壊れる。
+     *
+     * ★宿題: tsuioku 側に --selftest が無い（毒で赤くなるか未確認）。
+     *   それは tsuioku 側で足す。ここに戻すのは構造を揃える判断をしたときだけ。
+     */
+    match: (p) => /tsuioku-no-kirameki\.com[\\/]scripts[\\/]check-tracked-imports\.mjs$/.test(p),
+    why: '★別実装（ロジックを src/lib/ へ切り出し・専用テストあり・実測で緑）'
   }
 ]);
 
