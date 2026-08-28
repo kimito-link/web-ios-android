@@ -31,6 +31,29 @@ const GH_ROOT = resolve(KIT_ROOT, '..');
 
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
 
+/**
+ * ★放置日数の上限（ラチェット）。これを【超えたときだけ】鳴らす。
+ *
+ * ■ ★なぜ上限が要るか（2026-08-29）
+ *   放置日数を出すようにしたら、最長★51日のものが見つかった。
+ *   だが上限が無いと、51日が 100日・1000日になっても
+ *   ★出力は同じ「🔴」のまま＝悪化に気づけない。
+ *   100年後には全部が真っ赤で、誰も読まない紙になる。
+ *
+ * ■ ★なぜ「N日で即赤」にしないか
+ *   割れているのは【他リポ】であって、このリポではない。
+ *   他リポの事情でこのリポの作業を止めるのは正しくない
+ *   （だから割れは門ではなく報にしてある）。
+ *   ⟹ ★「いまの最長」を上限として固定し、**それより悪化したときだけ**鳴らす。
+ *     既存の51日は許容する。減らすのは自由（減らしたらこの数も下げる）。
+ *
+ * ■ ★この数を下げるとき
+ *   実際に放置が解消したら、この値も一緒に下げること。
+ *   下げないと「上限に余裕がある」状態が続き、また静かに伸びる。
+ *   （check-selftest-coverage.mjs の KNOWN_MISSING_SELFTEST_MAX と同じ運用）
+ */
+export const KNOWN_MAX_STALE_DAYS = 51;
+
 /*
  * ★isMain（2026-08-28 追加）: PAIRS を他の検査から import できるようにしたので、
  *   読まれただけで本体や selftest が走らないようにする。
@@ -481,6 +504,18 @@ if (SELFTEST) {
   if (daysBetween('2026-08-21', '2026-08-27') !== 6) fails.push('★日数の計算が合わない');
   if (daysBetween('2026-08-27', '2026-08-21') !== 6) fails.push('★順序を入れ替えると日数が変わる');
 
+  /*
+   * 毒5: ★放置日数のラチェットが機能しているか。
+   *   上限が無いと 51日→1000日 になっても出力が変わらず、悪化に気づけない。
+   *   ★上限そのものが消える/緩む変更を検出する。
+   */
+  if (typeof KNOWN_MAX_STALE_DAYS !== 'number' || !Number.isFinite(KNOWN_MAX_STALE_DAYS)) {
+    fails.push('★放置日数の上限が数値でない(ラチェットが効かない)');
+  }
+  if (KNOWN_MAX_STALE_DAYS > 365) {
+    fails.push('★放置日数の上限が1年を超えている(事実上の無制限＝鳴らない)');
+  }
+
   if (fails.length) {
     console.error('[check-drift] ★selftest 失敗（検知器が効いていません）:');
     for (const f of fails) console.error('  - ' + f);
@@ -496,6 +531,7 @@ if (SELFTEST) {
  * ★isMain ガード: 冒頭で定義済み。import されただけで本体が走るのを止める。
  */
 let worst = EXIT.PASS;
+let worstStaleDays = 0;
 for (const pair of isMain ? PAIRS : []) {
   const r = compare(pair.canonical, pair.copies);
   const mark = r.verdict === 'pass' ? '✅' : r.verdict === 'fail' ? '🔴' : '🟡';
@@ -505,8 +541,33 @@ for (const pair of isMain ? PAIRS : []) {
   if (r.howToFix) console.log('  → 直し方: ' + r.howToFix);
   if (r.limitation) console.log('  → この検査の限界: ' + r.limitation);
 
+  // ★放置日数の最長を覚えておく（下でラチェットに掛ける）。
+  const s = r.evidence && r.evidence['最長放置日数'];
+  if (typeof s === 'number' && s > worstStaleDays) worstStaleDays = s;
+
   // ★優先順は fail > inconclusive > pass（土台の computeExitCode と同じ規約）。
   if (r.verdict === 'fail') worst = EXIT.FAIL;
   else if (r.verdict === 'inconclusive' && worst === EXIT.PASS) worst = EXIT.INCONCLUSIVE;
 }
-if (isMain) process.exit(worst);
+
+if (isMain) {
+  /*
+   * ★放置のラチェット。既存の放置は許容し、【それより悪化したときだけ】鳴らす。
+   *   上限が無いと 51日→1000日 になっても出力が変わらず、悪化に気づけない。
+   */
+  if (worstStaleDays > KNOWN_MAX_STALE_DAYS) {
+    console.log('');
+    console.log(`[check-drift] 🔴 ★放置が上限を超えました: ${worstStaleDays}日 `
+      + `(上限 ${KNOWN_MAX_STALE_DAYS}日)`);
+    console.log('  → 直し方: 一番古いものを揃えるか、'
+      + `直せない理由があるなら KNOWN_MAX_STALE_DAYS を ${worstStaleDays} に上げて【理由をコメントに書く】。`);
+    console.log('  ★数字を黙って上げないこと。上げた理由が残らないと、次の人は上げ続けます。');
+    worst = EXIT.FAIL;
+  } else if (worstStaleDays > 0) {
+    console.log('');
+    console.log(`[check-drift] ・ 最長の放置 ${worstStaleDays}日（上限 ${KNOWN_MAX_STALE_DAYS}日・まだ超えていません）`);
+    console.log('  ★減らしたら KNOWN_MAX_STALE_DAYS も一緒に下げてください'
+      + '（下げないと、また静かに伸びます）。');
+  }
+  process.exit(worst);
+}
