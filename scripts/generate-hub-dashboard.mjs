@@ -325,9 +325,28 @@ function runSelfTest() {
     }
   }
 
-  // 対照: 実際のgithub/ai-hubに対しては正常に読めること
+  /*
+   * 対照: 実際のgithub/ai-hubに対しては正常に読めること。
+   *
+   * ★隣のリポ(ai-hub)が【無い環境】ではこの対照は測れない。
+   *   CI はこのリポだけを checkout するので、実際に測れない
+   *   （2026-08-29 に隔離環境で実測して踏んだ）。
+   *
+   * ★そこを「赤」にすると CI が常時赤になり、本物の赤が埋もれる。
+   *   かといって黙って飛ばすと★対照なしの selftest を緑と読ませることになる
+   *   ＝毒だけ見て実データを見ない検査になり、偽陽性に気づけない。
+   *   ⟹ 【測れなかった】と明示して、この対照だけを外す（exit 2 相当）。
+   */
   const realGithubRoot = findRepoRootFromRoot(resolve(HERE, '..'));
+  const siblingsAbsent = process.env.VERIFY_SIBLING_REPOS === 'absent'
+    || !existsSync(join(realGithubRoot, 'ai-hub', 'index.json'));
+  if (siblingsAbsent) {
+    console.log('[generate-hub-dashboard] 🟡 対照(実 ai-hub)は測れませんでした'
+      + '(★隣のリポが無い環境です。緑ではなく「この1件は未検証」です)');
+    console.log('  → 手元では隣に ai-hub があるので測れます。CI では測れません。');
+  }
   try {
+    if (siblingsAbsent) throw { __skip: true };
     const data = loadHubData(realGithubRoot);
     if (!Array.isArray(data.shelves)) fails.push('real ai-hub: shelvesが配列ではない');
     if (typeof data.entryCount !== 'number' || data.entryCount <= 0) {
@@ -341,7 +360,8 @@ function runSelfTest() {
       fails.push('deriveTodos: priority昇順にソートされていない');
     }
   } catch (e) {
-    fails.push(`real ai-hub: 正常系で例外が発生: ${e.message}`);
+    // ★測れないときの意図的な離脱は失敗に数えない（上で🟡として告知済み）。
+    if (!e || !e.__skip) fails.push(`real ai-hub: 正常系で例外が発生: ${e.message}`);
   }
 
   // 毒2: doctorProblemCount>0を模したデータでpriority0のTODOが先頭に来るか
