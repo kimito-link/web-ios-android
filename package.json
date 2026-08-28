@@ -3,6 +3,8 @@
   "version": "0.1.2",
   "private": true,
   "scripts": {
+    "verify": "node scripts/verify-all.mjs",
+    "verify:selftest": "node scripts/verify-all.mjs --selftest",
     "zip:cws": "node scripts/chrome/build-zip-node.mjs",
     "publish:cws": "node scripts/chrome/build-zip-node.mjs && node scripts/chrome/publish-cws-node.mjs",
     "publish:cws:check": "node scripts/chrome/publish-cws-node.mjs --check",
@@ -45,7 +47,11 @@
     "hub:page:selftest": "node scripts/generate-hub-dashboard.mjs --selftest",
     "check:hub-freshness": "node scripts/check-hub-page-freshness.mjs --root . --data site/hub/hub-data.json",
     "check:hub-freshness:selftest": "node scripts/check-hub-page-freshness.mjs --selftest",
-    "deploy:site": "npm run hub:page && npm run shindan:update && node templates/scripts/deploy-cloudflare-pages.mjs --dir site"
+    "deploy:site": "npm run hub:page && npm run shindan:update && node templates/scripts/deploy-cloudflare-pages.mjs --dir site",
+    "check:instrument-drift:coverage": "node _docs/instruments/check-drift-coverage.mjs",
+    "check:instrument-drift:coverage:selftest": "node _docs/instruments/check-drift-coverage.mjs --selftest",
+    "check:runner-registers-all": "node templates/diagnostics/check-runner-registers-all.mjs .",
+    "check:runner-registers-all:selftest": "node templates/diagnostics/check-runner-registers-all.mjs --selftest"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
