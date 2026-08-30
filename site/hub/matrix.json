@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30T23:45:27.724Z",
+  "generatedAt": "2026-08-30T23:49:21.598Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -52,6 +52,11 @@
       "id": "no-secrets-in-dist",
       "file": "verify-no-secrets-in-dist.mjs",
       "label": "⑩秘密焼込防止"
+    },
+    {
+      "id": "hermes-unsafe-imports",
+      "file": "verify-hermes-unsafe-imports.mjs",
+      "label": "⑪Hermes不可import"
     }
   ],
   "projects": [
@@ -88,11 +93,11 @@
           "provenance": "scan"
         },
         "tracked-imports": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "app-config-schema": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "assetlinks": {
@@ -100,19 +105,23 @@
           "provenance": "scan"
         },
         "instrument-core": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "no-secrets-in-dist": {
-          "state": "na",
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
           "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 0
+        "applicable": 5
       },
-      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）のため対象外"
+      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
     {
       "name": "Exosome",
@@ -165,11 +174,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 7
+        "applicable": 8
       },
       "rowNote": null
     },
@@ -224,11 +237,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 7
+        "applicable": 8
       },
       "rowNote": null
     },
@@ -283,11 +300,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 7
+        "applicable": 8
       },
       "rowNote": null
     },
@@ -341,6 +362,10 @@
         },
         "no-secrets-in-dist": {
           "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "na",
           "provenance": "scan"
         }
       },
@@ -401,11 +426,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 7
+        "applicable": 8
       },
       "rowNote": null
     },
@@ -460,11 +489,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 10
+        "applicable": 11
       },
       "rowNote": null
     },
@@ -519,11 +552,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 10
+        "applicable": 11
       },
       "rowNote": null
     },
@@ -577,6 +614,10 @@
         },
         "no-secrets-in-dist": {
           "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "na",
           "provenance": "scan"
         }
       },
@@ -637,11 +678,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 10
+        "applicable": 11
       },
       "rowNote": null
     },
@@ -678,11 +723,11 @@
           "provenance": "scan"
         },
         "tracked-imports": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "app-config-schema": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "assetlinks": {
@@ -690,19 +735,23 @@
           "provenance": "scan"
         },
         "instrument-core": {
-          "state": "na",
+          "state": "missing",
           "provenance": "scan"
         },
         "no-secrets-in-dist": {
-          "state": "na",
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
           "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 0
+        "applicable": 5
       },
-      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）のため対象外"
+      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
     {
       "name": "web-health-check-app",
@@ -755,11 +804,15 @@
         "no-secrets-in-dist": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 10
+        "applicable": 11
       },
       "rowNote": null
     }
@@ -787,11 +840,11 @@
     },
     "tracked-imports": {
       "ok": 3,
-      "applicable": 10
+      "applicable": 12
     },
     "app-config-schema": {
       "ok": 0,
-      "applicable": 10
+      "applicable": 12
     },
     "assetlinks": {
       "ok": 0,
@@ -799,9 +852,13 @@
     },
     "instrument-core": {
       "ok": 2,
-      "applicable": 10
+      "applicable": 12
     },
     "no-secrets-in-dist": {
+      "ok": 0,
+      "applicable": 12
+    },
+    "hermes-unsafe-imports": {
       "ok": 0,
       "applicable": 10
     }

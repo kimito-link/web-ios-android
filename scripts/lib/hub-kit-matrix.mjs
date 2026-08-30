@@ -30,6 +30,7 @@ export const GATES = [
     appliesTo: () => true,
   },
   { id: 'no-secrets-in-dist', label: '⑩秘密焼込防止', file: 'verify-no-secrets-in-dist.mjs', appliesTo: () => true },
+  { id: 'hermes-unsafe-imports', label: '⑪Hermes不可import', file: 'verify-hermes-unsafe-imports.mjs', appliesTo: (p) => p.hasCapacitor || p.hasExpo },
 ];
 
 /** walk中に刈り取るディレクトリ名（★.claude丸ごと除外＝worktree二重カウント対策）。 */
@@ -258,16 +259,14 @@ export function scanKitMatrix(githubRoot, overridesPath) {
   const projects = projectNames.map((name) => {
     const dir = join(githubRoot, name);
     const profile = detectProfile(dir);
-
-    if (profile.hasExpo && !profile.hasCapacitor && !profile.hasTwa) {
-      return {
-        name,
-        profile,
-        cells: Object.fromEntries(GATES.map((g) => [g.id, { state: 'na', provenance: 'scan' }])),
-        score: { ok: 0, applicable: 0 },
-        rowNote: 'Expo/React Native構成（Capacitor/TWA未使用）のため対象外',
-      };
-    }
+    // ★Expo/React Native構成はCapacitor/TWA前提のゲート(splash/signing等)は対象外(na)になるが、
+    //   Hermes関連ゲート等「appliesTo」がhasExpoを見るゲートは適用対象になる。
+    //   行ごと一律naにはせず、各ゲートのappliesTo述語に判断を委ねる(2026-08-31訂正:
+    //   逆輸入したhermes-unsafe-importsゲートを追加した際、行レベル除外だと
+    //   Expo案件でこのゲートまで一律「対象外」に隠れてしまうと判明したため)。
+    const rowNote = (profile.hasExpo && !profile.hasCapacitor && !profile.hasTwa)
+      ? 'Expo/React Native構成（Capacitor/TWA未使用）'
+      : null;
 
     const { cells, errors } = scanProjectGates(dir, profile);
     if (errors.length) scanErrors.push(...errors.map((e) => `${name}: ${e}`));
@@ -287,7 +286,7 @@ export function scanKitMatrix(githubRoot, overridesPath) {
       profile,
       cells,
       score: { ok: okCells.length, applicable: applicableCells.length },
-      rowNote: null,
+      rowNote,
     };
   });
 

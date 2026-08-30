@@ -230,13 +230,6 @@ function renderMatrixHtml(matrix) {
     .join('\n');
 
   const rows = matrix.projects.map((p) => {
-    if (p.rowNote) {
-      return `        <tr class="row-na">
-          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code></th>
-          <td class="cell row-note" data-state="na" colspan="${matrix.gates.length}">— 対象外: ${escapeHtml(p.rowNote)}</td>
-          <td class="score-col">—</td>
-        </tr>`;
-    }
     const cells = matrix.gates.map((g) => {
       const cell = p.cells[g.id] || { state: 'unknown' };
       const state = cell.state;
@@ -245,10 +238,14 @@ function renderMatrixHtml(matrix) {
       const overriddenAttr = overridden ? ' data-overridden="true"' : '';
       return `          <td class="cell" data-state="${state}"${overriddenAttr}${titleAttr}><span aria-hidden="true">${STATE_SYMBOL[state] || '?'}</span><span class="sr-only">${STATE_LABEL[state] || '不明'}</span></td>`;
     }).join('\n');
-    return `        <tr>
-          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code></th>
+    const noteHtml = p.rowNote
+      ? `<br><span class="row-note-inline">${escapeHtml(p.rowNote)}</span>`
+      : '';
+    const scoreText = p.score.applicable > 0 ? `${p.score.ok}/${p.score.applicable}` : '—';
+    return `        <tr${p.rowNote ? ' class="row-na"' : ''}>
+          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code>${noteHtml}</th>
 ${cells}
-          <td class="score-col">${p.score.ok}/${p.score.applicable}</td>
+          <td class="score-col">${scoreText}</td>
         </tr>`;
   }).join('\n');
 
@@ -257,7 +254,7 @@ ${cells}
     return `          <td>${t.ok}/${t.applicable}</td>`;
   }).join('\n');
 
-  const applicableCount = matrix.projects.filter((p) => !p.rowNote).length;
+  const applicableCount = matrix.projects.length;
 
   return `<section class="matrix-section" id="kit-matrix">
   <h2>🚦 出荷事故ゲート導入状況 <span class="count">(対象${applicableCount}プロジェクト × ${matrix.gates.length}ゲート)</span></h2>
@@ -373,7 +370,7 @@ ${rows}
   .kit-matrix tfoot td, .kit-matrix tfoot th { border-top: 2px solid #ddd; color: #555;
     position: sticky; bottom: 0; background: #fff; }
   .kit-matrix .score-col { font-weight: 600; text-align: right; }
-  .row-na .row-note { text-align: left; font-style: italic; }
+  .row-note-inline { font-style: italic; color: #888; font-size: 0.75rem; font-weight: normal; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 </style>
