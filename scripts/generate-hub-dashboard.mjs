@@ -20,10 +20,12 @@
  *   node scripts/generate-hub-dashboard.mjs --root . --out site/hub
  *   node scripts/generate-hub-dashboard.mjs --selftest
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, mkdtempSync, rmSync as rmSyncFs } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { scanKitMatrix, scanProjectGates, detectProfile, loadOverrides } from './lib/hub-kit-matrix.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -165,6 +167,20 @@ function deriveTodos(data) {
       evidence: 'node ai-hub/bin/hub.mjs doctor',
     });
   }
+  if (data.matrix && data.matrix.available) {
+    const zeroGateProjects = data.matrix.projects.filter(
+      (p) => !p.rowNote && p.profile.isKitTarget && p.score.applicable > 0 && p.score.ok === 0
+    );
+    if (zeroGateProjects.length) {
+      const names = zeroGateProjects.map((p) => p.name);
+      todos.push({
+        priority: 3,
+        title: `出荷事故ゲート0/9のプロジェクト${names.length}件（${names.slice(0, 3).join('・')}${names.length > 3 ? '…' : ''}）にゲートを導入する`,
+        reason: 'キット対象なのに出荷事故ゲートが1本も入っていない（Capacitorデフォルトスプラッシュ等の既知事故を素通しする状態）',
+        evidence: 'site/hub/matrix.json（generate-hub-dashboard.mjs 実スキャン）',
+      });
+    }
+  }
   if (data.emptyShelves.length) {
     todos.push({
       priority: 4,
@@ -196,6 +212,91 @@ function renderTodos(todos) {
   return `      <ol class="todo-list">
 ${items}
       </ol>`;
+}
+
+const STATE_LABEL = { ok: '導入済', missing: '未導入', na: '対象外', unknown: '計測不能' };
+const STATE_SYMBOL = { ok: '✓', missing: '✗', na: '—', unknown: '?' };
+
+function renderMatrixHtml(matrix) {
+  if (!matrix || !matrix.available) {
+    const msg = matrix ? matrix.error : '不明なエラー';
+    return `<div class="doctor ng">
+  🟡 出荷事故ゲートマトリクス: 計測不能（${escapeHtml(msg)}）— 緑ではなく未計測
+</div>`;
+  }
+
+  const gateHeaders = matrix.gates
+    .map((g) => `          <th scope="col"><abbr title="${escapeHtml(g.file || 'instrument-core.mjs のimport実測')}">${escapeHtml(g.label)}</abbr></th>`)
+    .join('\n');
+
+  const rows = matrix.projects.map((p) => {
+    if (p.rowNote) {
+      return `        <tr class="row-na">
+          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code></th>
+          <td class="cell row-note" data-state="na" colspan="${matrix.gates.length}">— 対象外: ${escapeHtml(p.rowNote)}</td>
+          <td class="score-col">—</td>
+        </tr>`;
+    }
+    const cells = matrix.gates.map((g) => {
+      const cell = p.cells[g.id] || { state: 'unknown' };
+      const state = cell.state;
+      const overridden = cell.provenance === 'override';
+      const titleAttr = overridden && cell.reason ? ` title="${escapeHtml(cell.reason)}"` : '';
+      const overriddenAttr = overridden ? ' data-overridden="true"' : '';
+      return `          <td class="cell" data-state="${state}"${overriddenAttr}${titleAttr}><span aria-hidden="true">${STATE_SYMBOL[state] || '?'}</span><span class="sr-only">${STATE_LABEL[state] || '不明'}</span></td>`;
+    }).join('\n');
+    return `        <tr>
+          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code></th>
+${cells}
+          <td class="score-col">${p.score.ok}/${p.score.applicable}</td>
+        </tr>`;
+  }).join('\n');
+
+  const footCells = matrix.gates.map((g) => {
+    const t = matrix.totals[g.id] || { ok: 0, applicable: 0 };
+    return `          <td>${t.ok}/${t.applicable}</td>`;
+  }).join('\n');
+
+  const applicableCount = matrix.projects.filter((p) => !p.rowNote).length;
+
+  return `<section class="matrix-section" id="kit-matrix">
+  <h2>🚦 出荷事故ゲート導入状況 <span class="count">(対象${applicableCount}プロジェクト × ${matrix.gates.length}ゲート)</span></h2>
+  <p class="matrix-meta">
+    実測: ${escapeHtml(matrix.generatedAt)}（generate-hub-dashboard.mjs によるファイルシステム実スキャン）
+    <!-- 出典: 各プロジェクトディレクトリのfs walk実測。matrix.json参照 -->
+  </p>
+  <p class="matrix-legend" aria-hidden="true">
+    <span class="cell" data-state="ok">✓ 導入済</span>
+    <span class="cell" data-state="missing">✗ 未導入</span>
+    <span class="cell" data-state="na">— 対象外</span>
+    <span class="cell" data-state="unknown">? 計測不能</span>
+  </p>
+  <div class="matrix-scroll" tabindex="0" role="region" aria-label="出荷事故ゲート導入マトリクス（横スクロール可）">
+    <table class="kit-matrix">
+      <caption class="sr-only">プロジェクトごとの出荷事故ゲート${matrix.gates.length}項目の導入状況</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="proj-col">プロジェクト</th>
+${gateHeaders}
+          <th scope="col" class="score-col">導入数</th>
+        </tr>
+      </thead>
+      <tbody>
+${rows}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" class="proj-col">列合計（導入/対象）</th>
+${footCells}
+          <td class="score-col"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+<script type="application/json" id="kit-matrix-json">
+${JSON.stringify(matrix).replaceAll('</', '<\\/')}
+</script>`;
 }
 
 function renderHtml(data) {
@@ -248,6 +349,33 @@ ${rows}
   .todo-reason { color: #555; font-size: 0.88rem; }
   .todo-evidence { color: #999; font-size: 0.78rem; }
   .todo-empty { color: #2e7d32; }
+  /* --- kit matrix --- */
+  .matrix-section { margin-bottom: 1.5rem; }
+  .matrix-meta { color: #666; font-size: 0.85rem; }
+  .matrix-legend .cell { display: inline-block; padding: 0.1rem 0.5rem; margin-right: 0.4rem;
+    border-radius: 3px; font-size: 0.82rem; }
+  .matrix-scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto;
+    border: 1px solid #ddd; border-radius: 6px; }
+  .kit-matrix { border-collapse: separate; border-spacing: 0; font-size: 0.82rem;
+    width: max-content; min-width: 100%; }
+  .kit-matrix th, .kit-matrix td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee;
+    text-align: center; white-space: nowrap; }
+  .kit-matrix thead th { position: sticky; top: 0; background: #fff; z-index: 2;
+    border-bottom: 2px solid #ddd; font-weight: 600; }
+  .kit-matrix .proj-col { position: sticky; left: 0; background: #fff; z-index: 1;
+    text-align: left; }
+  .kit-matrix thead .proj-col { z-index: 3; }
+  .kit-matrix td[data-state="ok"]      { background: #e8f5e9; color: #1b5e20; }
+  .kit-matrix td[data-state="missing"] { background: #ffebee; color: #b00; }
+  .kit-matrix td[data-state="na"]      { background: #f4f4f4; color: #888; }
+  .kit-matrix td[data-state="unknown"] { background: #fff8e1; color: #8a6d00; }
+  .kit-matrix td[data-overridden="true"] { outline: 1px dashed #999; outline-offset: -2px; }
+  .kit-matrix tfoot td, .kit-matrix tfoot th { border-top: 2px solid #ddd; color: #555;
+    position: sticky; bottom: 0; background: #fff; }
+  .kit-matrix .score-col { font-weight: 600; text-align: right; }
+  .row-na .row-note { text-align: left; font-style: italic; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body>
@@ -265,6 +393,7 @@ ${rows}
   <h2>🎯 次にやるべきこと（優先順位順・機械的に検出）</h2>
 ${renderTodos(data.todos)}
 </section>
+${renderMatrixHtml(data.matrix)}
 ${emptyNote}
 ${shelvesHtml}
 </body>
@@ -290,13 +419,36 @@ function main() {
     process.exit(1);
   }
   data.generatedAt = new Date().toISOString();
+
+  let matrix;
+  try {
+    matrix = scanKitMatrix(githubRoot, join(HERE, 'hub-matrix-overrides.json'));
+    matrix.generatedAt = data.generatedAt;
+  } catch (e) {
+    if (e.overrideConfigBroken) {
+      console.error(`[generate-hub-dashboard] FAIL  ${e.message}`);
+      process.exit(1);
+    }
+    matrix = { available: false, error: e.message };
+    console.error(`[generate-hub-dashboard] 🟡 マトリクスは計測できませんでした: ${e.message}`);
+  }
+  data.matrix = matrix;
   data.todos = deriveTodos(data);
 
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'index.html'), renderHtml(data), 'utf8');
+  writeFileSync(join(outDir, 'matrix.json'), JSON.stringify(matrix, null, 2), 'utf8');
+  const matrixSummary = matrix.available
+    ? {
+        available: true,
+        projectCount: matrix.projects.length,
+        fullOkCount: matrix.projects.filter((p) => !p.rowNote && p.score.applicable > 0 && p.score.ok === p.score.applicable).length,
+        worstGateId: Object.entries(matrix.totals).sort((a, b) => (a[1].ok / (a[1].applicable || 1)) - (b[1].ok / (b[1].applicable || 1)))[0]?.[0] || null,
+      }
+    : { available: false, error: matrix.error };
   writeFileSync(
     join(outDir, 'hub-data.json'),
-    JSON.stringify({ generatedFrom: data.generatedFrom, generatedAt: data.generatedAt, ...data }, null, 2),
+    JSON.stringify({ generatedFrom: data.generatedFrom, generatedAt: data.generatedAt, ...data, matrixSummary }, null, 2),
     'utf8'
   );
   console.log(`[generate-hub-dashboard] OK    ${outDir} を生成しました（entries=${data.entryCount}）`);
@@ -373,6 +525,53 @@ function runSelfTest() {
     const todos = deriveTodos(poisoned);
     if (!todos.length || todos[0].priority !== 0) {
       fails.push('poison(doctor problem): 問題ありのTODOが最優先(priority 0)にならなかった');
+    }
+  }
+
+  // 毒3〜5: kit-matrixの検知が効いているか（一時ディレクトリに毒フィクスチャを作る）
+  {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'hub-matrix-selftest-'));
+    try {
+      // 毒3: .claude/worktrees/配下だけにゲートファイルがある偽プロジェクト
+      //      （worktree除外が効いていなければ誤って ok になる）
+      const fakeApp1 = join(tmpRoot, 'fake-app-1');
+      mkdirSync(join(fakeApp1, '.claude', 'worktrees', 'x', 'scripts'), { recursive: true });
+      writeFileSync(join(fakeApp1, '.claude', 'worktrees', 'x', 'scripts', 'verify-webdir-consistency.mjs'), '// dummy', 'utf8');
+      writeFileSync(join(fakeApp1, 'capacitor.config.ts'), 'export default {};', 'utf8');
+      const profile1 = detectProfile(fakeApp1);
+      const { cells: cells1 } = scanProjectGates(fakeApp1, profile1);
+      if (cells1.webdir.state !== 'missing') {
+        fails.push('poison(worktree重複): .claude/worktrees配下のファイルを誤ってokと判定した(worktree除外が効いていない)');
+      }
+
+      // 毒4: instrument-core.mjsをコピーしただけ(import文なし)の偽プロジェクト
+      //      （死蔵ファイルの存在だけでokにしてはいけない）
+      const fakeApp2 = join(tmpRoot, 'fake-app-2');
+      mkdirSync(join(fakeApp2, 'scripts'), { recursive: true });
+      writeFileSync(join(fakeApp2, 'scripts', 'other.mjs'), 'export const x = 1;', 'utf8');
+      writeFileSync(join(fakeApp2, 'capacitor.config.ts'), 'export default {};', 'utf8');
+      const profile2 = detectProfile(fakeApp2);
+      const { cells: cells2 } = scanProjectGates(fakeApp2, profile2);
+      if (cells2['instrument-core'].state !== 'missing') {
+        fails.push('poison(死蔵ファイル): import文の無いinstrument-core言及を誤ってokと判定した');
+      }
+
+      // 毒5: reason/evidence欠落のoverridesを読ませて例外(fail-closed)になるか
+      const badOverridesPath = join(tmpRoot, 'bad-overrides.json');
+      writeFileSync(badOverridesPath, JSON.stringify({
+        include: [], exclude: [],
+        cells: [{ project: 'x', gate: 'webdir', state: 'na' }], // reason/evidence欠落
+      }), 'utf8');
+      try {
+        loadOverrides(badOverridesPath);
+        fails.push('poison(overrides欠落): reason/evidence無しのoverridesがthrowされなかった(fail-closedが効いていない)');
+      } catch (e) {
+        if (!e.overrideConfigBroken) {
+          fails.push(`poison(overrides欠落): 想定外のエラー種別: ${e.message}`);
+        }
+      }
+    } finally {
+      try { rmSyncFs(tmpRoot, { recursive: true, force: true }); } catch { /* 復帰失敗は致命ではない(OS temp) */ }
     }
   }
 
