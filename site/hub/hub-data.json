@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-30T20:42:07.601Z",
+  "generatedAt": "2026-08-30T23:45:27.724Z",
   "entryCount": 61,
   "doctorOk": true,
   "doctorProblems": [],
@@ -127,13 +127,14 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-assetlinks-published.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-external-links.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-no-secrets-in-dist.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-responsive-design.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-security-score.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-signing-material-path.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 126,
+  "doctorWarningCount": 127,
   "shelves": [
     {
       "id": "shipping",
@@ -1719,7 +1720,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-30T20:42:07.601Z",
+    "generatedAt": "2026-08-30T23:45:27.724Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -1767,6 +1768,11 @@
         "id": "instrument-core",
         "file": null,
         "label": "⑨計器import"
+      },
+      {
+        "id": "no-secrets-in-dist",
+        "file": "verify-no-secrets-in-dist.mjs",
+        "label": "⑩秘密焼込防止"
       }
     ],
     "projects": [
@@ -1815,6 +1821,10 @@
             "provenance": "scan"
           },
           "instrument-core": {
+            "state": "na",
+            "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
             "state": "na",
             "provenance": "scan"
           }
@@ -1872,11 +1882,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 6
+          "applicable": 7
         },
         "rowNote": null
       },
@@ -1927,11 +1941,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 6
+          "applicable": 7
         },
         "rowNote": null
       },
@@ -1982,11 +2000,15 @@
           "instrument-core": {
             "state": "ok",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 3,
-          "applicable": 6
+          "applicable": 7
         },
         "rowNote": null
       },
@@ -2037,11 +2059,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 3
+          "applicable": 4
         },
         "rowNote": null
       },
@@ -2092,11 +2118,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 6
+          "applicable": 7
         },
         "rowNote": null
       },
@@ -2147,11 +2177,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 9
+          "applicable": 10
         },
         "rowNote": null
       },
@@ -2202,11 +2236,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 3,
-          "applicable": 9
+          "applicable": 10
         },
         "rowNote": null
       },
@@ -2257,11 +2295,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 2,
-          "applicable": 6
+          "applicable": 7
         },
         "rowNote": null
       },
@@ -2312,11 +2354,15 @@
           "instrument-core": {
             "state": "ok",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 3,
-          "applicable": 9
+          "applicable": 10
         },
         "rowNote": null
       },
@@ -2365,6 +2411,10 @@
             "provenance": "scan"
           },
           "instrument-core": {
+            "state": "na",
+            "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
             "state": "na",
             "provenance": "scan"
           }
@@ -2422,11 +2472,15 @@
           "instrument-core": {
             "state": "missing",
             "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
           }
         },
         "score": {
           "ok": 0,
-          "applicable": 9
+          "applicable": 10
         },
         "rowNote": null
       }
@@ -2466,6 +2520,10 @@
       },
       "instrument-core": {
         "ok": 2,
+        "applicable": 10
+      },
+      "no-secrets-in-dist": {
+        "ok": 0,
         "applicable": 10
       }
     },
@@ -2565,7 +2623,7 @@
     },
     {
       "priority": 5,
-      "title": "ai-hub doctorの警告126件（未インデックス資産など）を精査する",
+      "title": "ai-hub doctorの警告127件（未インデックス資産など）を精査する",
       "reason": "緊急ではないが、資産が増えるほど探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }

@@ -29,6 +29,7 @@ export const GATES = [
     importRe: /from\s+['"][^'"]*instrument-core(?:\.mjs)?['"]|require\(\s*['"][^'"]*instrument-core/,
     appliesTo: () => true,
   },
+  { id: 'no-secrets-in-dist', label: '⑩秘密焼込防止', file: 'verify-no-secrets-in-dist.mjs', appliesTo: () => true },
 ];
 
 /** walk中に刈り取るディレクトリ名（★.claude丸ごと除外＝worktree二重カウント対策）。 */
