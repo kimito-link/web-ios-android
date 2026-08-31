@@ -2,23 +2,31 @@
 
 > ★この1枚だけで着手できる粒度で書いてあります。
 > 静的先取り: `verify-responsive-design.mjs` が崩れやすいCSSパターンをコード解析で検出。
-> 最終確認: 実ブラウザでの実測（AIが `responsive-check` スキル、または Playwright を使う）。
+> 実測（対話）: AIが `responsive-check` スキルで実ブラウザ実測。
+> 実測（自動化・CI向け）: `verify-responsive-runtime.mjs` がPlaywrightで複数幅を巡回し機械判定
+>   （2026-08-31、malwarecheck.siteから逆輸入。第3段として追加）。
 
 ---
 
 ## 0. 何をするものか
 
-`web-ios-android` キットで作ったWebサイト・LPを、次の2段階で確認する。
+`web-ios-android` キットで作ったWebサイト・LPを、次の3段階で確認する。
 
 1. **静的先取り**: CSS/HTMLを解析し、崩れやすい既知パターン（固定px幅・viewport欠如・
    メディアクエリ不在・overflow-x制御なし・極小フォント）をコードのまま検出する。
-2. **実ブラウザ実測**: 375/768/1024/1440pxで実際に開き、横スクロール・要素の重なり・
-   見切れを目視ではなく実測で確認する。**正式な判定はこちらが担う**。
+2. **実ブラウザ実測（対話・AIが都度確認）**: 375/768/1024/1440pxで実際に開き、横スクロール・
+   要素の重なり・見切れを目視ではなく実測で確認する（`responsive-check`スキル）。
+3. **実ブラウザ実測（自動化・CI向け）**: Playwrightで複数幅を自動巡回し、横スクロール・
+   要素はみ出し・テキスト省略・ナビ排他性を機械判定する（`verify-responsive-runtime.mjs`）。
+   対話的な2に対して、こちらはCIに組み込んで無人で繰り返し実行できる。
 
 ```bash
 node templates/scripts/verify-responsive-design.mjs           # 既定: ./site を解析
 node templates/scripts/verify-responsive-design.mjs path/to/dir  # 対象ディレクトリを指定
 node templates/scripts/verify-responsive-design.mjs --selftest   # 毒→赤を確認
+
+node templates/scripts/verify-responsive-runtime.mjs http://localhost:3000  # 実ブラウザで複数幅を自動巡回
+node templates/scripts/verify-responsive-runtime.mjs --selftest             # 毒→赤を確認（ブラウザ不要）
 ```
 
 ---
@@ -89,12 +97,15 @@ CSS Gridレイアウト固有の崩れ方。**こうした崩れは実ブラウ�
 ```bash
 node templates/scripts/verify-responsive-design.mjs --selftest ; echo "exit=$?"   # 0であること
 node templates/scripts/verify-responsive-design.mjs                                # 静的先取りが0であること
+node templates/scripts/verify-responsive-runtime.mjs --selftest ; echo "exit=$?"   # 0であること（ブラウザ不要）
+node templates/scripts/verify-responsive-runtime.mjs http://localhost:3000         # 実測が0であること（開発サーバー要）
 ```
 
-その後、**必ず実ブラウザで375/768/1024/1440pxを実測**する（`responsive-check`スキルに従う）。
-静的先取りが緑でも、実ブラウザ実測をせずに「完了」と報告しない
-（静的解析はCSS Gridの2次崩れ・JS動的スタイル・フォント読み込みタイミングによる
-レイアウトシフト等を検出できないため）。
+静的先取りが緑でも、実ブラウザ実測（`responsive-check`スキルまたは`verify-responsive-runtime.mjs`）
+をせずに「完了」と報告しない（静的解析はCSS Gridの2次崩れ・JS動的スタイル・フォント読み込み
+タイミングによるレイアウトシフト等を検出できないため）。CIに組み込みたい場合は
+`verify-responsive-runtime.mjs`、AIが対話的に確認する場合は`responsive-check`スキルを使う
+（両者は排他ではなく併用してよい）。
 
 ★**exit 2（inconclusive）が出た場合は「崩れていない」ではなく「測れなかった」**。
 対象ディレクトリにCSS/HTMLが1件も見つからなかった可能性が高い。
