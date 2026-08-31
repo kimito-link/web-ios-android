@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-31T00:06:32.972Z",
+  "generatedAt": "2026-08-31T00:08:47.264Z",
   "entryCount": 61,
   "doctorOk": true,
   "doctorProblems": [],
@@ -125,6 +125,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-template-drift.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-app-config-schema.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-assetlinks-published.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-external-links.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-hermes-unsafe-imports.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-key-coverage.mjs（index化を検討）",
@@ -137,7 +138,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 130,
+  "doctorWarningCount": 131,
   "shelves": [
     {
       "id": "shipping",
@@ -1723,7 +1724,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-31T00:06:32.972Z",
+    "generatedAt": "2026-08-31T00:08:47.264Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -2740,7 +2741,7 @@
     },
     {
       "priority": 5,
-      "title": "ai-hub doctorの警告130件（未インデックス資産など）を精査する",
+      "title": "ai-hub doctorの警告131件（未インデックス資産など）を精査する",
       "reason": "緊急ではないが、資産が増えるほど探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
