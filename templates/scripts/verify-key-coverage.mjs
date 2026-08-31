@@ -93,6 +93,23 @@ export function judgeKeyCoverage(mode, leftKeys, rightKeys, context, baseline = 
     }];
   }
 
+  // ★ファイルは在るのにキーが1件も取れない＝pattern が合っていない（2026-09-01 追加）。
+  //   ★これを緑にしてはいけない。「差分なし」ではなく「比べていない」だから。
+  //   実測: surechigai-romi.link で `^##\s+(SG-\d{2})` と書いたところ、
+  //   複数行フラグが無いため先頭行しか見ず **左が0件**になった。
+  //   それでも「✅ 合格」と出たので、索引に無い症状を足す毒テストでも赤くならなかった
+  //   ＝**永久に緑の飾り**が出来ていた（この検査群が最も嫌う形）。
+  if (leftKeys.length === 0) {
+    return [{
+      probe: `キー網羅性検査（${mode}）`,
+      verdict: 'inconclusive',
+      detail: '比較の左側からキーを1件も抽出できませんでした（★差分なしではなく、比べていません）',
+      howToFix: 'config.json の left.pattern を見直してください。'
+        + '★複数行の先頭に当てたいときは ^ ではなく \\n を使う（この検査は m フラグを付けません）。'
+        + '正規表現の1つ目の丸括弧がキーとして拾われます'
+    }];
+  }
+
   if (mode === 'diff') {
     const onlyLeft = leftKeys.filter((k) => !rightKeys.includes(k));
     const onlyRight = rightKeys.filter((k) => !leftKeys.includes(k));
@@ -186,6 +203,13 @@ function selftest() {
       name: '毒1: 比較対象ファイルが存在しない（測れなかった）',
       poison: () => {}, restore: () => {},
       isRed: () => computeExitCode(judgeKeyCoverage('diff', [], [], { leftExists: false, rightExists: true })) === EXIT.INCONCLUSIVE
+    },
+    {
+      // ★2026-09-01 追加。ファイルは在るのに pattern が合わず左が0件だったとき、
+      //   「✅ 合格」と出て毒テストすら赤にならない**永久に緑の飾り**が実際に出来ていた。
+      name: '★毒1b: ファイルは在るがキーが0件（緑にしない・比べていない）',
+      poison: () => {}, restore: () => {},
+      isRed: () => computeExitCode(judgeKeyCoverage('wiring', [], ['a'], { leftExists: true, rightExists: true })) === EXIT.INCONCLUSIVE
     },
     {
       name: '毒2: diffモードでleftのみのキーがある（赤）',

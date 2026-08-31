@@ -24,6 +24,7 @@
 //   0 = 出典欠落なし / 1 = 出典欠落あり（測れた上での赤） / 2 = 測れなかった（対象dir不在）
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 
 // 既定の数値実績を示唆する単位。--unit で上書き可能。
@@ -49,6 +50,33 @@ function listHtmlFiles(dir) {
     }
   }
   return results;
+}
+
+/**
+ * ★git が追跡していないファイルを落とす（2026-09-01 追加）。
+ *
+ * この検査が守りたいのは「公開されるページに根拠の無い数値主張が載ること」。
+ * ★未追跡のファイルは push されない＝公開されないので、対象ではない。
+ *
+ * 実測: surechigai-romi.link の public/lp/img/_sumi-test/（画像案を並べたローカルの
+ * 実験ファイル・未追跡）の「旅人1人が橋に立つ」を実績の主張として報告していた。
+ * ★これを直さないと、手元にゴミ HTML を置いた人が全員この赤を踏む。
+ *
+ * git が使えない環境では**絞り込まない**（落とすと見逃しになるので、安全側に倒す）。
+ */
+function keepTrackedOnly(files, cwd) {
+  if (files.length === 0) return files;
+  try {
+    const out = execFileSync('git', ['ls-files', '-z', '--', ...files], {
+      cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 32 * 1024 * 1024
+    });
+    const tracked = new Set(
+      out.split('\0').filter(Boolean).map((p) => path.resolve(cwd, p))
+    );
+    return files.filter((f) => tracked.has(path.resolve(cwd, f)));
+  } catch {
+    return files; // ★git が無い/リポ外 → 絞り込まない（見逃しを作らない）
+  }
 }
 
 /**
@@ -84,7 +112,17 @@ export function judgeClaimsProvenance(files, opts = {}) {
       end: m.index + m[0].length
     }));
 
-    const claimMatches = [...bodyContent.matchAll(claimPattern)];
+    // ★タグの中（属性値・インラインstyle）とCSS/JSブロックは「主張」ではない。
+    //   2026-09-01 実測: style="left:42%" や width="60%" を実績の主張として数え、
+    //   surechigai-romi.link の LP で 151 件の嘘の赤を出していた。
+    //   ★「42%」という文字列は同じでも、読者に見える主張と、要素の位置指定は別物。
+    //   タグ内と <style>/<script> の中身を空白で潰してから探す（位置がずれないよう同じ長さで）。
+    const blank = (s) => ' '.repeat(s.length);
+    const visibleContent = bodyContent
+      .replace(/<(style|script)\b[\s\S]*?<\/\1>/gi, blank)
+      .replace(/<[^>]*>/g, blank);
+
+    const claimMatches = [...visibleContent.matchAll(claimPattern)];
     for (const m of claimMatches) {
       const pos = m.index;
       const hasNearbySource = sourceComments.some(
@@ -178,7 +216,8 @@ const unitArg = arg('--unit', null);
 const units = unitArg ? unitArg.split(',').map((s) => s.trim()).filter(Boolean) : DEFAULT_UNITS;
 
 const files = fs.existsSync(publicDir)
-  ? listHtmlFiles(publicDir).map((p) => ({ path: p, content: fs.readFileSync(p, 'utf8') }))
+  ? keepTrackedOnly(listHtmlFiles(publicDir), process.cwd())
+      .map((p) => ({ path: p, content: fs.readFileSync(p, 'utf8') }))
   : [];
 
 const results = judgeClaimsProvenance(files, { units, window: DEFAULT_WINDOW });

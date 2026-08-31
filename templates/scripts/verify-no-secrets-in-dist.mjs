@@ -54,6 +54,31 @@ function isBenign(value) {
   if (!v) return true; // 空 = 未設定 = 正常
   if (v.length < 8) return true; // 短すぎる = 鍵ではない
   if (/^[a-z][A-Za-z0-9_]*$/.test(v) && v.length < 24) return true; // 変数名らしきもの
+
+  // ★人間向けの表示ラベルは秘密ではない（2026-09-01・surechigai-romi.link での実測で発覚）。
+  //   Clerk の多言語UIが各国語で apiKey:"APIキー" / apiKey:"API ключ" / apiKey:"Κλειδί API"
+  //   のような**ラベル文字列**を持っており、これを 374 件すべて秘密として報告していた。
+  //   ★件数が多いので一見「重大な漏洩」に見えるが、1件も秘密ではない＝嘘の赤。
+  //   嘘の赤は「どうせ誤検知」と読み飛ばす習慣を作るので、見逃しと同じくらい高くつく。
+  //
+  //   ★判定の根拠: 鍵は「空白を含まない1語」である。空白を含む値は人間向けの文。
+  //   ★空白なしの多言語ラベル（"APIキー"）は非ASCIIで拾う。
+  //   ★ただしバンドラは非ASCIIを \uXXXX のエスケープに変換するので、
+  //     ファイル上は ASCII に見える（"Κλειδί API" が "Κλ..." になる）。
+  //     ここを見落とすと 374 件のうち 13 件だけが残り、直したつもりで赤が消えない。
+  //   秘密の値（base64/hex/各社プレフィックス）は定義上ASCIIかつ \u を含まないので、
+  //   これらの判定で本物を取りこぼさない。
+  if (/\s/.test(v)) return true;
+  if (/[^\x00-\x7F]/.test(v)) return true;
+  if (/\\u[0-9a-fA-F]{4}/.test(v)) return true;
+  if (/\\x[0-9a-fA-F]{2}/.test(v)) return true; // "API-n\xf8gle"（デンマーク語ラベル）等
+
+  // ★ハイフン/アンダースコアで繋いだ短い単語列も人間向けの語（"API-nyckel"（スウェーデン語）
+  //   "API-avain"（フィンランド語）"server-managed"（設定値）を実際に踏んだ）。
+  //   ★鍵は語彙を持たない乱数列なので、この形にはならない。
+  //   ★24文字未満に限る: 長い乱数にハイフンが混じる形（UUID等）は除外しない。
+  if (v.length < 24 && /^[A-Za-z][A-Za-z0-9]*([-_][A-Za-z0-9]+)+$/.test(v)) return true;
+
   return false;
 }
 
@@ -157,6 +182,40 @@ function selftest() {
       isRed: () => {
         const good = { path: 'dist/status.js', content: 'const cfg = { apiKey: "", secret: "userKey" };' };
         return computeExitCode(judgeNoSecrets([good], DEFAULT_FIELDS, { dirsExist: true })) === EXIT.PASS;
+      }
+    },
+    {
+      // ★2026-09-01 追加。多言語UIのラベルを秘密と読んで 374 件の嘘の赤を出していた。
+      name: '毒なし: 多言語UIの表示ラベルを秘密と読まない（実際に踏んだ誤検知）',
+      poison: () => {}, restore: () => {},
+      isRed: () => {
+        const labels = {
+          path: 'dist/clerk-localizations.js',
+          // ★バンドラが出す \uXXXX エスケープ形も含める（ファイル上はASCIIに見える）。
+          //   素の連結で組む（テンプレート補間は解析器を壊す側に回る）。
+          content: 'a={apiKey:"APIキー"},b={apiKey:"API ключ"},d={apiKey:"API key"},'
+            + 'e={apiKey:"' + '\\u039a\\u03bb\\u03b5\\u03b9\\u03b4\\u03af API' + '"},'
+            // ★ハイフン繋ぎ（北欧語ラベル）と \xNN エスケープ（デンマーク語）も実際に踏んだ
+            + 'f={apiKey:"API-nyckel"},g={apiKey:"' + 'API-n\\xf8gle' + '"},'
+            + 'h={accessToken:"server-managed"}'
+        };
+        return computeExitCode(judgeNoSecrets([labels], DEFAULT_FIELDS, { dirsExist: true })) === EXIT.PASS;
+      }
+    },
+    {
+      // ★上の緩和で本物を見逃していないことを固定する（緩めた判定は必ず対で守る）。
+      name: '★緩和しても本物のASCII鍵は依然として赤（見逃しを作っていない）',
+      poison: () => {}, restore: () => {},
+      isRed: () => {
+        const real = {
+          path: 'dist/app.js',
+          // ★素の連結で組む（テンプレート補間は解析器を壊す側に回る）。
+          // ★実在プロバイダの接頭辞（sk_live_ 等）は使わない。GitHub の push protection が
+          //   本物の鍵と判定して push を止める（2026-09-01 に実際に止められた）。
+          //   ここで必要なのは「24文字以上・ASCII・区切り無し」という形だけ。
+          content: 'const c={apiKey:"' + 'EXAMPLEFAKE9fJ2xQ7bV4nR8tYw1zL5mC3d' + '"}'
+        };
+        return computeExitCode(judgeNoSecrets([real], DEFAULT_FIELDS, { dirsExist: true })) === EXIT.FAIL;
       }
     }
   ];

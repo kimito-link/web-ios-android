@@ -78,6 +78,40 @@ export function extractCheckNames(runSrc) {
 }
 
 /**
+ * ★検査名が「説明」に載っているかを判定する（純粋関数）。
+ *
+ * ★なぜ関数に切り出すか（2026-08-31）:
+ *   照合が `<code>名前</code>` という【HTML決め打ち】で書かれていたため、
+ *   ★実際に人が読んでチャットに貼る DIAGNOSTICS-HANDOUT.md(Markdown) は
+ *   一度も測られず、検査7本と書いたまま実体11本に対して2世代ズレていた。
+ *   公開ページ側は緑だったので、ズレは最後まで表に出なかった。
+ *
+ *   ⟹ ★「説明」は1枚ではない。配る実体が複数あるなら、その全部を測る。
+ *
+ * ★HTML(`<code>x</code>`)と Markdown(`` `x` ``)の両方の書き方を受け付ける。
+ *   ただし【単語の一部での一致は認めない】。
+ *   例: `check-selftest-coverage` が載っているだけで
+ *       `check-selftest-coverage-extra` を「載っている」と読むと嘘の緑になる。
+ *
+ * @param {string[]} names run.mjs に登録されている検査名
+ * @param {string} docSrc 説明の中身(HTML でも Markdown でもよい)
+ * @returns {string[]} ★説明に載っていない検査名
+ */
+export function findNamesMissingFromDoc(names, docSrc) {
+  const list = Array.isArray(names) ? names : [];
+  const doc = typeof docSrc === 'string' ? docSrc : '';
+  if (doc.trim() === '') return [...list];
+
+  return list.filter((n) => {
+    // ★前後が「名前として続かない」ことを確かめる(部分一致で緑にしない)。
+    // ★検査名は run.mjs の /name: '([a-z-]+)'/ 由来なので、正規表現の特殊文字は入らない。
+    if (!/^[a-z-]+$/.test(n)) return !doc.includes(n);
+    const re = new RegExp('(^|[^a-z0-9-])' + n + '([^a-z0-9-]|$)');
+    return !re.test(doc);
+  });
+}
+
+/**
  * @typedef {object} DocsMatchVerdict
  * @property {boolean} measured
  * @property {string[]} missing ★コードにあるのに説明に無いパス
@@ -144,13 +178,41 @@ function runSelftest() {
   }
   if (judgeDocsMatchCode(/** @type {any} */ (null)).measured) fails.push('★null を測れたことにしている');
 
+  // ⑤ ★検査名の照合が HTML と Markdown の両方で効くこと(2026-08-31 追加)。
+  //    ★これが無かったせいで、配布の実体である DIAGNOSTICS-HANDOUT.md(Markdown)は
+  //    照合が `<code>` 決め打ちだったため一度も測られず、2世代ズレたまま配られていた。
+  if (findNamesMissingFromDoc(['check-a'], '<code>check-a</code>').length !== 0) {
+    fails.push('★HTMLに載っているのに足りないと言う');
+  }
+  if (findNamesMissingFromDoc(['check-a'], '| `check-a` | 説明 |').length !== 0) {
+    fails.push('★Markdownに載っているのに足りないと言う');
+  }
+  if (findNamesMissingFromDoc(['check-a'], 'なにも載っていない').length !== 1) {
+    fails.push('★載っていないものを見逃す');
+  }
+  // ★部分一致で緑にしない。
+  //   ★向きが大事: 説明に【長い名前】だけが載っていて、探すのが【短い名前】のとき、
+  //   素朴な includes は「載っている」と読んでしまう(嘘の緑)。
+  //   例: 説明に check-a-extra しか無いのに check-a を合格にする。
+  if (findNamesMissingFromDoc(['check-a'], '`check-a-extra` だけが載っている').length !== 1) {
+    fails.push('★長い名前への部分一致で「載っている」ことにしている');
+  }
+  // ★説明が空＝測れていない。「全部載っている」と読んではいけない
+  if (findNamesMissingFromDoc(['check-a'], '').length !== 1) {
+    fails.push('★空の説明を緑にしている');
+  }
+  if (findNamesMissingFromDoc(/** @type {any} */ (null), /** @type {any} */ (null)).length !== 0) {
+    fails.push('★壊れた入力で throw する');
+  }
+
   if (fails.length) {
     console.error('[check-docs-match-code] ★selftest 失敗:\n  ' + fails.join('\n  '));
     process.exit(1);
   }
   console.log(
     '[check-docs-match-code] selftest OK'
-    + '(多階層を繋ぐ / ★説明に無いパスを見つける / 載っていれば通す / ★0件を緑にしない)'
+    + '(多階層を繋ぐ / ★説明に無いパスを見つける / 載っていれば通す / ★0件を緑にしない'
+    + ' / ★HTMLとMarkdownの両方で検査名を照合する)'
   );
   process.exit(0);
 }
@@ -181,12 +243,33 @@ function main() {
   //   2026-08-23: 検査を3本足したのに表は4本のままだった＝読んだ人には存在しない。
   const runPath = join(__dirname, 'run.mjs');
   const names = existsSync(runPath) ? extractCheckNames(readFileSync(runPath, 'utf8')) : [];
-  const missingNames = names.filter((n) => !doc.includes('<code>' + n + '</code>'));
+
+  // ★「説明」は1枚ではない。★配る実体を全部見る(2026-08-31)。
+  //   公開ページ(HTML)だけを見ていたため、実際に人がチャットへ貼る
+  //   DIAGNOSTICS-HANDOUT.md(Markdown)が【一度も測られず】検査7本のまま
+  //   実体11本に対して2世代ズレて配られていた。公開ページは緑なので気づけなかった。
+  const DOCS = [
+    { label: '公開ページ', path: docPath, src: doc },
+    ...['DIAGNOSTICS-HANDOUT.md', 'templates/diagnostics/README.md']
+      .map((rel) => ({ label: rel, path: join(root, rel) }))
+      .filter((d) => existsSync(d.path))
+      .map((d) => ({ ...d, src: readFileSync(d.path, 'utf8') })),
+  ];
+
+  const missingByDoc = names.length === 0 ? [] : DOCS
+    .map((d) => ({ label: d.label, missing: findNamesMissingFromDoc(names, d.src) }))
+    .filter((r) => r.missing.length > 0);
+  const missingNames = missingByDoc.flatMap((r) => r.missing);
 
   console.log(`[check-docs-match-code] 探す場所 ${v.total} 件 / 説明に無い ${v.missing.length} 件`);
   if (names.length > 0) {
-    console.log(`[check-docs-match-code] 検査 ${names.length} 本 / 表に無い ${missingNames.length} 本`);
-    for (const n of missingNames) console.log(`  ⚪ ${n}`);
+    console.log(
+      `[check-docs-match-code] 検査 ${names.length} 本 / 説明 ${DOCS.length} 枚`
+      + ` / 載っていない ${missingNames.length} 件`
+    );
+    for (const r of missingByDoc) {
+      for (const n of r.missing) console.log(`  ⚪ ${n} — ${r.label} に載っていない`);
+    }
   }
   for (const p of v.missing) console.log(`  ⚪ ${p}`);
 

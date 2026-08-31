@@ -326,6 +326,22 @@ if (isMain) {
   for (const p of targets) {
     try { files.push({ path: p, text: readFileSync(join(ROOT, p), 'utf8') }); } catch { /* 索引ズレはスキップ */ }
   }
+  // ★走査 0 件は「未追跡 import なし」ではなく【一度も見ていない】（2026-09-01 追加）。
+  //   ★逆輸入元 surechigai-romi.link が持っていた契約をキット側にも入れる。
+  //   実損: TRACKED_IMPORT_ROOTS に存在しないディレクトリ名（リネーム時に置き去りに
+  //   なりやすい）を渡すと、0 ファイルを走査して「OK・0 件」と緑を出していた。
+  //   ★件数0の緑は、この検査群が最も嫌う形（掟②）。
+  if (files.length === 0) {
+    console.error('[check-tracked-imports] 🟡 検査対象が 0 件でした（★緑ではありません。一度も見ていません）。');
+    console.error(
+      roots.length > 0
+        ? `[check-tracked-imports] → TRACKED_IMPORT_ROOTS="${roots.join(',')}" に一致する追跡ファイルが 0 件でした。`
+        : '[check-tracked-imports] → 追跡ファイルにソースが 1 件もありませんでした。'
+    );
+    console.error('[check-tracked-imports] → 直し方: TRACKED_IMPORT_ROOTS のディレクトリ名が実在するか確認してください。');
+    process.exit(2);
+  }
+
   const violations = findUntrackedImports(files, trackedSet);
   if (violations.length > 0) {
     console.error(`[check-tracked-imports] git 未追跡のファイルへ import している疑い ${violations.length} 件:`);
