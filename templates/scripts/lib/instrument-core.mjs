@@ -219,3 +219,44 @@ export function runSelfTest(cases) {
   }
   return { ok: fails.length === 0, fails };
 }
+
+/**
+ * ★タイムアウトしうる処理を1回だけ再試行し、2回とも駄目なら「測れなかった」にする。
+ *
+ * ★収穫元: kimitolink-linktree/scripts/lib/diag-core.mjs
+ *   → surechigai-romi.link が 2026-08-27 に輸入 → ★2026-08-28 に正本へ取り込み。
+ *
+ * ■ ★なぜ fail にしないか
+ *   ネットワーク越しの検査がタイムアウトしたとき、それは
+ *   「対象が壊れている」ではなく「★こちらが測れなかった」。
+ *   fail に倒すと、回線が細い日にデプロイが止まる＝赤が日常になり、
+ *   本物の赤を誰も見なくなる（掟「測れなかったを赤にも緑にも混ぜない」）。
+ *
+ * ■ 使い方
+ *   const r = await withRetryOnTimeout(() => fetch(url), 5000);
+ *   if (r?.timedOut) → verdict: 'inconclusive' にする
+ *
+ * @param {() => Promise<any>} fn
+ * @param {number} timeoutMs
+ * @returns {Promise<any>} 成功時はその値 / 2回ともタイムアウトなら { timedOut: true }
+ */
+export async function withRetryOnTimeout(fn, timeoutMs) {
+  const attempt = () =>
+    Promise.race([
+      fn(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs)),
+    ]);
+
+  try {
+    return await attempt();
+  } catch (firstErr) {
+    if (firstErr.message !== 'timeout') throw firstErr;
+    try {
+      return await attempt();
+    } catch (secondErr) {
+      if (secondErr.message !== 'timeout') throw secondErr;
+      // ★「測れなかった」を返す。呼び出し側で inconclusive にすること。
+      return { timedOut: true };
+    }
+  }
+}

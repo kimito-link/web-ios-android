@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-26T02:24:00.731Z",
-  "generatedAtLabel": "2026/08/26 11:24",
-  "commit": "253d1218",
+  "generatedAt": "2026-08-31T05:07:08.338Z",
+  "generatedAtLabel": "2026/08/31 14:07",
+  "commit": "0a73b77e",
   "measurement": {
     "attempted": false,
     "exitCode": null
   },
   "app": {
     "name": "web-ios-android",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "homeUrl": "https://kimito-skill.link",
     "diagnosisUrl": "https://kimito-skill.link/check-shindan-version/",
     "primaryColor": "#315efb",
@@ -115,19 +115,19 @@
         {
           "label": "改善指標の宣言",
           "status": "pass",
-          "evidence": "3 指標",
+          "evidence": "4 指標",
           "nextAction": "実測してから better と why を宣言する"
         },
         {
           "label": "実測履歴",
           "status": "pass",
-          "evidence": "4 件",
+          "evidence": "8 件",
           "nextAction": "実測値と source を記録する"
         },
         {
           "label": "現在版の実測",
           "status": "pass",
-          "evidence": "v0.1.1: 1 件",
+          "evidence": "v0.1.2: 4 件",
           "nextAction": "現在版を実測する"
         },
         {
@@ -262,8 +262,8 @@
     }
   ],
   "evolution": {
-    "metricCount": 3,
-    "measurementCount": 4,
+    "metricCount": 4,
+    "measurementCount": 8,
     "currentVersionMeasured": true,
     "decisionCounts": {
       "confirmed": 2,
@@ -271,6 +271,30 @@
       "pending": 0
     },
     "latest": [
+      {
+        "version": "0.1.2",
+        "label": "割れ検査に登録されていない実体",
+        "value": 0,
+        "unit": "本"
+      },
+      {
+        "version": "0.1.2",
+        "label": "selftest を持たない配布スクリプト",
+        "value": 1,
+        "unit": "本"
+      },
+      {
+        "version": "0.1.2",
+        "label": "selftest を持たない診断キットの検査",
+        "value": 2,
+        "unit": "本"
+      },
+      {
+        "version": "0.1.2",
+        "label": "診断キットの検査本数",
+        "value": 10,
+        "unit": "本"
+      },
       {
         "version": "0.1.1",
         "label": "診断キットの検査本数",
@@ -282,47 +306,35 @@
         "label": "selftest を持たない診断キットの検査",
         "value": 3,
         "unit": "本"
-      },
-      {
-        "version": "0.1.0",
-        "label": "selftest を持たない配布スクリプト",
-        "value": 8,
-        "unit": "本"
-      },
-      {
-        "version": "0.1.0",
-        "label": "診断キットの検査本数",
-        "value": 6,
-        "unit": "本"
       }
     ],
     "publicLatest": [
       {
-        "version": "0.1.1",
+        "version": "0.1.2",
         "label": "malwarecheck.site本体で公開サイトを実測する仕組みを追加",
         "value": "",
         "unit": ""
       },
       {
-        "version": "0.1.1",
+        "version": "0.1.2",
         "label": "起動直後の画像崩れを自動確認する検査を追加",
         "value": "",
         "unit": ""
       },
       {
-        "version": "0.1.1",
+        "version": "0.1.2",
         "label": "各アプリに更新情報と動作チェックページを追加",
         "value": "",
         "unit": ""
       },
       {
-        "version": "0.1.1",
+        "version": "0.1.2",
         "label": "説明ページにも同じ更新情報を自動表示",
         "value": "",
         "unit": ""
       },
       {
-        "version": "0.1.1",
+        "version": "0.1.2",
         "label": "前回の判断を引き継ぐ仕組みを追加",
         "value": "",
         "unit": ""

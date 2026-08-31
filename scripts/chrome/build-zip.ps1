@@ -1,5 +1,12 @@
 # Chrome 拡張 ZIP作成スクリプト(汎用テンプレ)
 #
+# ★コンソールの無い環境（CI・AIハーネス・タスクスケジューラ）で【固まって返ってこない】
+#   のを止める。Compress-Archive / Invoke-WebRequest は進捗バーを描こうとするが、
+#   描く先が無いと待ち続ける。
+#   実測: 既定=返ってこない / 抑止あり=402ms(1KB)・669ms(1.5MB)。
+#   ★1KB でも固まるので「重いから遅い」と誤診しやすい（実際に誤診した）。
+$ProgressPreference = 'SilentlyContinue'
+#
 # manifest.json から version を自動取得し、拡張のファイル一式を zip にパッケージ化する。
 # どの拡張でも使えるよう、同梱対象は manifest.json と同じ階層の主要ファイル/ディレクトリを
 # 自動で拾う(node_modules・.git・store-assets 等の不要物は除外)。

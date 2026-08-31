@@ -270,6 +270,11 @@
           <td><code>check-docs-match-code</code></td>
           <td>★<b>説明した置き場所と、コードが実際に探す場所のズレ</b>。説明はコードより先に腐るので、人の記憶に頼らず機械で突き合わせます。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-silent-hang-guard.mjs（2026-08-26追加・実測値つき） -->
+        <tr>
+          <td><code>check-silent-hang-guard</code></td>
+          <td>★<b>コンソールが無い場所で「固まって返ってこない」形</b>。PowerShell は進捗バーを描こうとしますが、描く先が無いと待ち続けます。<b>1KB のファイルでも固まる</b>ので「重いから遅い」と誤診しがちです（実測: 既定＝返ってこない／抑止あり＝402ms）。CI や自動化から呼ぶスクリプトで効きます。</td>
+        </tr>
       </table>
 
       <div class="code-block">

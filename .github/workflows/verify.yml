@@ -1,0 +1,85 @@
+# ★このキットの検査を、人が思い出さなくても走らせる。
+#
+# ■ なぜ要るか（2026-08-29）
+#   このリポは【配る側】なのに CI が1本も無かった。
+#   配布先は 14〜17本の CI を持っているのに、正本を守るものがゼロ。
+#   ＝★正本が壊れたまま配られても、誰も気づかない状態だった。
+#
+#   実際この日、進化台帳は★43コミットのあいだ一度も走っておらず、
+#   キット自身の計器の土台は正本より12行古いまま、それを検査4本が使っていた。
+#   ⟹ ★人の記憶を仕組みの前提にしない。
+#
+# ■ 何を落とすか（npm run verify の設計に従う）
+#   門(gate)  … 赤なら【落とす】。検知器が毒で赤くならない・登録漏れ等。
+#                ＝守りが効いていない状態は、放置すると全部が嘘になる。
+#   報(report)… 赤でも【落とさない】。他リポとの割れなど。
+#                ★割れること自体は正常（各リポが独自に育つ）。
+#                ここで落とすと、他リポを直すまでこのリポの PR が止まる。
+#                ★出力には必ず出るので、見えなくなるわけではない。
+#
+# ■ ★この CI が判定しないこと
+#   製品が正しく動くかは見ない（検査の健全性だけ）。
+#   配布先リポの中身も見ない（それは各リポの CI の仕事）。
+
+name: verify (検査の健全性)
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  # ★週1で定期実行する。触っていない週に壊れても気づけるように
+  #   （「走っていない」で死ぬのがラチェットの一番多い壊れ方）。
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # ★放置日数を git log から測るので、浅い clone だと測れない。
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ★「依存ゼロだから install 不要」と書きかけたが【誤り】だった。
+      #   隔離環境で実測したら ajv が見つからず config:schema の selftest が落ちた。
+      #   ★計器の土台は依存ゼロだが、キット全体はそうではない。
+      #   ⟹ 推測でワークフローを書かない。隔離して実際に走らせる。
+      - name: Install
+        run: npm ci
+
+      - name: verify（門が赤なら落ちる / 報は落とさない）
+        run: npm run verify
+        env:
+          # ★隣のリポ(ai-hub 等)は CI に存在しない。存在しないものを探して
+          #   赤にすると★常時赤になり、本物の赤が埋もれる（オオカミ少年）。
+          #   ⟹ 「隣が居ない」を検査自身に伝えて、赤ではなく🟡(測れなかった)にさせる。
+          VERIFY_SIBLING_REPOS: 'absent'
+
+      # ★配布先リポはこの CI からは見えない（checkout していない）。
+      #   割れの検出はローカルの `npm run verify` が担当する。
+      #   ここでそれを「緑」と誤読しないよう、明示的に書き残す。
+      - name: この CI の限界を明示する
+        if: always()
+        run: |
+          echo "★この CI が見ていないもの:"
+          echo "  - 配布先リポとの割れ（他リポを checkout していないため測れない）"
+          echo "  - 製品が正しく動くか（検査の健全性だけを見ている）"
+          echo "  ⟹ 割れは手元で npm run verify を実行して確認すること。"

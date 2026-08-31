@@ -212,6 +212,23 @@ function main() {
   }
   const res = scanDirectory(dir, pattern);
 
+  /*
+   * ★--count: 欠落本数だけを1行で返す（進化台帳の auto 測定用・2026-08-28）。
+   *
+   *   ★なぜ要るか: 台帳の指標「selftest を持たない検査の数」は、
+   *     以前【手で数えた値】が書かれていて、★数え方がどこにも残っていなかった。
+   *     後から素朴に数え直すと母集団が違い（8本 と 35本）、
+   *     ★比べると必ず誤診する（母集団が違えば比較不能）。
+   *   ⟹ ★数え方を持つのはこの検査だけにして、台帳はここを呼ぶ。
+   *
+   *   ★測れなかったときは数字を出さない（0 と書かない）。
+   */
+  if (args.includes('--count')) {
+    if (!res.ok) process.exit(2);
+    console.log(String(res.missing.length));
+    process.exit(0);
+  }
+
   if (!res.ok) {
     // ★測れなかった＝コード2。合格(0)にも赤(1)にも混ぜない。
     console.error(`[check-selftest-coverage] ★測れませんでした: ${res.reason}`);

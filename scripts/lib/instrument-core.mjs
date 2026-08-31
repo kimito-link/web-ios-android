@@ -44,6 +44,15 @@
 
 /** ★終了コードの約束。★このファイルをコピーすれば、web-ios-androidキットを
  *  使っていない他のリポジトリでもそのまま同じ規約で使える(依存ゼロ・純Node)。 */
+/**
+ * ★証拠が「いつ測ったものか」を見て、古ければ印を付ける閾値（ミリ秒）。
+ *
+ * ★収穫元: surechigai-romi.link/scripts/lib/instrument-core.mjs（2026-08-27 に正本へ取り込み）。
+ *   ★合格そのものは取り消さない。「古い」は「無効」ではない。
+ *   ただし★古い緑を新しい緑と同じ見た目にはしない（経過秒を必ず出す）。
+ */
+const STALE_MS = 60 * 1000;
+
 export const EXIT = Object.freeze({
   /** 合格。★根拠(evidence)を伴うときだけ名乗れる。 */
   PASS: 0,
@@ -90,6 +99,15 @@ export function normalizeProbeResult(raw) {
   }
   if (verdict !== 'pass' && verdict !== 'fail' && verdict !== 'inconclusive') {
     verdict = 'inconclusive';
+  }
+
+  // ★証拠に verifiedAt があれば、古さを測って印を付ける（合格は取り消さない）。
+  if (evidence && typeof evidence.verifiedAt === 'string') {
+    const at = Date.parse(evidence.verifiedAt);
+    if (!Number.isNaN(at) && Date.now() - at > STALE_MS) {
+      evidence.stale = true;
+      evidence.staleSec = Math.round((Date.now() - at) / 1000);
+    }
   }
 
   return {
@@ -155,6 +173,14 @@ export function formatProbeReport(results, opts = {}) {
   if (!fails.length && !unk.length) {
     const ev = pass.length ? `(根拠あり ${pass.length}件)` : '';
     lines.push(`${label}✅ 合格 ${ev}`);
+    // ★古い証拠での合格は、経過時間を必ず出す（新しい緑と見分けが付かなくしない）。
+    for (const r of pass) {
+      if (r.evidence?.stale) {
+        lines.push(
+          `${label}⏳ ${r.probe}: ★${r.evidence.staleSec}秒前の証拠です（今の状態ではありません）`
+        );
+      }
+    }
   }
   return lines.join('\n');
 }
@@ -192,4 +218,45 @@ export function runSelfTest(cases) {
     if (!red) fails.push(`${c.name}: ★毒を入れても赤にならなかった(検知が効いていない)`);
   }
   return { ok: fails.length === 0, fails };
+}
+
+/**
+ * ★タイムアウトしうる処理を1回だけ再試行し、2回とも駄目なら「測れなかった」にする。
+ *
+ * ★収穫元: kimitolink-linktree/scripts/lib/diag-core.mjs
+ *   → surechigai-romi.link が 2026-08-27 に輸入 → ★2026-08-28 に正本へ取り込み。
+ *
+ * ■ ★なぜ fail にしないか
+ *   ネットワーク越しの検査がタイムアウトしたとき、それは
+ *   「対象が壊れている」ではなく「★こちらが測れなかった」。
+ *   fail に倒すと、回線が細い日にデプロイが止まる＝赤が日常になり、
+ *   本物の赤を誰も見なくなる（掟「測れなかったを赤にも緑にも混ぜない」）。
+ *
+ * ■ 使い方
+ *   const r = await withRetryOnTimeout(() => fetch(url), 5000);
+ *   if (r?.timedOut) → verdict: 'inconclusive' にする
+ *
+ * @param {() => Promise<any>} fn
+ * @param {number} timeoutMs
+ * @returns {Promise<any>} 成功時はその値 / 2回ともタイムアウトなら { timedOut: true }
+ */
+export async function withRetryOnTimeout(fn, timeoutMs) {
+  const attempt = () =>
+    Promise.race([
+      fn(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs)),
+    ]);
+
+  try {
+    return await attempt();
+  } catch (firstErr) {
+    if (firstErr.message !== 'timeout') throw firstErr;
+    try {
+      return await attempt();
+    } catch (secondErr) {
+      if (secondErr.message !== 'timeout') throw secondErr;
+      // ★「測れなかった」を返す。呼び出し側で inconclusive にすること。
+      return { timedOut: true };
+    }
+  }
 }

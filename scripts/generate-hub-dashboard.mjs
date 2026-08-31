@@ -20,10 +20,12 @@
  *   node scripts/generate-hub-dashboard.mjs --root . --out site/hub
  *   node scripts/generate-hub-dashboard.mjs --selftest
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, mkdtempSync, rmSync as rmSyncFs } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { scanKitMatrix, scanProjectGates, detectProfile, loadOverrides } from './lib/hub-kit-matrix.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -140,15 +142,9 @@ function loadHubData(githubRoot) {
 const TODO_SOURCE = [
   {
     priority: 1,
-    title: 'sakkino.link（IAP実装済み・開発中）の次の一手を決める',
-    reason: '課金導線が既にあるプロジェクトの中で最もマネタイズに近い。ai-hub未登録のため状況を再確認し、リリースまでの障害物を洗い出す',
+    title: 'sakkino.link（課金機能はもう作ってある）を、次はどう前に進めるか決める',
+    reason: 'お金を生む仕組みが一番できているアプリなのに、まだこの一覧に載せていなかった。まず現状を見直して、公開までの残り障害を洗い出す',
     evidence: '2026-08-26調査: 「用途不明5リポジトリ」判定でIAP・独自iOSキーボード/共有拡張を実装済みと確認',
-  },
-  {
-    priority: 2,
-    title: 'Cloudflare Accessを /hub/* に設定する',
-    reason: 'このダッシュボードはnoindexのみで、Access未設定の間は実質公開状態（GUI操作のため自動化不可）',
-    evidence: '_docs/IMPLEMENTATION-HANDOFF-ai-hub-consolidation-2026-08-26.md のリスク対応チェックリスト参照',
   },
 ];
 
@@ -160,24 +156,38 @@ function deriveTodos(data) {
     //   (壊れた地図の上で優先順位を議論しても意味が無いため、priority 0で最上位に割り込む)。
     todos.push({
       priority: 0,
-      title: `ai-hub doctorの問題${data.doctorProblemCount}件を直す`,
+      title: `この一覧表そのものにエラーが${data.doctorProblemCount}件ある。まずこれを直す`,
       reason: data.doctorProblems.slice(0, 3).join(' / '),
       evidence: 'node ai-hub/bin/hub.mjs doctor',
     });
   }
+  if (data.matrix && data.matrix.available) {
+    const zeroGateProjects = data.matrix.projects.filter(
+      (p) => !p.rowNote && p.profile.isKitTarget && p.score.applicable > 0 && p.score.ok === 0
+    );
+    if (zeroGateProjects.length) {
+      const names = zeroGateProjects.map((p) => p.name);
+      todos.push({
+        priority: 3,
+        title: `安全チェックが1つも入っていないアプリが${names.length}件ある（${names.slice(0, 3).join('・')}${names.length > 3 ? '…' : ''}）`,
+        reason: '審査に出せる状態のアプリなのに、うっかりミスを防ぐ仕組みが何も入っていない。よくある事故（初期状態のままの画像を出してしまう等）を素通ししてしまう',
+        evidence: 'site/hub/matrix.json（generate-hub-dashboard.mjs 実スキャン）',
+      });
+    }
+  }
   if (data.emptyShelves.length) {
     todos.push({
       priority: 4,
-      title: `未整理の棚（${data.emptyShelves.join('・')}）に登録できる資産を探す`,
-      reason: '該当タグのエントリがindex.jsonに0件のため、この棚は空のまま表示されている',
+      title: `まだ何も登録していないテーマ（${data.emptyShelves.join('・')}）がある`,
+      reason: 'このテーマに当てはまる「作ったもの」がまだ1件も記録されていない。心当たりがあれば登録する',
       evidence: 'ai-hub/index.json',
     });
   }
   if (data.doctorWarningCount > 0) {
     todos.push({
       priority: 5,
-      title: `ai-hub doctorの警告${data.doctorWarningCount}件（未インデックス資産など）を精査する`,
-      reason: '緊急ではないが、資産が増えるほど探しにくくなる',
+      title: `一覧表にまだ載せていないファイルが${data.doctorWarningCount}件ある。急がなくてよい`,
+      reason: '緊急ではないが、増えるほど後で探しにくくなる',
       evidence: 'node ai-hub/bin/hub.mjs doctor',
     });
   }
@@ -186,7 +196,7 @@ function deriveTodos(data) {
 
 function renderTodos(todos) {
   if (!todos.length) {
-    return '<p class="todo-empty">✅ 今のところ機械的に検出された次のタスクはありません。</p>';
+    return '<p class="todo-empty">✅ 今のところ、機械が見つけた「次にやるべきこと」はありません。一息ついて大丈夫です。</p>';
   }
   const items = todos.map((t) => `        <li class="todo priority-${t.priority}">
           <div class="todo-title">${escapeHtml(t.title)}</div>
@@ -196,6 +206,94 @@ function renderTodos(todos) {
   return `      <ol class="todo-list">
 ${items}
       </ol>`;
+}
+
+const STATE_LABEL = { ok: '導入済', missing: '未導入', na: '対象外', unknown: '計測不能' };
+const STATE_SYMBOL = { ok: '✓', missing: '✗', na: '—', unknown: '?' };
+
+function renderMatrixHtml(matrix) {
+  if (!matrix || !matrix.available) {
+    const msg = matrix ? matrix.error : '不明なエラー';
+    return `<div class="doctor ng">
+  🟡 自動チェックの導入状況が今回は数えられませんでした（${escapeHtml(msg)}）— 「問題なし」ではなく「確認できていない」状態です
+</div>`;
+  }
+
+  const gateHeaders = matrix.gates
+    .map((g) => `          <th scope="col"><abbr title="${escapeHtml(g.file || 'instrument-core.mjs のimport実測')}">${escapeHtml(g.label)}</abbr></th>`)
+    .join('\n');
+
+  const rows = matrix.projects.map((p) => {
+    const cells = matrix.gates.map((g) => {
+      const cell = p.cells[g.id] || { state: 'unknown' };
+      const state = cell.state;
+      const overridden = cell.provenance === 'override';
+      const titleAttr = overridden && cell.reason ? ` title="${escapeHtml(cell.reason)}"` : '';
+      const overriddenAttr = overridden ? ' data-overridden="true"' : '';
+      return `          <td class="cell" data-state="${state}"${overriddenAttr}${titleAttr}><span aria-hidden="true">${STATE_SYMBOL[state] || '?'}</span><span class="sr-only">${STATE_LABEL[state] || '不明'}</span></td>`;
+    }).join('\n');
+    const noteHtml = p.rowNote
+      ? `<br><span class="row-note-inline">${escapeHtml(p.rowNote)}</span>`
+      : '';
+    const scoreText = p.score.applicable > 0 ? `${p.score.ok}/${p.score.applicable}` : '—';
+    return `        <tr${p.rowNote ? ' class="row-na"' : ''}>
+          <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code>${noteHtml}</th>
+${cells}
+          <td class="score-col">${scoreText}</td>
+        </tr>`;
+  }).join('\n');
+
+  const footCells = matrix.gates.map((g) => {
+    const t = matrix.totals[g.id] || { ok: 0, applicable: 0 };
+    return `          <td>${t.ok}/${t.applicable}</td>`;
+  }).join('\n');
+
+  const applicableCount = matrix.projects.length;
+
+  return `<section class="matrix-section" id="kit-matrix">
+  <h2>🚦 うっかりミスを防ぐ自動チェック、どのアプリに入っているか <span class="count">(対象${applicableCount}アプリ × ${matrix.gates.length}種類)</span></h2>
+  <p class="section-lead">
+    アプリを審査に出す前に「よくある失敗（設定忘れ・署名ミス等）」を機械が自動で
+    見つけてくれる仕組みがあります。これを1つのアプリだけで使っていても仕方ないので、
+    育てている全アプリに配りたい。でも実際どこまで配れているかは数えないと分からない
+    ——それをこの表がやってくれます。
+  </p>
+  <p class="matrix-meta">
+    最終確認: ${escapeHtml(matrix.generatedAt)}（すべて実際のファイルを機械が数えた結果で、人の申告ではありません）
+    <!-- 出典: 各プロジェクトディレクトリのfs walk実測。matrix.json参照 -->
+  </p>
+  <p class="matrix-legend" aria-hidden="true">
+    <span class="cell" data-state="ok">✓ 入っている</span>
+    <span class="cell" data-state="missing">✗ まだ入っていない</span>
+    <span class="cell" data-state="na">— このアプリには関係ない</span>
+    <span class="cell" data-state="unknown">? 確認できなかった</span>
+  </p>
+  <div class="matrix-scroll" tabindex="0" role="region" aria-label="アプリごとの自動チェック導入状況（横スクロール可）">
+    <table class="kit-matrix">
+      <caption class="sr-only">プロジェクトごとの出荷事故ゲート${matrix.gates.length}項目の導入状況</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="proj-col">プロジェクト</th>
+${gateHeaders}
+          <th scope="col" class="score-col">導入数</th>
+        </tr>
+      </thead>
+      <tbody>
+${rows}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" class="proj-col">列合計（導入/対象）</th>
+${footCells}
+          <td class="score-col"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+<script type="application/json" id="kit-matrix-json">
+${JSON.stringify(matrix).replaceAll('</', '<\\/')}
+</script>`;
 }
 
 function renderHtml(data) {
@@ -223,10 +321,15 @@ ${rows}
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
-<title>ai-hub ダッシュボード</title>
+<title>次にやることリスト（作業台）</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
   h1 { font-size: 1.4rem; }
+  .intro { color: #444; font-size: 0.95rem; line-height: 1.7; margin: 0.6rem 0; }
+  .intro--honest { color: #666; font-size: 0.85rem; font-style: italic; }
+  .section-lead { color: #555; font-size: 0.88rem; line-height: 1.6; margin: 0.3rem 0 0.8rem; }
+  .shelf-intro { margin: 2rem 0 0.5rem; }
+  .shelf-intro h2 { font-size: 1.15rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
   .meta { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
   .meta.stale { color: #b00; font-weight: bold; }
   .shelf { margin-bottom: 1.5rem; }
@@ -248,24 +351,69 @@ ${rows}
   .todo-reason { color: #555; font-size: 0.88rem; }
   .todo-evidence { color: #999; font-size: 0.78rem; }
   .todo-empty { color: #2e7d32; }
+  /* --- kit matrix --- */
+  .matrix-section { margin-bottom: 1.5rem; }
+  .matrix-meta { color: #666; font-size: 0.85rem; }
+  .matrix-legend .cell { display: inline-block; padding: 0.1rem 0.5rem; margin-right: 0.4rem;
+    border-radius: 3px; font-size: 0.82rem; }
+  .matrix-scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto;
+    border: 1px solid #ddd; border-radius: 6px; }
+  .kit-matrix { border-collapse: separate; border-spacing: 0; font-size: 0.82rem;
+    width: max-content; min-width: 100%; }
+  .kit-matrix th, .kit-matrix td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee;
+    text-align: center; white-space: nowrap; }
+  .kit-matrix thead th { position: sticky; top: 0; background: #fff; z-index: 2;
+    border-bottom: 2px solid #ddd; font-weight: 600; }
+  .kit-matrix .proj-col { position: sticky; left: 0; background: #fff; z-index: 1;
+    text-align: left; }
+  .kit-matrix thead .proj-col { z-index: 3; }
+  .kit-matrix td[data-state="ok"]      { background: #e8f5e9; color: #1b5e20; }
+  .kit-matrix td[data-state="missing"] { background: #ffebee; color: #b00; }
+  .kit-matrix td[data-state="na"]      { background: #f4f4f4; color: #888; }
+  .kit-matrix td[data-state="unknown"] { background: #fff8e1; color: #8a6d00; }
+  .kit-matrix td[data-overridden="true"] { outline: 1px dashed #999; outline-offset: -2px; }
+  .kit-matrix tfoot td, .kit-matrix tfoot th { border-top: 2px solid #ddd; color: #555;
+    position: sticky; bottom: 0; background: #fff; }
+  .kit-matrix .score-col { font-weight: 600; text-align: right; }
+  .row-note-inline { font-style: italic; color: #888; font-size: 0.75rem; font-weight: normal; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body>
 <p><a href="/">← kimito-skill.link トップへ</a></p>
-<h1>ai-hub ダッシュボード</h1>
+<h1>今、何から手をつけるべきか（自分専用メモ）</h1>
+<p class="intro">
+  これは私（開発者）が自分のために作った作業台です。育てているアプリやサイトが
+  いくつもあるので、「次に何をやればいいか」と「どのアプリにどんな安全チェックが
+  入っているか」を、人が見て回らなくても機械が毎回数えて教えてくれるようにしました。
+</p>
+<p class="intro intro--honest">
+  正直に言うと、専門用語もそのまま出てきます（内部の作業メモを兼ねているためです）。
+  分からない言葉があれば、各見出しの下にある一言メモを読めば流れは追えるはずです。
+</p>
 <p class="meta" id="freshness-note" data-generated-at="${escapeHtml(data.generatedAt)}">
-  生成: ${escapeHtml(data.generatedAt)}（entries=${data.entryCount}）
+  最終更新: ${escapeHtml(data.generatedAt)}（登録している資産: ${data.entryCount}件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json 実行結果、生成時刻はこのスクリプト実行時刻 -->
 </p>
 <div class="doctor ${data.doctorOk ? 'ok' : 'ng'}">
-  doctor: ${data.doctorOk ? '✓ OK' : '✗ 問題あり'}（問題${data.doctorProblemCount}件・警告${data.doctorWarningCount}件）
+  この一覧表自体が壊れていないかの自己点検: ${data.doctorOk ? '✓ 問題なし' : '✗ 問題あり'}（問題${data.doctorProblemCount}件・気になる点${data.doctorWarningCount}件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json -->
 </div>
 <section class="todo-section">
-  <h2>🎯 次にやるべきこと（優先順位順・機械的に検出）</h2>
+  <h2>🎯 次にやることリスト（優先順の高い順に、機械が毎回洗い出した分だけ）</h2>
+  <p class="section-lead">人が「次はこれ」と決めたのではなく、下の一覧表やチェック結果から自動で見つかったものです。</p>
 ${renderTodos(data.todos)}
 </section>
+${renderMatrixHtml(data.matrix)}
 ${emptyNote}
+<section class="shelf-intro">
+  <h2>📚 これまでに作った資産の一覧</h2>
+  <p class="section-lead">
+    ここから下は、テーマごとに整理した「作ったもの・分かったこと」の目録です。
+    ファイルの置き場所と種類（ノウハウ・自動化担当者・チェックの仕組み）だけを並べています。
+  </p>
+</section>
 ${shelvesHtml}
 </body>
 </html>
@@ -290,13 +438,36 @@ function main() {
     process.exit(1);
   }
   data.generatedAt = new Date().toISOString();
+
+  let matrix;
+  try {
+    matrix = scanKitMatrix(githubRoot, join(HERE, 'hub-matrix-overrides.json'));
+    matrix.generatedAt = data.generatedAt;
+  } catch (e) {
+    if (e.overrideConfigBroken) {
+      console.error(`[generate-hub-dashboard] FAIL  ${e.message}`);
+      process.exit(1);
+    }
+    matrix = { available: false, error: e.message };
+    console.error(`[generate-hub-dashboard] 🟡 マトリクスは計測できませんでした: ${e.message}`);
+  }
+  data.matrix = matrix;
   data.todos = deriveTodos(data);
 
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'index.html'), renderHtml(data), 'utf8');
+  writeFileSync(join(outDir, 'matrix.json'), JSON.stringify(matrix, null, 2), 'utf8');
+  const matrixSummary = matrix.available
+    ? {
+        available: true,
+        projectCount: matrix.projects.length,
+        fullOkCount: matrix.projects.filter((p) => !p.rowNote && p.score.applicable > 0 && p.score.ok === p.score.applicable).length,
+        worstGateId: Object.entries(matrix.totals).sort((a, b) => (a[1].ok / (a[1].applicable || 1)) - (b[1].ok / (b[1].applicable || 1)))[0]?.[0] || null,
+      }
+    : { available: false, error: matrix.error };
   writeFileSync(
     join(outDir, 'hub-data.json'),
-    JSON.stringify({ generatedFrom: data.generatedFrom, generatedAt: data.generatedAt, ...data }, null, 2),
+    JSON.stringify({ generatedFrom: data.generatedFrom, generatedAt: data.generatedAt, ...data, matrixSummary }, null, 2),
     'utf8'
   );
   console.log(`[generate-hub-dashboard] OK    ${outDir} を生成しました（entries=${data.entryCount}）`);
@@ -325,9 +496,28 @@ function runSelfTest() {
     }
   }
 
-  // 対照: 実際のgithub/ai-hubに対しては正常に読めること
+  /*
+   * 対照: 実際のgithub/ai-hubに対しては正常に読めること。
+   *
+   * ★隣のリポ(ai-hub)が【無い環境】ではこの対照は測れない。
+   *   CI はこのリポだけを checkout するので、実際に測れない
+   *   （2026-08-29 に隔離環境で実測して踏んだ）。
+   *
+   * ★そこを「赤」にすると CI が常時赤になり、本物の赤が埋もれる。
+   *   かといって黙って飛ばすと★対照なしの selftest を緑と読ませることになる
+   *   ＝毒だけ見て実データを見ない検査になり、偽陽性に気づけない。
+   *   ⟹ 【測れなかった】と明示して、この対照だけを外す（exit 2 相当）。
+   */
   const realGithubRoot = findRepoRootFromRoot(resolve(HERE, '..'));
+  const siblingsAbsent = process.env.VERIFY_SIBLING_REPOS === 'absent'
+    || !existsSync(join(realGithubRoot, 'ai-hub', 'index.json'));
+  if (siblingsAbsent) {
+    console.log('[generate-hub-dashboard] 🟡 対照(実 ai-hub)は測れませんでした'
+      + '(★隣のリポが無い環境です。緑ではなく「この1件は未検証」です)');
+    console.log('  → 手元では隣に ai-hub があるので測れます。CI では測れません。');
+  }
   try {
+    if (siblingsAbsent) throw { __skip: true };
     const data = loadHubData(realGithubRoot);
     if (!Array.isArray(data.shelves)) fails.push('real ai-hub: shelvesが配列ではない');
     if (typeof data.entryCount !== 'number' || data.entryCount <= 0) {
@@ -341,7 +531,8 @@ function runSelfTest() {
       fails.push('deriveTodos: priority昇順にソートされていない');
     }
   } catch (e) {
-    fails.push(`real ai-hub: 正常系で例外が発生: ${e.message}`);
+    // ★測れないときの意図的な離脱は失敗に数えない（上で🟡として告知済み）。
+    if (!e || !e.__skip) fails.push(`real ai-hub: 正常系で例外が発生: ${e.message}`);
   }
 
   // 毒2: doctorProblemCount>0を模したデータでpriority0のTODOが先頭に来るか
@@ -353,6 +544,53 @@ function runSelfTest() {
     const todos = deriveTodos(poisoned);
     if (!todos.length || todos[0].priority !== 0) {
       fails.push('poison(doctor problem): 問題ありのTODOが最優先(priority 0)にならなかった');
+    }
+  }
+
+  // 毒3〜5: kit-matrixの検知が効いているか（一時ディレクトリに毒フィクスチャを作る）
+  {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'hub-matrix-selftest-'));
+    try {
+      // 毒3: .claude/worktrees/配下だけにゲートファイルがある偽プロジェクト
+      //      （worktree除外が効いていなければ誤って ok になる）
+      const fakeApp1 = join(tmpRoot, 'fake-app-1');
+      mkdirSync(join(fakeApp1, '.claude', 'worktrees', 'x', 'scripts'), { recursive: true });
+      writeFileSync(join(fakeApp1, '.claude', 'worktrees', 'x', 'scripts', 'verify-webdir-consistency.mjs'), '// dummy', 'utf8');
+      writeFileSync(join(fakeApp1, 'capacitor.config.ts'), 'export default {};', 'utf8');
+      const profile1 = detectProfile(fakeApp1);
+      const { cells: cells1 } = scanProjectGates(fakeApp1, profile1);
+      if (cells1.webdir.state !== 'missing') {
+        fails.push('poison(worktree重複): .claude/worktrees配下のファイルを誤ってokと判定した(worktree除外が効いていない)');
+      }
+
+      // 毒4: instrument-core.mjsをコピーしただけ(import文なし)の偽プロジェクト
+      //      （死蔵ファイルの存在だけでokにしてはいけない）
+      const fakeApp2 = join(tmpRoot, 'fake-app-2');
+      mkdirSync(join(fakeApp2, 'scripts'), { recursive: true });
+      writeFileSync(join(fakeApp2, 'scripts', 'other.mjs'), 'export const x = 1;', 'utf8');
+      writeFileSync(join(fakeApp2, 'capacitor.config.ts'), 'export default {};', 'utf8');
+      const profile2 = detectProfile(fakeApp2);
+      const { cells: cells2 } = scanProjectGates(fakeApp2, profile2);
+      if (cells2['instrument-core'].state !== 'missing') {
+        fails.push('poison(死蔵ファイル): import文の無いinstrument-core言及を誤ってokと判定した');
+      }
+
+      // 毒5: reason/evidence欠落のoverridesを読ませて例外(fail-closed)になるか
+      const badOverridesPath = join(tmpRoot, 'bad-overrides.json');
+      writeFileSync(badOverridesPath, JSON.stringify({
+        include: [], exclude: [],
+        cells: [{ project: 'x', gate: 'webdir', state: 'na' }], // reason/evidence欠落
+      }), 'utf8');
+      try {
+        loadOverrides(badOverridesPath);
+        fails.push('poison(overrides欠落): reason/evidence無しのoverridesがthrowされなかった(fail-closedが効いていない)');
+      } catch (e) {
+        if (!e.overrideConfigBroken) {
+          fails.push(`poison(overrides欠落): 想定外のエラー種別: ${e.message}`);
+        }
+      }
+    } finally {
+      try { rmSyncFs(tmpRoot, { recursive: true, force: true }); } catch { /* 復帰失敗は致命ではない(OS temp) */ }
     }
   }
 
