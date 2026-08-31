@@ -31,6 +31,7 @@ export const GATES = [
   },
   { id: 'no-secrets-in-dist', label: '⑩秘密焼込防止', file: 'verify-no-secrets-in-dist.mjs', appliesTo: () => true },
   { id: 'hermes-unsafe-imports', label: '⑪Hermes不可import', file: 'verify-hermes-unsafe-imports.mjs', appliesTo: (p) => p.hasCapacitor || p.hasExpo },
+  { id: 'root-cause-claim', label: '⑫根治宣言検査', file: 'verify-root-cause-claim.mjs', appliesTo: () => true },
 ];
 
 /** walk中に刈り取るディレクトリ名（★.claude丸ごと除外＝worktree二重カウント対策）。 */

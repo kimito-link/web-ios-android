@@ -62,12 +62,12 @@
 <body>
 <p><a href="/">← kimito-skill.link トップへ</a></p>
 <h1>ai-hub ダッシュボード</h1>
-<p class="meta" id="freshness-note" data-generated-at="2026-08-30T23:49:21.598Z">
-  生成: 2026-08-30T23:49:21.598Z（entries=61）
+<p class="meta" id="freshness-note" data-generated-at="2026-08-31T00:06:32.972Z">
+  生成: 2026-08-31T00:06:32.972Z（entries=61）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json 実行結果、生成時刻はこのスクリプト実行時刻 -->
 </p>
 <div class="doctor ok">
-  doctor: ✓ OK（問題0件・警告128件）
+  doctor: ✓ OK（問題0件・警告130件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json -->
 </div>
 <section class="todo-section">
@@ -94,16 +94,16 @@
           <div class="todo-evidence">出典: ai-hub/index.json</div>
         </li>
         <li class="todo priority-5">
-          <div class="todo-title">ai-hub doctorの警告128件（未インデックス資産など）を精査する</div>
+          <div class="todo-title">ai-hub doctorの警告130件（未インデックス資産など）を精査する</div>
           <div class="todo-reason">緊急ではないが、資産が増えるほど探しにくくなる</div>
           <div class="todo-evidence">出典: node ai-hub/bin/hub.mjs doctor</div>
         </li>
       </ol>
 </section>
 <section class="matrix-section" id="kit-matrix">
-  <h2>🚦 出荷事故ゲート導入状況 <span class="count">(対象12プロジェクト × 11ゲート)</span></h2>
+  <h2>🚦 出荷事故ゲート導入状況 <span class="count">(対象12プロジェクト × 12ゲート)</span></h2>
   <p class="matrix-meta">
-    実測: 2026-08-30T23:49:21.598Z（generate-hub-dashboard.mjs によるファイルシステム実スキャン）
+    実測: 2026-08-31T00:06:32.972Z（generate-hub-dashboard.mjs によるファイルシステム実スキャン）
     <!-- 出典: 各プロジェクトディレクトリのfs walk実測。matrix.json参照 -->
   </p>
   <p class="matrix-legend" aria-hidden="true">
@@ -114,7 +114,7 @@
   </p>
   <div class="matrix-scroll" tabindex="0" role="region" aria-label="出荷事故ゲート導入マトリクス（横スクロール可）">
     <table class="kit-matrix">
-      <caption class="sr-only">プロジェクトごとの出荷事故ゲート11項目の導入状況</caption>
+      <caption class="sr-only">プロジェクトごとの出荷事故ゲート12項目の導入状況</caption>
       <thead>
         <tr>
           <th scope="col" class="proj-col">プロジェクト</th>
@@ -129,6 +129,7 @@
           <th scope="col"><abbr title="instrument-core.mjs のimport実測">⑨計器import</abbr></th>
           <th scope="col"><abbr title="verify-no-secrets-in-dist.mjs">⑩秘密焼込防止</abbr></th>
           <th scope="col"><abbr title="verify-hermes-unsafe-imports.mjs">⑪Hermes不可import</abbr></th>
+          <th scope="col"><abbr title="verify-root-cause-claim.mjs">⑫根治宣言検査</abbr></th>
           <th scope="col" class="score-col">導入数</th>
         </tr>
       </thead>
@@ -146,7 +147,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/5</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/6</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>Exosome</code></th>
@@ -161,7 +163,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/8</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/9</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>fujisan-clean</code></th>
@@ -176,7 +179,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/8</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/9</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>kimitolink-linktree</code></th>
@@ -191,7 +195,8 @@
           <td class="cell" data-state="ok"><span aria-hidden="true">✓</span><span class="sr-only">導入済</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">3/8</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">3/9</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>malwarecheck.site</code></th>
@@ -206,7 +211,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="na"><span aria-hidden="true">—</span><span class="sr-only">対象外</span></td>
-          <td class="score-col">0/4</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/5</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>partnership_program_website</code></th>
@@ -221,7 +227,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/8</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/9</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>resend-kimito-link-review</code></th>
@@ -236,7 +243,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/11</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/12</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>resend.kimito-link.com</code></th>
@@ -251,7 +259,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">3/11</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">3/12</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>sakkino.link</code></th>
@@ -266,7 +275,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="na"><span aria-hidden="true">—</span><span class="sr-only">対象外</span></td>
-          <td class="score-col">2/7</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">2/8</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>surechigai-romi.link</code></th>
@@ -281,7 +291,8 @@
           <td class="cell" data-state="ok"><span aria-hidden="true">✓</span><span class="sr-only">導入済</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">3/11</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">3/12</td>
         </tr>
         <tr class="row-na">
           <th scope="row" class="proj-col"><code>surechigai-romi.link-deploy-886aeff</code><br><span class="row-note-inline">Expo/React Native構成（Capacitor/TWA未使用）</span></th>
@@ -296,7 +307,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/5</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/6</td>
         </tr>
         <tr>
           <th scope="row" class="proj-col"><code>web-health-check-app</code></th>
@@ -311,7 +323,8 @@
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
           <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
-          <td class="score-col">0/11</td>
+          <td class="cell" data-state="missing"><span aria-hidden="true">✗</span><span class="sr-only">未導入</span></td>
+          <td class="score-col">0/12</td>
         </tr>
       </tbody>
       <tfoot>
@@ -328,6 +341,7 @@
           <td>2/12</td>
           <td>0/12</td>
           <td>0/10</td>
+          <td>0/12</td>
           <td class="score-col"></td>
         </tr>
       </tfoot>
@@ -335,7 +349,7 @@
   </div>
 </section>
 <script type="application/json" id="kit-matrix-json">
-{"generatedAt":"2026-08-30T23:49:21.598Z","scannedFrom":"github/ 直下ディレクトリの実ファイルスキャン","available":true,"gates":[{"id":"ios-splash","file":"verify-ios-splash-not-default.mjs","label":"①iOS splash"},{"id":"android-splash","file":"verify-android-splash-not-default.mjs","label":"②And splash"},{"id":"android-signing","file":"verify-android-signing-config.mjs","label":"③署名config"},{"id":"webdir","file":"verify-webdir-consistency.mjs","label":"④webDir"},{"id":"signing-path","file":"verify-signing-material-path.mjs","label":"⑤署名パス"},{"id":"tracked-imports","file":"check-tracked-imports.mjs","label":"⑥add忘れ"},{"id":"app-config-schema","file":"verify-app-config-schema.mjs","label":"⑦config schema"},{"id":"assetlinks","file":"verify-assetlinks-published.mjs","label":"⑧assetlinks"},{"id":"instrument-core","file":null,"label":"⑨計器import"},{"id":"no-secrets-in-dist","file":"verify-no-secrets-in-dist.mjs","label":"⑩秘密焼込防止"},{"id":"hermes-unsafe-imports","file":"verify-hermes-unsafe-imports.mjs","label":"⑪Hermes不可import"}],"projects":[{"name":"doin-challenge.com","profile":{"hasCapacitor":false,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":5},"rowNote":"Expo/React Native構成（Capacitor/TWA未使用）"},{"name":"Exosome","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":8},"rowNote":null},{"name":"fujisan-clean","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":8},"rowNote":null},{"name":"kimitolink-linktree","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"ok","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"ok","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":8},"rowNote":null},{"name":"malwarecheck.site","profile":{"hasCapacitor":false,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"na","provenance":"scan"}},"score":{"ok":0,"applicable":4},"rowNote":null},{"name":"partnership_program_website","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":8},"rowNote":null},{"name":"resend-kimito-link-review","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"missing","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":11},"rowNote":null},{"name":"resend.kimito-link.com","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"ok","provenance":"scan"},"android-splash":{"state":"ok","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":11},"rowNote":null},{"name":"sakkino.link","profile":{"hasCapacitor":false,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"na","provenance":"scan"}},"score":{"ok":2,"applicable":7},"rowNote":null},{"name":"surechigai-romi.link","profile":{"hasCapacitor":true,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"ok","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":11},"rowNote":null},{"name":"surechigai-romi.link-deploy-886aeff","profile":{"hasCapacitor":false,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":5},"rowNote":"Expo/React Native構成（Capacitor/TWA未使用）"},{"name":"web-health-check-app","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"missing","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":11},"rowNote":null}],"totals":{"ios-splash":{"ok":2,"applicable":8},"android-splash":{"ok":1,"applicable":8},"android-signing":{"ok":3,"applicable":5},"webdir":{"ok":0,"applicable":8},"signing-path":{"ok":0,"applicable":5},"tracked-imports":{"ok":3,"applicable":12},"app-config-schema":{"ok":0,"applicable":12},"assetlinks":{"ok":0,"applicable":5},"instrument-core":{"ok":2,"applicable":12},"no-secrets-in-dist":{"ok":0,"applicable":12},"hermes-unsafe-imports":{"ok":0,"applicable":10}},"scan":{"skippedDirs":[".agents",".auth",".claude",".claude_backup_tsuioku",".codex",".git",".pnpm-store","ai-health-check.link","ai-shain-worker","ai-shain.link","AI汎用ルール","appium","best-trust.biz","characterlive","codex","council","discordai","dns-osint-pro-ver2.0","gmail-secretary-extension","gpthisho","grok-build","hacking-tool","henshin-hisho","henshin-hisho-lp-deploy","Kali","kimi-no-oto","kimito-Link-Voice","kimito-link-yukkuri-douga","knowledge","line-bot","localclaudcode","manus","nagano_giin_complete_guide","Negative-suggestion-checker","nicolive-dl-master","OpenClaude","ouenmovie","patents","pincers","Push成功 🎉 リポが完全に初期化できました","qa-results","Qwen3.6-35B-A3B","removal","reply-copilot-openrouter-v2","reviewcheck.jp","reviewcheck.jp-kenshin","rolex","soushin-suggest.link","splash","surechigai-nico","Target-List-maker","tegiwai-video","telegram-todo-ai","traffic-seo","tsuioku-no-kiroku","VeniceUncensored","web-health-check.link","yukkuri","_backups","_enforcement-test","_pending-deletion-review","でｒa","デルタもん"],"errors":[]}}
+{"generatedAt":"2026-08-31T00:06:32.972Z","scannedFrom":"github/ 直下ディレクトリの実ファイルスキャン","available":true,"gates":[{"id":"ios-splash","file":"verify-ios-splash-not-default.mjs","label":"①iOS splash"},{"id":"android-splash","file":"verify-android-splash-not-default.mjs","label":"②And splash"},{"id":"android-signing","file":"verify-android-signing-config.mjs","label":"③署名config"},{"id":"webdir","file":"verify-webdir-consistency.mjs","label":"④webDir"},{"id":"signing-path","file":"verify-signing-material-path.mjs","label":"⑤署名パス"},{"id":"tracked-imports","file":"check-tracked-imports.mjs","label":"⑥add忘れ"},{"id":"app-config-schema","file":"verify-app-config-schema.mjs","label":"⑦config schema"},{"id":"assetlinks","file":"verify-assetlinks-published.mjs","label":"⑧assetlinks"},{"id":"instrument-core","file":null,"label":"⑨計器import"},{"id":"no-secrets-in-dist","file":"verify-no-secrets-in-dist.mjs","label":"⑩秘密焼込防止"},{"id":"hermes-unsafe-imports","file":"verify-hermes-unsafe-imports.mjs","label":"⑪Hermes不可import"},{"id":"root-cause-claim","file":"verify-root-cause-claim.mjs","label":"⑫根治宣言検査"}],"projects":[{"name":"doin-challenge.com","profile":{"hasCapacitor":false,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":6},"rowNote":"Expo/React Native構成（Capacitor/TWA未使用）"},{"name":"Exosome","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":9},"rowNote":null},{"name":"fujisan-clean","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":9},"rowNote":null},{"name":"kimitolink-linktree","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"ok","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"ok","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":9},"rowNote":null},{"name":"malwarecheck.site","profile":{"hasCapacitor":false,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"na","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":5},"rowNote":null},{"name":"partnership_program_website","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":9},"rowNote":null},{"name":"resend-kimito-link-review","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"missing","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":12},"rowNote":null},{"name":"resend.kimito-link.com","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":false,"isKitTarget":true},"cells":{"ios-splash":{"state":"ok","provenance":"scan"},"android-splash":{"state":"ok","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":12},"rowNote":null},{"name":"sakkino.link","profile":{"hasCapacitor":false,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"na","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":2,"applicable":8},"rowNote":null},{"name":"surechigai-romi.link","profile":{"hasCapacitor":true,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"ok","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"ok","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"ok","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":3,"applicable":12},"rowNote":null},{"name":"surechigai-romi.link-deploy-886aeff","profile":{"hasCapacitor":false,"hasExpo":true,"hasTwa":false,"hasIosDir":false,"hasAndroidDir":false,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"na","provenance":"scan"},"android-splash":{"state":"na","provenance":"scan"},"android-signing":{"state":"na","provenance":"scan"},"webdir":{"state":"na","provenance":"scan"},"signing-path":{"state":"na","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"na","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":6},"rowNote":"Expo/React Native構成（Capacitor/TWA未使用）"},{"name":"web-health-check-app","profile":{"hasCapacitor":true,"hasExpo":false,"hasTwa":false,"hasIosDir":true,"hasAndroidDir":true,"hasAppConfig":true,"isKitTarget":true},"cells":{"ios-splash":{"state":"missing","provenance":"scan"},"android-splash":{"state":"missing","provenance":"scan"},"android-signing":{"state":"missing","provenance":"scan"},"webdir":{"state":"missing","provenance":"scan"},"signing-path":{"state":"missing","provenance":"scan"},"tracked-imports":{"state":"missing","provenance":"scan"},"app-config-schema":{"state":"missing","provenance":"scan"},"assetlinks":{"state":"missing","provenance":"scan"},"instrument-core":{"state":"missing","provenance":"scan"},"no-secrets-in-dist":{"state":"missing","provenance":"scan"},"hermes-unsafe-imports":{"state":"missing","provenance":"scan"},"root-cause-claim":{"state":"missing","provenance":"scan"}},"score":{"ok":0,"applicable":12},"rowNote":null}],"totals":{"ios-splash":{"ok":2,"applicable":8},"android-splash":{"ok":1,"applicable":8},"android-signing":{"ok":3,"applicable":5},"webdir":{"ok":0,"applicable":8},"signing-path":{"ok":0,"applicable":5},"tracked-imports":{"ok":3,"applicable":12},"app-config-schema":{"ok":0,"applicable":12},"assetlinks":{"ok":0,"applicable":5},"instrument-core":{"ok":2,"applicable":12},"no-secrets-in-dist":{"ok":0,"applicable":12},"hermes-unsafe-imports":{"ok":0,"applicable":10},"root-cause-claim":{"ok":0,"applicable":12}},"scan":{"skippedDirs":[".agents",".auth",".claude",".claude_backup_tsuioku",".codex",".git",".pnpm-store","ai-health-check.link","ai-shain-worker","ai-shain.link","AI汎用ルール","appium","best-trust.biz","characterlive","codex","council","discordai","dns-osint-pro-ver2.0","gmail-secretary-extension","gpthisho","grok-build","hacking-tool","henshin-hisho","henshin-hisho-lp-deploy","Kali","kimi-no-oto","kimito-Link-Voice","kimito-link-yukkuri-douga","knowledge","line-bot","localclaudcode","manus","nagano_giin_complete_guide","Negative-suggestion-checker","nicolive-dl-master","OpenClaude","ouenmovie","patents","pincers","Push成功 🎉 リポが完全に初期化できました","qa-results","Qwen3.6-35B-A3B","removal","reply-copilot-openrouter-v2","reviewcheck.jp","reviewcheck.jp-kenshin","rolex","soushin-suggest.link","splash","surechigai-nico","Target-List-maker","tegiwai-video","telegram-todo-ai","traffic-seo","tsuioku-no-kiroku","VeniceUncensored","web-health-check.link","yukkuri","_backups","_enforcement-test","_pending-deletion-review","でｒa","デルタもん"],"errors":[]}}
 </script>
 <p class="empty-note">整理中（まだ登録資産なし）: 動画・SNS / ローカルLLM</p>
       <section class="shelf">

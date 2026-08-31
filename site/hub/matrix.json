@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30T23:49:21.598Z",
+  "generatedAt": "2026-08-31T00:06:32.972Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -57,6 +57,11 @@
       "id": "hermes-unsafe-imports",
       "file": "verify-hermes-unsafe-imports.mjs",
       "label": "⑪Hermes不可import"
+    },
+    {
+      "id": "root-cause-claim",
+      "file": "verify-root-cause-claim.mjs",
+      "label": "⑫根治宣言検査"
     }
   ],
   "projects": [
@@ -115,11 +120,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 5
+        "applicable": 6
       },
       "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
@@ -178,11 +187,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 8
+        "applicable": 9
       },
       "rowNote": null
     },
@@ -241,11 +254,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 8
+        "applicable": 9
       },
       "rowNote": null
     },
@@ -304,11 +321,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 8
+        "applicable": 9
       },
       "rowNote": null
     },
@@ -367,11 +388,15 @@
         "hermes-unsafe-imports": {
           "state": "na",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 4
+        "applicable": 5
       },
       "rowNote": null
     },
@@ -430,11 +455,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 8
+        "applicable": 9
       },
       "rowNote": null
     },
@@ -493,11 +522,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 11
+        "applicable": 12
       },
       "rowNote": null
     },
@@ -556,11 +589,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 11
+        "applicable": 12
       },
       "rowNote": null
     },
@@ -619,11 +656,15 @@
         "hermes-unsafe-imports": {
           "state": "na",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 2,
-        "applicable": 7
+        "applicable": 8
       },
       "rowNote": null
     },
@@ -682,11 +723,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 3,
-        "applicable": 11
+        "applicable": 12
       },
       "rowNote": null
     },
@@ -745,11 +790,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 5
+        "applicable": 6
       },
       "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
@@ -808,11 +857,15 @@
         "hermes-unsafe-imports": {
           "state": "missing",
           "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
         }
       },
       "score": {
         "ok": 0,
-        "applicable": 11
+        "applicable": 12
       },
       "rowNote": null
     }
@@ -861,6 +914,10 @@
     "hermes-unsafe-imports": {
       "ok": 0,
       "applicable": 10
+    },
+    "root-cause-claim": {
+      "ok": 0,
+      "applicable": 12
     }
   },
   "scan": {
