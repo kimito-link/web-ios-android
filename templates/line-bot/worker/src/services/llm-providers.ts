@@ -1,4 +1,5 @@
 import { ESCALATION_MARKER, type GroqReplyResult } from './groq-reply.js';
+import { readBodyForLog } from './safe-log.js';
 
 /**
  * LLMプロバイダの共通呼び出し層。GROQ/Gemini/Cloudflare Workers AI をチェーンで
@@ -100,7 +101,7 @@ async function callOpenAiCompatible(
     return { kind: 'fail_closed' };
   }
   if (!response.ok) {
-    console.warn('[llm-providers] API error', response.status, await response.text().catch(() => ''));
+    console.warn('[llm-providers] API error', response.status, await readBodyForLog(response, [apiKey]));
     return { kind: 'fail_closed' };
   }
 
@@ -201,7 +202,7 @@ export async function callVisionOpenAiCompatible(
     return null;
   }
   if (!response.ok) {
-    console.warn('[llm-providers] vision API error', response.status, await response.text().catch(() => ''));
+    console.warn('[llm-providers] vision API error', response.status, await readBodyForLog(response, [apiKey]));
     return null;
   }
 
@@ -297,7 +298,7 @@ export async function callGeminiAudio(apiKey: string, model: string, params: Aud
     return null;
   }
   if (!response.ok) {
-    console.warn('[llm-providers] audio API error', response.status, await response.text().catch(() => ''));
+    console.warn('[llm-providers] audio API error', response.status, await readBodyForLog(response, [apiKey]));
     return null;
   }
 
@@ -374,7 +375,7 @@ export async function callGeminiVideo(apiKey: string, model: string, params: Vid
     return null;
   }
   if (!response.ok) {
-    console.warn('[llm-providers] video API error', response.status, await response.text().catch(() => ''));
+    console.warn('[llm-providers] video API error', response.status, await readBodyForLog(response, [apiKey]));
     return null;
   }
 

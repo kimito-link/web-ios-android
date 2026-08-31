@@ -18,6 +18,7 @@ LLM生成段は**Groq→Gemini→Cloudflare Workers AIの3プロバイダをフ�
 | `worker/src/` | Cloudflare Workers本体（Hono）。webhook受信→署名検証→LLMチェーン→LINE返信 | 無改変 |
 | `worker/src/services/llm-providers.ts` | Groq/Gemini/Workers AI 3プロバイダの共通呼び出し層＋vision/video/audio呼び出し | 無改変 |
 | `worker/src/services/llm-chain.ts` | 3プロバイダを順に試すフォールバックチェーン（残り時間駆動） | 無改変 |
+| `worker/src/services/safe-log.ts` | 外部APIのエラー本文をログに出す前にAPIキー等を伏せる（下の地雷6） | 無改変 |
 | `worker/src/services/vision-describe.ts` | 画像→客観描写（Groq/Geminiのvisionチェーン） | 無改変 |
 | `worker/src/services/media-describe.ts` | 動画・音声→客観描写（Geminiのみ対応） | 無改変 |
 | `worker/src/services/incoming-image.ts` / `incoming-media.ts` | LINE Content APIから受信メディアを取得しR2に保存 | 無改変 |
@@ -301,6 +302,22 @@ npx wrangler secret put GEMINI_API_KEY
 5. **`knowledge-pack/*.md`とWorkersの読み込み方法が二重管理にならないようにする。** このテンプレは
    `import personaMd from '../knowledge-pack/persona.md'`という静的importで直接読む設計にしており
    （line-harness-ossにあった手動同期必須のTS焼き込み版は採用していない）、書き換えたら再デプロイのみで反映される。
+6. **外部APIのレスポンス本文をそのまま`console`に出さない。** LLMプロバイダがエラーを返したとき、
+   原因を知るために本文をログへ出したくなるが、**外部APIはこちらが送った値を反射することがある**。
+   そこにAPIキーが載っていると **Workers Logs に平文で残り、ログを読める全員に見える**。
+   - 2026-08-31 実障害（line-bot本体で6箇所発見・本テンプレも4箇所同じ構造だったため同時修正）:
+     `console.warn('...', await response.text())` の形が `llm-providers.ts` の
+     API/vision/audio/video の4経路にあった。`worker/src/services/safe-log.ts` の
+     `readBodyForLog()` を通す形に修正済み。**改変時もこの性質を崩さないこと。**
+   - ★**単体テストが緑でも漏れる。** マスク関数のテストを14件全通過させた状態で実際の経路を
+     通したら、秘密が素通りしていた（`{"error":{"message":"invalid api key: gsk_XXX"}}` の
+     `"message"` は秘密らしいキー名ではないので、キー名ベースのルールに引っかからなかった）。
+     **マスクを書いたら必ず実際の呼び出し経路を通して確かめる。**
+   - 防御は二重にしてある: ①呼び出し側が使った鍵を渡す（未知の形式でも値そのもので消える）
+     ②既知の接頭辞を形で捕まえる（`sk-ant-` / `gsk_` / `AIza` / `xox` / `ghp_` 等。渡し忘れの保険）。
+     ①だけだと渡し忘れで漏れ、②だけだと未知形式を取りこぼす。
+   - **伏せすぎない。** エラーの原因（`authentication_error` 等）は読めるまま残す。
+     調査できない形にすると運用者はログを見なくなる。見られないログは無いのと同じ。
 
 ## 移植元との違い（意図的な簡素化）
 
