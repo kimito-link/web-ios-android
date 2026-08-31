@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-31T05:19:11.134Z",
+  "generatedAt": "2026-08-31T05:24:01.349Z",
   "entryCount": 63,
   "doctorOk": true,
   "doctorProblems": [],
@@ -1801,7 +1801,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-31T05:19:11.134Z",
+    "generatedAt": "2026-08-31T05:24:01.349Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
