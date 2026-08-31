@@ -1,7 +1,7 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-31T00:08:47.264Z",
-  "entryCount": 61,
+  "generatedAt": "2026-08-31T04:46:49.180Z",
+  "entryCount": 62,
   "doctorOk": true,
   "doctorProblems": [],
   "doctorWarnings": [
@@ -22,7 +22,7 @@
     "kb-soushin-thumbmakefail: summary が80字超（1行厳守）",
     "kb-soushin-selfstop-explorer: summary が80字超（1行厳守）",
     "kb-winv-freeze-explorer-dup: summary が80字超（1行厳守）",
-    "linebot-llm-providers: mustSyncWith の反映漏れの疑い → web-ios-android/templates/line-bot/worker/src/services/llm-providers.ts が 4日古い（正本: line-bot/apps/worker/src/services/llm-providers.ts）",
+    "linebot-llm-providers: mustSyncWith の反映漏れの疑い → web-ios-android/templates/line-bot/worker/src/services/llm-providers.ts が 42日古い（正本: line-bot/apps/worker/src/services/llm-providers.ts）",
     "linebot-media-describe: mustSyncWith の反映漏れの疑い → web-ios-android/templates/line-bot/worker/src/services/media-describe.ts が 3日古い（正本: line-bot/apps/worker/src/services/media-describe.ts）",
     "linebot-incoming-media: mustSyncWith の反映漏れの疑い → web-ios-android/templates/line-bot/worker/src/services/incoming-media.ts が 3日古い（正本: line-bot/apps/worker/src/services/incoming-media.ts）",
     "未インデックスの検証資産: ai-shain-worker/scripts/check-frames.mjs（index化を検討）",
@@ -125,6 +125,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-template-drift.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-app-config-schema.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-assetlinks-published.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-claims-provenance.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-external-links.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-hermes-unsafe-imports.mjs（index化を検討）",
@@ -132,13 +133,14 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-manual-setup-done.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-no-secrets-in-dist.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-responsive-design.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/verify-responsive-runtime.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-root-cause-claim.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-security-score.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-signing-material-path.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 131,
+  "doctorWarningCount": 133,
   "shelves": [
     {
       "id": "shipping",
@@ -1224,9 +1226,11 @@
             "ci",
             "cost",
             "billing",
-            "trap"
+            "trap",
+            "fork-sync",
+            "permissions"
           ],
-          "summary": "Actionsが静かに金を食う地雷群（切上課金/緑の偽装/未有効機能/起動前死/無制限/action追従切れ）と直し方",
+          "summary": "Actionsが静かに金を食う地雷群（切上課金/緑の偽装/未有効機能/起動前死/無制限/action追従切れ）と、失敗が既定動作になったworkflowの直し方",
           "triggers": [
             "Actions",
             "課金",
@@ -1240,9 +1244,24 @@
             "invalid leading UTF-8 octet",
             "0s failure",
             "actionlintバグ",
-            "readFileSync utf8 ワークフローYAML 破壊"
+            "readFileSync utf8 ワークフローYAML 破壊",
+            "refusing to allow a GitHub App to create or update workflow",
+            "without `workflows` permission",
+            "Resource not accessible by integration",
+            "createPullRequest",
+            "default_workflow_permissions",
+            "Update from upstream",
+            "上流取り込み",
+            "マージ衝突",
+            "毎晩失敗",
+            "連続failure",
+            "ブランチが溜まる",
+            "重複ブランチ",
+            "毎晩1本増える",
+            "定期実行 成果物 溜まる",
+            "already-prepared"
           ],
-          "verified": "2026-08-07"
+          "verified": "2026-08-31"
         },
         {
           "id": "script-ci-audit",
@@ -1715,6 +1734,39 @@
             "WORKER_NAME"
           ],
           "verified": "2026-08-30"
+        },
+        {
+          "id": "kb-secrets-in-logs",
+          "kind": "kb",
+          "path": "ai-hub/kb/secrets-leaking-into-logs.md",
+          "tags": [
+            "security",
+            "logging",
+            "secrets",
+            "credential",
+            "trap",
+            "api-key"
+          ],
+          "summary": "外部APIのエラー本文をログに出すと秘密が残る。単体テストが緑でも経路で漏れた実例と、二重防御の作り方",
+          "triggers": [
+            "console.error",
+            "errText",
+            "await res.text()",
+            "レスポンス本文 ログ",
+            "client_secret",
+            "api key ログ",
+            "秘密 漏れ",
+            "credential ログ",
+            "マスク 効かない",
+            "redact",
+            "Workers Logs 平文",
+            "authentication_error",
+            "sk-ant-",
+            "gsk_",
+            "AIza",
+            "Bearer トークン ログ"
+          ],
+          "verified": "2026-08-31"
         }
       ]
     }
@@ -1724,7 +1776,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-31T00:08:47.264Z",
+    "generatedAt": "2026-08-31T04:46:49.180Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -2741,7 +2793,7 @@
     },
     {
       "priority": 5,
-      "title": "ai-hub doctorの警告131件（未インデックス資産など）を精査する",
+      "title": "ai-hub doctorの警告133件（未インデックス資産など）を精査する",
       "reason": "緊急ではないが、資産が増えるほど探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
