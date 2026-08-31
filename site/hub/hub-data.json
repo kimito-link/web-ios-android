@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-31T04:46:49.180Z",
+  "generatedAt": "2026-08-31T05:06:19.000Z",
   "entryCount": 62,
   "doctorOk": true,
   "doctorProblems": [],
@@ -1776,7 +1776,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-31T04:46:49.180Z",
+    "generatedAt": "2026-08-31T05:06:19.000Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -2769,32 +2769,26 @@
   "todos": [
     {
       "priority": 1,
-      "title": "sakkino.link（IAP実装済み・開発中）の次の一手を決める",
-      "reason": "課金導線が既にあるプロジェクトの中で最もマネタイズに近い。ai-hub未登録のため状況を再確認し、リリースまでの障害物を洗い出す",
+      "title": "sakkino.link（課金機能はもう作ってある）を、次はどう前に進めるか決める",
+      "reason": "お金を生む仕組みが一番できているアプリなのに、まだこの一覧に載せていなかった。まず現状を見直して、公開までの残り障害を洗い出す",
       "evidence": "2026-08-26調査: 「用途不明5リポジトリ」判定でIAP・独自iOSキーボード/共有拡張を実装済みと確認"
     },
     {
-      "priority": 2,
-      "title": "Cloudflare Accessを /hub/* に設定する",
-      "reason": "このダッシュボードはnoindexのみで、Access未設定の間は実質公開状態（GUI操作のため自動化不可）",
-      "evidence": "_docs/IMPLEMENTATION-HANDOFF-ai-hub-consolidation-2026-08-26.md のリスク対応チェックリスト参照"
-    },
-    {
       "priority": 3,
-      "title": "出荷事故ゲート0/9のプロジェクト6件（Exosome・fujisan-clean・malwarecheck.site…）にゲートを導入する",
-      "reason": "キット対象なのに出荷事故ゲートが1本も入っていない（Capacitorデフォルトスプラッシュ等の既知事故を素通しする状態）",
+      "title": "安全チェックが1つも入っていないアプリが6件ある（Exosome・fujisan-clean・malwarecheck.site…）",
+      "reason": "審査に出せる状態のアプリなのに、うっかりミスを防ぐ仕組みが何も入っていない。よくある事故（初期状態のままの画像を出してしまう等）を素通ししてしまう",
       "evidence": "site/hub/matrix.json（generate-hub-dashboard.mjs 実スキャン）"
     },
     {
       "priority": 4,
-      "title": "未整理の棚（動画・SNS・ローカルLLM）に登録できる資産を探す",
-      "reason": "該当タグのエントリがindex.jsonに0件のため、この棚は空のまま表示されている",
+      "title": "まだ何も登録していないテーマ（動画・SNS・ローカルLLM）がある",
+      "reason": "このテーマに当てはまる「作ったもの」がまだ1件も記録されていない。心当たりがあれば登録する",
       "evidence": "ai-hub/index.json"
     },
     {
       "priority": 5,
-      "title": "ai-hub doctorの警告133件（未インデックス資産など）を精査する",
-      "reason": "緊急ではないが、資産が増えるほど探しにくくなる",
+      "title": "一覧表にまだ載せていないファイルが133件ある。急がなくてよい",
+      "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
   ],

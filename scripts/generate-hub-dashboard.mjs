@@ -142,15 +142,9 @@ function loadHubData(githubRoot) {
 const TODO_SOURCE = [
   {
     priority: 1,
-    title: 'sakkino.link（IAP実装済み・開発中）の次の一手を決める',
-    reason: '課金導線が既にあるプロジェクトの中で最もマネタイズに近い。ai-hub未登録のため状況を再確認し、リリースまでの障害物を洗い出す',
+    title: 'sakkino.link（課金機能はもう作ってある）を、次はどう前に進めるか決める',
+    reason: 'お金を生む仕組みが一番できているアプリなのに、まだこの一覧に載せていなかった。まず現状を見直して、公開までの残り障害を洗い出す',
     evidence: '2026-08-26調査: 「用途不明5リポジトリ」判定でIAP・独自iOSキーボード/共有拡張を実装済みと確認',
-  },
-  {
-    priority: 2,
-    title: 'Cloudflare Accessを /hub/* に設定する',
-    reason: 'このダッシュボードはnoindexのみで、Access未設定の間は実質公開状態（GUI操作のため自動化不可）',
-    evidence: '_docs/IMPLEMENTATION-HANDOFF-ai-hub-consolidation-2026-08-26.md のリスク対応チェックリスト参照',
   },
 ];
 
@@ -162,7 +156,7 @@ function deriveTodos(data) {
     //   (壊れた地図の上で優先順位を議論しても意味が無いため、priority 0で最上位に割り込む)。
     todos.push({
       priority: 0,
-      title: `ai-hub doctorの問題${data.doctorProblemCount}件を直す`,
+      title: `この一覧表そのものにエラーが${data.doctorProblemCount}件ある。まずこれを直す`,
       reason: data.doctorProblems.slice(0, 3).join(' / '),
       evidence: 'node ai-hub/bin/hub.mjs doctor',
     });
@@ -175,8 +169,8 @@ function deriveTodos(data) {
       const names = zeroGateProjects.map((p) => p.name);
       todos.push({
         priority: 3,
-        title: `出荷事故ゲート0/9のプロジェクト${names.length}件（${names.slice(0, 3).join('・')}${names.length > 3 ? '…' : ''}）にゲートを導入する`,
-        reason: 'キット対象なのに出荷事故ゲートが1本も入っていない（Capacitorデフォルトスプラッシュ等の既知事故を素通しする状態）',
+        title: `安全チェックが1つも入っていないアプリが${names.length}件ある（${names.slice(0, 3).join('・')}${names.length > 3 ? '…' : ''}）`,
+        reason: '審査に出せる状態のアプリなのに、うっかりミスを防ぐ仕組みが何も入っていない。よくある事故（初期状態のままの画像を出してしまう等）を素通ししてしまう',
         evidence: 'site/hub/matrix.json（generate-hub-dashboard.mjs 実スキャン）',
       });
     }
@@ -184,16 +178,16 @@ function deriveTodos(data) {
   if (data.emptyShelves.length) {
     todos.push({
       priority: 4,
-      title: `未整理の棚（${data.emptyShelves.join('・')}）に登録できる資産を探す`,
-      reason: '該当タグのエントリがindex.jsonに0件のため、この棚は空のまま表示されている',
+      title: `まだ何も登録していないテーマ（${data.emptyShelves.join('・')}）がある`,
+      reason: 'このテーマに当てはまる「作ったもの」がまだ1件も記録されていない。心当たりがあれば登録する',
       evidence: 'ai-hub/index.json',
     });
   }
   if (data.doctorWarningCount > 0) {
     todos.push({
       priority: 5,
-      title: `ai-hub doctorの警告${data.doctorWarningCount}件（未インデックス資産など）を精査する`,
-      reason: '緊急ではないが、資産が増えるほど探しにくくなる',
+      title: `一覧表にまだ載せていないファイルが${data.doctorWarningCount}件ある。急がなくてよい`,
+      reason: '緊急ではないが、増えるほど後で探しにくくなる',
       evidence: 'node ai-hub/bin/hub.mjs doctor',
     });
   }
@@ -202,7 +196,7 @@ function deriveTodos(data) {
 
 function renderTodos(todos) {
   if (!todos.length) {
-    return '<p class="todo-empty">✅ 今のところ機械的に検出された次のタスクはありません。</p>';
+    return '<p class="todo-empty">✅ 今のところ、機械が見つけた「次にやるべきこと」はありません。一息ついて大丈夫です。</p>';
   }
   const items = todos.map((t) => `        <li class="todo priority-${t.priority}">
           <div class="todo-title">${escapeHtml(t.title)}</div>
@@ -221,7 +215,7 @@ function renderMatrixHtml(matrix) {
   if (!matrix || !matrix.available) {
     const msg = matrix ? matrix.error : '不明なエラー';
     return `<div class="doctor ng">
-  🟡 出荷事故ゲートマトリクス: 計測不能（${escapeHtml(msg)}）— 緑ではなく未計測
+  🟡 自動チェックの導入状況が今回は数えられませんでした（${escapeHtml(msg)}）— 「問題なし」ではなく「確認できていない」状態です
 </div>`;
   }
 
@@ -257,18 +251,24 @@ ${cells}
   const applicableCount = matrix.projects.length;
 
   return `<section class="matrix-section" id="kit-matrix">
-  <h2>🚦 出荷事故ゲート導入状況 <span class="count">(対象${applicableCount}プロジェクト × ${matrix.gates.length}ゲート)</span></h2>
+  <h2>🚦 うっかりミスを防ぐ自動チェック、どのアプリに入っているか <span class="count">(対象${applicableCount}アプリ × ${matrix.gates.length}種類)</span></h2>
+  <p class="section-lead">
+    アプリを審査に出す前に「よくある失敗（設定忘れ・署名ミス等）」を機械が自動で
+    見つけてくれる仕組みがあります。これを1つのアプリだけで使っていても仕方ないので、
+    育てている全アプリに配りたい。でも実際どこまで配れているかは数えないと分からない
+    ——それをこの表がやってくれます。
+  </p>
   <p class="matrix-meta">
-    実測: ${escapeHtml(matrix.generatedAt)}（generate-hub-dashboard.mjs によるファイルシステム実スキャン）
+    最終確認: ${escapeHtml(matrix.generatedAt)}（すべて実際のファイルを機械が数えた結果で、人の申告ではありません）
     <!-- 出典: 各プロジェクトディレクトリのfs walk実測。matrix.json参照 -->
   </p>
   <p class="matrix-legend" aria-hidden="true">
-    <span class="cell" data-state="ok">✓ 導入済</span>
-    <span class="cell" data-state="missing">✗ 未導入</span>
-    <span class="cell" data-state="na">— 対象外</span>
-    <span class="cell" data-state="unknown">? 計測不能</span>
+    <span class="cell" data-state="ok">✓ 入っている</span>
+    <span class="cell" data-state="missing">✗ まだ入っていない</span>
+    <span class="cell" data-state="na">— このアプリには関係ない</span>
+    <span class="cell" data-state="unknown">? 確認できなかった</span>
   </p>
-  <div class="matrix-scroll" tabindex="0" role="region" aria-label="出荷事故ゲート導入マトリクス（横スクロール可）">
+  <div class="matrix-scroll" tabindex="0" role="region" aria-label="アプリごとの自動チェック導入状況（横スクロール可）">
     <table class="kit-matrix">
       <caption class="sr-only">プロジェクトごとの出荷事故ゲート${matrix.gates.length}項目の導入状況</caption>
       <thead>
@@ -321,10 +321,15 @@ ${rows}
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
-<title>ai-hub ダッシュボード</title>
+<title>次にやることリスト（作業台）</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
   h1 { font-size: 1.4rem; }
+  .intro { color: #444; font-size: 0.95rem; line-height: 1.7; margin: 0.6rem 0; }
+  .intro--honest { color: #666; font-size: 0.85rem; font-style: italic; }
+  .section-lead { color: #555; font-size: 0.88rem; line-height: 1.6; margin: 0.3rem 0 0.8rem; }
+  .shelf-intro { margin: 2rem 0 0.5rem; }
+  .shelf-intro h2 { font-size: 1.15rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
   .meta { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
   .meta.stale { color: #b00; font-weight: bold; }
   .shelf { margin-bottom: 1.5rem; }
@@ -377,21 +382,38 @@ ${rows}
 </head>
 <body>
 <p><a href="/">← kimito-skill.link トップへ</a></p>
-<h1>ai-hub ダッシュボード</h1>
+<h1>今、何から手をつけるべきか（自分専用メモ）</h1>
+<p class="intro">
+  これは私（開発者）が自分のために作った作業台です。育てているアプリやサイトが
+  いくつもあるので、「次に何をやればいいか」と「どのアプリにどんな安全チェックが
+  入っているか」を、人が見て回らなくても機械が毎回数えて教えてくれるようにしました。
+</p>
+<p class="intro intro--honest">
+  正直に言うと、専門用語もそのまま出てきます（内部の作業メモを兼ねているためです）。
+  分からない言葉があれば、各見出しの下にある一言メモを読めば流れは追えるはずです。
+</p>
 <p class="meta" id="freshness-note" data-generated-at="${escapeHtml(data.generatedAt)}">
-  生成: ${escapeHtml(data.generatedAt)}（entries=${data.entryCount}）
+  最終更新: ${escapeHtml(data.generatedAt)}（登録している資産: ${data.entryCount}件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json 実行結果、生成時刻はこのスクリプト実行時刻 -->
 </p>
 <div class="doctor ${data.doctorOk ? 'ok' : 'ng'}">
-  doctor: ${data.doctorOk ? '✓ OK' : '✗ 問題あり'}（問題${data.doctorProblemCount}件・警告${data.doctorWarningCount}件）
+  この一覧表自体が壊れていないかの自己点検: ${data.doctorOk ? '✓ 問題なし' : '✗ 問題あり'}（問題${data.doctorProblemCount}件・気になる点${data.doctorWarningCount}件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json -->
 </div>
 <section class="todo-section">
-  <h2>🎯 次にやるべきこと（優先順位順・機械的に検出）</h2>
+  <h2>🎯 次にやることリスト（優先順の高い順に、機械が毎回洗い出した分だけ）</h2>
+  <p class="section-lead">人が「次はこれ」と決めたのではなく、下の一覧表やチェック結果から自動で見つかったものです。</p>
 ${renderTodos(data.todos)}
 </section>
 ${renderMatrixHtml(data.matrix)}
 ${emptyNote}
+<section class="shelf-intro">
+  <h2>📚 これまでに作った資産の一覧</h2>
+  <p class="section-lead">
+    ここから下は、テーマごとに整理した「作ったもの・分かったこと」の目録です。
+    ファイルの置き場所と種類（ノウハウ・自動化担当者・チェックの仕組み）だけを並べています。
+  </p>
+</section>
 ${shelvesHtml}
 </body>
 </html>
