@@ -1,7 +1,7 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-08-31T05:07:07.515Z",
-  "entryCount": 62,
+  "generatedAt": "2026-08-31T05:19:11.134Z",
+  "entryCount": 63,
   "doctorOk": true,
   "doctorProblems": [],
   "doctorWarnings": [
@@ -1767,6 +1767,31 @@
             "Bearer トークン ログ"
           ],
           "verified": "2026-08-31"
+        },
+        {
+          "id": "kb-upstream-fork-triage",
+          "kind": "kb",
+          "path": "ai-hub/kb/upstream-fork-triage.md",
+          "tags": [
+            "fork",
+            "upstream",
+            "oss",
+            "merge",
+            "triage",
+            "maintenance"
+          ],
+          "summary": "分岐したforkで上流の変更を丸ごとマージせず1件ずつ精査して取り込む型。ファイルの存在≠同じバグ、修正を戻して赤くなる確認まで",
+          "triggers": [
+            "上流 取り込み",
+            "fork 同期",
+            "丸ごとマージ",
+            "衝突11",
+            "upstream/update",
+            "マージ 危険",
+            "上流 fix 精査",
+            "分岐 fork"
+          ],
+          "verified": "2026-08-31"
         }
       ]
     }
@@ -1776,7 +1801,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-08-31T05:07:07.515Z",
+    "generatedAt": "2026-08-31T05:19:11.134Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [

@@ -21,7 +21,10 @@
     { href: '/features/health-check/', label: '🎬 起動画面と動作確認' },
     { href: '/check-shindan-version/', label: '✅ 更新・動作状況' },
     { href: '/ai-guide/', label: '🤖 AI向けガイド' },
-    { href: '/sitemap/', label: '🗺️ その他の説明' }
+    { href: '/sitemap/', label: '🗺️ その他の説明' },
+    // /hub/ は開発者本人専用の内部作業台（ログインが必要）。一般の訪問者向けではないため、
+    // 目立たせず一番奥に置く。
+    { href: '/hub/', label: '🔒 作業台（本人専用）' }
   ];
 
   // 現在地の判定は「そのnavリンクのパスが今のURLの先頭と一致するか」で行う。
