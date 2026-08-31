@@ -61,6 +61,47 @@ import { tmpdir } from 'node:os';
 
 const SRC_FILE_RE = /\.(ahk|js|mjs|ts|cs|py)$/;
 
+/**
+ * ★走査しないディレクトリ(2026-08-31 に生成物を追加)。
+ *
+ * 【なぜ生成物を外すか(実測)】キット自身に当てたとき、証跡がこう出ていた:
+ *     ✅ 合格(心拍が在ります: api.ts, main-nyV2JAdP.js, worker-entry-O_x3YhXA.js, …)
+ *   ★正体は dist/ 配下の【minify 済みビルド成果物】で、.gitignore された場所だった。
+ *
+ *   ・minify は1行が数万字になるため、②の【窓300字】の前提が崩れる
+ *   ・生成物は【直せない】。赤くなっても人間が対処できない
+ *   ・"main-nyV2JAdP.js" を見に行っても、人間には何の根拠にもならない
+ *
+ * ★元ソースに心拍が在れば生成物にも在るので、除外しても見逃しは増えない。
+ */
+const SKIP_DIRS = new Set([
+  'node_modules', '.git',
+  'dist', 'build', 'out', '.next', '.nuxt', '.output', 'coverage', 'vendor',
+]);
+
+/**
+ * ★コメントを落とす(2026-08-31)。綴りで判定する前に必ず通す。
+ *
+ * 【なぜ要るか】コメントは「書いてあるだけ」で、動く保証がゼロ。
+ *   ★実測で、心拍を停止させた製品が【コメント1行】だけで合格した。
+ *   ここで落としておけば、以後どの判定も「書いてあるだけ」に騙されない。
+ *
+ * 【★対象の綴り】このキットは言語をまたぐので、行コメントは表で持つ:
+ *   ; (AutoHotkey) / # (Python・シェル・PowerShell) / // (JS/TS/C#)
+ *   ブロックコメント (JS/TS/C#) も落とす。
+ *
+ * 【★やらないこと】文字列リテラルの中までは見ない。
+ *   "heartbeat" という【文字列】を書けば通ってしまうが、
+ *   ★それはログに出す文言である可能性が高く、コメントほど無害ではない。
+ *   完全な構文解析はこのキットの方針(依存を増やさない)に反するので踏み込まない。
+ */
+export function stripComments(src) {
+  return String(src || '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')   // ブロックコメント。★行より先に落とす
+    .replace(/^[ \t]*[;#].*$/gm, '')    // AHK(;) / Python・シェル・PowerShell(#)
+    .replace(/^[ \t]*\/\/.*$/gm, '');   // JS/TS/C#
+}
+
 /** 定期的に走る仕掛けが在るか。 */
 export function hasPeriodic(src) {
   const s = String(src || '');
@@ -94,9 +135,26 @@ export function hasLogging(src) {
  *      確実に見つけてほしいなら、関数名か注釈に heartbeat と書くこと。
  */
 export function looksLikeHeartbeat(src) {
-  const s = String(src || '');
+  const s = stripComments(String(src || ''));
   // ① 明示的に名乗っているもの。★最も確実で、実装者の意図が読める。
-  if (/heartbeat|Heartbeat|HEARTBEAT|心拍/.test(s)) return true;
+  //
+  // 【★偽の緑を出した(2026-08-31・実測)】当初は綴りが在るだけで true にしていた:
+  //     if (/heartbeat|Heartbeat|HEARTBEAT|心拍/.test(s)) return true;
+  //   実在の製品で心拍を【3重に停止】させた(呼び出しを削除・周期を負(1回きり)に
+  //   改変・綴りを置換)にもかかわらず、★残った2つだけで【合格】が出た:
+  //     global DIAG_HEARTBEAT_MS := 300000   ← 定数の宣言
+  //     ; ★心拍を始める                      ← コメント
+  //   ⟹ ★コメント1行だけで通る = 実装がゼロでも緑。
+  //      この検査の目的(沈黙と正常を区別する)と、挙動が矛盾していた。
+  //
+  // 【★直した判定】コードとして名乗っているものだけを認める:
+  //   ・コメントを先に落とす(stripComments)
+  //   ・★定数の【宣言だけ】は根拠にしない。関数の定義か呼び出しの形を要求する。
+  //     DIAG_HEARTBEAT_MS := 300000 は「値を置いた」だけで、打つ保証が無い。
+  //
+  // 【この判定の限界】heartbeat という名前を使わずに実装した心拍は①では拾えない。
+  //   ★見逃す方向の誤りであり、偽の緑より安全(②が拾う可能性も残る)。
+  if (/\w*(?:heartbeat|Heartbeat|HEARTBEAT|心拍)\w*\s*\(/.test(s)) return true;
   // ② 繰り返す仕掛けの【内側】で記録しているもの。
   //    SetTimer(() => Log(...))  /  setInterval(() => { ...write... }, n)
   // ★閉じ括弧では区切らない。setInterval(() => {...}, n) は最初の ")" が
@@ -159,7 +217,7 @@ export function scanDirectory(dir) {
     for (const e of ents) {
       // ★node_modules と .git は見ない(遅いうえ、直せないものを数えても意味が無い)
       if (e.isDirectory()) {
-        if (e.name === 'node_modules' || e.name === '.git') continue;
+        if (SKIP_DIRS.has(e.name)) continue;
         walk(join(d, e.name));
         continue;
       }
@@ -222,7 +280,9 @@ function runSelftest() {
   if (!(re2.ok && re2.files === 1 && re2.heartbeat === false))
     fails.push('★node_modules を数えてしまっている: ' + JSON.stringify(re2));
 
-  // ⑥ ★"heartbeat" という綴りだけでも心拍と認めること(明示的な実装への配慮)
+  // ⑥ ★heartbeat と名乗る【関数】は心拍と認めること(明示的な実装への配慮)。
+  //    ★綴りが在るだけでは足りない。関数の定義/呼び出しの形であることが条件
+  //    (下の⑪と対で読むこと。1文字の違いではなく「コードか否か」が分かれ目)。
   const f = mk('word', { 'f.ahk': 'DiagHeartbeat() {\n  ; 心拍\n}\n' });
   const rf = scanDirectory(f);
   if (!(rf.ok && rf.heartbeat === true))
@@ -269,12 +329,38 @@ function runSelftest() {
   if (rj.heartbeat !== false)
     fails.push('★関数の外の記録を拾って心拍と誤認している: ' + JSON.stringify(rj));
 
+  // ⑪ ★【実損の再現】コメントと定数の宣言だけを心拍と認めないこと(2026-08-31)。
+  //    実在の製品で心拍を3重に停止させた(呼び出しを削除・周期を負に改変・綴りを置換)
+  //    にもかかわらず、★残ったこの2行だけで【合格】が出た。
+  //    ⟹ コメントは「書いてあるだけ」で動く保証がゼロ。
+  //       定数の宣言も「値を置いた」だけで、打つ保証が無い。
+  const k = mk('commentonly', {
+    'k.ahk': '; ★心拍を始める(2026-08-31)\n'
+      + 'global DIAG_HEARTBEAT_MS := 300000\n'
+      + 'FileAppend("x", "p")\n',
+  });
+  const rk = scanDirectory(k);
+  if (rk.heartbeat !== false)
+    fails.push('★コメント/定数の宣言だけを心拍と誤認している: ' + JSON.stringify(rk));
+
+  // ⑫ ★正の対照: ⑪と同じ綴りでも【呼び出す】なら心拍と認めること。
+  //    ★⑪との差は「コードか否か」の1点だけ。ここが両方向で動いて初めて
+  //      「コメントに騙されない」と言える(片側だけなら何も検出しない検査でも通る)。
+  const l = mk('called', {
+    'l.ahk': 'SetTimer(DiagHeartbeatTick, 300000)\n'
+      + 'DiagHeartbeatTick() {\n    FileAppend("beat", "p")\n}\n',
+  });
+  const rl = scanDirectory(l);
+  if (rl.heartbeat !== true)
+    fails.push('★コードとして名乗る心拍を見つけられない: ' + JSON.stringify(rl));
+
   if (fails.length) {
     console.error('[check-heartbeat-present] ★selftest 失敗:\n  ' + fails.join('\n  '));
     process.exit(1);
   }
   console.log('[check-heartbeat-present] selftest OK'
-    + '(心拍の有無を両方向で判定 / ★1回きりを心拍と誤認しない / 別々の仕組みを誤認しない / 0件を緑にしない)');
+    + '(心拍の有無を両方向で判定 / ★1回きりを心拍と誤認しない / 別々の仕組みを誤認しない'
+    + ' / ★コメント・定数の宣言だけでは緑にしない / 0件を緑にしない)');
   process.exit(0);
 }
 
