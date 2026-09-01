@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI向け実行ガイド | web-ios-android アプリ公開キット</title>
-  <meta name="description" content="web-ios-androidキットを扱うAI向けに、目的、読む順番、必要な入力、実行手順、安全上の境界、完了条件を整理した実行ガイドです。">
+  <title>AI向け実行ガイド | web-ios-android 横断開発基盤</title>
+  <meta name="description" content="web-ios-androidキットを扱うAI向けに、目的、読む順番、必要な入力、実行手順、安全上の境界、完了条件を整理した実行ガイドです。このキットはアプリ申請自動化ひな型と、横断知見の正本ai-hubへの窓口の2役を持ちます。">
   <link rel="canonical" href="https://kimito-skill.link/ai-guide/">
   <link rel="alternate" type="text/plain" href="/llms.txt" title="AI向け概要">
   <link rel="icon" type="image/png" href="../favicon.png">
@@ -50,14 +50,15 @@
 
       <section class="card" id="purpose">
         <h2>1. 目的</h2>
-        <p>このキットは、個別アプリの設定を1か所へ集め、Web・iPhone・Android・Chrome拡張の公開準備と確認を、再実行できる形で進めるためのテンプレートです。</p>
+        <p>このキットは2つの役割を持ちます。①個別アプリの設定を1か所へ集め、Web・iPhone・Android・Chrome拡張の公開準備と確認を再実行できる形で進めるテンプレート（本ガイドの主題）。②横断知見の正本 <code>../ai-hub</code> への窓口——重複実装の防止・出荷事故ゲート・他プロジェクトの実損記録を検索できます。</p>
+        <p><b>①だけを見て「ストア申請ツール」と思わないこと。</b>新しい部品・検査・データ形式を実装する前に、<code>node ../ai-hub/bin/hub.mjs find --tag &lt;topic&gt;</code> で既に他プロジェクトに同等の実装が無いか確認してください。ヒット0はfail-closedでexit 1が返るだけで正常です。</p>
         <h3>このキットがしないこと</h3>
         <ul><li>ユーザーに代わってアプリの目的や価格を決定する</li><li>本人確認、契約、支払い、ストア審査の承認を代行する</li><li>未確認の外部状態を「完了」や「正常」と推測する</li></ul>
       </section>
 
       <section class="card" id="read-order">
         <h2>2. 読む順番</h2>
-        <ol><li><code>START-HERE.md</code> — 人とAIの開始地点</li><li>リポジトリ直下の <code>CLAUDE.md</code> / <code>AGENTS.md</code> — 作業規則</li><li><code>app.config.json</code> — アプリ固有の入力値</li><li>対象プラットフォームの説明書 — Web / iOS / Android / Chrome</li><li>現在の変更、診断結果、引き継ぎ文書 — 既存作業を壊さないため</li></ol>
+        <ol><li><code>START-HERE.md</code> — 人とAIの開始地点</li><li>リポジトリ直下の <code>CLAUDE.md</code> / <code>AGENTS.md</code> — 作業規則</li><li><code>app.config.json</code> — アプリ固有の入力値</li><li>対象プラットフォームの説明書 — Web / iOS / Android / Chrome</li><li>現在の変更、診断結果、引き継ぎ文書 — 既存作業を壊さないため</li><li>横断知見が必要な場合は <code>../ai-hub/CLAUDE.md</code> — find/doctor/harvestコマンドの正本</li></ol>
         <p>ファイルが存在しない場合は、存在しないことを報告し、同等の情報源をリポジトリ内で探してください。名前だけを推測して作成しないでください。</p>
       </section>
 

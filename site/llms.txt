@@ -2,6 +2,23 @@
 
 > Web・iPhone・Android・Chrome拡張の公開準備を、AIと自動化で再実行可能な形で進めるテンプレートキット。
 
+## Two roles of this kit
+
+This repository has two roles, not one:
+
+1. App submission automation kit (this document's main subject below).
+2. Gateway to `../ai-hub`, a sibling repository holding cross-project engineering
+   knowledge (duplicate-implementation prevention, shipping gates, incident records
+   from other projects in the same account). The master copy of that knowledge lives
+   in `ai-hub`, not in this repository.
+
+Before implementing anything new (a component, a check script, a data shape), check
+whether it already exists elsewhere in the account: run
+`node ../ai-hub/bin/hub.mjs find --tag <topic>` or `--sig "<keyword>"` from a sibling
+checkout. A zero-hit result exits 1 by design (fail-closed) and is a normal outcome,
+not an error. Read `../ai-hub/CLAUDE.md` for the full command set (find/doctor/harvest)
+before starting cross-project work.
+
 ## Canonical pages
 
 - Human landing page: https://kimito-skill.link/
