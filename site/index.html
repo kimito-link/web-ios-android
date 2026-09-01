@@ -383,6 +383,19 @@
     .hint-body .accent { color: #c77800; }
     .hint-body .note { font-size: 0.88rem; color: #666; }
 
+    /* ── このページの地図 ── */
+    .page-map { max-width: 680px; margin: 0 auto 28px; background: white; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 18px 20px; }
+    .page-map-title { text-align: center; font-size: 1rem; font-weight: 900; color: #1a1a2e; margin-bottom: 12px; }
+    .page-map ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+    .page-map li { padding: 6px 4px; border-bottom: 1px solid #f0f0f0; }
+    .page-map a { font-weight: 800; color: #1a1a2e; text-decoration: none; font-size: 0.88rem; }
+    .page-map a:hover { color: #c77800; text-decoration: underline; }
+    .page-map li span { display: block; font-size: 0.76rem; color: #888; margin-top: 2px; }
+    #steps, #ai-start, #claims, #more, #auto, #showcase, #faq { scroll-margin-top: 72px; }
+    @media (max-width: 640px) {
+      .page-map ul { grid-template-columns: 1fr; }
+    }
+
     /* ── バージョン情報の案内カード ── */
     .version-card {
       display: block; margin: 0 auto 28px; padding: 18px;
@@ -644,11 +657,28 @@
     </div>
   </div>
 
+  <!-- このページの地図：全セクションの位置と役割の静的インデックス。
+       ①〜④カード・関連リンク等はJS描画のため、非JS読者(AIクローラー)には
+       この地図が唯一の全体構造情報になる。静的HTMLのまま維持すること。
+       行はHTML上のセクションと1対1。JSON(steps.json等)の中身は書かない。 -->
+  <nav class="page-map" id="page-map" aria-label="このページの地図">
+    <div class="page-map-title">🗺 このページの地図</div>
+    <ul>
+      <li><a href="#steps">やることは①②③④だけ</a><span>使い方の必須手順とおまけ機能</span></li>
+      <li><a href="#ai-start">AIに渡す文章</a><span>コピペで作業を始める開始文</span></li>
+      <li><a href="#claims">できること・できないこと</a><span>自動/一緒に/人の作業の正直な区分け</span></li>
+      <li><a href="#more">もっと知りたい方へ</a><span>お店ごとの手順・困りごと別の詳細ページ</span></li>
+      <li><a href="#auto">自動でやってくれること一覧</a><span>肩代わりされる作業と実測パネル</span></li>
+      <li><a href="#showcase">実際に使った例</a><span>このキットで公開したアプリ</span></li>
+      <li><a href="#faq">よくある質問</a><span>経験の要否・全自動かどうか・審査のこと</span></li>
+    </ul>
+  </nav>
+
   <div data-shindan-version-summary data-report-url="check-shindan-version/report.json">
     <a href="check-shindan-version/" class="version-card">✅ キットの更新情報と動作状況を見る →</a>
   </div>
 
-  <div class="steps-head">やることは ① ② ③ ④ だけ！</div>
+  <div class="steps-head" id="steps">やることは ① ② ③ ④ だけ！</div>
 
   <!-- 所要時間バー -->
   <div class="time-bar">
@@ -698,7 +728,7 @@
     <div class="steps-grid steps-slot" data-steps-group="bonus"></div><!-- /steps-grid（⑤〜⑧おまけ） -->
 
     <!-- AIへの開始文（コピペ用） -->
-    <div class="ai-box">
+    <div class="ai-box" id="ai-start">
       <h3>🤖 AIに渡す文章</h3>
       <p class="ai-sub">この文章をそのままコピーして、Claude Code や ChatGPT などフォルダを扱えるAIに貼り付けてください。あとはAIが手順どおり進めてくれます。</p>
       <div class="ai-copy" id="starter-prompt">このキットを使って、新しいアプリのセットアップを始めてください。
@@ -719,7 +749,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 
   </div><!-- /steps-grid（⑤〜⑧） -->
 
-  <div class="claims-box">
+  <div class="claims-box" id="claims">
     <div class="claims-title">🔍 できること・できないこと（正直に）</div>
     <div class="claim-row" data-claim="cloudflare-domain-connect">
       <span class="claim-badge claim-badge-auto">✅ 自動</span>
@@ -764,7 +794,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 <div class="bottom-wrap">
 
   <!-- 左カラム: 各機能ページへのリンク集（お店ごとの追体験・困りごと別ページなど） -->
-  <div>
+  <div id="more">
     <div style="font-size:1rem; font-weight:900; margin-bottom:14px;">📚 もっと知りたい方へ</div>
     <!-- 中身は more-links.js が assets/data/more-links.json を読んで実行時に描画する（HTML側に個別カードは書かない） -->
     <div class="more-cards more-links-slot"></div>
@@ -772,7 +802,7 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 
   <!-- 右カラム: 自動化される作業の一覧 ＋ セキュリティ/レスポンシブの実測結果パネル -->
   <div>
-    <div class="auto-box" style="margin-bottom:20px;">
+    <div class="auto-box" id="auto" style="margin-bottom:20px;">
       <div class="auto-title">🤖 自動でやってくれること一覧</div>
       <div class="auto-sub">✋ は初回だけ15分ほど自分でやる作業です</div>
       <!-- 中身は auto-list.js が assets/data/auto-list.json を読んで実行時に描画する（HTML側に個別行は書かない） -->
@@ -821,14 +851,14 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 </div><!-- /bottom-wrap -->
 
 <!-- ショーケース（実際に使った例）。中身は showcase.js が assets/data/showcase.json を読んで実行時に描画する（HTML側に個別のカードは書かない） -->
-<div class="showcase-wrap">
+<div class="showcase-wrap" id="showcase">
   <div class="showcase-title">📱 実際に使った例</div>
   <div class="examples showcase-slot" data-variant="lp" data-showcase-data-path="assets/data/showcase.json"></div>
   <p class="showcase-more"><a href="showcase/">公開アプリの一覧をすべて見る →</a></p>
 </div>
 
 <!-- よくある質問 -->
-<div class="main-wrap" style="padding-top:0;">
+<div class="main-wrap" id="faq" style="padding-top:0;">
   <div class="steps-head" id="faq-title">よくある質問</div>
   <div class="faq-wrap">
     <div class="faq-list">
