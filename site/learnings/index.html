@@ -73,6 +73,24 @@
     .site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
     .site-footer-links a:hover { text-decoration: underline; }
     .site-footer-copy { font-size: .78em; color: #6b7280; }
+
+    /* ── このページの地図 / 最近の更新（site/index.htmlのpage-mapと同パターン） ── */
+    .page-map, .recent-updates { max-width: 680px; margin: 0 auto 28px; background: white; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 18px 20px; }
+    .page-map-title { text-align: center; font-size: 1rem; font-weight: 900; color: #1a1a2e; margin-bottom: 12px; }
+    .page-map ul, .recent-updates ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+    .recent-updates ul { grid-template-columns: 1fr; }
+    .page-map li, .recent-updates li { padding: 6px 4px; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; }
+    .page-map a, .recent-updates a { font-weight: 800; color: #1a1a2e; text-decoration: none; font-size: 0.88rem; }
+    .page-map a:hover, .recent-updates a:hover { color: #c77800; text-decoration: underline; }
+    .page-map li span { display: block; font-size: 0.76rem; color: #888; margin-top: 2px; }
+    .recent-updates time { color: #888; font-size: 0.8rem; margin-right: 6px; }
+    #recent-updates, #north-star, #ios-appstore, #android-play, #chrome-webstore,
+    #cant-submit-3times, #multi-session, #parallel-work, #ai-maze, #didnt-change,
+    #shared-identity, #header-footer, #secrets-list, #three-agents,
+    #human-work-reduced, #no-need-to-check, #walkthrough-guide { scroll-margin-top: 72px; }
+    @media (max-width: 640px) {
+      .page-map ul { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -88,7 +106,43 @@
     キット: web-ios-android テンプレ / リポ: web-health-check-app</p>
     <p class="sub">関連: <a href="../line-bot/">💬 LINE botの無応答ゼロ化の仕組み</a>（同じ「1回で通す・止めない」思想をLINE bot側に適用した知見）</p>
 
-    <h2>北極星（ブレない原則）</h2>
+    <!-- 最近の更新：新着を時間軸で追うための人手管理リスト。
+         カード追記時に必ず1行足す（運用手順はこのファイル末尾コメント参照）。
+         最大10行・古い行から削除（全量の索引は下の地図が正本）。 -->
+    <section class="recent-updates" id="recent-updates" aria-label="最近の更新">
+      <div class="page-map-title">📅 最近の更新</div>
+      <ul>
+        <li><time datetime="2026-09-01">2026-09-01</time> <a href="#ai-maze">「AIと一緒に迷路を歩いている感」の話</a> を追加</li>
+        <li><time datetime="2026-09-01">2026-09-01</time> <a href="#multi-session">別プロジェクトのAIとの協働実例</a> を追加</li>
+      </ul>
+    </section>
+
+    <!-- このページの地図：全カードの静的インデックス。site/index.htmlのpage-mapと同パターン。
+         非JS読者(AIクローラー)にはこれが唯一の全体構造情報。静的HTMLのまま維持すること。
+         h2を足したら必ずここに1行足す（verify-learnings-map.mjsが漏れを検知する）。 -->
+    <nav class="page-map" id="page-map" aria-label="このページの地図">
+      <div class="page-map-title">🗺 このページの地図</div>
+      <ul>
+        <li><a href="#north-star">北極星（ブレない原則）</a><span>全プラットフォーム共通の設計原則</span></li>
+        <li><a href="#ios-appstore">🍎 iOS（App Store）</a><span>人間が1回だけやること／CIで自動化される範囲</span></li>
+        <li><a href="#android-play">▶ Android（Google Play）</a><span>人間が触る画面／CI・スクリプトで自動化される範囲</span></li>
+        <li><a href="#chrome-webstore">🧩 Chrome（Web Store）</a><span>審査提出の自動化と手動項目</span></li>
+        <li><a href="#cant-submit-3times">AIに「提出できません」と3回言われた話</a><span>自動化の境界がストアごとに逆になる罠</span></li>
+        <li><a href="#multi-session">別プロジェクトのAIとこの心臓部を正し合った話</a><span>越境してきた知見を裏取りしてから通した実例</span></li>
+        <li><a href="#parallel-work">並行作業で起きたこと（Codex × Cursor）</a><span>複数エージェント同時作業の衝突と対処</span></li>
+        <li><a href="#ai-maze">「AIと一緒に迷路を歩いている感」の話</a><span>直した知見が次の場所へ届いていない構造の話</span></li>
+        <li><a href="#didnt-change">「直したのに変わらない」を3回やった話</a><span>推論に頼らず実際の送信内容を覗いて解決した記録</span></li>
+        <li><a href="#shared-identity">サムネイル・ID・アイコン・名前の話</a><span>プロジェクトをまたいだ重複実装の実例</span></li>
+        <li><a href="#header-footer">「このキット自身」に実装があるだけでは見えなかった話</a><span>格上げだけでは他プロジェクトに届かなかった実例</span></li>
+        <li><a href="#secrets-list">Secrets 一覧（コピペ用）</a><span>CI設定で必要なSecrets名の一覧</span></li>
+        <li><a href="#three-agents">AIの中に、係の人を3人おきました</a><span>役割エージェント（reality-checker等）の設計</span></li>
+        <li><a href="#human-work-reduced">人がやることが、かなり減った話</a><span>自動化前後で人間の作業がどう変わったか</span></li>
+        <li><a href="#no-need-to-check">「見てきて」と頼まなくて済むようにした話</a><span>製品自身が状態を申告する診断計器の実例</span></li>
+        <li><a href="#walkthrough-guide">追体験ガイド</a><span>ストアごとの実画面を追体験できるページへの導線</span></li>
+      </ul>
+    </nav>
+
+    <h2 id="north-star">北極星（ブレない原則）</h2>
     <div class="card">
       <ul>
         <li><span class="tag all">共通</span>提出まで自動・合否は審査側（iOS / Android / Chrome 同型）</li>
@@ -98,7 +152,7 @@
       </ul>
     </div>
 
-    <h2>🍎 iOS（App Store）</h2>
+    <h2 id="ios-appstore">🍎 iOS（App Store）</h2>
     <div class="card">
       <h3>人間が1回だけ必要</h3>
       <ul>
@@ -156,7 +210,7 @@
         kimito.link（X専用＝Bパターンの実適用）。</p>
     </div>
 
-    <h2>▶ Android（Google Play）</h2>
+    <h2 id="android-play">▶ Android（Google Play）</h2>
     <div class="card">
       <h3>人間が触る画面</h3>
       <ul>
@@ -189,7 +243,7 @@
       </div>
     </div>
 
-    <h2>🧩 Chrome（Web Store）</h2>
+    <h2 id="chrome-webstore">🧩 Chrome（Web Store）</h2>
     <div class="card">
       <ul>
         <li>初回: デベロッパーダッシュボードでアイテム作成 + OAuth（<b>デスクトップアプリ</b>型）</li>
@@ -200,7 +254,7 @@
       <p>📷 手順 → <a href="../walkthrough/chrome/">Chrome 追体験</a></p>
     </div>
 
-    <h2>🤖 AIに「提出できません」と3回言われた話</h2>
+    <h2 id="cant-submit-3times">🤖 AIに「提出できません」と3回言われた話</h2>
     <div class="card">
       <p>
         Chrome 拡張の申請をAIに頼んだら、「ダッシュボードへのログインと提出ボタンは代行できません」
@@ -280,7 +334,7 @@
       </ul>
     </div>
 
-    <h2>⚠️ 並行作業で起きたこと（Codex × Cursor）</h2>
+    <h2 id="parallel-work">⚠️ 並行作業で起きたこと（Codex × Cursor）</h2>
     <div class="card">
       <ul>
         <li>両方が同時に ASC へスクショ再アップロード → <code>SCREENSHOT_UPLOADS_IN_PROGRESS</code></li>
@@ -289,7 +343,7 @@
       </ul>
     </div>
 
-    <h2>🌀 「AIと一緒に迷路を歩いている感」という指摘は、たぶん正しい</h2>
+    <h2 id="ai-maze">🌀 「AIと一緒に迷路を歩いている感」という指摘は、たぶん正しい</h2>
     <div class="card">
       <p>
         SNSで見かけた投稿（<a href="https://x.com/fre2dm" target="_blank" rel="noopener">@fre2dm</a> さんの発信）の要旨は、
@@ -315,7 +369,7 @@
       </ul>
     </div>
 
-    <h2>🔍 「直したのに変わらない」を3回やった話</h2>
+    <h2 id="didnt-change">🔍 「直したのに変わらない」を3回やった話</h2>
     <div class="card">
       <p>
         AIに調査させると、コードを読んで「たぶんここが原因」と推論します。
@@ -345,7 +399,7 @@
       </p>
     </div>
 
-    <h2>🧩 「サムネイル・ID・アイコン・名前」を、プロジェクトごとに別の形で作っていた話</h2>
+    <h2 id="shared-identity">🧩 「サムネイル・ID・アイコン・名前」を、プロジェクトごとに別の形で作っていた話</h2>
     <div class="card">
       <p>
         姉妹プロジェクトから「AIが実装前に、既にある機能を知らずに新規実装しようとする型の失敗が
@@ -386,7 +440,7 @@
       </p>
     </div>
 
-    <h2>🧱 「このキット自身」に実装があるだけでは、他のプロジェクトからは見えなかった話</h2>
+    <h2 id="header-footer">🧱 「このキット自身」に実装があるだけでは、他のプロジェクトからは見えなかった話</h2>
     <div class="card">
       <p>
         上のカードのすぐ後、実際のスクリーンショットを見せられました。別プロジェクトの
@@ -421,7 +475,7 @@
       </ul>
     </div>
 
-    <h2>Secrets 一覧（コピペ用）</h2>
+    <h2 id="secrets-list">Secrets 一覧（コピペ用）</h2>
     <table>
       <tr><th>用途</th><th>Secret 名</th></tr>
       <tr><td>iOS 署名</td><td><code>IOS_DIST_CERT_*</code> / <code>IOS_APPSTORE_PROFILE_BASE64</code> / <code>IOS_APPSTORE_PROFILE_RH_BASE64</code> / <code>APPLE_TEAM_ID</code></td></tr>
@@ -430,7 +484,7 @@
       <tr><td>Chrome</td><td><code>.env.cws</code>（リポジトリ外・gitignore）</td></tr>
     </table>
 
-    <h2>🤖 AIの中に、係の人を3人おきました</h2>
+    <h2 id="three-agents">🤖 AIの中に、係の人を3人おきました</h2>
     <div class="card">
       <p>
         <img src="../images/link-smile.png" alt="りんく" class="char-icon"><b>りんく（案内役）:</b> AIにぜんぶを1人でやらせると、「できたつもり」で間違えることがあるんだ。
@@ -463,7 +517,7 @@
       </p>
     </div>
 
-    <h2>🙌 人がやることが、かなり減った話</h2>
+    <h2 id="human-work-reduced">🙌 人がやることが、かなり減った話</h2>
     <div class="card">
       <p>
         <img src="../images/link-smile.png" alt="りんく" class="char-icon"><b>りんく（案内役）:</b> 「君斗りんくのAI返信秘書」をお店に出したとき、Play Console の
@@ -486,7 +540,7 @@
       </div>
     </div>
 
-    <h2>📟 「見てきて」と頼まなくて済むようにした話</h2>
+    <h2 id="no-need-to-check">📟 「見てきて」と頼まなくて済むようにした話</h2>
     <div class="card">
       <p>
         不具合を直すとき、いちばん時間を食うのは修正そのものではありません。
@@ -519,7 +573,7 @@
       </p>
     </div>
 
-    <h2>追体験ガイド</h2>
+    <h2 id="walkthrough-guide">追体験ガイド</h2>
     <ul>
       <li><a href="../walkthrough/">追体験トップ（3プラットフォーム）</a></li>
       <li><a href="../walkthrough/ios/">iOS — 実画面キャプチャ付き</a></li>
@@ -527,6 +581,15 @@
       <li><a href="../walkthrough/chrome/">Chrome — 実画面キャプチャ付き</a></li>
     </ul>
 
+    <!-- ★カード追加時の運用手順（council-fable設計、2026-09-01）
+         1. <h2 id="新id">でカードを書く。命名は小文字英数字+ハイフンのケバブケース、
+            2〜4語で主題を表す（絵文字・日本語・連番は禁止）。公開後は改名・削除しない。
+         2. 上の #page-map に1行足す（アンカー＋役割1行。JSONの中身は書かない）。
+         3. 上の #recent-updates の【先頭】に1行足す。10行を超えたら末尾（古い方）を削る。
+         4. node scripts/verify-learnings-map.mjs / node scripts/verify-internal-links.mjs
+            を実行し緑を確認する。
+         5. git push 後、npm run deploy:site を実行し、本番URLを開いて反映を確認してから
+            完了と報告する（「コミットした」は「反映された」ではない）。 -->
     <div id="site-footer"></div>
   </div>
   <script src="../scripts/site-chrome.js"></script>
