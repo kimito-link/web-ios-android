@@ -61,7 +61,9 @@
     "check:gates-wired": "node templates/diagnostics/check-gates-are-wired.mjs .",
     "check:gates-wired:selftest": "node templates/diagnostics/check-gates-are-wired.mjs --selftest",
     "site:claims": "node scripts/verify-claims-coverage.mjs",
-    "site:links": "node scripts/verify-internal-links.mjs"
+    "site:links": "node scripts/verify-internal-links.mjs",
+    "site:learnings-map": "node scripts/verify-learnings-map.mjs",
+    "site:learnings-map:selftest": "node scripts/verify-learnings-map.mjs --selftest"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

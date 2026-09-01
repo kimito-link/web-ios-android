@@ -19,12 +19,18 @@ checkout. A zero-hit result exits 1 by design (fail-closed) and is a normal outc
 not an error. Read `../ai-hub/CLAUDE.md` for the full command set (find/doctor/harvest)
 before starting cross-project work.
 
+The master copy of the rules is CLAUDE.md in the repository
+(https://github.com/kimito-link/web-ios-android). This site is its
+human/AI-readable rendition; when they disagree, CLAUDE.md wins.
+An agent working inside a checkout reads CLAUDE.md first, not this file.
+
 ## Canonical pages
 
 - Human landing page: https://kimito-skill.link/
 - AI execution guide: https://kimito-skill.link/ai-guide/
 - Current version and checks: https://kimito-skill.link/check-shindan-version/
 - All documentation: https://kimito-skill.link/sitemap/
+- Verified field notes (index of all incident cards): https://kimito-skill.link/learnings/
 
 ## Purpose
 
