@@ -24,6 +24,7 @@
 | `scripts/screenshot-plan.example.json` | 撮影計画のひな形 | リポの `store-assets/screenshot-plan.json` にコピーして編集 |
 | `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
 | `web/` | **Web→アプリDL導線**(公式バッジ取得・UA出し分け・Smart App Banner・CSS)。詳細は [`web/README.md`](web/README.md) | `{{ascAppId}}`/`{{playPackageName}}`/`{{productionUrl}}`/`{{primaryColor}}`/`{{accentColor}}` を置換 |
+| [`web/site-chrome/`](web/site-chrome/README.md) | **複数ページ静的サイト用、共通ヘッダー・フッターの金型**(ビルドレス・JS実行時注入)。ページごとのheader/footerコピペ・相対パスのズレ・直し漏れを防ぐ。web-ios-androidキット自身のsite/が実運用。2026-09-01: この金型が無かったため他プロジェクト(line-bot/apps/lp)でheader/footer未共通化事故が実際に起きた反省で追加 | `site-chrome.template.js`内の`SITE_CONFIG`/`NAV_ITEMS`を対象サイトの値に置換。`site-chrome.template.css`の`--site-chrome-accent`等でブランド色調整 |
 | `stripe-checkout-email/` | **Stripe決済→購入完了メール送信**(Cloudflare Pages Functions + Resend)。買い切り課金の物販/ツール系で使用。詳細は [`stripe-checkout-email/README.md`](stripe-checkout-email/README.md) | `{{downloadUrl}}`等多数を置換(README参照)。クロスセル導線はコメントアウトのオプションブロック |
 | `line-bot/` | **LINE公式アカウントでAI社員と会話できるbot**(Cloudflare Workers + D1、GROQ AI応答、fail-closed設計)。詳細は [`line-bot/README.md`](line-bot/README.md) | `{{shortName}}`/`{{cloudflareAccountId}}`/`{{cloudflareD1DatabaseId}}`等を置換。`knowledge-pack/persona.md`はキャラごとに書き換え。`app.config.json`の`lineBot.enabled`をtrueに |
 | `scripts/generate-privacy-page.mjs` | プライバシーポリシーHTML生成(健康/Play 審査で必須の公開URL)。API非依存・静的生成のため陳腐化しない | **無改変**(app.config.json 駆動) |

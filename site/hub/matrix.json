@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-31T05:24:01.349Z",
+  "generatedAt": "2026-09-01T00:52:20.993Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -717,20 +717,20 @@
           "provenance": "scan"
         },
         "no-secrets-in-dist": {
-          "state": "missing",
+          "state": "ok",
           "provenance": "scan"
         },
         "hermes-unsafe-imports": {
-          "state": "missing",
+          "state": "ok",
           "provenance": "scan"
         },
         "root-cause-claim": {
-          "state": "missing",
+          "state": "ok",
           "provenance": "scan"
         }
       },
       "score": {
-        "ok": 3,
+        "ok": 6,
         "applicable": 12
       },
       "rowNote": null
@@ -908,15 +908,15 @@
       "applicable": 12
     },
     "no-secrets-in-dist": {
-      "ok": 0,
+      "ok": 1,
       "applicable": 12
     },
     "hermes-unsafe-imports": {
-      "ok": 0,
+      "ok": 1,
       "applicable": 10
     },
     "root-cause-claim": {
-      "ok": 0,
+      "ok": 1,
       "applicable": 12
     }
   },
@@ -979,6 +979,7 @@
       "tsuioku-no-kiroku",
       "VeniceUncensored",
       "web-health-check.link",
+      "works",
       "yukkuri",
       "_backups",
       "_enforcement-test",

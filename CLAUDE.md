@@ -147,6 +147,20 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   4. **最高品質**: 手を抜いた近似実装で済ませず、既存の計器規約
      （[`_docs/instruments/HANDOFF-new-app.md`](_docs/instruments/HANDOFF-new-app.md) の3値exit・
      selftest・fail-closed）に沿った、他のアプリにも配布できる水準で作る。
+  5. **共有部品は「このプロジェクトだけ」で閉じない（2026-09-01確立）**: ヘッダー・フッター・
+     人物表示（アイコン・ID・名前）・診断計器・レビュー体制など、**複数プロジェクトで
+     繰り返し必要になる部品**を新規実装するときは、まず`templates/`配下（このキット）と
+     `ai-hub/bin/hub.mjs find --tag <topic>`（横断知見の正本）を見て、既に金型・実装が
+     無いか確認する。無ければその場限りで終わらせず、**`templates/`へ一般化して格上げする**
+     （キット固有の値を設定として外出しし、他プロジェクトが再利用できる形にする）。
+     ★実損（2026-09-01）: web-ios-androidキット自身の`site/`には共通ヘッダー・フッターの
+     実装（`site/scripts/site-chrome.js`）が既にあったが、`templates/`へ格上げされていな
+     かったため、別プロジェクト（line-bot/apps/lp配下の複数LP）が新規サイトを作る際に
+     再利用できず、ページごとにヘッダー・フッターを個別実装する事故が実際に起きた。
+     `kimito-skill.link`（このキット）は個々のプロジェクトの1つではなく、**全プロジェクトが
+     従う設計の心臓部**であるべき場所。ここに実装がある＝全プロジェクトから使える、では
+     ない。`templates/`に格上げして初めて他プロジェクトから見える。
+     （実装: [`templates/web/site-chrome/`](templates/web/site-chrome/README.md)）
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
