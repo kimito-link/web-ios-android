@@ -51,7 +51,17 @@
     "check:instrument-drift:coverage": "node _docs/instruments/check-drift-coverage.mjs",
     "check:instrument-drift:coverage:selftest": "node _docs/instruments/check-drift-coverage.mjs --selftest",
     "check:runner-registers-all": "node templates/diagnostics/check-runner-registers-all.mjs .",
-    "check:runner-registers-all:selftest": "node templates/diagnostics/check-runner-registers-all.mjs --selftest"
+    "check:runner-registers-all:selftest": "node templates/diagnostics/check-runner-registers-all.mjs --selftest",
+    "ci:timeouts": "node templates/scripts/check-workflow-timeouts.mjs .",
+    "ci:timeouts:selftest": "node templates/scripts/check-workflow-timeouts.mjs --selftest",
+    "ci:dependabot": "node templates/scripts/check-dependabot-queue.mjs .",
+    "ci:dependabot:selftest": "node templates/scripts/check-dependabot-queue.mjs --selftest",
+    "ci:usage": "node templates/scripts/check-actions-usage.mjs .",
+    "ci:usage:selftest": "node templates/scripts/check-actions-usage.mjs --selftest",
+    "check:gates-wired": "node templates/diagnostics/check-gates-are-wired.mjs .",
+    "check:gates-wired:selftest": "node templates/diagnostics/check-gates-are-wired.mjs --selftest",
+    "site:claims": "node scripts/verify-claims-coverage.mjs",
+    "site:links": "node scripts/verify-internal-links.mjs"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

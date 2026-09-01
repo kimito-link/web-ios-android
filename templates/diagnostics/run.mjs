@@ -57,6 +57,14 @@ const CHECKS = [
   //   ★エラーも stderr も空。1KB でも固まるので「重いから遅い」と誤診した。
   //   真因は進捗バーの描画で、抑止1行で 402ms に戻った。
   { name: 'check-silent-hang-guard', path: join(__dirname, 'check-silent-hang-guard.mjs') },
+  // ★検査を「作った/格上げした」のに誰も呼んでいない状態を数える(2026-09-01追加)。
+  //   実損3回: ①iOS 518 却下の検出役が pnpm check にも CI にも未登録だった
+  //   ②登録済みだが毎回 skip していた ③★このキット自身で、linktree から格上げした
+  //   計器3点が package.json・workflows・run.mjs のどこからも呼ばれていなかった
+  //   （出自リポでは workflow から呼ばれていたのに、格上げ先では0件）。
+  //   ★「templates/ へ格上げする」までは基準#5 にあるが、格上げ先で配線するところは
+  //   誰も見ていなかった。呼ばれない検査は、存在しない検査と同じ。
+  { name: 'check-gates-are-wired', path: join(__dirname, 'check-gates-are-wired.mjs'), kitRoot: true },
   // ★共有部品が「あるのに使われていない」を数える(2026-09-01追加)。
   //   実損: 同じ画面部品が3つ別々に実装され、ユーザーが
   //   「車輪の再発明もいいところです」と指摘した。重複禁止は
