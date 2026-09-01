@@ -62,7 +62,7 @@
  *   node check-hotkey-scope.mjs [対象ディレクトリ]
  *   node check-hotkey-scope.mjs --selftest   ← ★自分自身を毒で試す
  */
-import { readFileSync, existsSync, readdirSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -72,7 +72,34 @@ const MOUSE_ONLY = [
   'WheelUp', 'WheelDown', 'WheelLeft', 'WheelRight',
 ];
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'out', '.next', '.nuxt', '.output', 'coverage', 'vendor']);
+// ★「出荷しないファイル」を読まない(2026-09-01・実測で偽陽性6件)。
+//
+// 【何が起きたか】soushin-suggest.link で赤6件が出たが、★実体は全部
+//   出荷対象外だった: dist-demo/(デモ生成物) と tmp/tauridev-52/(外部レビューへ
+//   渡した【過去版 v1.40.0】のコピー)。src/ は例外宣言付きで正しく緑だった。
+//
+// 【なぜ放置できないか】出荷しないファイルで赤が出続けると
+//   ★赤が常態になって誰も見なくなる。本物が1件混ざっても埋もれる。
+//   (「警告だけのガードは無いのと同じ」と同型の壊れ方)
+//
+// ★除外は検査を【弱める】変更なので、selftest に正の対照を必ず置くこと
+//   (⑫ tmp/ は拾わない ⇔ ⑬ src/ なら拾う。この対がないと
+//    「除外しすぎて何も見ない検査」が緑のまま通る)。
+const SKIP_DIRS = new Set([
+  'node_modules', '.git',
+  'dist', 'build', 'out', '.next', '.nuxt', '.output', 'coverage', 'vendor',
+  // ★作業用・外部へ渡したコピー。出荷物ではない
+  'tmp', 'temp', '.tmp',
+  // ★デモ用の生成物
+  'dist-demo', 'demo',
+  // ★退避・過去版
+  'backup', 'archive', '_old',
+]);
+
+// ★版番号入りのファイル名は【過去版のコピー】とみなして読まない。
+//   例: soushin-suggest-v1.40.0.ahk。ディレクトリ除外だけだと、
+//   出荷ディレクトリ直下に置かれた過去版を拾ってしまう。
+const OLD_VERSION_FILE = /-v\d+\.\d+/;
 
 /**
  * ソース1本(文字列)を読み、危険なホットキーブロックを返す。
@@ -178,7 +205,9 @@ export function scanDirectory(dir) {
         walk(join(d, e.name));
         continue;
       }
-      if (e.name.endsWith('.ahk')) files.push(join(d, e.name));
+      if (!e.name.endsWith('.ahk')) continue;
+      if (OLD_VERSION_FILE.test(e.name)) continue;   // ★過去版のコピーは出荷物ではない
+      files.push(join(d, e.name));
     }
   };
   walk(dir);
@@ -293,6 +322,46 @@ function runSelftest() {
     writeFileSync(join(dir, 'a.mjs'), 'console.log("not ahk")\n');
     const r = scanDirectory(dir);
     if (!(r.ok === false && r.skip === true)) fails.push('★.ahk無しをskip扱いにできていない: ' + JSON.stringify(r));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // ★⑫⑬⑭ は【対で測る】。除外は検査を弱める変更なので、
+  //   「拾わない」だけを確かめると "何も見ない検査" が緑で通ってしまう。
+  //   同じ中身を置き場所だけ変えて、拾う/拾わない が反転することを見る。
+  // ─────────────────────────────────────────────────────────────────────
+  const DANGEROUS = 'Space::Foo()' + String.fromCharCode(10);   // ★前面判定なし＝本来は必ず赤
+
+  // ⑫ ★正の対照: src/ に置けば拾える(除外しすぎていない証明)
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'nl-hk-pos-'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'a.ahk'), DANGEROUS);
+    const r = scanDirectory(dir);
+    if (!(r.ok === true && r.findings && r.findings.length === 1)) {
+      fails.push('★src/の危険なホットキーを拾えていない(除外しすぎ): ' + JSON.stringify(r));
+    }
+  }
+
+  // ⑬ ★負の対照: 同じ中身でも tmp/ なら読まない(出荷物ではない)
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'nl-hk-tmp-'));
+    mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'tmp', 'a.ahk'), DANGEROUS);
+    const r = scanDirectory(dir);
+    if (!(r.ok === false && r.skip === true)) {
+      fails.push('★tmp/配下(出荷対象外)を読んでしまっている: ' + JSON.stringify(r));
+    }
+  }
+
+  // ⑭ ★版番号入りのファイル名は過去版のコピー。src/直下でも読まない
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'nl-hk-ver-'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'app-v1.40.0.ahk'), DANGEROUS);
+    const r = scanDirectory(dir);
+    if (!(r.ok === false && r.skip === true)) {
+      fails.push('★版番号入り(過去版のコピー)を読んでしまっている: ' + JSON.stringify(r));
+    }
   }
 
   if (fails.length > 0) {
