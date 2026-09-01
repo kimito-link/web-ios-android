@@ -1,12 +1,13 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-01T09:30:40.296Z",
-  "entryCount": 71,
+  "generatedAt": "2026-09-01T09:38:04.411Z",
+  "entryCount": 72,
   "doctorOk": true,
   "doctorProblems": [],
   "doctorWarnings": [
     "kb-copywriting-persuasion-principles: summary が80字超（1行厳守）",
     "kb-timid-marketer-principles: summary が80字超（1行厳守）",
+    "kb-http-200-lies: summary が80字超（1行厳守）",
     "gate-ios-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "gate-android-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "gate-lint-pre-submission: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
@@ -162,7 +163,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 155,
+  "doctorWarningCount": 156,
   "shelves": [
     {
       "id": "shipping",
@@ -1136,6 +1137,38 @@
           "verified": "2026-09-01"
         },
         {
+          "id": "kb-http-200-lies",
+          "kind": "kb",
+          "path": "ai-hub/kb/http-200-lies.md",
+          "tags": [
+            "verification",
+            "instrument",
+            "http",
+            "spa",
+            "false-green",
+            "qa"
+          ],
+          "summary": "HTTP 200 は『表示できる』を意味しない。SPAは存在しないパスでも200+HTMLを返す。画像はcontent-type/マジックナンバーで、SVGはXMLとして、計器は毒テストで確かめる。2026-09-01に1日で3回踏んだ型",
+          "triggers": [
+            "200が返る",
+            "リンク切れ",
+            "画像が出ない",
+            "壊れた画像",
+            "偽の緑",
+            "false green",
+            "content-type",
+            "SPAフォールバック",
+            "計器",
+            "毒テスト",
+            "selftest",
+            "exit 2",
+            "測れなかった",
+            "apple-touch-icon",
+            "SVGが表示されない"
+          ],
+          "verified": "2026-09-01"
+        },
+        {
           "id": "kb-clerk-x-oauth-e2e",
           "kind": "kb",
           "path": "web-ios-android/_docs/clerk-x-oauth-e2e-verification-playbook.md",
@@ -2032,7 +2065,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-01T09:30:40.296Z",
+    "generatedAt": "2026-09-01T09:38:04.411Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3044,7 +3077,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが155件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが156件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
