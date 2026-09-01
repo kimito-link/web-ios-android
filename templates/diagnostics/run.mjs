@@ -41,7 +41,13 @@ const CHECKS = [
   { name: 'check-symptom-index', path: join(__dirname, 'check-symptom-index.mjs') },
   // ★「遅い」と言われる経路に時間を測る計器があるか(2026-08-23追加)。
   //   実損: 計器が無い経路の遅さを推測で3回直そうとして3回とも外した。
-  { name: 'check-timing-instrumented', path: join(__dirname, 'check-timing-instrumented.mjs') },
+  //   ★srcDir: ソースの置き場所を位置引数で渡す。リポ全体を渡すと node_modules 等で
+  //   「利用者に見える操作らしい関数」が見つからず測れないことがある。
+  {
+    name: 'check-timing-instrumented',
+    path: join(__dirname, 'check-timing-instrumented.mjs'),
+    declaresDir: 'srcDir',
+  },
   // ★製品が「異常なし」を自分で名乗れるか(2026-08-24追加)。
   //   実損: 製品を起動する重い検査76本(1回22分)が見つけた製品の不具合は【0件】で、
   //   実際の不具合5件はオーナーの報告と★製品自身の診断ログから見つかっていた。
@@ -79,7 +85,13 @@ const CHECKS = [
   //   ★キットに既に3箇所書いてあったのに守られなかった。
   //   ⟹ 文章を4箇所目に足しても解決しない。**検査していない規範は守られない**。
   //   ★代償は行数ではなく「一度直したバグが別の画面では直っていない」こと。
-  { name: 'check-shared-parts-used', path: join(__dirname, 'check-shared-parts-used.mjs') },
+  //   ★sharedDir: 共有部品の置き場所。既定(shared/common/lib/shared)に無いリポは
+  //   diagnostics.json で宣言すれば測れる（Next.js の lib/ 等）。
+  {
+    name: 'check-shared-parts-used',
+    path: join(__dirname, 'check-shared-parts-used.mjs'),
+    declares: { sharedDir: '--shared-dir' },
+  },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },
@@ -115,10 +127,12 @@ for (const check of CHECKS) {
     //   ★これが無いと、対象リポのゲートが何本あっても一度も測られない。
     let declaredChecks = '';
     let declaredPattern = '';
+    let declared = {};
     try {
       const dp = join(TARGET_DIR, 'diagnostics.json');
       if (existsSync(dp)) {
         const dj = JSON.parse(readFileSync(dp, 'utf8'));
+        declared = dj && typeof dj === 'object' ? dj : {};
         if (dj && typeof dj.checks === 'string' && dj.checks.trim()) {
           declaredChecks = join(TARGET_DIR, dj.checks.trim());
         }
@@ -126,14 +140,37 @@ for (const check of CHECKS) {
           declaredPattern = dj.checkPattern.trim();
         }
       }
-    } catch { declaredChecks = ''; }
+    } catch { declaredChecks = ''; declared = {}; }
+
+    // ★declaresDir: 位置引数で渡す場所を対象リポが宣言できる（--flag ではない検査用）。
+    const declaredDir = check.declaresDir && typeof declared[check.declaresDir] === 'string'
+      && declared[check.declaresDir].trim()
+      ? join(TARGET_DIR, declared[check.declaresDir].trim())
+      : '';
 
     const scanDir = check.kitRoot
       ? join(__dirname, '..', '..')
       : check.selfTargetDir ? check.selfTargetDir
-      : check.selfTarget ? (declaredChecks || __dirname) : TARGET_DIR;
+      : check.selfTarget ? (declaredChecks || __dirname)
+      : (declaredDir || TARGET_DIR);
+
+    // ★対象リポが宣言した場所を、それを必要とする検査へ渡す(2026-09-01追加)。
+    //   ★実損: kimitolink-linktree で check-shared-parts-used と
+    //   check-timing-instrumented が **2本とも「測れませんでした」**になっていた。
+    //   どちらも引数を渡せば測れるのに、run.mjs は checks/checkPattern しか
+    //   読まないので**渡す手段が無かった**＝ランナー経由では永久に測れない。
+    //   ★README は「場所を知っているのは対象リポなので宣言させる」「キット側に
+    //   決め打ちを足し続ける設計は腐る」と書いている。その思想どおり宣言で解く。
+    const declaredArgs = [];
+    if (check.declares) {
+      for (const [key, flag] of Object.entries(check.declares)) {
+        const v = declared[key];
+        if (typeof v === 'string' && v.trim()) declaredArgs.push(flag, v.trim());
+      }
+    }
+
     const extraArgs = (check.selfTarget && declaredChecks && declaredPattern)
-      ? ['--pattern', declaredPattern] : [];
+      ? ['--pattern', declaredPattern] : declaredArgs;
     const output = execFileSync('node', [check.path, scanDir, ...extraArgs], { encoding: 'utf8', stdio: 'pipe', cwd: TARGET_DIR });
     process.stdout.write(output);
     const status = /\(skip\)/.test(output) ? 'skip' : 'pass';

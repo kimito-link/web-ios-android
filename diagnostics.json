@@ -1,0 +1,8 @@
+{
+  "_why": "★自分で作った案内板の仕組みを、自分にも適用する。これが無いとキット自身の診断で check-timing-instrumented と check-shared-parts-used が『測れませんでした』のまま＝**配った仕組みを自分では使っていない**状態になる（2026-09-01 に実際そうなっていた）。",
+  "_note": "★実在するものだけを書く。無いものを宣言すると案内板そのものが嘘になる。",
+  "index": "../ai-hub/index.json",
+  "_srcDir_why": "★check-timing-instrumented は scripts/ を指定しても『測れませんでした』(exit 2)のままになる。これは正しい: このリポの scripts/ は CLI ツール群で、★『利用者が待たされる画面操作』(handleSubmit / PasteImage 等)が1つも無い。無理に measured へ倒すために対象を広げない——それは『測ったことにする』であって、このキットが最も嫌う形。画面を持つプロジェクトでは app/ や src/ を指す。",
+  "sharedDir": "templates/scripts/lib",
+  "srcDir": "scripts"
+}

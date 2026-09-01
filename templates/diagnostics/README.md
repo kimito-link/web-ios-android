@@ -156,6 +156,22 @@ JS以外の製品や、置き場所の流儀が違うリポはこれで参加で
 | `index` | 原因の索引（`triggers` を持つ JSON） |
 | `checks` | ゲートが置いてあるディレクトリ |
 | `checkPattern` | **どれがゲートか**の正規表現 |
+| `sharedDir` | 共有部品の置き場所（`check-shared-parts-used` が使う）。既定は `shared`/`common`/`lib/shared` |
+| `srcDir` | 画面ソースの置き場所（`check-timing-instrumented` が使う）。Next.js なら `app` 等 |
+
+### ★`sharedDir` / `srcDir` がなぜ要るか（2026-09-01・実損）
+
+kimitolink-linktree（Next.js）で診断を回すと、**2本が同時に「測れませんでした」**になった。
+どちらも引数を渡せば測れるのに、★ランナーは `checks`/`checkPattern` しか読まないので
+**渡す手段が無く、ランナー経由では永久に測れなかった**。
+
+★このとき「キット側に `lib` を決め打ちで足す」のは誤り。README が上に書いているとおり、
+**足し忘れた側が黙って skip になる**設計は必ず腐る。場所を知っているのは対象リポなので、
+宣言で解く。
+
+★あわせてキット側の穴も3つ実測で見つかった（どれも JS/TS のリポで詰まる）:
+`.tsx`/`.jsx` が対象拡張子に無い／`export function` と `const f = () => {}` を関数と
+認識しない／`handleSubmit` のような camelCase のハンドラ名を「操作」と見なさない。
 
 ### ★なぜ「決め打ちを増やす」ではなく宣言にしたか
 

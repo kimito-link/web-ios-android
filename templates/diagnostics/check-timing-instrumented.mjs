@@ -61,7 +61,10 @@ import { tmpdir } from 'node:os';
 export const DEFAULT_UNTIMED_MAX = 0;
 
 /** 対象にするソースの形。言語ごとに足すだけで済むようにする。 */
-const SRC_FILE_RE = /\.(ahk|js|mjs|ts|cs|py)$/;
+// ★.tsx/.jsx を足した（2026-09-01）。React/Next.js の画面はこの拡張子にあり、
+//   ★入っていないと**ファイルを1つも読まないまま**「操作らしい関数が無い」と
+//   報告する＝JS/TSのUIリポでは永久に unmeasured になっていた（実測で発覚）。
+const SRC_FILE_RE = /\.(ahk|js|mjs|jsx|ts|tsx|cs|py)$/;
 
 /**
  * 「利用者に見える操作」らしい関数名か。
@@ -71,7 +74,26 @@ const SRC_FILE_RE = /\.(ahk|js|mjs|ts|cs|py)$/;
  *   判定する方法は無い。★名前で拾える範囲だけを対象にし、
  *   拾えないものは【この検査の対象外】と明示する(黙って見逃さない)。
  */
-const ACTION_NAME_RE = /\b(Paste|Insert|Apply|Send|Submit|Upload|Download|Import|Export|Restore|Render|Search|Load)[A-Z]\w*/;
+const ACTION_VERBS = 'Paste|Insert|Apply|Send|Submit|Upload|Download|Import|Export|Restore|Render|Search|Load';
+
+/**
+ * ★2つの命名規約に対応する（2026-09-01 追加）。
+ *
+ *   ① PascalCase 直書き: `PasteImage` `SubmitForm`（AutoHotkey・C# 等）
+ *   ② ★camelCase のハンドラ: `handleSubmit` `onUpload`（JS/TS の標準規約）
+ *
+ * ★なぜ足したか（実損）: kimitolink-linktree（Next.js）では ① の形が
+ * 実質1件しか無く、★リポ全体を渡しても `app/` を渡しても
+ * 「利用者に見える操作らしい関数が1つも見つからない」＝**永久に測れなかった**。
+ * 実データ: このリポの該当関数は `handleSubmit` / `onSubmit`（camelCase）。
+ * ★①だけを見る設計は「JS/TSのリポでは常に unmeasured」を意味していた。
+ *
+ * ★それでも名前で当たりを付ける弱い判定であることは変わらない。
+ * 拾えないものは【この検査の対象外】と明示する（黙って見逃さない）。
+ */
+const ACTION_NAME_RE = new RegExp(
+  `\\b((${ACTION_VERBS})[A-Z]\\w*|(handle|on)(${ACTION_VERBS})\\w*)`,
+);
 
 /** 経過時間を測っている形跡があるか。★言語ごとの綴りを表で持つ。 */
 export function hasTiming(src) {
@@ -90,7 +112,13 @@ export function splitFunctions(src) {
   const s = String(src || '');
   const out = [];
   // 行頭から始まる「名前(...) {」を関数の始まりとみなす。
-  const re = /^[ \t]*(?:function\s+|def\s+|(?:public|private|static|async)\s+)*([A-Za-z_]\w*)\s*\([^)]*\)\s*[:{]/gm;
+  // ★export / const 形も認める（2026-09-01 追加）。
+  //   ★実損: `export function handleUpload()` と
+  //   `const handleSubmit = async (…) => {` を**どちらも拾えていなかった**。
+  //   JS/TS では前者が標準の書き方、後者は React のハンドラの標準形なので、
+  //   ★このリポの画面コードの大半が「関数ではない」ものとして素通りしていた
+  //   （毒テストで計器の無い操作を足しても件数が increase せず発覚）。
+  const re = /^[ \t]*(?:export\s+|default\s+|function\s+|def\s+|(?:public|private|static|async)\s+)*([A-Za-z_]\w*)\s*\([^)]*\)\s*[:{]/gm;
   // ★制御構文を関数名と誤認しない。
   //   これを入れる前は if(...) { を関数の始まりと見なし、
   //   ★本体をそこで切ってしまい【計時があるのに「無い」と判定】していた
@@ -276,12 +304,30 @@ function main() {
   }
 
   const n = res.untimed.length;
-  console.log(`[check-timing-instrumented] 利用者に見える操作 ${res.total} 件 / 時間を測っていない ${n} 件`);
+
+  // ★ベースライン（ラチェット）を実装する（2026-09-01）。
+  //   ★ヘッダには最初から「ベースライン＋ラチェット。増えたときだけ赤」と
+  //   書いてあったが、実装は上限0の固定だった＝**説明とコードのズレ**。
+  //   既存プロジェクトに当てると必ず赤になり、「強制しない」という掟に反していた。
+  //   .timing-instrumented-baseline.json に {"untimed": N} を置くとそこが上限になる。
+  let limit = DEFAULT_UNTIMED_MAX;
+  try {
+    const bp = join(dir, '.timing-instrumented-baseline.json');
+    if (existsSync(bp)) {
+      const v = JSON.parse(readFileSync(bp, 'utf8')).untimed;
+      if (Number.isFinite(v)) limit = v;
+    }
+  } catch { /* 壊れた案内板で診断を止めない */ }
+
+  console.log(
+    `[check-timing-instrumented] 利用者に見える操作 ${res.total} 件 / 時間を測っていない ${n} 件`
+    + (limit === DEFAULT_UNTIMED_MAX ? '' : `（上限 ${limit}）`),
+  );
   for (const u of res.untimed.slice(0, 20)) console.log(`  ⚪ ${u}`);
   if (res.untimed.length > 20) console.log(`  … 他 ${res.untimed.length - 20} 件`);
 
-  if (n > DEFAULT_UNTIMED_MAX) {
-    console.error(`[check-timing-instrumented] 🔴 時間を測っていない操作が ${DEFAULT_UNTIMED_MAX} 件を超えました(${n} 件)。`);
+  if (n > limit) {
+    console.error(`[check-timing-instrumented] 🔴 時間を測っていない操作が ${limit} 件を超えました(${n} 件)。`);
     console.error('  → 直し方: 開始時刻を取り、差分を計器へ渡す('
       + '例: t := A_TickCount ... DiagBump("xxxMs:" . (A_TickCount - t)))。');
     console.error('  → ★なぜ要るか: 「遅い」と報告されたとき、'
