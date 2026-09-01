@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ストア申請 実証知見まとめ | Kimito-Link</title>
-  <meta name="description" content="君斗りんくのWEBサイト健康診断で iOS/Android/Chrome 申請まで通した知見。キット運用の教科書。">
+  <title>AI開発の総合ルール 実証知見まとめ | Kimito-Link</title>
+  <meta name="description" content="AIにプログラム開発を任せるときの総合ルール（重複実装の防止・出荷事故ゲート・計器設計・思い込みでの調査を防ぐ手順）を、君斗りんくのWEBサイト健康診断などの実アプリで実際に踏んだ地雷とセットでまとめたキット運用の教科書。">
   <link rel="canonical" href="https://kimito-skill.link/learnings/">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="ストア申請 実証知見まとめ | Kimito-Link">
-  <meta property="og:description" content="君斗りんくのWEBサイト健康診断で iOS/Android/Chrome 申請まで通した知見。キット運用の教科書。">
+  <meta property="og:title" content="AI開発の総合ルール 実証知見まとめ | Kimito-Link">
+  <meta property="og:description" content="AIにプログラム開発を任せるときの総合ルールを、実アプリで踏んだ地雷とセットでまとめたキット運用の教科書。">
   <meta property="og:url" content="https://kimito-skill.link/learnings/">
   <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -82,8 +82,9 @@
     <nav class="breadcrumb" aria-label="パンくずリスト">
       <a href="../">ホーム</a> ＞ <a href="../apps/">応用・実績</a> ＞ 実証知見まとめ
     </nav>
-    <h1>ストア申請 実証知見まとめ</h1>
-    <p class="sub">実証アプリ: <b>君斗りんくのWEBサイト健康診断</b>（2026-06）<br>
+    <h1>AI開発の総合ルール 実証知見まとめ</h1>
+    <p class="sub">プログラムを作る総合ルールと、作業効率化のひな型を実アプリで検証した記録。<br>
+    実証アプリ: <b>君斗りんくのWEBサイト健康診断</b>（2026-06）ほか<br>
     キット: web-ios-android テンプレ / リポ: web-health-check-app</p>
     <p class="sub">関連: <a href="../line-bot/">💬 LINE botの無応答ゼロ化の仕組み</a>（同じ「1回で通す・止めない」思想をLINE bot側に適用した知見）</p>
 
@@ -276,6 +277,47 @@
       <p>
         「性能の高いものに変えれば直る」は、原因を特定する前にやると費用だけ増えます。
         詳細は <code>_docs/runtime-truth-verification-knowledge-base.md</code> に残しました。
+      </p>
+    </div>
+
+    <h2>🧩 「サムネイル・ID・アイコン・名前」を、プロジェクトごとに別の形で作っていた話</h2>
+    <div class="card">
+      <p>
+        姉妹プロジェクトから「AIが実装前に、既にある機能を知らずに新規実装しようとする型の失敗が
+        複数のプロジェクトで見つかった」という報告が届きました。ルールとして重複実装を避けることは
+        <b>3箇所にすでに書いてあり</b>、文章としては十分でした。それでも起きていました。
+      </p>
+      <p>
+        返信を書き終えた直後、<b>まさに同じことを自分がやっていた</b>と分かりました。
+        新しい機能（複数のチャット相手をひとつの案件としてまとめるAI秘書）に、
+        メッセージの送信者を表示するタイムラインを新しく作ったのですが、
+        <b>「役割名＋名前」のテキストだけ</b>で済ませていました。
+      </p>
+      <p>
+        一方、姉妹プロジェクトには既に「人物」の表し方の正本がありました。
+        アイコン画像 or 名前から決まる安定した色つきの頭文字、IDは改名しても同一人物と分かる鍵として保持する、
+        という形です。しかもそのコードには
+        「2026-08-21実機で『サムネイルが出ない』として発覚した」という<b>実際の事故の記録</b>まで
+        コメントに残っていました。それを読まずに、劣化版を新しく書いてしまったのです。
+      </p>
+      <!-- 出典: web-ios-android/_docs/REPLY-to-tsuioku-ai-maze-pattern-2026-08-31.md 付記2 -->
+      <!-- 出典: reply-copilot-openrouter-v2/shared/conversation-render.js（avatarFor）／shared/shiori-to-conversation.js -->
+      <!-- 対応: henshin-hisho/web-app/app.js（avatarFor移植・renderMessageTimeline修正） -->
+      <ul>
+        <li>教訓①: <b>「重複実装をしない」という文章のルールは、実装前に読みに行かなければ効かない</b>。
+          ルールが良い場所に書いてあることと、それを使うことは別問題</li>
+        <li>教訓②: 「サムネイル・ID・アイコン・名前」のように<b>複数の値をひとまとめにして扱う概念</b>ほど、
+          プロジェクトをまたいで別の形を作りやすい。人間なら普通しない</li>
+        <li>教訓③: 事故の記録は<b>コードコメントに書くと、次に読む人（AIも）が実装の瞬間に必ず目にする</b>。
+          別文書に置くより効く場面がある</li>
+        <li>✗ 効かなかった: <b>ルール文を4箇所目に増やすこと</b>。3箇所で足りなかったものが4箇所で足りるとは限らない。
+          直したのはルールの数ではなく、実装前に姉妹プロジェクトを見に行く手順そのもの</li>
+      </ul>
+      <p>
+        この件は横断の索引（<code>ai-hub/index.json</code>）にも登録し、次に別プロジェクトで
+        同じ判断を迫られたときに<code>find --tag duplication</code>で見つかるようにしました。
+        正本はこのキットの<code>_docs/</code>に残し、索引には要約だけを置く、という置き場所の使い分けも、
+        「正本を2つ作らない」という同じ教訓の実践です。
       </p>
     </div>
 
