@@ -31,6 +31,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-heartbeat-present.mjs` | ★製品が「異常なし」を自分で名乗れるか（心拍） | ログを書く製品のみ。書かなければskip |
 | `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |
 | `check-silent-hang-guard.mjs` | ★**コンソールが無いと固まる**書き方（進捗バーの抑止漏れ） | `.ps1/.psm1`。他言語は表で追加 |
+| `check-hotkey-scope.mjs` | ★AutoHotkey製常駐アプリで**前面判定(WinActive)の無いホットキー**（他アプリのキーボードを奪う） | `.ahk`。無ければskip |
 | `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
 | `check-gates-are-wired.mjs` | ★検査を**作った/格上げしたのに誰も呼んでいない**数 | ラチェット。`--dirs` で置き場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
@@ -63,6 +64,36 @@ exe のコンパイルまでは成功するのに zip だけができず、
 ★**赤くなり原因の2箇所（`Compress-Archive` / `Invoke-WebRequest`）を名指し**した。
 修正後は緑。自己検査6本（`--selftest`）には、
 「コメントの中の抑止を有効と数える」偽の緑も固定してある。
+
+### ★`check-hotkey-scope` がなぜ要るか（2026-09-01・実損。soushin-suggest.linkから移植）
+
+AutoHotkey製の常駐ツールで、オーナーが作業中に**「スペースキーを打っても変換されない」**
+状態になった。★製品を `Stop-Process` した瞬間に直った＝製品が原因。同じ日に2回起きた。
+
+真因は1行だった：
+
+```ahk
+#HotIf IsLauncherAlive() && !IvIsOpen()      ← ★WinActive が無い
+Space::IvShowHovered()
+```
+
+`IsLauncherAlive()` は「生きているか」であって「前面にいるか」ではない。ウィンドウが前面
+でなくても真になり続けるので、★メモ帳でもブラウザでも `Space` がこのホットキーへ吸われた。
+他の4本（数字キー・Enter・`^+f`）は全部 `WinActive` を条件に持っていて無事だった。
+**1本だけ仲間外れ**だったのを、誰も気づけなかった。
+
+★この検査は綴りでも件数でもなく**条件式の形**を見る。`WinActive` を消せばその場で赤になる。
+マウス専用ホットキーは対象外（押した場所が対象を決めるので前面判定が無くても安全）。
+`; hotkey-scope-exempt: 理由` を直前行に書けば例外にできる（理由を書かせることで
+「なんとなくの例外」を作らせない）。
+
+**★AutoHotkey前提の検査であり、強制しない**：対象に `.ahk` が1件も無ければ `skip`
+（`check-heartbeat-present` の「ログを書かない製品には心拍を求めない」と同じ設計）。
+
+**★毒で校正済み**：実損時のコード（`WinActive`無し）を食わせると赤くなり、真犯人の
+`Space`を行番号つきで名指しした。修正後のコードは緑。selftest 11ケースには、
+「Hotkey関数形式（`Hotkey "Enter", Foo`）の見落とし」「`::`を含む普通の式の誤読
+（`ComCall(...)`等）」という、移植元で実際に踏んだ2つの穴も固定してある。
 
 ### ★`check-heartbeat-present` がなぜ要るか（2026-08-24・実損）
 

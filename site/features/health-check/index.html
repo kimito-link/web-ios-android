@@ -275,6 +275,11 @@
           <td><code>check-silent-hang-guard</code></td>
           <td>★<b>コンソールが無い場所で「固まって返ってこない」形</b>。PowerShell は進捗バーを描こうとしますが、描く先が無いと待ち続けます。<b>1KB のファイルでも固まる</b>ので「重いから遅い」と誤診しがちです（実測: 既定＝返ってこない／抑止あり＝402ms）。CI や自動化から呼ぶスクリプトで効きます。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-hotkey-scope.mjs（2026-09-01追加・soushin-suggest.linkの実損より移植） -->
+        <tr>
+          <td><code>check-hotkey-scope</code></td>
+          <td>★AutoHotkey製の常駐アプリで、<b>キーボードを奪ったまま返さないホットキー</b>。前面判定（<code>WinActive</code>）を持たない条件で登録されたキーは、常駐ウィンドウが閉じきれずに残ったとき<b>メモ帳でもブラウザでもそのキーを奪います</b>（実際に「スペースキーを打っても変換されない」という実害が同じ日に2回発生）。他アプリのキー入力に手を出さない<b>マウス専用ホットキーは対象外</b>です。<code>.ahk</code>が無いプロジェクトは skip（対象外・合格ではない）。</td>
+        </tr>
         <!-- 出典: templates/diagnostics/check-gates-are-wired.mjs（2026-09-01追加・このキット自身の実損より） -->
         <tr>
           <td><code>check-gates-are-wired</code></td>

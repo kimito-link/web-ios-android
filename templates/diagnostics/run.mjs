@@ -57,6 +57,14 @@ const CHECKS = [
   //   ★エラーも stderr も空。1KB でも固まるので「重いから遅い」と誤診した。
   //   真因は進捗バーの描画で、抑止1行で 402ms に戻った。
   { name: 'check-silent-hang-guard', path: join(__dirname, 'check-silent-hang-guard.mjs') },
+  // ★キーボードを奪ったまま返さない形が残っていないか(2026-09-01追加。
+  //   soushin-suggest.linkから移植)。
+  //   実損: AutoHotkey製の常駐ツールで、前面判定(WinActive)を持たないホットキーが
+  //   1本だけ紛れ込み、常駐ウィンドウが閉じきれずに残ったときメモ帳でもブラウザでも
+  //   Spaceキーが奪われた（同じ日に2回発生。うち1回はAIが修正後exeを再ビルドせず
+  //   旧exeを起動したまま確認していたことが重なった＝別の教訓も参照）。
+  //   ★対象に.ahkが無いプロジェクトはskip(AutoHotkey前提の検査。強制しない)。
+  { name: 'check-hotkey-scope', path: join(__dirname, 'check-hotkey-scope.mjs') },
   // ★検査を「作った/格上げした」のに誰も呼んでいない状態を数える(2026-09-01追加)。
   //   実損3回: ①iOS 518 却下の検出役が pnpm check にも CI にも未登録だった
   //   ②登録済みだが毎回 skip していた ③★このキット自身で、linktree から格上げした

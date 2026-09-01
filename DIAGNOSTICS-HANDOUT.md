@@ -40,6 +40,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-heartbeat-present` | **製品が「異常なし」を自分で名乗れない**もの（沈黙と正常を区別できない） |
 | `check-instruments-reachable` | 計器が**あるのに動かない**もの（try に飲まれて1件も記録されない等） |
 | `check-silent-hang-guard` | **コンソールが無いと固まる**書き方（エラーも出ずビルドが返ってこない） |
+| `check-hotkey-scope` | AutoHotkey製常駐アプリで**前面判定の無いホットキー**（他アプリのキーボードを奪う）。`.ahk`が無い対象はskip |
 | `check-shared-parts-used` | **共有部品があるのに使わず自前で書いている**もの（車輪の再発明） |
 | `check-gates-are-wired` | **検査を作ったのに誰も呼んでいない**もの（呼ばれない検査＝存在しない検査） |
 | `check-docs-match-code` | 説明とコードのズレ（**この案内文と実体のズレも含む**） |
