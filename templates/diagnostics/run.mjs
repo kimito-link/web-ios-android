@@ -71,6 +71,13 @@ const CHECKS = [
   //   旧exeを起動したまま確認していたことが重なった＝別の教訓も参照）。
   //   ★対象に.ahkが無いプロジェクトはskip(AutoHotkey前提の検査。強制しない)。
   { name: 'check-hotkey-scope', path: join(__dirname, 'check-hotkey-scope.mjs') },
+  // ★配る実体がソースより古くないかを見る(2026-09-01追加・実損)。
+  //   上の Space 事故の【2回目】がこれ。コードは直っていたのに再発した:
+  //     dist/soushin-suggest.ahk 15:22(修正済) / dist/soushin-suggest.exe 14:59(古い)
+  //   ★製品が常駐したまま exe を掴み、ビルドが無言で失敗して古い実体が残っていた。
+  //   ソース側の検査(sha256・構文)は全部緑だった＝この区間だけ無防備だった。
+  //   ★成果物を作らないプロジェクトは skip(強制しない)。
+  { name: 'check-build-fresh', path: join(__dirname, 'check-build-fresh.mjs') },
   // ★検査を「作った/格上げした」のに誰も呼んでいない状態を数える(2026-09-01追加)。
   //   実損3回: ①iOS 518 却下の検出役が pnpm check にも CI にも未登録だった
   //   ②登録済みだが毎回 skip していた ③★このキット自身で、linktree から格上げした

@@ -280,6 +280,11 @@
           <td><code>check-hotkey-scope</code></td>
           <td>★AutoHotkey製の常駐アプリで、<b>キーボードを奪ったまま返さないホットキー</b>。前面判定（<code>WinActive</code>）を持たない条件で登録されたキーは、常駐ウィンドウが閉じきれずに残ったとき<b>メモ帳でもブラウザでもそのキーを奪います</b>（実際に「スペースキーを打っても変換されない」という実害が同じ日に2回発生）。他アプリのキー入力に手を出さない<b>マウス専用ホットキーは対象外</b>です。<code>.ahk</code>が無いプロジェクトは skip（対象外・合格ではない）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-build-fresh.mjs（2026-09-01追加・soushin-suggest.linkの実損より） -->
+        <tr>
+          <td><code>check-build-fresh</code></td>
+          <td>★<b>直したはずなのに直っていない</b>形。配る実体（exe / app / apk 等）がソースより<b>古いまま</b>になっていないかを見ます。実際に、キーボードを奪う不具合を直したのに<b>同じ日に2回目が発生</b>しました——コードは直っていたのに、<b>製品が常駐したまま exe を掴んでいてビルドが無言で失敗</b>し、古い実体が残って起動されていたためです。ソース側の検査（ハッシュ一致・構文）は<b>全部緑だった</b>ので、この区間だけが無防備でした。多段ビルド（src → 中間生成物 → 実体）の中間も見ます。成果物を作らないプロジェクトは skip（対象外・合格ではない）。</td>
+        </tr>
         <!-- 出典: templates/diagnostics/check-gates-are-wired.mjs（2026-09-01追加・このキット自身の実損より） -->
         <tr>
           <td><code>check-gates-are-wired</code></td>

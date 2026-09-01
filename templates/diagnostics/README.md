@@ -32,6 +32,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |
 | `check-silent-hang-guard.mjs` | ★**コンソールが無いと固まる**書き方（進捗バーの抑止漏れ） | `.ps1/.psm1`。他言語は表で追加 |
 | `check-hotkey-scope.mjs` | ★AutoHotkey製常駐アプリで**前面判定(WinActive)の無いホットキー**（他アプリのキーボードを奪う） | `.ahk`。無ければskip |
+| `check-build-fresh.mjs` | ★配る実体（exe/app/apk）が**ソースより古い**（ビルドが無言で失敗している） | 成果物。無ければskip |
 | `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
 | `check-gates-are-wired.mjs` | ★検査を**作った/格上げしたのに誰も呼んでいない**数 | ラチェット。`--dirs` で置き場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
