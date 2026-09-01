@@ -252,11 +252,35 @@ try {
       const measured = await page.evaluate((checkNav) => {
         const docW = document.documentElement.scrollWidth;
         const winW = window.innerWidth;
+        // ★祖先でクリップされている要素は数えない(2026-09-01・偽の赤から)。
+        //
+        // 【何が起きたか】soushin-suggest.link に当てたところ、11幅すべてで
+        //   DIV.thx-wipe が「はみ出し」として報告された。しかし実測すると
+        //   ★docW === winW で【横スクロールは1pxも起きていなかった】。
+        //   真因: この要素は transform: translateX(±105%) でアニメーションする
+        //   演出用の帯で、親が overflow:hidden で刈っている(親側のCSSに
+        //   「ここで刈らないと375px幅で横スクロールが285px発生する」と
+        //   実測コメント付きで書かれていた＝既に正しく対処済みだった)。
+        //
+        // 【なぜ止めるか】★偽の赤は「毎回赤い検査」を作り、誰も読まなくなる。
+        //   このキットの掟(件数のラチェットと同じ考え方)に反する。
+        //   ⟹ 祖先に overflow の刈り取りがあるものは、画面外へ出ていても
+        //      利用者には見えず、横スクロールも起こさないので除外する。
+        const isClipped = (el) => {
+          let a = el.parentElement;
+          while (a && a !== document.documentElement) {
+            const ov = getComputedStyle(a);
+            if (ov.overflowX !== 'visible' || ov.overflowY !== 'visible') return true;
+            a = a.parentElement;
+          }
+          return false;
+        };
         const over = [];
         for (const e of document.querySelectorAll('body *')) {
           const r = e.getBoundingClientRect();
           if (r.width === 0 && r.height === 0) continue;
           if (r.right > winW + 1 || r.left < -1) {
+            if (isClipped(e)) continue;   // ★刈られている＝実害なし
             over.push(`${e.tagName}.${(e.className || '').toString().slice(0, 48)}`);
           }
         }
