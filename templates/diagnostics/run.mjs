@@ -57,6 +57,13 @@ const CHECKS = [
   //   ★エラーも stderr も空。1KB でも固まるので「重いから遅い」と誤診した。
   //   真因は進捗バーの描画で、抑止1行で 402ms に戻った。
   { name: 'check-silent-hang-guard', path: join(__dirname, 'check-silent-hang-guard.mjs') },
+  // ★共有部品が「あるのに使われていない」を数える(2026-09-01追加)。
+  //   実損: 同じ画面部品が3つ別々に実装され、ユーザーが
+  //   「車輪の再発明もいいところです」と指摘した。重複禁止は
+  //   ★キットに既に3箇所書いてあったのに守られなかった。
+  //   ⟹ 文章を4箇所目に足しても解決しない。**検査していない規範は守られない**。
+  //   ★代償は行数ではなく「一度直したバグが別の画面では直っていない」こと。
+  { name: 'check-shared-parts-used', path: join(__dirname, 'check-shared-parts-used.mjs') },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },

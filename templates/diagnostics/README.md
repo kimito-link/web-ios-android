@@ -31,6 +31,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-heartbeat-present.mjs` | ★製品が「異常なし」を自分で名乗れるか（心拍） | ログを書く製品のみ。書かなければskip |
 | `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |
 | `check-silent-hang-guard.mjs` | ★**コンソールが無いと固まる**書き方（進捗バーの抑止漏れ） | `.ps1/.psm1`。他言語は表で追加 |
+| `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
 
 ### ★`check-silent-hang-guard` がなぜ要るか（2026-08-26・実損）

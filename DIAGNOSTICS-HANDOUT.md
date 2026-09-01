@@ -26,7 +26,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 
 対象フォルダ＝あなたがいま作業しているリポジトリのルートです。
 
-## 何を見るか（11本）
+## 何を見るか（12本）
 
 | 検査 | 見つけること |
 |---|---|
@@ -40,6 +40,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-heartbeat-present` | **製品が「異常なし」を自分で名乗れない**もの（沈黙と正常を区別できない） |
 | `check-instruments-reachable` | 計器が**あるのに動かない**もの（try に飲まれて1件も記録されない等） |
 | `check-silent-hang-guard` | **コンソールが無いと固まる**書き方（エラーも出ずビルドが返ってこない） |
+| `check-shared-parts-used` | **共有部品があるのに使わず自前で書いている**もの（車輪の再発明） |
 | `check-docs-match-code` | 説明とコードのズレ（**この案内文と実体のズレも含む**） |
 
 ## いちばん大事な設計：3値で答えます
