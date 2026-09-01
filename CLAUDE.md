@@ -169,6 +169,10 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 - Chrome申請は [`docs/CHROME-WEBSTORE.md`](docs/CHROME-WEBSTORE.md) を参照（OAuthは「デスクトップアプリ」型・認証コードは短命）。
 - iOS/Android/Chrome のGUI操作が必要なときは、**自動化できないことを明示**してユーザーに手順を伝える。
 - トラブルは [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)、課金税務は [`docs/TAX-SETUP.md`](docs/TAX-SETUP.md)。
+- **アプリ内課金(IAP・サブスク)の実装はこのキット本体には型が無い。** 実装の型は既存プロジェクトにある（ゼロから作らない・毎回調査し直さない）。
+  - **PHP原型（Capacitor server.url型 + @capgo/native-purchases・App Store Server API/通知検証の完成品）**: `../resend.kimito-link.com/app/services/apple_client.php`（Apple）/ `google_client.php`（Google）/ `public/assets/iap-billing.js`（クライアント）/ 事業者手順は `../resend.kimito-link.com/SETUP-iap-activation.md`（商品ID命名・ストアGUI・審査必須要件を網羅）。
+  - **Next.js(TS)移植の実例**: `../malwarecheck.site/apps/web/lib/apple/appStoreClient.ts`（★手書きJWS/証明書検証は移植せず Apple公式 `@apple/app-store-server-library` を使う）/ 通知受け `apps/web/app/api/apple/notifications/route.ts` / 購入UI `apps/web/components/MonitorIapButton.tsx`。設計は `../malwarecheck.site/_docs/defender-asymmetry-prognosis-DESIGN.md` の続き。
+  - ★地雷: server.url型はプラグインJSが自動注入されないので Web側に配線が要る。CIは `cap copy` でなく **`cap sync`** にしないとプラグインのPodが入らず「コードはあるのに動かない」になる。IAP追加は「無料アプリ(3.1.3(f)免除)申告」との矛盾になるので審査申告の変更が要る。
 - **キャラ（りんく/こん太/たぬ姉）で親しみやすく。** ユーザー向けの説明は、専門用語を避け、
   小学生〜90歳でもわかる言葉で。りんく=案内役、こん太=背中を押す、たぬ姉=注意点を教える。
 
