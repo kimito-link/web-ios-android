@@ -1,0 +1,20 @@
+{
+  "badgeText": {
+    "auto": "✅ 自動",
+    "once": "✋ 初回のみ",
+    "wait": "⏳ 待つだけ"
+  },
+  "items": [
+    { "badge": "auto", "label": "Webサイトの公開・更新" },
+    { "badge": "auto", "label": "iPhoneアプリのビルド・App Store申請・配信地域（全世界）" },
+    { "badge": "auto", "label": "Androidアプリのビルド・Google Play申請" },
+    { "badge": "auto", "label": "Chromeアドオンのパッケージ化・Chromeウェブストア申請" },
+    { "badge": "auto", "label": "アイコン・宣伝用の画面写真の作成" },
+    { "badge": "auto", "label": "お店の説明文・画像の登録" },
+    { "badge": "auto", "label": "プライバシーポリシーのページ作成" },
+    { "badge": "auto", "label": "アプリごとの更新情報・動作チェックページ作成" },
+    { "badge": "once", "label": "広告・対象年齢の申告（Googleのサイトで）" },
+    { "badge": "once", "label": "コンテンツのレーティング設定" },
+    { "badge": "wait", "label": "Apple・Google・Chromeの審査（iPhone: 1〜3日、Android・Chrome: 数日）" }
+  ]
+}

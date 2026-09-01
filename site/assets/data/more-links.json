@@ -1,0 +1,37 @@
+{
+  "groups": [
+    {
+      "head": "実際の画面で追体験する",
+      "items": [
+        { "icon": "📷", "href": "walkthrough/", "title": "お店への申請 追体験（3プラットフォーム）", "desc": "iOS・Android・Chrome で人間が触る画面だけ。「やることこれだけ」形式" },
+        { "icon": "🍎", "href": "walkthrough/ios/", "title": "App Store 追体験（実画面）", "desc": "プライバシー申告・秘密情報・通知・配信地域175か国まで。キャプチャ5枚＋自動化コマンド付き" },
+        { "icon": "▶", "href": "walkthrough/play/", "title": "Google Play 追体験（実画面）", "desc": "本物の Play Console 画面で、アプリ作成〜審査送信までをそのままなぞれます" },
+        { "icon": "🧩", "href": "walkthrough/chrome/", "title": "Chrome ウェブストア 追体験（実画面）", "desc": "ログイン連携の初回セットアップ → 以降は2コマンドで送信。キャプチャ5枚付き" }
+      ]
+    },
+    {
+      "head": "始める前に読んでおく",
+      "items": [
+        { "icon": "📋", "href": "guide/", "title": "はじめる前の準備", "desc": "Apple・Googleへの開発者登録のしかた" },
+        { "icon": "🖼️", "href": "howto/", "title": "ゆっくり解説", "desc": "GitHub・Vercel・ドメインって何？<br>画面つきでわかりやすく説明します" },
+        { "icon": "📖", "href": "story/", "title": "完成ものがたり", "desc": "このキットが「5年後に楽できるレベル」になるまでの作り直し記録を、3人のゆっくりが追体験" }
+      ]
+    },
+    {
+      "head": "作ったものを販売する",
+      "items": [
+        { "icon": "💳", "href": "https://github.com/kimito-link/web-ios-android/tree/main/templates/stripe-checkout-email", "external": true, "title": "買い切り課金＋購入完了メールの金型", "desc": "決済→自動送信の仕組みで、ダウンロード案内メールを自動で送ります。実際に使われている型" }
+      ]
+    },
+    {
+      "head": "困ったとき・知っておくこと",
+      "items": [
+        { "icon": "🩹", "href": "troubleshooting/", "title": "公開でつまずいたら", "desc": "「承認されたのにDLできない」など、よくある罠と直し方" },
+        { "icon": "💴", "href": "tax/", "title": "アプリ課金の税務手続き", "desc": "もし将来アプリ内課金や有料アプリで収益が出たら関係してくる話です。米国での源泉徴収の手続きと銀行受取。正しいやり方" },
+        { "icon": "📚", "href": "learnings/", "title": "実証知見まとめ", "desc": "健康診断アプリで iOS/Android/Chrome 申請まで通した知見・必要な情報の一覧" },
+        { "icon": "💬", "href": "line-bot/", "title": "無応答ゼロ化の仕組み", "desc": "LINEのAI社員が「既読無視」しない設計。AIの切り替えと実際に起きた不具合の直し方" },
+        { "icon": "🖼️", "href": "line-bot-features/", "title": "画像・動画・音声認識", "desc": "LINEのAI社員が写真も動画も聞いた話も分かる仕組み。どのAIモデルが何を担当しているか、対応モデル一覧と実機検証で判明した罠" }
+      ]
+    }
+  ]
+}

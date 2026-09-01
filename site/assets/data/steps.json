@@ -1,0 +1,142 @@
+{
+  "required": [
+    {
+      "circle": "①",
+      "title": "ボタンを押してダウンロード",
+      "oneLine": "ファイルが届いたらダブルクリックして開くだけ",
+      "char": "link-smile.png",
+      "charName": "りんく",
+      "illustClass": "",
+      "illustStyle": "flex-direction:column; gap:12px;",
+      "illustHtml": "<a href=\"download/web-ios-android-template.zip\" class=\"step-dl-btn\">⬇ 上と同じZIPをここでもダウンロード</a><div style=\"display:flex; align-items:center; justify-content:center; gap:8px;\"><div class=\"ill-box\"><span class=\"ill-icon\">📦</span>届く</div><div class=\"ill-arr\">→</div><div class=\"ill-box\"><span class=\"ill-icon\">📂</span>開く</div></div>",
+      "detailHtml": "上の「ダウンロード」ボタンを押してください。<br>ファイルが届いたら、ダブルクリックして開くだけ。<br>中にアプリの土台が全部入っています。<div class=\"tip\">💡 Windowsの場合は、ファイルを右クリック→「すべて展開」で開けます。</div>"
+    },
+    {
+      "circle": "②",
+      "title": "アプリの名前を書く",
+      "oneLine": "アプリの名前を書くだけ",
+      "char": "konta-smile.png",
+      "charName": "こん太",
+      "illustStyle": "background:#fff8e1; flex-direction:column; align-items:stretch; gap:10px;",
+      "illustHtml": "<div style=\"text-align:center; font-size:0.8rem; color:#888; font-weight:700;\">📄 メモ帳で開いて書き換えるだけ（正体は <code>app.config.json</code> という設定ファイル）</div><div style=\"background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08); font-size:0.9rem; display:flex; align-items:center; gap:10px;\"><span style=\"font-size:1.4rem;\">📱</span><span style=\"color:#555;\">アプリの名前</span><span style=\"margin-left:auto; color:#e65100; font-weight:700;\">✏️ 書く</span></div><div style=\"text-align:center; font-size:0.75rem; color:#aaa;\">これだけ！あとはさわらなくてOK</div>",
+      "detailHtml": "開いたフォルダの中に「設定ファイル」（<code>app.config.json</code>）があります。<br>メモ帳（テキストエディタ）で開いて、アプリの名前を書くだけ。<div class=\"tip\">📱 アプリの名前（例：「私の健康アプリ」）<br><br>📧 メールアドレスや 🌐 独自ドメインは、後でAIに「〇〇にして」と伝えるだけでOK</div>"
+    },
+    {
+      "circle": "③",
+      "title": "AIに「やって」と頼む",
+      "oneLine": "フォルダを渡してお願いするだけ",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9;",
+      "illustHtml": "<div class=\"ill-chat\"><div class=\"chat-title\">🤖 こう言うだけ！</div><div class=\"ill-msg user\">このフォルダ、セットアップして！</div><div class=\"ill-msg ai\">まかせて！ぜんぶやるね✨</div><div class=\"ill-msg user\">エラーが出た（スクショ貼る）</div><div class=\"ill-msg ai\">直しました！もう大丈夫です👍</div></div>",
+      "detailHtml": "Claude や ChatGPT などのAIに、フォルダをそのまま渡して<br>「セットアップして」と言うだけ。<br>アイコン・説明文・細かい設定をぜんぶやってくれます。<div class=\"tip\">🤖 途中でエラーが出ても大丈夫！ 画面をそのままスクショしてAIに貼るだけで直してくれます。</div><div class=\"tip\">📖 なぜ「渡すだけ」で伝わるの？ → フォルダの中に <code>CLAUDE.md</code> という「AI向けの説明書」が最初から入っています。Claude Code のようなAIツールは、作業するフォルダの中にこのファイルを見つけると自動で読み込む仕組みになっているので、あなたが手順を説明しなくても、AIが「このフォルダは何のためのもので、どう進めればいいか」を自分で理解してくれます。すぐに使える開始文は、少し下の「AIに渡す文章」でコピーできます。</div>"
+    },
+    {
+      "circle": "④",
+      "title": "「送信」して待つだけ",
+      "oneLine": "送るところまで自動。OKを出すのはお店の審査員（人間）",
+      "char": "link-smile.png",
+      "charName": "りんく",
+      "illustStyle": "background:#e3f2fd; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox hi\"><span class=\"fi\">📤</span>送信</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🤖</span>自動で<br>つくる</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">✅</span>完成！</div></div><div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap; font-size:0.78rem; color:#555;\"><span style=\"background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);\">🍎 iPhoneのお店へ</span><span style=\"background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);\">▶ Androidのお店へ</span><span style=\"background:white; border-radius:8px; padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);\">🌐 Webサイトへ</span></div><div class=\"illust-flow-note\">4つぜんぶ、送るところまで進みます</div>",
+      "detailHtml": "AIがやってくれた作業を「送信」すると、<br>iPhoneアプリ・Androidアプリ・Webサイト・Chromeのアドオンが<br>自動でつくられて、それぞれのお店に提出されます。<div class=\"tip\">⏳ お店の人（審査員）が確認するのに数日かかります。OKが出たら公開。<br>Androidの「審査用に送信」は人間のボタンが必要な場合があります。iOSの配信地域は、世界のほぼ全部の国・地域を自動で設定します（あとでApp Store Connectの画面で確認もできます）。詳しくは <a href=\"walkthrough/ios/\">App Store 追体験</a> ／ <a href=\"troubleshooting/\">つまずいたら</a>。</div>"
+    }
+  ],
+  "bonus": [
+    {
+      "circle": "🛡️",
+      "title": "もし「却下」されても、自動で立て直す",
+      "oneLine": "却下理由をログから特定 → 直して → 再申請まで自動",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#fff3e0; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">❌</span>却下</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🔍</span>原因を<br>特定</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🔧</span>自動で<br>修正</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">📤</span>再申請</div></div><div class=\"illust-flow-note\">アプリが落ちる・宣伝っぽいスクショ・連絡先の抜け…よくある却下に対応</div>",
+      "detailHtml": "審査は一度で通らないこともあります。でも大丈夫。<br>Apple/Google からの却下メッセージと、アプリが落ちた記録から原因を特定し、<br>中身や設定を直して、もう一度申請するところまで進められます。<div class=\"tip\">💡 これまでに実際に起きた却下のやり取り（Guideline番号ごとの原因と直し方）を、社内の記録に蓄積しています。よくある却下パターンは <a href=\"troubleshooting/\">つまずいたら</a> にまとめています。</div>"
+    },
+    {
+      "circle": "🩺",
+      "title": "できたアプリは、自分で「けんこう診断」を出す",
+      "oneLine": "調子が悪いとき、あなたが説明しなくてもAIが自分で調べて直せる",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">🤒</span>なんか<br>おかしい</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">📋</span>アプリが<br>自己申告</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🤖</span>AIが数字で<br>原因特定</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">🔧</span>直る</div></div><div class=\"illust-flow-note\">「見てきて」「押してみて」の往復ナシで直ります</div>",
+      "detailHtml": "",
+      "noToggle": true,
+      "afterIllustHtml": "<div class=\"tip\" style=\"margin:14px 20px 0;\">💡 仕組みと実例のくわしい説明（開発中の中身そのものを検査する診断キットも同じページに）は <a href=\"features/health-check/\">けんこう診断の仕組みページ</a> へ。</div>"
+    },
+    {
+      "circle": "⏱️",
+      "title": "診断は「押したとき」ではなく、ずっと動いている",
+      "oneLine": "不具合はこちらが見ている時だけ起きるわけではない。壊れて開けないときの備えも同じ仕組み",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">⏱️</span>2秒ごとに<br>自分を測る</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">📋</span>コピー<br>1回</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">🔍</span>原因が<br>分かる</div></div><div class=\"illust-flow-note\">見ていない画面では自動で止まるので、電池もCPUも食わない</div>",
+      "detailHtml": "アプリは2秒ごとに自分の状態を測り続け、気づいた異常をコピー1回で開発者に渡せる形にまとめます。この「①ずっと測る」と「②コピー1回で伝える」は2つで1組。片方だけでは機能しません。さらに、いちばん知りたい「重いとき」に診断画面そのものが開かなくなる弱点に備え、<b>あなたに頼まず開発側が自分で測る手順</b>も同じ仕組みの一部として持っています。<!-- 出典: _docs/instruments/ALWAYS-ON-DIAGNOSTICS.md:19,66 --><div class=\"tip\">💡 判定は🟢正常／🟡注意／🔴異常／⚪測れていない の4値。「測れていない」を「正常」に混ぜないので、0件を「異常なし」と誤診しません。実績：この仕組みで「診断817秒→0.005秒」の原因特定が、あなたの操作1回で回るようになりました。くわしい骨格は<a href=\"features/health-check/#ai-instructions\">けんこう診断の仕組みページ</a> へ。</div>"
+    },
+    {
+      "circle": "📈",
+      "title": "前回の続きから迷わず進め、進み具合も見える",
+      "oneLine": "これまでの判断を引き継ぎ、準備が何％まで進んだか確認できます",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">📏</span>新しい版で<br>数字を測る</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">📒</span>台帳に<br>書き足す</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🔍</span>過去いちばん<br>良い版と比べる</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">🟢</span>良くなった<br>ときだけ緑</div></div><div class=\"illust-flow-note\">「軽くしました」ではなく「2400KBが1360KBになりました」と言い切れる</div>",
+      "detailHtml": "アプリは1つ直すたびに、少しずつ別の場所が重くなったり遅くなったりしがちです。1回ずつは小さい変化なので、人が見比べても気づけません。★このキットは「前の版と比べる」のではなく<b>「今までで一番良かった版」と比べます</b>。じわじわ悪化して元の悪い状態に戻っても、必ず気づけます。<br><br>★さらに完全版では、作業前に<b>これまでの変更・決めたこと・うまくいかなかった方法・まだ確認できていない点</b>を、出どころが分かる1枚へまとめます。作業後は証拠のある結果だけを台帳へ戻すため、次のAIが同じ失敗を提案せず、前回の続きから始められます。<!-- 出典: _docs/instruments/ALWAYS-ON-DIAGNOSTICS.md:19,66 --><div class=\"tip\">💡 実例：ある配信ツールで、診断の読み込み速度を <b>817,000ミリ秒（約14分）→5ミリ秒</b> に改善。この改善が「本当に起きたこと」だと言えるのは、体感ではなく実際に測った数字を版ごとの台帳に残しているからです。台帳には「良くなった理由」も一緒に書くので、審査提出のときに「何をどれだけ改善したか」をそのまま数字で説明できます。<br><br>★逆方向の工夫もあります。数字は「小さいほど良い」とは限りません（エラー率は0%が良い、失敗を検知できた回数は多い方が良い、など）。このキットは指標ごとに「どちらの方向が良いか」を先に決めてから測るので、<b>正しく直した人を「悪化させた」と誤判定して止めてしまう事故</b>を防いでいます。<br><br>★さらに、この見張り役<b>そのものが動いていない</b>状態も検出します。「赤いまま放置された検査」は、緑と同じくらい危険だからです（実際、別のプロジェクトで<b>8日間も赤に気づかなかった</b>ことがありました）。検査が最後に通った時点を記録しておき、そこから更新が重なると「そもそも走っていないのでは」と知らせます。<br><br>★<b>測る項目そのものは、はじめは空っぽで届きます。</b>何を測るべきかはアプリごとに違うので、実際に測ってから足す作りです（測らずに「こちらが良い」と決めると、正しい修正を止めてしまうため）。<br><br>★<code>.env</code>・鍵・ローカル設定の中身は読みません。会話だけの判断や外部サービス・実機の状態も自動では取れないため、取っていないものを「把握済み」に混ぜません。<br><br>★このキットで作った各アプリには <code>/check-shindan-version/</code> が作られます。「確認済み・確認中・まだ未確認・見つかった問題」を分けて表示し、残っている項目には「次に何をするか」も出します。このキット自身の実物は <a href=\"check-shindan-version/\">更新情報と動作チェック</a> で確認できます。仕組みを知りたい方は <a href=\"features/health-check/\">詳しい仕組みの説明</a> へ。</div>"
+    },
+    {
+      "circle": "🔒",
+      "title": "出荷前に「安全チェックで満点」を先取りする",
+      "titleId": "security-title",
+      "oneLine": "まず自分の中で先にチェックし、最後に外部の診断サービスでも確認",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">🔍</span>自分の中で<br>先に確認</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">🌐</span>外部の<br>診断サービス</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">💯</span>両方そろって<br>完了</div></div><div class=\"illust-flow-note\">攻撃・侵入・総当たりは一切しません（外から見えるものだけ確認）</div>",
+      "detailHtml": "たぬ姉：「外部の安全チェックサービスに自分のサイトを見てもらうと、設定の抜けや<code>.env</code>ファイル（秘密の情報が書かれたファイル）の公開放置などで減点されることがあるの。出してから気づくのは遅いから、まず自分の中で『足りない設定はないか』を先に確認するのよ。<br><br>そのあとで、malwarecheck.site という外部の診断サービスにも同じ公開URLを見てもらう。内部チェックと外部チェック、<b>両方が満点にそろったときだけ『完了』</b>って言うようにしてるわ。」<div class=\"tip\">💡 公開URLに普通にアクセスするだけで完結します。不正な侵入を試すテストや、鍵をこじ開けるような検査は一切行いません。100点は外から見える簡単な診断の満点であって、絶対安全を保証するものではありません。くわしくは <a href=\"features/health-check/#security-score\">けんこう診断の仕組みページ</a>、実際の外部サービスは<a href=\"https://malwarecheck.site/check/\" target=\"_blank\" rel=\"noopener\">malwarecheck.site</a>で見られます。</div>"
+    },
+    {
+      "circle": "🎬",
+      "title": "アプリを開いた「最初の1秒」の崩れを、出す前に見つける",
+      "oneLine": "起動画面がAndroidだけ縦に伸びる・ダークモードで効かない、を機械で検出",
+      "char": "tanunee-smile.png",
+      "charName": "たぬ姉",
+      "illustStyle": "background:#e8f5e9; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">📱</span>設定と素材を<br>読むだけ</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">🎬</span>崩れる条件を<br>出す前に発見</div></div><div class=\"illust-flow-note\">実機の見え方までは判定しません（最後は目で見る）</div>",
+      "detailHtml": "アプリを開いた最初の1秒に出る画面（スプラッシュ）は、設定を1つ書き忘れるだけでAndroidだけ縦に伸びたり、一瞬まっ白がチラついたりします。しかも<strong>ファイルは正しく置かれているので、あるかないかのチェックでは見つかりません</strong>。設定と素材そのものを読んで、崩れる条件になっていないかを機械で確かめます。<div class=\"tip\">💡 よくあるのは①Androidの引き伸ばし設定（そのままだと歪む）②ダーク用の画像がライト用と<strong>中身まで同一</strong>（2つあるので対応済みに見える）の2つです。くわしくは <a href=\"features/health-check/\">けんこう診断の仕組みページ</a> へ。</div>"
+    },
+    {
+      "circle": "📐",
+      "title": "スマホでもPCでも、画面が崩れていないか実際に確かめる",
+      "titleId": "responsive-title",
+      "oneLine": "崩れやすい書き方をコードで先に見つけ、最後は実際の画面を目で見て確認",
+      "char": "konta-smile.png",
+      "charName": "こん太",
+      "illustStyle": "background:#fff3e0; flex-direction:column; gap:10px; align-items:stretch;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">🔎</span>崩れそうな<br>書き方を検出</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">📱💻</span>4つの<br>画面幅で実測</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">✅</span>横スクロール<br>ゼロを確認</div></div>",
+      "detailHtml": "こん太：「スマホで見たら文字が切れてた…なんてこと、ない？<br><br>スマホ・タブレット・パソコンって画面の横幅がぜんぜん違うから、幅を固定した書き方をしてると、横に間延びしてスクロールバーが出たり、文字が読めなくなったりするんだ。このキットは、そういう『崩れやすい書き方』をまずコードのまま先に見つける。そのあとで <b>375px・768px・1024px・1440px</b> の4つの幅で、実際にブラウザを開いて『本当に崩れてないか』を目で見て確認するよ。」<div class=\"tip\">💡 見た目の最終判定は、自作の判定エンジンではなく実際のブラウザに任せています。くわしい仕組みは<a href=\"features/health-check/#responsive-check\">こちら</a>。</div>"
+    },
+    {
+      "circle": "📚",
+      "title": "一度つまずいた失敗は、次のアプリでは繰り返さない",
+      "oneLine": "却下や初めて見るエラーを直したら、AIがこのキット自身に書き足していく",
+      "char": "link-smile.png",
+      "charName": "りんく",
+      "illustStyle": "background:#e3f2fd;",
+      "illustHtml": "<div style=\"display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;\"><div class=\"fbox\"><span class=\"fi\">🔧</span>1つ<br>直す</div><div class=\"farr\">→</div><div class=\"fbox\"><span class=\"fi\">📝</span>知見を<br>書き戻す</div><div class=\"farr\">→</div><div class=\"fbox ok\"><span class=\"fi\">🚀</span>次のアプリで<br>先に読む</div></div><div class=\"illust-flow-note\">同じ調査・同じ回り道を、二度とやり直さない</div>",
+      "beforeToggleComment": "出典: _docs/FIRST-SUBMISSION-blockers.md（B1〜B8の8件、実在確認済み）",
+      "detailHtml": "このキットは「使うたびに賢くなる」設計です。<br>審査の却下対応や、初めて見るエラーの解決は、症状・原因・直し方のセットでキット内の知見ファイルに書き戻されます。次に別のアプリを同じキットで作るとき、AIは着手する前にその記録を読み、同じ調査を一からやり直しません。<div class=\"tip\">💡 実例：あるアプリの初回提出で踏んだ8個の詰まり（署名鍵・必須項目不足など）を「初回提出ブロッカー全リスト」として記録。次の新規アプリでは、そのリストを上から潰すだけで、やり直しの回数が大きく減りました。書き戻しルールの正体はキットに入っている説明書（AIが読む用）にあります。くわしい実証知見は <a href=\"learnings/\">実証知見まとめ</a> へ。</div>"
+    },
+    {
+      "circle": "💬",
+      "title": "LINEで、あなたのAI社員と会話できるようにする",
+      "oneLine": "ユーザーがLINEで話しかけると、キャラクターの人格でAIが自動で返信",
+      "char": "link-smile.png",
+      "charName": "りんく",
+      "illustStyle": "background:#e8f5e9;",
+      "illustHtml": "<div class=\"ill-chat\"><div class=\"chat-title\">💬 LINEでこんな会話ができる</div><div class=\"ill-msg user\">使い方教えて</div><div class=\"ill-msg ai\">今日も1日お疲れさまでした！何かお手伝いできることがあれば教えてくださいね。</div></div>",
+      "detailHtml": "アプリに専用のLINE公式アカウントを持たせ、ユーザーが話しかけるとキャラクター（人格・トーンはあなたが決める）でAIが自動返信します。よくある質問はキャッシュと定型応答で無料枠内に収め、答えられない相談は「担当者確認が必要です」と正直に伝えて人間に引き継ぎます（誇張表現やできない約束はしません）。<div class=\"tip\">💡 エラーや予期しない不具合が起きても、絶対に無言のままにしない設計（fail-closed）。「何を送っても反応がない」という一番気づきにくい壊れ方を防ぎます。実体は<code>templates/line-bot/</code>（LINE公式アカウントの人格・応答ロジックの金型。CRM機能などの複雑な部分は含まない、会話に特化した最小構成）。</div><div class=\"tip\">🛡️ AIの頭脳は1社に頼りません。1番手が混んでいたり止まっていたりしても、自動で2番手・3番手のAIに切り替えて必ず返事をする「無応答ゼロ化」の仕組みが入っています。しかも切り替え先は無料の範囲に収まる組み合わせを選んであるので、ふだんの追加コストはかかりません。実例：1番手が数秒答えられなかった実際のケースで、2番手のAIが代わりに応答して「既読無視」を防いだ実績あり。くわしい仕組みと実例は <a href=\"line-bot/\">無応答ゼロ化のページ</a> へ。</div><div class=\"tip\">🖼️ テキストだけでなく、写真・動画・音声メッセージにもちゃんと反応します。送られた内容を理解した上で、キャラクターらしい言葉で返事をする2段構成。どのAIモデルが画像・動画・音声それぞれを担当しているか、対応モデル一覧は<a href=\"line-bot-features/\">画像・動画・音声認識のページ</a> へ。</div>"
+    }
+  ]
+}
