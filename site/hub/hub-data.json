@@ -1,11 +1,12 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-01T07:10:26.805Z",
-  "entryCount": 70,
+  "generatedAt": "2026-09-01T09:30:40.296Z",
+  "entryCount": 71,
   "doctorOk": true,
   "doctorProblems": [],
   "doctorWarnings": [
     "kb-copywriting-persuasion-principles: summary が80字超（1行厳守）",
+    "kb-timid-marketer-principles: summary が80字超（1行厳守）",
     "gate-ios-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "gate-android-splash: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "gate-lint-pre-submission: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
@@ -133,6 +134,7 @@
     "未インデックスの検証資産: web-ios-android/scripts/verify-all.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/verify-claims-coverage.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/verify-internal-links.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/scripts/verify-learnings-map.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/verify-numeric-claims-provenance.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-actions-usage.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-dependabot-queue.mjs（index化を検討）",
@@ -160,7 +162,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 153,
+  "doctorWarningCount": 155,
   "shelves": [
     {
       "id": "shipping",
@@ -1102,6 +1104,38 @@
       "title": "横断知見・その他",
       "entries": [
         {
+          "id": "kb-timid-marketer-principles",
+          "kind": "kb",
+          "path": "ai-hub/kb/timid-marketer-principles.md",
+          "tags": [
+            "marketing",
+            "validation",
+            "mvp",
+            "lp",
+            "risk",
+            "pricing",
+            "business"
+          ],
+          "summary": "臆病者のマーケティング（キリタのラジオ）。『欲しいですか』ではなく値段を言って『買いますか』を聞く／売れたものだけを商品化／最初に必要なのはLP1枚／小さく失敗できる賭けしかしない／固定費を極端に嫌う",
+          "triggers": [
+            "作るべきか",
+            "需要があるか",
+            "ニーズ検証",
+            "MVP",
+            "先に作る",
+            "予約販売",
+            "モニター募集",
+            "撤退ライン",
+            "小さく試す",
+            "固定費",
+            "値段を聞く",
+            "売れたものだけ",
+            "臆病者のマーケティング",
+            "キリタのラジオ"
+          ],
+          "verified": "2026-09-01"
+        },
+        {
           "id": "kb-clerk-x-oauth-e2e",
           "kind": "kb",
           "path": "web-ios-android/_docs/clerk-x-oauth-e2e-verification-playbook.md",
@@ -1998,7 +2032,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-01T07:10:26.805Z",
+    "generatedAt": "2026-09-01T09:30:40.296Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3010,7 +3044,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが153件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが155件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
