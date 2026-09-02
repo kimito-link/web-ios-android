@@ -353,6 +353,7 @@ ${rows}
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>次にやることリスト（作業台）</title>
+<link rel="stylesheet" href="../assets/css/common.css?v=2" />
 <style>
 ${TREE_VIEW_CSS}
   body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
@@ -421,7 +422,7 @@ ${TREE_VIEW_CSS}
 </style>
 </head>
 <body>
-<p><a href="/">← kimito-skill.link トップへ</a></p>
+<div id="site-header"></div>
 <h1>今、何から手をつけるべきか（自分専用メモ）</h1>
 <p class="intro">
   これは私（開発者）が自分のために作った作業台です。育てているアプリやサイトが
@@ -463,6 +464,8 @@ ${emptyNote}
   </p>
 </section>
 ${shelvesHtml}
+<div id="site-footer"></div>
+<script src="../scripts/site-chrome.js"></script>
 </body>
 </html>
 `;

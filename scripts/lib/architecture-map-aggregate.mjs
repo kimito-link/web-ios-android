@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { gitSnapshot, gitHeadTrackedFiles, scanRepoStructure, findPairsRole } from './architecture-map-core.mjs';
+import { gitSnapshot, gitHeadTrackedFiles, gitRemoteRepoName, scanRepoStructure, findPairsRole } from './architecture-map-core.mjs';
 
 /**
  * ★1リポジトリの解析結果に、PAIRS/ai-hub登録の情報を突き合わせて注釈する。
@@ -139,8 +139,13 @@ export async function buildArchitectureMap(githubRoot, opts = {}) {
     //   状態」だけへ絞り込むための材料（2026-09-02、dirty恒常除外問題の根治でls-tree HEAD化）。
     //   内部データにも保持しておき、公開View側で再度gitを呼ばない。
     const trackedFiles = gitHeadTrackedFiles(dir);
+    // ★githubRepoName: ローカルのディレクトリ名とGitHub上の実際のリポジトリ名が食い違う
+    //   実例があるため（2026-09-02、公開リポ未反映問題の根治）、visibility判定にはこちらを使う。
+    //   取れない場合はnull（呼び出し側=architecture-map-public-view.mjsでlocal名にフォールバック）。
+    const githubRepoName = gitRemoteRepoName(dir);
     repos.push({
       name,
+      githubRepoName,
       head: snapshot?.head || null,
       dirty: snapshot?.dirty ?? null, // null=git管理外・測れなかった
       fileCount: nodes.length,

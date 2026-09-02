@@ -72,6 +72,23 @@ if (isMain && argv.includes('--selftest')) {
     if (JSON.stringify(pub).includes('secret-client')) fails.push('非公開リポ名が公開データに漏れた');
     if (pub.excludedCount !== 1) fails.push('除外件数が正しく数えられていない');
   }
+  // buildPublicView: ローカルディレクトリ名とGitHub上の実際のリポジトリ名が食い違う場合、
+  // githubRepoNameでvisibility判定する（2026-09-02、公開リポ未反映問題の根治。
+  // 実例: ローカル'Exosome' -> GitHub上'yukkuri-exosome.link'）。
+  {
+    const internal = {
+      repos: [{
+        name: 'Exosome', githubRepoName: 'yukkuri-exosome.link', head: 'a', dirty: false,
+        fileCount: 1, gateCount: 0, directories: [],
+        nodes: [{ path: 'a.mjs', name: 'a.mjs', isGate: false }], edges: [],
+        trackedFiles: ['a.mjs']
+      }]
+    };
+    // ★visibilityMapのキーはローカル名'Exosome'ではなくGitHub上の名前'yukkuri-exosome.link'
+    const pub = buildPublicView(internal, { 'yukkuri-exosome.link': 'PUBLIC' });
+    if (pub.repos.length !== 1) fails.push('★ローカル名≠GitHub名のリポがPUBLICなのに公開されなかった（名前不一致問題の再発）');
+    if (pub.repos[0]?.name !== 'Exosome') fails.push('表示名がローカル名から変わってしまった');
+  }
   // buildPublicView: dirty(未コミット変更あり)なリポでも、HEADコミット時点のtrackedFiles
   // に絞れば公開する（2026-09-02、恒常除外問題の根治。dirtyだけを理由に丸ごと除外しない）。
   {
@@ -261,6 +278,7 @@ function renderHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Architecture Map — 今あるコードの現在地</title>
+<link rel="stylesheet" href="../../assets/css/common.css?v=2" />
 <style>
 ${TREE_VIEW_CSS}
   body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
@@ -304,6 +322,7 @@ ${TREE_VIEW_CSS}
 </style>
 </head>
 <body>
+<div id="site-header"></div>
 <h1>🗺 Architecture Map — 今あるコードの現在地</h1>
 <p class="intro">
   コードの構造を変えるための図ではありません。<b>今のコードから機械的に生成した「現在地」</b>です。
@@ -499,8 +518,11 @@ ${TREE_VIEW_CSS}
       previewEl.innerHTML = '<p class="empty-note">HEADが不明なためプレビューできません。</p>';
       return;
     }
-    const url = rawGithubUrl(repo.name, repo.head, node.path);
-    const githubUrl = 'https://github.com/kimito-link/' + encodeURIComponent(repo.name) + '/blob/' + repo.head + '/' +
+    // ★githubRepoName優先: ローカル名とGitHub上の実際のリポ名が食い違うケースがあるため
+    // （2026-09-02、名前不一致問題の根治）、URLの組み立てには必ずこちらを使う。
+    const repoNameForUrl = repo.githubRepoName || repo.name;
+    const url = rawGithubUrl(repoNameForUrl, repo.head, node.path);
+    const githubUrl = 'https://github.com/kimito-link/' + encodeURIComponent(repoNameForUrl) + '/blob/' + repo.head + '/' +
       node.path.split('/').map(encodeURIComponent).join('/');
     fetch(url, { cache: 'no-store' })
       .then((r) => {
@@ -521,6 +543,8 @@ ${TREE_VIEW_CSS}
   }
 })();
 </script>
+<div id="site-footer"></div>
+<script src="../../scripts/site-chrome.js"></script>
 </body>
 </html>
 `;

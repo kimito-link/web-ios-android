@@ -46,21 +46,50 @@ import { buildDirectoryRollup } from './architecture-map-aggregate.mjs';
  * しない（以前はしていたが、開発中リポが恒久的に公開されない副作用があったため撤廃）。
  * trackedFiles自体が測れなかった(null)リポのみ、安全側に倒して除外する。
  *
+ * ★visibility判定は`r.githubRepoName`（git remoteから取得した実際のGitHubリポジトリ名）を
+ * 優先して使う（2026-09-02、公開リポ未反映問題の根治）。ローカルのディレクトリ名（`r.name`）と
+ * GitHub上のリポジトリ名が食い違う実例があり、以前は常にr.nameで引いていたため、実際には
+ * PUBLICなリポでもfail-closedでPRIVATE扱いになっていた。githubRepoNameが取れない
+ * （リモート無し等）場合のみr.nameへフォールバックする（それでも一致しなければ従来通り
+ * 安全側でPRIVATE扱いになる）。
+ *
+ * ★同一githubRepoNameの重複は1件に集約する（2026-09-02、上記修正の副作用で発覚。
+ * 同じGitHubリポを指す複数のローカルクローン/worktree（例: `reviewcheck.jp`と
+ * `reviewcheck.jp-kenshin`が両方とも`github.com/kimito-link/reviewcheck.jp`を指す）が
+ * 別々のノードとして公開Mapに現れ、同一リポの中身が重複表示される問題があった。
+ * 優先順位はdirty=falseを優先、同点ならローカル名の昇順（決定的・毎回同じ結果になる）。
+ *
  * @param {{repos:object[]}} internalData
  * @param {Record<string,'PUBLIC'|'PRIVATE'>} visibilityMap
  */
 export function buildPublicView(internalData, visibilityMap) {
   let excludedNotPublic = 0;
   let excludedTrackedFilesUnknown = 0;
-  const publicRepos = [];
+  let excludedDuplicateGithubRepo = 0;
+  const candidates = [];
 
   for (const r of internalData.repos) {
-    if (!isPublishable(visibilityMap, r.name)) { excludedNotPublic++; continue; }
+    if (!isPublishable(visibilityMap, r.githubRepoName ?? r.name)) { excludedNotPublic++; continue; }
     // ★trackedFilesが測れなかった(git管理外・git ls-tree失敗等)リポのみ安全側に倒し除外する。
     // dirty(未コミット変更あり)かどうかは、trackedFilesがHEADコミット時点の一覧である
     // 以上、公開可否の判断材料にしない（2026-09-02、恒常除外問題の根治）。
     if (!Array.isArray(r.trackedFiles)) { excludedTrackedFilesUnknown++; continue; }
+    candidates.push(r);
+  }
 
+  // ★同一githubRepoNameの重複排除: dirty=false優先、同点はローカル名昇順で決定的に1件選ぶ。
+  const byGithubName = new Map();
+  for (const r of candidates) {
+    const key = r.githubRepoName ?? r.name;
+    const existing = byGithubName.get(key);
+    if (!existing) { byGithubName.set(key, r); continue; }
+    const better = pickPreferredDuplicate(existing, r);
+    byGithubName.set(key, better);
+    excludedDuplicateGithubRepo++;
+  }
+
+  const publicRepos = [];
+  for (const r of byGithubName.values()) {
     const trackedSet = new Set(r.trackedFiles);
     const nodes = r.nodes.filter((n) => trackedSet.has(n.path));
     const edges = r.edges.filter((e) => trackedSet.has(e.from) && trackedSet.has(e.to));
@@ -68,6 +97,13 @@ export function buildPublicView(internalData, visibilityMap) {
 
     publicRepos.push({
       name: r.name,
+      // ★githubRepoNameを公開データにも含める（2026-09-02、名前不一致問題の根治）。
+      //   クライアント側でGitHub raw URL/リンクを組み立てる際、ローカル名(r.name)を
+      //   誤って使うと存在しないURLになる（例: ローカル'Exosome'をURLに使うとGitHub上
+      //   実在する'yukkuri-exosome.link'にならず404になる）。取れなければr.nameへ
+      //   フォールバック（この時点でisPublishableを通過済み＝r.name自体がGitHub名として
+      //   有効だったケースなので問題ない）。
+      githubRepoName: r.githubRepoName ?? r.name,
       head: r.head,
       dirty: r.dirty, // ★参考情報として残す（trueでも公開対象になり得る。HEADコミット時点のみ表示している旨はUI側で明示）
       fileCount: nodes.length,
@@ -78,13 +114,28 @@ export function buildPublicView(internalData, visibilityMap) {
       edges
     });
   }
+  publicRepos.sort((a, b) => a.name.localeCompare(b.name));
 
-  const publicCandidateCount = publicRepos.length + excludedTrackedFilesUnknown; // ★visibility=PUBLICだった総数
+  const publicCandidateCount = publicRepos.length + excludedTrackedFilesUnknown + excludedDuplicateGithubRepo; // ★visibility=PUBLICだった総数
   return {
     repos: publicRepos,
     excludedCount: internalData.repos.length - publicRepos.length, // 後方互換（非公開理由の総計）
     publicCandidateCount,
     excludedNotPublicCount: excludedNotPublic,
-    excludedTrackedFilesUnknownCount: excludedTrackedFilesUnknown // ★HEADコミット時点の一覧が測れず除外
+    excludedTrackedFilesUnknownCount: excludedTrackedFilesUnknown, // ★HEADコミット時点の一覧が測れず除外
+    excludedDuplicateGithubRepoCount: excludedDuplicateGithubRepo // ★同一GitHubリポの重複クローンとして除外
   };
+}
+
+/**
+ * ★同一githubRepoNameを指す2つの候補から、公開に残す1件を決定的に選ぶ。
+ * dirty=falseを優先し、同点ならローカル名の昇順（毎回同じ結果になることを保証）。
+ * @param {object} a
+ * @param {object} b
+ * @returns {object}
+ */
+function pickPreferredDuplicate(a, b) {
+  if (a.dirty === false && b.dirty !== false) return a;
+  if (b.dirty === false && a.dirty !== false) return b;
+  return a.name.localeCompare(b.name) <= 0 ? a : b;
 }

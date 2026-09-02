@@ -67,6 +67,37 @@ export function gitSnapshot(repoDir) {
 }
 
 /**
+ * ★originリモートURLから、実際のGitHubリポジトリ名を抽出する。取れなければnull。
+ *
+ * ★なぜ要るか（2026-09-02、公開リポ未反映問題の根治）:
+ *   isPublishable()（architecture-map-visibility.mjs）は、GitHub上のvisibility判定を
+ *   リポジトリ名をキーに引く。以前はgithub/直下の★ローカルディレクトリ名★をそのまま
+ *   キーに使っていたが、ローカルのフォルダ名とGitHub上の実際のリポジトリ名が食い違う
+ *   実例が複数あった（例: ローカル`Exosome` → GitHub上`yukkuri-exosome.link`、
+ *   ローカル`line-bot` → GitHub上`linebot`）。この食い違いがあると、実際にはPUBLICな
+ *   リポでもvisibilityMapに一致するキーが無くfail-closedでPRIVATE扱いになり、
+ *   本来公開できるはずのリポが恒久的に表示されなくなる（実測: 71-73件中6件しか
+ *   表示されなかった主因の1つ）。git remoteという一次情報からリポジトリ名を取れば、
+ *   ローカルのフォルダ名がどうであれ正しくvisibility判定できる。
+ * @param {string} repoDir
+ * @returns {string|null}
+ */
+export function gitRemoteRepoName(repoDir) {
+  if (!existsSync(join(repoDir, '.git'))) return null;
+  try {
+    const url = execFileSync('git', ['remote', 'get-url', 'origin'], {
+      cwd: repoDir, encoding: 'utf8', timeout: 15000, stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    // ★https://github.com/<owner>/<repo>.git と git@github.com:<owner>/<repo>.git の両対応。
+    //   owner部分は使わない（`gh repo list <org>`で既にorgを固定しているため、名前だけ抽出すれば足りる）。
+    const m = url.match(/[/:]([^/]+?)(?:\.git)?\/?$/);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * ★このリポジトリのHEADコミット時点でGit管理下にある（＝実際にGitHubへpush済みの
  * 可能性がある）ファイルの相対パス集合を取得する。取れなければnull。
  *
