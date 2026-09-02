@@ -44,22 +44,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gitSnapshot, gitTrackedFiles, scanRepoStructure, findPairsRole, classifyGate } from './lib/architecture-map-core.mjs';
 import { fetchVisibilityFromGitHub, readVisibilityCache, writeVisibilityCache, isPublishable } from './lib/architecture-map-visibility.mjs';
 import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
+import { findRepoRoot } from './lib/repo-root.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
 const argv = process.argv.slice(2);
 const SKIP_VISIBILITY_FETCH = argv.includes('--skip-visibility-fetch');
-
-function findRepoRoot(startDir) {
-  let dir = startDir;
-  for (let i = 0; i < 10; i++) {
-    if (existsSync(join(dir, '.git'))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return resolve(startDir, '..');
-}
 
 /**
  * ★1リポジトリの解析結果に、PAIRS/ai-hub登録の情報を突き合わせて注釈する。

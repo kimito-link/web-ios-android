@@ -27,6 +27,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { scanKitMatrix, scanProjectGates, detectProfile, loadOverrides } from './lib/hub-kit-matrix.mjs';
 import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
+import { findRepoRoot } from './lib/repo-root.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -51,17 +52,6 @@ const SHELVES = [
   { id: 'gate', title: '計器・出荷ゲート', tags: ['gate', 'verify'] },
   { id: 'council', title: '会議・設計ハーネス', tags: ['council', 'llm', 'fable'] },
 ];
-
-function findRepoRoot(startDir) {
-  let dir = startDir;
-  for (let i = 0; i < 10; i++) {
-    if (existsSync(join(dir, '.git'))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return resolve(startDir, '..');
-}
 
 /**
  * ai-hub/index.json と doctor --json を読み、棚ごとにグルーピングしたデータを返す。
