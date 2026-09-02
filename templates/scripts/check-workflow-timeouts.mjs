@@ -83,6 +83,18 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 function findWorkflowDir() {
   if (process.env.WORKFLOW_DIR) return process.env.WORKFLOW_DIR;
+
+  // ★位置引数で対象リポを受け取る（2026-09-02 追加）。
+  //   ★これが無いと dirname(=スクリプト自身の場所)から遡るので、
+  //   キットの templates/scripts/ から呼ぶ限り**常にキット自身**を見てしまう。
+  //   実測: surechigai-romi.link に当てたら「ワークフロー 1 本」と出た（実際は17本）。
+  //   ★件数が少ないだけで緑になるので、見ていないことに気づけない形だった。
+  const argDir = process.argv.slice(2).find((a) => !a.startsWith("--"));
+  if (argDir) {
+    const fromArg = path.join(path.resolve(argDir), ".github", "workflows");
+    if (fs.existsSync(fromArg)) return fromArg;
+  }
+
   let cur = dirname;
   for (let i = 0; i < 6; i += 1) {
     const candidate = path.join(cur, ".github", "workflows");
