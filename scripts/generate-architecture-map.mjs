@@ -38,219 +38,20 @@
  *   node scripts/generate-architecture-map.mjs --selftest
  * ───────────────────────────────────────────────────────────────────────────
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { gitSnapshot, gitTrackedFiles, scanRepoStructure, findPairsRole, classifyGate } from './lib/architecture-map-core.mjs';
+import { classifyGate } from './lib/architecture-map-core.mjs';
 import { fetchVisibilityFromGitHub, readVisibilityCache, writeVisibilityCache, isPublishable } from './lib/architecture-map-visibility.mjs';
-import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
+import { TREE_VIEW_CSS, buildTree } from './lib/tree-view-component.mjs';
 import { findRepoRoot } from './lib/repo-root.mjs';
+import { buildArchitectureMap, annotateNodes } from './lib/architecture-map-aggregate.mjs';
+import { buildPublicView } from './lib/architecture-map-public-view.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
 const argv = process.argv.slice(2);
 const SKIP_VISIBILITY_FETCH = argv.includes('--skip-visibility-fetch');
-
-/**
- * ★1リポジトリの解析結果に、PAIRS/ai-hub登録の情報を突き合わせて注釈する。
- * @param {{nodes:object[], edges:object[], errors:string[]}} scan
- * @param {string} repoDir
- * @param {Array<{label:string, canonical:string, copies:string[]}>} pairs PAIRS（ai-hub不在ならnull）
- * @param {Set<string>} aiHubPaths ai-hub/index.jsonに登録済みの `repo/relpath` 集合（ai-hub不在ならnull）
- * @param {string} repoName
- */
-function annotateNodes(scan, repoDir, pairs, aiHubPaths, repoName) {
-  return scan.nodes.map((n) => {
-    // ★n.pathはscanRepoStructure内で既にPOSIX区切り('/')に正規化済み。
-    //   joinはPOSIX文字列を渡してもWindows上で正しく絶対パスへ復元できる。
-    const abs = join(repoDir, ...n.path.split('/'));
-    const pairsRole = pairs ? findPairsRole(pairs, abs) : null;
-    const aiHubKey = `${repoName}/${n.path}`;
-    return {
-      ...n,
-      pairs: pairsRole, // {role:'canonical'|'copy', label} または null
-      aiHubRegistered: aiHubPaths ? aiHubPaths.has(aiHubKey) : null // null=測っていない(ai-hub不在)
-    };
-  });
-}
-
-/**
- * ★ai-hub/index.jsonから `repo/relpath` 形式のpath集合を作る。ai-hub不在ならnull。
- * @param {string} githubRoot
- * @returns {Set<string>|null}
- */
-function loadAiHubPaths(githubRoot) {
-  const indexPath = join(githubRoot, 'ai-hub', 'index.json');
-  if (!existsSync(indexPath)) return null;
-  try {
-    const idx = JSON.parse(readFileSync(indexPath, 'utf8'));
-    return new Set((idx.entries || []).map((e) => String(e.path || '').split('\\').join('/')));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * ★check-drift.mjsのPAIRSをimportする。ai-hub/web-ios-androidの配置に依存するファイルなので、
- * 存在しない・importできない場合はnull（fail-closedというよりinconclusive: 測れなかった扱い）。
- * @param {string} githubRoot
- * @returns {Promise<Array<{label:string, canonical:string, copies:string[]}>|null>}
- */
-async function loadPairs(githubRoot) {
-  const p = join(githubRoot, 'web-ios-android', '_docs', 'instruments', 'check-drift.mjs');
-  if (!existsSync(p)) return null;
-  try {
-    const mod = await import(pathToFileURL(p).href);
-    return Array.isArray(mod.PAIRS) ? mod.PAIRS : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * ★1リポジトリをLevel2(ディレクトリ)/Level3(ファイル)の集約ビューへ畳む。
- * @param {object[]} nodes annotateNodes()の出力
- */
-function buildDirectoryRollup(nodes) {
-  const dirs = new Map();
-  for (const n of nodes) {
-    const parts = n.path.split('/');
-    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
-    if (!dirs.has(dir)) dirs.set(dir, { path: dir, fileCount: 0, gateCount: 0, gateCandidateCount: 0, pairsCount: 0 });
-    const d = dirs.get(dir);
-    d.fileCount++;
-    if (n.isGate) d.gateCount++; // ★事実（正本GATE_REに一致）
-    if (n.gateCandidate) d.gateCandidateCount++; // ★推測（.js命名規則のみ、heuristic）
-    if (n.pairs) d.pairsCount++;
-  }
-  return [...dirs.values()].sort((a, b) => a.path.localeCompare(b.path));
-}
-
-/**
- * ★全体を集計する（メイン入口・純関数寄り。fsアクセスはscanRepoStructure等に委譲）。
- * @param {string} githubRoot
- * @param {{fetchVisibility: boolean}} opts
- */
-async function buildArchitectureMap(githubRoot, opts = {}) {
-  // ★hub-kit-matrix.mjsのdiscoverProjects/EXCLUDED_PROJECTSは意図的に使わない。
-  //   あちらは「出荷ゲート導入マトリクスに載せるプロジェクトか」というmatrix固有の判定
-  //   （Capacitor/TWA/Expo等のkit対象判定で絞る・web-ios-android/ai-hub自身を除外する理由も
-  //   「載せると全ゲート導入済に見える偽の全緑になる」というmatrix特有の事情）であり、
-  //   Architecture Mapの目的（github/配下の現在地を俯瞰する）とは一致しない。
-  //   ★特にweb-ios-android自身は今回の仕組みの中心であり、除外する理由が無い
-  //   （2026-09-02指摘: 既存部品の再利用が「意味」まで誤って引き継いでいた）。
-  //   ここでは「隠しディレクトリでないこと」だけを条件にする独自の対象選定を行う。
-  //
-  // ★シンボリックリンク/ディレクトリジャンクションは対象外にする（hub-kit-matrix.mjsの
-  //   walkFilesと同じ方針＝ループ防止）。Dirent.isDirectory()はreparse point（Windowsの
-  //   ジャンクション含む）でfalseを返すため、素の.isDirectory()フィルタだけだと該当ディレクトリが
-  //   ★無言で欠落する（実測: tsuioku-no-kirameki.comがジャンクションで、これにより発覚）。
-  //   fail-closedの原則(README掟)に従い、無言で欠けさせず skippedReparsePoints として記録する。
-  const { readdirSync } = await import('node:fs');
-  const rawEntries = readdirSync(githubRoot, { withFileTypes: true });
-  const skippedReparsePoints = rawEntries
-    .filter((e) => e.isSymbolicLink() && !e.name.startsWith('.'))
-    .map((e) => e.name);
-  const allDirs = rawEntries
-    .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
-    .map((e) => e.name)
-    .sort((a, b) => a.localeCompare(b));
-
-  const pairs = await loadPairs(githubRoot);
-  const aiHubPaths = loadAiHubPaths(githubRoot);
-
-  const repos = [];
-  for (const name of allDirs) {
-    const dir = join(githubRoot, name);
-    const snapshot = gitSnapshot(dir);
-    const scan = scanRepoStructure(dir, name);
-    const nodes = annotateNodes(scan, dir, pairs, aiHubPaths, name);
-    // ★trackedFiles: 公開View構築時に「Git管理下＝pushされた可能性のあるファイル」だけへ
-    //   絞り込むための材料。内部データにも保持しておき、公開View側で再度gitを呼ばない。
-    const trackedFiles = gitTrackedFiles(dir);
-    repos.push({
-      name,
-      head: snapshot?.head || null,
-      dirty: snapshot?.dirty ?? null, // null=git管理外・測れなかった
-      fileCount: nodes.length,
-      gateCount: nodes.filter((n) => n.isGate).length, // ★事実（正本GATE_REに一致）
-      gateCandidateCount: nodes.filter((n) => n.gateCandidate).length, // ★推測（heuristic）
-      directories: buildDirectoryRollup(nodes),
-      nodes,
-      edges: scan.edges,
-      trackedFiles: trackedFiles ? [...trackedFiles] : null,
-      scanErrors: scan.errors
-    });
-  }
-
-  return {
-    repos,
-    skippedReparsePoints,
-    pairsAvailable: pairs !== null,
-    aiHubAvailable: aiHubPaths !== null
-  };
-}
-
-/**
- * ★内部データから公開データを切り出す。allowlist(visibilityMap経由)に無いリポは
- * 名前もパスも一切含めない（存在自体を伏せる。「非公開」と明示するのではなく丸ごと省く）。
- *
- * ★公開Mapのソースはローカル作業ツリーではなく「Git管理下のファイル」に限定する
- * （2026-09-02、実損の指摘を受けて修正）。GitHub visibility=PUBLICは「pushされた内容が
- * 公開されている」ことしか意味しない。untrackedファイル・gitignore対象の一時ファイルは
- * GitHub上では公開されていないため、ローカルfs walkの結果をそのまま公開Mapへ出すと
- * 実際には公開されていない情報まで漏れる。v1では複雑な仕組み（HEADのblobを直接読む等）を
- * 避け、次の2条件だけで安全側に倒す:
- *   1. `git ls-files` に含まれるファイルだけを対象にする
- *   2. working treeがdirty(未コミット変更あり)なリポは丸ごと公開Mapから除外する
- *      （dirtyだと「どのファイルが安全か」の境界がuntracked/変更差分の混在で複雑になるため、
- *      v1では個別ファイル単位の精査はせずリポ単位で除外する）
- * dirty判定が測れなかった(null)リポも安全側に倒し、除外する。
- *
- * @param {{repos:object[]}} internalData
- * @param {Record<string,'PUBLIC'|'PRIVATE'>} visibilityMap
- */
-function buildPublicView(internalData, visibilityMap) {
-  let excludedNotPublic = 0;
-  let excludedDirtyTrue = 0;
-  let excludedDirtyUnknown = 0;
-  const publicRepos = [];
-
-  for (const r of internalData.repos) {
-    if (!isPublishable(visibilityMap, r.name)) { excludedNotPublic++; continue; }
-    // ★除外理由を区別する（2026-09-02指摘: dirty=trueとdirty=null/測定不能は意味が違う）。
-    if (r.dirty === true) { excludedDirtyTrue++; continue; }
-    if (r.dirty !== false) { excludedDirtyUnknown++; continue; } // ★dirty===null（測れなかった）
-    if (!Array.isArray(r.trackedFiles)) { excludedDirtyUnknown++; continue; } // ★tracked一覧が取れなければ同じ「測れなかった」扱い
-
-    const trackedSet = new Set(r.trackedFiles);
-    const nodes = r.nodes.filter((n) => trackedSet.has(n.path));
-    const edges = r.edges.filter((e) => trackedSet.has(e.from) && trackedSet.has(e.to));
-    const directories = buildDirectoryRollup(nodes);
-
-    publicRepos.push({
-      name: r.name,
-      head: r.head,
-      dirty: r.dirty, // 常にfalse（フィルタ済み）だが、スキーマの一貫性のため残す
-      fileCount: nodes.length,
-      gateCount: nodes.filter((n) => n.isGate).length, // ★事実
-      gateCandidateCount: nodes.filter((n) => n.gateCandidate).length, // ★推測（heuristic）
-      directories,
-      nodes,
-      edges
-    });
-  }
-
-  const publicCandidateCount = publicRepos.length + excludedDirtyTrue + excludedDirtyUnknown; // ★visibility=PUBLICだった総数（dirty判定前）
-  return {
-    repos: publicRepos,
-    excludedCount: internalData.repos.length - publicRepos.length, // 後方互換（非公開理由の総計）
-    publicCandidateCount,
-    excludedNotPublicCount: excludedNotPublic,
-    excludedDirtyTrueCount: excludedDirtyTrue,     // ★working treeに未コミット変更ありで除外
-    excludedDirtyUnknownCount: excludedDirtyUnknown // ★dirty判定・tracked一覧のいずれかが測れず除外
-  };
-}
 
 /* ── --selftest ─────────────────────────────────────────────── */
 if (isMain && argv.includes('--selftest')) {
@@ -361,6 +162,16 @@ if (isMain && argv.includes('--selftest')) {
     if (!src || src.agg.gate !== 1) fails.push('★buildTree: Gate(事実)の集計が正しくない');
     if (!src || src.agg.gateCandidate !== 1) fails.push('★buildTree: Gate候補(推測)の集計が正しくない');
   }
+  // ★毒テスト: buildTreeはHTMLへ toString() で文字列埋め込みされる自己完結関数。
+  // lib/tree-view-component.mjsへ切り出した後もこの制約が壊れていないことを機械的に確認する
+  // （importやモジュールスコープ変数への参照が紛れ込むと埋め込み先でReferenceErrorになる）。
+  {
+    const src = buildTree.toString();
+    if (!src.startsWith('function buildTree(')) fails.push('★buildTree: 関数宣言の形が変わった(toString埋め込みの前提が崩れる)');
+    if (/\bimport\s/.test(src)) fails.push('★buildTree: import文を含んでいる(埋め込み先でSyntaxErrorになる)');
+    if (/\brequire\(/.test(src)) fails.push('★buildTree: require(を含んでいる(埋め込み先でReferenceErrorになる)');
+    if (/\bTREE_VIEW_CSS\b/.test(src)) fails.push('★buildTree: モジュールスコープの変数(TREE_VIEW_CSS)を参照している');
+  }
 
   if (fails.length) {
     console.error('[generate-architecture-map] ★selftest 失敗:');
@@ -434,78 +245,6 @@ if (isMain && !argv.includes('--selftest')) {
   );
   console.log(`[generate-architecture-map] 公開ページ: ${publicHtmlPath}`);
   console.log(`[generate-architecture-map] 生成時間: ${elapsedMs}ms`);
-}
-
-/**
- * ★フラットなファイルパス配列から、ネストしたディレクトリツリーを組み立てる（純関数）。
- *
- * ★2026-09-02、Fable設計により追加。「コードの図がぱっとわからない」というフィードバックを
- * 受け、progressive disclosure（1階層ずつクリックで掘る）から、フォルダアイコン＋接続線の
- * 視覚的なツリー表示へ作り替える際の中核ロジック。
- *
- * ★これは「表示用データ整形」であり、新しい解析ロジックではない。既存の真偽値
- * （isGate/gateCandidate/pairs/aiHubRegistered）を判定・変更・推測することは一切せず、
- * パスを`/`で分割してネストし、既存フラグを合計するだけ（buildDirectoryRollupと同種の集計）。
- *
- * ★repo.directoriesではなくrepo.nodesから組む。directoriesは「ファイルを直接含む
- * ディレクトリ」しか持たず、中間ディレクトリ（例: app/apiにファイルが無くapp/api/lookupにだけ
- * ある場合のapi）が欠落する（実データで確認済み）。
- *
- * ★この関数はモジュールスコープの外部参照を一切持たない自己完結関数にする。
- * クライアントサイドJSへ`${buildTree.toString()}`として文字列埋め込みするため
- * （変数・import・他関数の参照があると埋め込み先でReferenceErrorになる）。
- *
- * @param {Array<{path:string, name:string, isGate:boolean, gateCandidate:boolean, pairs:object|null, aiHubRegistered:boolean|null}>} nodes
- * @returns {object} ルートディレクトリノード
- */
-function buildTree(nodes) {
-  function emptyAgg() { return { files: 0, gate: 0, gateCandidate: 0, pairs: 0, aiHub: 0 }; }
-  function newDir(name, path) {
-    return { kind: 'dir', name, path, dirs: new Map(), files: [], agg: emptyAgg() };
-  }
-  const root = newDir('', '');
-
-  for (const n of (Array.isArray(nodes) ? nodes : [])) {
-    const parts = String(n.path || '').split('/').filter(Boolean);
-    if (parts.length === 0) continue;
-    let cur = root;
-    for (let i = 0; i < parts.length - 1; i++) {
-      const seg = parts[i];
-      if (!cur.dirs.has(seg)) {
-        cur.dirs.set(seg, newDir(seg, cur.path ? cur.path + '/' + seg : seg));
-      }
-      cur = cur.dirs.get(seg);
-    }
-    cur.files.push(n);
-  }
-
-  function aggregate(dir) {
-    for (const f of dir.files) {
-      dir.agg.files++;
-      if (f.isGate) dir.agg.gate++;
-      if (f.gateCandidate) dir.agg.gateCandidate++;
-      if (f.pairs) dir.agg.pairs++;
-      if (f.aiHubRegistered === true) dir.agg.aiHub++;
-    }
-    for (const child of dir.dirs.values()) {
-      aggregate(child);
-      dir.agg.files += child.agg.files;
-      dir.agg.gate += child.agg.gate;
-      dir.agg.gateCandidate += child.agg.gateCandidate;
-      dir.agg.pairs += child.agg.pairs;
-      dir.agg.aiHub += child.agg.aiHub;
-    }
-  }
-  aggregate(root);
-
-  function sortRec(dir) {
-    dir.files.sort((a, b) => a.name.localeCompare(b.name));
-    dir.dirs = new Map([...dir.dirs.entries()].sort((a, b) => a[0].localeCompare(b[0])));
-    for (const child of dir.dirs.values()) sortRec(child);
-  }
-  sortRec(root);
-
-  return root;
 }
 
 /**
