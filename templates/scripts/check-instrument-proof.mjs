@@ -163,14 +163,26 @@ if (has('--selftest')) {
       isRed: () => judgePreflight({ lastRealGreen: { commit: 'a', at: new Date().toISOString(), sourceHash: 'h1' } }) === null
     },
     {
-      name: '★changedFilesはあるがpreflightSearchPathが無ければinconclusive',
+      name: '★changedFilesはあるがpreflightSearch(receipt)が無ければinconclusive',
       poison: () => {}, restore: () => {},
       isRed: () => judgePreflight({ changedFiles: ['x.mjs'] })?.verdict === 'inconclusive'
     },
     {
-      name: '★preflightSearchPathがあればpass（誤検知しない）',
+      name: '★pathだけあってreceipt本体が無ければpassにしない（ログが消えた後にpassし続ける事故の防止）',
       poison: () => {}, restore: () => {},
-      isRed: () => judgePreflight({ changedFiles: ['x.mjs'], preflightSearchPath: '.log' })?.verdict === 'pass'
+      isRed: () => judgePreflight({
+        changedFiles: ['x.mjs'],
+        preflightSearchPath: '.log' // ★元ログの場所を示す文字列だけがある状態を模擬
+      })?.verdict === 'inconclusive'
+    },
+    {
+      name: '★preflightSearch(receipt)があればpass（元ログが無くても検証できる）',
+      poison: () => {}, restore: () => {},
+      isRed: () => judgePreflight({
+        changedFiles: ['x.mjs'],
+        preflightSearch: { cmd: 'find', at: new Date().toISOString(), tag: ['x'], sig: null, exitCode: 0, hits: 1 }
+        // ★preflightSearchPathを意図的に付けない＝元ログが既に無い状態を模擬してもpassすること
+      })?.verdict === 'pass'
     }
   ]);
   if (!ok) {
@@ -233,7 +245,10 @@ if (preflightResults.length > 0) {
   console.log('\n--- PRE-FLIGHT証拠（新形式の記録のみ・結果は下の完了判定に合流します） ---');
   for (const { name, r } of preflightResults) {
     const mark = r.verdict === 'pass' ? '✓' : '?';
-    console.log(`${mark} ${name}: ${r.verdict === 'pass' ? `ログあり(${r.evidence.ログ})` : r.detail}`);
+    const msg = r.verdict === 'pass'
+      ? `検索receiptあり(${r.evidence.検索日時} / ${r.evidence.条件} / ${r.evidence.件数}件)`
+      : r.detail;
+    console.log(`${mark} ${name}: ${msg}`);
   }
   results.push(...preflightResults.map(({ name, r }) => ({ ...r, probe: `${r.probe}: ${name}` })));
 }

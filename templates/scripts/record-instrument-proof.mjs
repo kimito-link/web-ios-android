@@ -129,32 +129,54 @@ if (changedFiles === null) {
 }
 
 /**
- * ★PRE-FLIGHT証拠: ログファイルの最小限の構造だけを見る（署名検証・改ざん防止はしない）。
- * 目的は「全く関係ないファイルを誤ってpreflight証拠として渡す事故」を防ぐことだけ。
- * hub.mjs find --logは1行1JSON追記形式なので、末尾の（＝最新の）行を見る。
- * @returns {boolean}
+ * ★PRE-FLIGHT証拠: ログファイルの最小限の構造だけを見て、receipt（最小限の中身）を取り出す
+ * （署名検証・改ざん防止はしない。目的は「全く関係ないファイルを誤ってpreflight証拠として
+ * 渡す事故」を防ぐことだけ）。hub.mjs find --logは1行1JSON追記形式なので、末尾の
+ * （＝最新の）行を見る。
+ *
+ * ★なぜreceiptを取り出すか（pathを保存するだけでは不十分な理由）:
+ *   ログファイル自体は一時ファイル（/tmp・gitignore対象等）になりうる。台帳に
+ *   「ログがあった場所」というpath文字列だけを残すと、そのログが後から削除された
+ *   時点で★検証不能な文字列が残るだけになる。台帳自身が「その時ログに何が書いて
+ *   あったか」の最小限の写しを持てば、元ログが消えても検証できる。
+ *
+ * @param {string} text
+ * @returns {{cmd:string, at:string, tag:string[]|null, sig:string|null, exitCode:number, hits:number}|null}
  */
-function looksLikeHubFindLog(text) {
+function parseHubFindLogReceipt(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return false;
+  if (lines.length === 0) return null;
   let last;
-  try { last = JSON.parse(lines[lines.length - 1]); } catch { return false; }
-  if (!last || typeof last !== 'object') return false;
-  if (last.cmd !== 'find') return false;
-  if (typeof last.at !== 'string' || !last.at) return false;
-  if (typeof last.exitCode !== 'number') return false;
-  if (typeof last.hits !== 'number') return false;
-  if (!last.tag && !last.sig) return false; // ★検索条件(tag/sig)のどちらかは要る
-  return true;
+  try { last = JSON.parse(lines[lines.length - 1]); } catch { return null; }
+  if (!last || typeof last !== 'object') return null;
+  if (last.cmd !== 'find') return null;
+  if (typeof last.at !== 'string' || !last.at) return null;
+  if (typeof last.exitCode !== 'number') return null;
+  if (typeof last.hits !== 'number') return null;
+  if (!last.tag && !last.sig) return null; // ★検索条件(tag/sig)のどちらかは要る
+  return {
+    cmd: last.cmd,
+    at: last.at,
+    tag: Array.isArray(last.tag) ? last.tag : null,
+    sig: typeof last.sig === 'string' ? last.sig : null,
+    exitCode: last.exitCode,
+    hits: last.hits
+  };
 }
 
-/** ★PRE-FLIGHT証拠: ログファイルが実在し、hub.mjs find --logの最小構造を満たすかを見る。 */
+/**
+ * ★PRE-FLIGHT証拠: ログファイルが実在し最小構造を満たすかを見て、receiptを取り出す。
+ * preflightSearchPathは★補助情報（元ログの場所）としてのみ残す。pass判定の根拠は
+ * receipt本体（台帳に永続コピーされる）であり、path文字列の存在だけでは判定しない
+ * （lib/instrument-proof.mjs の judgePreflight 参照）。
+ */
 const preflightAbs = PREFLIGHT_PATH ? resolve(ROOT, PREFLIGHT_PATH) : null;
-const preflightSearchPath = preflightAbs && existsSync(preflightAbs) && looksLikeHubFindLog(readFileSync(preflightAbs, 'utf8'))
-  ? PREFLIGHT_PATH
+const preflightReceipt = preflightAbs && existsSync(preflightAbs)
+  ? parseHubFindLogReceipt(readFileSync(preflightAbs, 'utf8'))
   : null;
-if (PREFLIGHT_PATH && !preflightSearchPath) {
-  console.log(`[record-instrument-proof] 🟡 --preflightで指定されたファイルがai-hub検索ログの形をしていません: ${PREFLIGHT_PATH}（preflightSearchPathは記録しません）`);
+const preflightSearchPath = preflightReceipt ? PREFLIGHT_PATH : null;
+if (PREFLIGHT_PATH && !preflightReceipt) {
+  console.log(`[record-instrument-proof] 🟡 --preflightで指定されたファイルがai-hub検索ログの形をしていません: ${PREFLIGHT_PATH}（preflightSearchは記録しません）`);
 }
 
 const existingProof = readJson(PROOF_PATH);
@@ -191,6 +213,7 @@ for (const item of results) {
   checks = applyProofUpdate(checks, item, {
     commit: head || '', at, sourceHash,
     ...(preflightSearchPath ? { preflightSearchPath } : {}),
+    ...(preflightReceipt ? { preflightSearch: preflightReceipt } : {}),
     ...(changedFiles !== null ? { changedFiles } : {})
   });
   if (checks !== before) applied++;

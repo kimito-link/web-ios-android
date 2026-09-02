@@ -41,17 +41,24 @@
  *         "lastRealGreen": { "commit": "...", "at": "ISO8601", "sourceHash": "ab12..." },
  *         "lastRealRed":   { "commit": "...", "at": "ISO8601", "sourceHash": "ab12...", "detail": "..." },
  *         "preflightSearchPath": ".ai-hub-search.log",
+ *         "preflightSearch": { "cmd": "find", "at": "ISO8601", "tag": ["marketing"], "sig": null, "exitCode": 0, "hits": 2 },
  *         "changedFiles": ["templates/scripts/lib/instrument-proof.mjs"]
  *       }
  *     }
  *   }
  *
  * ■ ★PRE-FLIGHT拡張（2026-09-02、AIの行動監視ではなく証拠の有無で完了判定するための追加）
- *   `preflightSearchPath` / `changedFiles` は★optionalフィールド。無い記録（このフィールドが
- *   追加される前の既存エントリ含む）を壊れている・不合格とは扱わない。judgeProof()の証明3点判定
- *   （lastRealGreen/lastRealRed）はこの2フィールドの有無に一切影響されない＝後方互換を壊さない。
+ *   `preflightSearchPath` / `preflightSearch` / `changedFiles` は★optionalフィールド。無い記録
+ *   （このフィールドが追加される前の既存エントリ含む）を壊れている・不合格とは扱わない。
+ *   judgeProof()の証明3点判定（lastRealGreen/lastRealRed）はこれらの有無に一切影響されない
+ *   ＝後方互換を壊さない。
  *   ★changedFilesはGitから自動取得する（record-instrument-proof.mjs参照。tracked変更+untracked
  *   新規ファイルの合成）。AIの自己申告ではなく機械的に観測できる事実を優先する。
+ *   ★preflightSearchPathとpreflightSearchの違い（2026-09-02、実損の指摘を受けて追加）:
+ *   pathは元ログファイルの場所を示す補助情報にすぎず、そのログが `/tmp` 等の一時ファイルで
+ *   後から削除されると検証不能な文字列だけが残る。search（receipt）は検索ログの中身
+ *   （実行日時・検索条件・exitCode・件数）を台帳へ永続コピーしたもので、元ログが消えても
+ *   検証できる。judgePreflight()のpass判定根拠は必ずsearch側で、pathの存在だけでは判定しない。
  *   ★意味の注意: changedFilesは「このタスクだけが変更したファイル」ではなく、★記録時点で
  *   HEADとの差分として存在するworkspace変更の一覧（タスク単位で区切る入れ物はまだ無い）。
  *
@@ -102,10 +109,23 @@ export function hashSource(normalizedSourceText) {
  */
 
 /**
+ * @typedef {object} PreflightReceipt
+ * @property {string} cmd 'find'固定
+ * @property {string} at ISO8601
+ * @property {string[]|null} tag
+ * @property {string|null} sig
+ * @property {number} exitCode
+ * @property {number} hits
+ */
+
+/**
  * @typedef {object} ProofEntry
  * @property {ProofEvent} [lastRealGreen]
  * @property {ProofEvent} [lastRealRed]
- * @property {string} [preflightSearchPath] ★ai-hub find --logが書いたログファイルへの相対パス（PRE-FLIGHT証拠）
+ * @property {string} [preflightSearchPath] ★元ログファイルへの相対パス（補助情報。存在しなくなっていてもよい）
+ * @property {PreflightReceipt} [preflightSearch] ★ai-hub find --logの中身を台帳へ永続コピーしたもの（PRE-FLIGHT証拠の本体）。
+ *   元ログが削除されてもこのreceiptで検証できる。judgePreflightのpass判定はこのフィールドの有無で行い、
+ *   preflightSearchPathの存在だけでは判定しない
  * @property {string[]} [changedFiles] ★記録時点でHEADとの差分として存在するworkspace変更（tracked+untracked、POST-FLIGHT証拠、自動取得）
  */
 
@@ -195,27 +215,38 @@ export function judgeProof(entry, currentSourceHash, opts = {}) {
  * `null` を返す（新フィールドが無いという理由だけで既存の正常な証明履歴を壊さないため）。
  * `null` は「この軸では判定しない」を表し、inconclusive/pass/failのいずれとも異なる。
  *
+ * ★pass判定の根拠は `preflightSearch`（台帳へ永続コピーされたreceipt本体）の有無であり、
+ * `preflightSearchPath`（元ログの場所を示す補助情報の文字列）の有無では判定しない。
+ * 元ログが `/tmp` 等の一時ファイルで後から消えても、receiptは台帳に残るため検証できる
+ * （path文字列だけを根拠にすると、ログ削除後もpassし続けてしまう＝実損の指摘を受けて修正）。
+ *
  * @param {ProofEntry|undefined|null} entry
  * @returns {import('./instrument-core.mjs').ProbeResult|null}
  */
 export function judgePreflight(entry) {
   if (!entry || !Array.isArray(entry.changedFiles)) return null; // ★拡張前の記録は対象外
-  if (entry.preflightSearchPath) {
+  const receipt = entry.preflightSearch;
+  if (receipt && receipt.cmd === 'find' && typeof receipt.at === 'string' && receipt.at) {
     return {
       probe: 'PRE-FLIGHT証拠(ai-hub検索)',
       verdict: 'pass',
-      evidence: { ログ: entry.preflightSearchPath },
-      limitation: '★ログファイルが存在することだけを見ます。検索条件が今回の変更に妥当だったかは見ません'
+      evidence: {
+        検索日時: receipt.at,
+        条件: receipt.tag ? `tag:${receipt.tag.join(',')}` : (receipt.sig ? `sig:${receipt.sig}` : null),
+        件数: receipt.hits,
+        元ログ: entry.preflightSearchPath || '(未記録)'
+      },
+      limitation: '★台帳へ永続コピーされたreceiptの構造だけを見ます。検索条件が今回の変更に妥当だったかは見ません'
     };
   }
   return {
     probe: 'PRE-FLIGHT証拠(ai-hub検索)',
     verdict: 'inconclusive',
     evidence: null,
-    detail: 'この記録にはai-hub検索の証拠(preflightSearchPath)がありません',
+    detail: 'この記録にはai-hub検索の証拠(preflightSearch)がありません',
     howToFix: 'node ../ai-hub/bin/hub.mjs find --tag <t> --log <path> を実行してから、'
       + 'record-instrument-proof.mjs --preflight <path> で記録する',
-    limitation: '★ログの存在だけを見ます。検索しなかったことの確定証明ではなく、記録がないことの検出です'
+    limitation: '★台帳に永続コピーされたreceiptの有無だけを見ます。検索しなかったことの確定証明ではなく、記録がないことの検出です'
   };
 }
 
@@ -226,7 +257,7 @@ export function judgePreflight(entry) {
  *
  * @param {Record<string, ProofEntry>} checks 現在の台帳（checks部分）
  * @param {{ script: string, verdict: 'pass'|'fail'|'inconclusive' }} resultItem
- * @param {{ commit: string, at: string, sourceHash: string, detail?: string, preflightSearchPath?: string, changedFiles?: string[] }} context
+ * @param {{ commit: string, at: string, sourceHash: string, detail?: string, preflightSearchPath?: string, preflightSearch?: PreflightReceipt, changedFiles?: string[] }} context
  * @returns {Record<string, ProofEntry>}
  */
 export function applyProofUpdate(checks, resultItem, context) {
@@ -249,6 +280,11 @@ export function applyProofUpdate(checks, resultItem, context) {
   // ★optional: 無ければ書かない（既存フィールドを消さない・後方互換）。
   //   渡されたときだけ、その回の観測として上書きする。
   if (context.preflightSearchPath) nextEntry.preflightSearchPath = String(context.preflightSearchPath);
+  // ★preflightSearchはreceipt本体（judgePreflightのpass判定の根拠）。元ログが後から
+  //   消えてもこのコピーで検証できるよう、値をそのまま台帳へ永続保存する。
+  if (context.preflightSearch && typeof context.preflightSearch === 'object') {
+    nextEntry.preflightSearch = { ...context.preflightSearch };
+  }
   if (Array.isArray(context.changedFiles)) nextEntry.changedFiles = context.changedFiles.map(String);
 
   base[key] = nextEntry;
