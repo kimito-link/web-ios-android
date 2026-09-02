@@ -106,10 +106,12 @@
 <div id="content"></div>
 
 <p class="disclaimer">
-  ここに表示されるのはGitHub上で公開（Public）と確認できたリポジトリのうち、working treeが
-  クリーン（未コミット変更なし）なものだけです。ファイルも<code>git ls-files</code>で追跡されている
-  ものだけに絞っています。untrackedファイル・未コミット変更・非公開リポジトリの名前や構造は
-  一切この画面に出しません。「似ているから同じ部品」という自動判定はしていません（v1では意図的に
+  ここに表示されるのはGitHub上で公開（Public）と確認できたリポジトリの、<b>最後にpushした
+  コミット（HEAD）時点の内容</b>です。working treeがdirty（未コミット変更あり）なリポも表示
+  対象ですが、表示されるファイル一覧・中身プレビューは常にHEADコミット時点のもので、
+  <code>git ls-tree HEAD</code>で確認できるファイルだけに絞っています。untrackedファイル・
+  未コミットの変更内容・非公開リポジトリの名前や構造は一切この画面に出しません。
+  「似ているから同じ部品」という自動判定はしていません（v1では意図的に
   入れていません）。<b>Gate・platform固有は「事実（正本の判定基準に一致）」と「推測（ファイル名からの
   heuristic）」を明確に分けて表示しています</b>。正本の色分けは正しさの保証ではなく、既存データからの
   機械的な事実表示です。
@@ -205,8 +207,8 @@
       ' / 生成時間: ' + (data.generationMs ?? '不明') + 'ms' +
       ' / 公開リポ ' + (data.repos ? data.repos.length : 0) + '件' +
       '（PUBLIC候補 ' + (data.publicCandidateCount ?? '不明') + '件 のうち、' +
-      '未コミット変更ありで除外 ' + (data.excludedDirtyTrueCount ?? 0) + '件・' +
-      'dirty判定不能で除外 ' + (data.excludedDirtyUnknownCount ?? 0) + '件）';
+      'HEADコミット時点の一覧が測れず除外 ' + (data.excludedTrackedFilesUnknownCount ?? 0) + '件。' +
+      '表示は常にHEADコミット時点の内容、未コミットの変更は含みません）';
   }
 
   /** ★事実/推測チップを組み立てる。1つの要素に混同させない（属性ごとに別チップ）。 */
