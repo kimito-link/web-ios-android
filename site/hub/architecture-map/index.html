@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Architecture Map — 今あるコードの現在地</title>
+<link rel="stylesheet" href="../../assets/css/common.css?v=2" />
 <style>
 
   :root { color-scheme: light; }
@@ -82,6 +83,7 @@
 </style>
 </head>
 <body>
+<div id="site-header"></div>
 <h1>🗺 Architecture Map — 今あるコードの現在地</h1>
 <p class="intro">
   コードの構造を変えるための図ではありません。<b>今のコードから機械的に生成した「現在地」</b>です。
@@ -325,8 +327,11 @@
       previewEl.innerHTML = '<p class="empty-note">HEADが不明なためプレビューできません。</p>';
       return;
     }
-    const url = rawGithubUrl(repo.name, repo.head, node.path);
-    const githubUrl = 'https://github.com/kimito-link/' + encodeURIComponent(repo.name) + '/blob/' + repo.head + '/' +
+    // ★githubRepoName優先: ローカル名とGitHub上の実際のリポ名が食い違うケースがあるため
+    // （2026-09-02、名前不一致問題の根治）、URLの組み立てには必ずこちらを使う。
+    const repoNameForUrl = repo.githubRepoName || repo.name;
+    const url = rawGithubUrl(repoNameForUrl, repo.head, node.path);
+    const githubUrl = 'https://github.com/kimito-link/' + encodeURIComponent(repoNameForUrl) + '/blob/' + repo.head + '/' +
       node.path.split('/').map(encodeURIComponent).join('/');
     fetch(url, { cache: 'no-store' })
       .then((r) => {
@@ -347,5 +352,7 @@
   }
 })();
 </script>
+<div id="site-footer"></div>
+<script src="../../scripts/site-chrome.js"></script>
 </body>
 </html>
