@@ -67,21 +67,30 @@ export function gitSnapshot(repoDir) {
 }
 
 /**
- * ★このリポジトリでGit管理下にある（＝コミット済みでGitHubにpush済みの可能性がある）
- * ファイルの相対パス集合を取得する。取れなければnull。
+ * ★このリポジトリのHEADコミット時点でGit管理下にある（＝実際にGitHubへpush済みの
+ * 可能性がある）ファイルの相対パス集合を取得する。取れなければnull。
  *
- * ★なぜ要るか（2026-09-02、公開Mapのソース分離）:
- *   `walkFiles`はローカルの作業ツリーをそのまま歩くため、untrackedファイル・
- *   gitignore対象外の一時ファイル・秘密のメモ等も含まれうる。GitHub visibility=PUBLICは
- *   「pushされた内容が公開されている」ことしか意味せず、ローカルの未追跡状態まで
- *   公開してよいわけではない。公開Mapを作る側は、必ずこの集合で絞り込んでから使うこと。
+ * ★なぜ`git ls-files`ではなく`git ls-tree HEAD`か（2026-09-02、dirty恒常除外問題の根治）:
+ *   以前は`git ls-files`（ワーキングツリーのインデックス状態）を使っていたが、これは
+ *   `git add`済みだが未コミットの新規ファイルも含んでしまう。walkFilesで読むファイルの
+ *   中身自体はローカル作業ツリーの現在の状態（未コミット変更を含む）なので、
+ *   dirtyなリポでこの一覧をそのまま公開Mapへ流すと、未コミットの下書き内容が漏れる
+ *   リスクがあった。v1ではこれを避けるため「dirtyなら丸ごと除外」という強い制約を
+ *   置いていたが、副作用として開発中リポ（常にdirty）がほぼ恒久的に公開データへ
+ *   現れないという構造的な問題を生んだ（ユーザー指摘: 「100年後楽できる設計」）。
+ *
+ *   `git ls-tree -r --name-only HEAD`はHEADコミットに実際に記録された（＝GitHubへ
+ *   push済みなら公開されている）ファイル一覧のみを返す。未コミット変更・未addの
+ *   新規ファイルは一切含まれない。この一覧でnodesを絞り込めば、dirtyなリポでも
+ *   「最後にpushしたコミットの安全な状態」だけを正確に公開できる
+ *   （呼び出し側=architecture-map-public-view.mjsは、この一覧に絞ったノードのみを使う）。
  * @param {string} repoDir
  * @returns {Set<string>|null} POSIX区切りの相対パス集合
  */
-export function gitTrackedFiles(repoDir) {
+export function gitHeadTrackedFiles(repoDir) {
   if (!existsSync(join(repoDir, '.git'))) return null;
   try {
-    const out = execFileSync('git', ['ls-files'], {
+    const out = execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], {
       cwd: repoDir, encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'ignore']
     });
     return new Set(out.split('\n').map((l) => l.trim()).filter(Boolean).map((p) => p.split('\\').join('/')));

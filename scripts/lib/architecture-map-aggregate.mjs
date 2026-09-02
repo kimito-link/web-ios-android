@@ -4,7 +4,7 @@
  * ───────────────────────────────────────────────────────────────────────────
  * ■ 何をするか
  *   1リポジトリごとの解析結果（architecture-map-core.mjsのscanRepoStructure/gitSnapshot/
- *   gitTrackedFiles）に、PAIRS（正本/コピー）とai-hub登録の情報を注釈し、github/配下
+ *   gitHeadTrackedFiles）に、PAIRS（正本/コピー）とai-hub登録の情報を注釈し、github/配下
  *   全体の内部データを1つのオブジェクトへ組み立てる。
  *
  * ■ ★2026-09-02、コンポーネント化で切り出し（/componentizeスキル・council-fable設計）
@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { gitSnapshot, gitTrackedFiles, scanRepoStructure, findPairsRole } from './architecture-map-core.mjs';
+import { gitSnapshot, gitHeadTrackedFiles, scanRepoStructure, findPairsRole } from './architecture-map-core.mjs';
 
 /**
  * ★1リポジトリの解析結果に、PAIRS/ai-hub登録の情報を突き合わせて注釈する。
@@ -135,9 +135,10 @@ export async function buildArchitectureMap(githubRoot, opts = {}) {
     const snapshot = gitSnapshot(dir);
     const scan = scanRepoStructure(dir, name);
     const nodes = annotateNodes(scan, dir, pairs, aiHubPaths, name);
-    // ★trackedFiles: 公開View構築時に「Git管理下＝pushされた可能性のあるファイル」だけへ
-    //   絞り込むための材料。内部データにも保持しておき、公開View側で再度gitを呼ばない。
-    const trackedFiles = gitTrackedFiles(dir);
+    // ★trackedFiles: 公開View構築時に「HEADコミット時点＝pushされた可能性のある安全な
+    //   状態」だけへ絞り込むための材料（2026-09-02、dirty恒常除外問題の根治でls-tree HEAD化）。
+    //   内部データにも保持しておき、公開View側で再度gitを呼ばない。
+    const trackedFiles = gitHeadTrackedFiles(dir);
     repos.push({
       name,
       head: snapshot?.head || null,

@@ -72,19 +72,19 @@ if (isMain && argv.includes('--selftest')) {
     if (JSON.stringify(pub).includes('secret-client')) fails.push('非公開リポ名が公開データに漏れた');
     if (pub.excludedCount !== 1) fails.push('除外件数が正しく数えられていない');
   }
-  // buildPublicView: dirtyなリポは(visibilityがPUBLICでも)公開しない
+  // buildPublicView: dirty(未コミット変更あり)なリポでも、HEADコミット時点のtrackedFiles
+  // に絞れば公開する（2026-09-02、恒常除外問題の根治。dirtyだけを理由に丸ごと除外しない）。
   {
     const internal = {
       repos: [{
         name: 'public-but-dirty', head: 'a', dirty: true, fileCount: 1, gateCount: 0,
         directories: [], nodes: [{ path: 'a.mjs', name: 'a.mjs', isGate: false }], edges: [],
-        trackedFiles: ['a.mjs']
+        trackedFiles: ['a.mjs'] // ★git ls-tree HEAD由来=HEADコミット時点の安全な一覧
       }]
     };
     const pub = buildPublicView(internal, { 'public-but-dirty': 'PUBLIC' });
-    if (pub.repos.length !== 0) fails.push('★dirtyなリポを公開してしまった');
-    if (pub.excludedDirtyTrueCount !== 1) fails.push('dirty=true除外件数が正しく数えられていない');
-    if (pub.excludedDirtyUnknownCount !== 0) fails.push('dirty=trueをdirty不明として数えてしまった');
+    if (pub.repos.length !== 1) fails.push('★dirtyなリポがHEAD追跡ファイルありなのに公開されなかった（恒常除外の再発）');
+    if (pub.repos[0]?.dirty !== true) fails.push('dirtyフラグが公開データに正しく残っていない（UI側の注記に必要）');
   }
   // buildPublicView: untrackedファイルは公開データのnodes/edgesに一切現れない
   {
@@ -106,17 +106,17 @@ if (isMain && argv.includes('--selftest')) {
     if (pub.repos[0]?.nodes.length !== 1) fails.push('trackedFilesでの絞り込みが効いていない');
     if (pub.repos[0]?.edges.length !== 0) fails.push('untrackedファイルを含む辺が公開データに残った');
   }
-  // buildPublicView: dirty判定が測れなかった(null)リポも安全側に倒して除外する
+  // buildPublicView: HEADコミット時点のtrackedFilesが測れなかった(null)リポは安全側に倒して除外する
   {
     const internal = {
       repos: [{
-        name: 'unknown-dirty', head: null, dirty: null, fileCount: 1, gateCount: 0,
+        name: 'unknown-tracked', head: null, dirty: null, fileCount: 1, gateCount: 0,
         directories: [], nodes: [], edges: [], trackedFiles: null
       }]
     };
-    const pub = buildPublicView(internal, { 'unknown-dirty': 'PUBLIC' });
-    if (pub.repos.length !== 0) fails.push('★dirty不明(null)のリポを公開してしまった');
-    if (pub.excludedDirtyUnknownCount !== 1) fails.push('dirty不明の除外件数が正しく数えられていない（dirty=trueと混同した可能性）');
+    const pub = buildPublicView(internal, { 'unknown-tracked': 'PUBLIC' });
+    if (pub.repos.length !== 0) fails.push('★trackedFiles不明(null)のリポを公開してしまった');
+    if (pub.excludedTrackedFilesUnknownCount !== 1) fails.push('trackedFiles不明の除外件数が正しく数えられていない');
   }
   // classifyGate: 正本GATE_RE一致(事実)とファイル名heuristic一致(推測)を混同しない
   {
@@ -178,7 +178,7 @@ if (isMain && argv.includes('--selftest')) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(1);
   }
-  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・dirty・dirty不明のリポを公開しない / untrackedファイルを漏らさない / 中間ディレクトリを欠落させない / 事実推測の集計を混同しない）');
+  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・HEAD一覧不明のリポを公開しない / dirtyでもHEADコミット時点なら公開する / untrackedファイルを漏らさない / 中間ディレクトリを欠落させない / 事実推測の集計を混同しない / buildTreeの自己完結性）');
   process.exit(0);
 }
 
@@ -229,7 +229,8 @@ if (isMain && !argv.includes('--selftest')) {
     generatedAt: new Date().toISOString(),
     generationMs: elapsedMs,
     note: '解析対象はgithub/配下の全リポジトリだが、ここにはGitHub上でPUBLICと確認できたリポジトリのうち、'
-      + 'working treeがdirtyでないものだけを、git ls-files で追跡されているファイルのみに絞って含む',
+      + 'HEADコミット時点でGit管理下にあるファイル（git ls-tree HEAD）のみに絞って含む。'
+      + '未コミットの変更（working treeの差分）は一切含まれない',
     ...publicView
   }, null, 2) + '\n');
 
@@ -240,8 +241,7 @@ if (isMain && !argv.includes('--selftest')) {
     `[generate-architecture-map] 公開データ: PUBLIC候補${publicView.publicCandidateCount}件`
     + ` → 公開${publicView.repos.length}件`
     + `（PUBLICでないため除外${publicView.excludedNotPublicCount}件`
-    + ` / dirty=trueで除外${publicView.excludedDirtyTrueCount}件`
-    + ` / dirty不明で除外${publicView.excludedDirtyUnknownCount}件）: ${publicOutPath}`
+    + ` / HEADコミット時点の一覧が測れず除外${publicView.excludedTrackedFilesUnknownCount}件）: ${publicOutPath}`
   );
   console.log(`[generate-architecture-map] 公開ページ: ${publicHtmlPath}`);
   console.log(`[generate-architecture-map] 生成時間: ${elapsedMs}ms`);
@@ -328,10 +328,12 @@ ${TREE_VIEW_CSS}
 <div id="content"></div>
 
 <p class="disclaimer">
-  ここに表示されるのはGitHub上で公開（Public）と確認できたリポジトリのうち、working treeが
-  クリーン（未コミット変更なし）なものだけです。ファイルも<code>git ls-files</code>で追跡されている
-  ものだけに絞っています。untrackedファイル・未コミット変更・非公開リポジトリの名前や構造は
-  一切この画面に出しません。「似ているから同じ部品」という自動判定はしていません（v1では意図的に
+  ここに表示されるのはGitHub上で公開（Public）と確認できたリポジトリの、<b>最後にpushした
+  コミット（HEAD）時点の内容</b>です。working treeがdirty（未コミット変更あり）なリポも表示
+  対象ですが、表示されるファイル一覧・中身プレビューは常にHEADコミット時点のもので、
+  <code>git ls-tree HEAD</code>で確認できるファイルだけに絞っています。untrackedファイル・
+  未コミットの変更内容・非公開リポジトリの名前や構造は一切この画面に出しません。
+  「似ているから同じ部品」という自動判定はしていません（v1では意図的に
   入れていません）。<b>Gate・platform固有は「事実（正本の判定基準に一致）」と「推測（ファイル名からの
   heuristic）」を明確に分けて表示しています</b>。正本の色分けは正しさの保証ではなく、既存データからの
   機械的な事実表示です。
@@ -379,8 +381,8 @@ ${TREE_VIEW_CSS}
       ' / 生成時間: ' + (data.generationMs ?? '不明') + 'ms' +
       ' / 公開リポ ' + (data.repos ? data.repos.length : 0) + '件' +
       '（PUBLIC候補 ' + (data.publicCandidateCount ?? '不明') + '件 のうち、' +
-      '未コミット変更ありで除外 ' + (data.excludedDirtyTrueCount ?? 0) + '件・' +
-      'dirty判定不能で除外 ' + (data.excludedDirtyUnknownCount ?? 0) + '件）';
+      'HEADコミット時点の一覧が測れず除外 ' + (data.excludedTrackedFilesUnknownCount ?? 0) + '件。' +
+      '表示は常にHEADコミット時点の内容、未コミットの変更は含みません）';
   }
 
   /** ★事実/推測チップを組み立てる。1つの要素に混同させない（属性ごとに別チップ）。 */
