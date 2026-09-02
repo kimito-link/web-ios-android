@@ -450,6 +450,10 @@ ${TREE_VIEW_CSS}
 ${renderTodos(data.todos)}
 </section>
 ${renderMatrixHtml(data.matrix)}
+<p class="intro">
+  🗺 <a href="/hub/architecture-map/">Architecture Map（今あるコードの現在地・フォルダツリーで見る）</a>
+  も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
+</p>
 ${emptyNote}
 <section class="shelf-intro">
   <h2>📚 これまでに作った資産の一覧</h2>
