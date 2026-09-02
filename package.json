@@ -45,6 +45,8 @@
     "shindan:update": "node templates/scripts/generate-shindan-version.mjs --root . --out site/check-shindan-version --base-url https://kimito-skill.link --name web-ios-android",
     "hub:page": "node scripts/generate-hub-dashboard.mjs --root . --out site/hub",
     "hub:page:selftest": "node scripts/generate-hub-dashboard.mjs --selftest",
+    "hub:architecture-map": "node scripts/generate-architecture-map.mjs",
+    "hub:architecture-map:selftest": "node scripts/generate-architecture-map.mjs --selftest",
     "check:hub-freshness": "node scripts/check-hub-page-freshness.mjs --root . --data site/hub/hub-data.json",
     "check:hub-freshness:selftest": "node scripts/check-hub-page-freshness.mjs --selftest",
     "deploy:site": "npm run hub:page && npm run shindan:update && node templates/scripts/deploy-cloudflare-pages.mjs --dir site",

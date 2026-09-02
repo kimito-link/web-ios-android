@@ -34,10 +34,15 @@ export const GATES = [
   { id: 'root-cause-claim', label: '⑫根治宣言検査', file: 'verify-root-cause-claim.mjs', appliesTo: () => true },
 ];
 
-/** walk中に刈り取るディレクトリ名（★.claude丸ごと除外＝worktree二重カウント対策）。 */
+/**
+ * walk中に刈り取るディレクトリ名（★.claude丸ごと除外＝worktree二重カウント対策）。
+ * ★.vercelは2026-09-02追加（Architecture Map生成時に発覚: surechigai-romi.linkの
+ *   .vercel/output/functions/配下だけで数百ファイルのビルド成果物が混入し、実コードの
+ *   構造が埋もれた）。ビルド成果物という点でdist/build/outと同種であり、除外方針を変えない。
+ */
 export const EXCLUDED_DIRS = new Set([
   'node_modules', '.git', '.claude', '.next', 'dist', 'build', 'out',
-  'coverage', 'Pods', 'DerivedData', '.gradle', '.expo', 'vendor',
+  'coverage', 'Pods', 'DerivedData', '.gradle', '.expo', 'vendor', '.vercel',
 ]);
 
 /** マトリクスの行に載せない（キット自身・横断ハブ）。★載せると全ゲート導入済に見える偽の全緑になる。 */
@@ -57,8 +62,10 @@ function safeReaddir(dir) {
 /**
  * プロジェクト配下を1回だけ歩き、basenameとその絶対パスの一覧を集める。
  * ★シンボリックリンクは辿らない（ループ防止）。
+ * ★export済み(2026-09-02): generate-architecture-map.mjsが同じ除外ルール・深さ上限で
+ *   ファイル一覧を取得するために共有する。fs walkロジックを2箇所に複製しない。
  */
-function walkFiles(rootDir) {
+export function walkFiles(rootDir) {
   const files = [];
   const errors = [];
   function walk(dir, depth) {

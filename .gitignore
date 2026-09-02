@@ -31,3 +31,9 @@ kimitolink-line/
 
 # Lighthouse CI のローカル実行で生成されるレポート（毎回変わる生成物）。
 .lighthouseci/
+
+# Architecture Map の内部データ（github/配下の全リポジトリ名・ディレクトリ構造・
+# visibility取得結果を含む＝絶対に公開してはいけない）。公開してよい範囲だけを
+# 抽出した site/hub/architecture-map/map-data.json のみコミット対象にする。
+.architecture-map-internal.json
+.architecture-map-visibility-cache.json

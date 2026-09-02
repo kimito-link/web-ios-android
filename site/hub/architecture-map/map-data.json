@@ -1,0 +1,462 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-02T08:44:20.164Z",
+  "generationMs": 14202,
+  "note": "解析対象はgithub/配下の全リポジトリだが、ここにはGitHub上でPUBLICと確認できたリポジトリのうち、working treeがdirtyでないものだけを、git ls-files で追跡されているファイルのみに絞って含む",
+  "repos": [
+    {
+      "name": "rolex",
+      "head": "c0ae690861d78015fc0b21c69eef2b7234811d39",
+      "dirty": false,
+      "fileCount": 29,
+      "gateCount": 0,
+      "gateCandidateCount": 0,
+      "directories": [
+        {
+          "path": "(root)",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "public",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "scripts",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "src/app",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "src/components",
+          "fileCount": 13,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "src/lib",
+          "fileCount": 8,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        }
+      ],
+      "nodes": [
+        {
+          "path": "next.config.mjs",
+          "name": "next.config.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "postcss.config.mjs",
+          "name": "postcss.config.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/sw.js",
+          "name": "sw.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "scripts/gen-icons.mjs",
+          "name": "gen-icons.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/app/layout.tsx",
+          "name": "layout.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/app/manifest.ts",
+          "name": "manifest.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/app/page.tsx",
+          "name": "page.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/ApplicationEditor.tsx",
+          "name": "ApplicationEditor.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/AutofillTip.tsx",
+          "name": "AutofillTip.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/CopyPanel.tsx",
+          "name": "CopyPanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/GmailHelpPanel.tsx",
+          "name": "GmailHelpPanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/HistoryPanel.tsx",
+          "name": "HistoryPanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/LandingHero.tsx",
+          "name": "LandingHero.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/Mascot.tsx",
+          "name": "Mascot.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/ProfilePanel.tsx",
+          "name": "ProfilePanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/ServiceWorkerRegister.tsx",
+          "name": "ServiceWorkerRegister.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/SettingsPanel.tsx",
+          "name": "SettingsPanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/StepsPanel.tsx",
+          "name": "StepsPanel.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/StoreCard.tsx",
+          "name": "StoreCard.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/components/ui.tsx",
+          "name": "ui.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/characters.ts",
+          "name": "characters.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/constants.ts",
+          "name": "constants.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/duplicate.ts",
+          "name": "duplicate.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/id.ts",
+          "name": "id.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/storage.ts",
+          "name": "storage.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/types.ts",
+          "name": "types.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/useAppState.ts",
+          "name": "useAppState.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/lib/useClipboard.ts",
+          "name": "useClipboard.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "tailwind.config.ts",
+          "name": "tailwind.config.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "src/app/layout.tsx",
+          "to": "src/app/globals.css"
+        }
+      ]
+    },
+    {
+      "name": "Target-List-maker",
+      "head": "16ccedf6d68ba52a173035dc3cb697d557342ec1",
+      "dirty": false,
+      "fileCount": 6,
+      "gateCount": 0,
+      "gateCandidateCount": 0,
+      "directories": [
+        {
+          "path": "(root)",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "app",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "app/api/lookup",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        }
+      ],
+      "nodes": [
+        {
+          "path": "app/api/lookup/route.ts",
+          "name": "route.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "app/layout.tsx",
+          "name": "layout.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "app/page.tsx",
+          "name": "page.tsx",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "next.config.mjs",
+          "name": "next.config.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "postcss.config.js",
+          "name": "postcss.config.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "tailwind.config.ts",
+          "name": "tailwind.config.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "app/layout.tsx",
+          "to": "app/globals.css"
+        }
+      ]
+    }
+  ],
+  "excludedCount": 69,
+  "publicCandidateCount": 8,
+  "excludedNotPublicCount": 63,
+  "excludedDirtyTrueCount": 4,
+  "excludedDirtyUnknownCount": 2
+}

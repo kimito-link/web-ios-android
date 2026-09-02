@@ -1,0 +1,200 @@
+<!-- 生成物・手編集禁止。正本はgithub/配下の実コード。再生成は npm run hub:architecture-map -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Architecture Map — 今あるコードの現在地</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
+  h1 { font-size: 1.4rem; }
+  .intro { color: #444; font-size: 0.92rem; line-height: 1.7; margin: 0.6rem 0 1rem; }
+  .meta { color: #666; font-size: 0.85rem; margin-bottom: 1.2rem; }
+  .meta.stale { color: #b00; font-weight: bold; }
+  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0 1.5rem; font-size: 0.82rem; }
+  .legend span { padding: 0.15rem 0.5rem; border-radius: 4px; }
+  .breadcrumb { font-size: 0.85rem; color: #666; margin-bottom: 0.8rem; }
+  .breadcrumb a { color: #1a73e8; text-decoration: none; cursor: pointer; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  ul.level-list { list-style: none; padding: 0; }
+  ul.level-list li { padding: 0.35rem 0.2rem; border-bottom: 1px solid #eee; font-size: 0.92rem; }
+  ul.level-list a { color: #0d3b8c; text-decoration: none; cursor: pointer; font-weight: 700; }
+  ul.level-list a:hover { color: #1a73e8; text-decoration: underline; }
+  .badge { display: inline-block; padding: 0.05rem 0.4rem; border-radius: 3px; font-size: 0.72rem; margin-left: 0.35rem; }
+  .badge-canonical { background: #e8f5e9; color: #1b5e20; }
+  .badge-copy { background: #fff3e0; color: #a05a00; }
+  .badge-aihub { background: #e3f2fd; color: #0d47a1; }
+  .badge-gate { background: #f3e5f5; color: #6a1b9a; }
+  .badge-platform { background: #e0f7fa; color: #00695c; }
+  .count { color: #888; font-weight: normal; font-size: 0.85rem; }
+  .empty-note { color: #888; font-style: italic; font-size: 0.85rem; }
+  .file-detail { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.2rem; margin-top: 1rem; }
+  .file-detail dt { font-weight: 600; margin-top: 0.6rem; font-size: 0.85rem; color: #555; }
+  .file-detail dd { margin: 0.2rem 0 0; font-size: 0.88rem; }
+  .disclaimer { color: #888; font-size: 0.78rem; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 0.8rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h1>🗺 Architecture Map — 今あるコードの現在地</h1>
+<p class="intro">
+  コードの構造を変えるための図ではありません。<b>今のコードから機械的に生成した「現在地」</b>です。
+  図とコードが食い違ったら、正しいのはコードです。この図は毎回コードから作り直します。
+</p>
+<div id="meta" class="meta">読み込み中…</div>
+
+<div class="legend">
+  <span class="badge-canonical">🟢 正本（PAIRS canonical・同期関係の基準。再利用推奨の意味ではありません）</span>
+  <span class="badge-copy">🟠 同期対象（PAIRS copy）</span>
+  <span class="badge-aihub">🔷 ai-hub登録済み</span>
+  <span class="badge-gate">🟣 Gate（事実：正本 check-gates-are-wired.mjs の判定基準 .mjsファイルに一致）</span>
+  <span class="badge-platform">🔵 Gate候補・platform固有候補（推測：ファイル名の命名規則のみ・確定情報ではありません）</span>
+</div>
+
+<div id="breadcrumb" class="breadcrumb"></div>
+<div id="content"></div>
+
+<p class="disclaimer">
+  ここに表示されるのはGitHub上で公開（Public）と確認できたリポジトリのうち、working treeが
+  クリーン（未コミット変更なし）なものだけです。ファイルも<code>git ls-files</code>で追跡されている
+  ものだけに絞っています。untrackedファイル・未コミット変更・非公開リポジトリの名前や構造は
+  一切この画面に出しません。「似ているから同じ部品」という自動判定はしていません（v1では意図的に
+  入れていません）。<b>Gate・platform固有は「事実（正本の判定基準に一致）」と「推測（ファイル名からの
+  heuristic）」を明確に分けて表示しています</b>。正本の色分けは正しさの保証ではなく、既存データからの
+  機械的な事実表示です。
+</p>
+
+<script>
+(function () {
+  const contentEl = document.getElementById('content');
+  const breadcrumbEl = document.getElementById('breadcrumb');
+  const metaEl = document.getElementById('meta');
+
+  fetch('./map-data.json', { cache: 'no-store' })
+    .then((r) => r.json())
+    .then((data) => {
+      renderMeta(data);
+      renderLevel1(data);
+    })
+    .catch((e) => {
+      contentEl.innerHTML = '<p class="empty-note">map-data.json を読み込めませんでした: ' + escapeHtml(String(e)) + '</p>';
+    });
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderMeta(data) {
+    const genAt = data.generatedAt ? new Date(data.generatedAt) : null;
+    const genStr = genAt ? genAt.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) + ' (JST)' : '不明';
+    const ageDays = genAt ? Math.floor((Date.now() - genAt.getTime()) / 86400000) : null;
+    const stale = ageDays !== null && ageDays > 30;
+    metaEl.className = 'meta' + (stale ? ' stale' : '');
+    metaEl.innerHTML =
+      '最終更新: <b>' + genStr + '</b>' +
+      (ageDays !== null ? '（' + ageDays + '日前' + (stale ? ' — 30日超・古い可能性があります' : '') + '）' : '') +
+      ' / 生成時間: ' + (data.generationMs ?? '不明') + 'ms' +
+      ' / 公開リポ ' + (data.repos ? data.repos.length : 0) + '件' +
+      '（PUBLIC候補 ' + (data.publicCandidateCount ?? '不明') + '件 のうち、' +
+      '未コミット変更ありで除外 ' + (data.excludedDirtyTrueCount ?? 0) + '件・' +
+      'dirty判定不能で除外 ' + (data.excludedDirtyUnknownCount ?? 0) + '件）';
+  }
+
+  function renderLevel1(data) {
+    breadcrumbEl.innerHTML = '<span>リポジトリ一覧</span>';
+    if (!data.repos || data.repos.length === 0) {
+      contentEl.innerHTML = '<p class="empty-note">公開対象のリポジトリがありません。</p>';
+      return;
+    }
+    const items = data.repos.map((r) => {
+      const dirtyBadge = r.dirty === true ? ' <span class="badge badge-copy">未コミット変更あり</span>' : '';
+      const headStr = r.head ? r.head.slice(0, 8) : '不明';
+      const candStr = r.gateCandidateCount ? ' / Gate候補(推測) ' + r.gateCandidateCount + '本' : '';
+      return '<li><a data-repo="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) + '</a>' +
+        ' <span class="count">(' + r.fileCount + 'ファイル / Gate ' + r.gateCount + '本' + candStr + ' / HEAD ' + headStr + ')</span>' + dirtyBadge + '</li>';
+    }).join('');
+    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul>';
+    contentEl.querySelectorAll('a[data-repo]').forEach((a) => {
+      a.addEventListener('click', () => {
+        const repo = data.repos.find((r) => r.name === a.dataset.repo);
+        renderLevel2(data, repo);
+      });
+    });
+  }
+
+  function renderLevel2(data, repo) {
+    breadcrumbEl.innerHTML =
+      '<a data-back="level1">リポジトリ一覧</a> ＞ ' + escapeHtml(repo.name);
+    breadcrumbEl.querySelector('a[data-back="level1"]').addEventListener('click', () => renderLevel1(data));
+
+    if (!repo.directories || repo.directories.length === 0) {
+      contentEl.innerHTML = '<p class="empty-note">ディレクトリ情報がありません。</p>';
+      return;
+    }
+    const items = repo.directories.map((d) => {
+      return '<li><a data-dir="' + escapeHtml(d.path) + '">' + escapeHtml(d.path) + '</a>' +
+        ' <span class="count">(' + d.fileCount + 'ファイル' +
+        (d.gateCount ? ' / Gate ' + d.gateCount + '本' : '') +
+        (d.gateCandidateCount ? ' / Gate候補(推測) ' + d.gateCandidateCount + '本' : '') +
+        (d.pairsCount ? ' / PAIRS該当 ' + d.pairsCount + '件' : '') + ')</span></li>';
+    }).join('');
+    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul>';
+    contentEl.querySelectorAll('a[data-dir]').forEach((a) => {
+      a.addEventListener('click', () => renderLevel3(data, repo, a.dataset.dir));
+    });
+  }
+
+  function renderLevel3(data, repo, dirPath) {
+    breadcrumbEl.innerHTML =
+      '<a data-back="level1">リポジトリ一覧</a> ＞ <a data-back="level2">' + escapeHtml(repo.name) + '</a> ＞ ' + escapeHtml(dirPath);
+    breadcrumbEl.querySelector('a[data-back="level1"]').addEventListener('click', () => renderLevel1(data));
+    breadcrumbEl.querySelector('a[data-back="level2"]').addEventListener('click', () => renderLevel2(data, repo));
+
+    const nodes = repo.nodes.filter((n) => {
+      const parts = n.path.split('/');
+      const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
+      return dir === dirPath;
+    });
+    if (nodes.length === 0) {
+      contentEl.innerHTML = '<p class="empty-note">ファイルがありません。</p>';
+      return;
+    }
+    const items = nodes.map((n) => {
+      const badges = [];
+      if (n.pairs?.role === 'canonical') badges.push('<span class="badge badge-canonical">正本</span>');
+      if (n.pairs?.role === 'copy') badges.push('<span class="badge badge-copy">同期対象</span>');
+      if (n.aiHubRegistered === true) badges.push('<span class="badge badge-aihub">ai-hub登録済み</span>');
+      if (n.isGate) badges.push('<span class="badge badge-gate">Gate</span>');
+      if (n.gateCandidate) badges.push('<span class="badge badge-platform">Gate候補(推測)</span>');
+      if (n.platformHint) badges.push('<span class="badge badge-platform">' + escapeHtml(n.platformHint) + '(推測)</span>');
+      return '<li><a data-file="' + escapeHtml(n.path) + '">' + escapeHtml(n.name) + '</a>' + badges.join('') + '</li>';
+    }).join('');
+    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul><div id="file-detail"></div>';
+    contentEl.querySelectorAll('a[data-file]').forEach((a) => {
+      a.addEventListener('click', () => renderFileDetail(repo, a.dataset.file));
+    });
+  }
+
+  function renderFileDetail(repo, filePath) {
+    const node = repo.nodes.find((n) => n.path === filePath);
+    const detailEl = document.getElementById('file-detail');
+    if (!node) { detailEl.innerHTML = ''; return; }
+    const dependsOn = repo.edges.filter((e) => e.from === filePath).map((e) => e.to);
+    const referencedBy = repo.edges.filter((e) => e.to === filePath).map((e) => e.from);
+    detailEl.innerHTML =
+      '<div class="file-detail"><dl>' +
+      '<dt>パス</dt><dd>' + escapeHtml(node.path) + '</dd>' +
+      '<dt>Gate（事実）</dt><dd>' + (node.isGate ? 'はい（正本 check-gates-are-wired.mjs の判定基準に一致）' : 'いいえ') + '</dd>' +
+      '<dt>Gate候補（推測）</dt><dd>' + (node.gateCandidate ? 'check-*.js / verify-*.js の命名規則のみ一致。実際にGateとして配線されているかは未確認' : 'なし') + '</dd>' +
+      '<dt>PAIRS</dt><dd>' + (node.pairs ? escapeHtml(node.pairs.role) + '（' + escapeHtml(node.pairs.label) + '）' : 'なし') + '</dd>' +
+      '<dt>ai-hub登録</dt><dd>' + (node.aiHubRegistered === true ? 'あり' : (node.aiHubRegistered === false ? 'なし' : '未計測（ai-hub不在で生成）')) + '</dd>' +
+      '<dt>platform推測</dt><dd>' + (node.platformHint ? escapeHtml(node.platformHint) + '（ファイル名からの推測）' : 'なし') + '</dd>' +
+      '<dt>依存先（import）</dt><dd>' + (dependsOn.length ? dependsOn.map(escapeHtml).join('<br>') : 'なし') + '</dd>' +
+      '<dt>参照元（このファイルをimportしている）</dt><dd>' + (referencedBy.length ? referencedBy.map(escapeHtml).join('<br>') : 'なし') + '</dd>' +
+      '</dl></div>';
+  }
+})();
+</script>
+</body>
+</html>

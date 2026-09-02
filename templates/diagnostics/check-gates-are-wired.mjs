@@ -61,8 +61,12 @@ import { pathToFileURL } from 'node:url';
 
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
 
-/** 検査とみなすファイル名。 */
-const GATE_RE = /^(check|verify)-.*\.mjs$/;
+/**
+ * 検査とみなすファイル名。
+ * ★export済み(2026-09-02): generate-architecture-map.mjsが同じ判定基準でGateを
+ *   数えるためimportする。同じ正規表現を2箇所に複製しない（車輪の再発明・drift防止）。
+ */
+export const GATE_RE = /^(check|verify)-.*\.mjs$/;
 
 /**
  * 既定で検査を探す場所（プロジェクトごとに --dirs で変えられる）。
