@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "receipts": [
+    {
+      "at": "2026-09-02T14:18:39.667Z",
+      "responsibility": "Decision Receipt Gate自体の新規実装（check-decision-receipt.mjs）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/check-decision-receipt.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-02T14:18:47.404Z",
+      "responsibility": "Decision Receipt記録の口（record-decision-receipt.mjs）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/record-decision-receipt.mjs"
+      ]
+    }
+  ]
+}

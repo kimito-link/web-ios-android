@@ -36,6 +36,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
 | `check-gates-are-wired.mjs` | ★検査を**作った/格上げしたのに誰も呼んでいない**数 | ラチェット。`--dirs` で置き場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
+| `check-decision-receipt.mjs` | ★新規source fileがある変更にDecision Receiptがあるか（`_docs/DESIGN-canonical-boundary-rules.md`） | `.decision-receipts.json`。無ければ新規ファイル0件でも記録不要 |
 
 ### ★`check-silent-hang-guard` がなぜ要るか（2026-08-26・実損）
 

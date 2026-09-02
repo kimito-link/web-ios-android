@@ -33,6 +33,13 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
 
 1. **既存実装を検索する** — `Grep`/`Glob`で対象領域の既存コードを探す
 2. **`ai-hub`で共通部品を確認する** — `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` / `--sig "<キーワード>"`（「セッション開始時の必須アクション」3番目と同じコマンド。実装着手の直前にもう一度確認する）
+2.5. **CANONICAL CHECKを通す** — 既存候補が見つかったら「それを信じてよいか」を判定する
+   （同じ責務か・同じ意味か・置き場所は適切か・依存方向は逆転していないか）。判定結果は
+   REUSE / ESTABLISH_REHOME / CONTRACT / SYNC / KEEP_SEPARATE / LOCAL の6種類のいずれかで、
+   詳細な定義・判定基準は正本 [`_docs/DESIGN-canonical-boundary-rules.md`](_docs/DESIGN-canonical-boundary-rules.md)
+   を参照する（本文をここへコピーしない）。新規source fileを含む変更は、判定結果を
+   `record-decision-receipt.mjs` で記録すること（`templates/diagnostics/check-decision-receipt.mjs`
+   が記録の有無を機械検査する）
 3. **同等機能があれば新規実装しない** — 見つかったら再利用・薄い拡張に倒す。「速いから」で複製しない
 4. **PAIRS / drift対象を確認する** — 正本とコピーの関係にあるファイルを変更するとき、
    [`_docs/instruments/check-drift.mjs`](_docs/instruments/check-drift.mjs) の `PAIRS` に登録済みか見る。

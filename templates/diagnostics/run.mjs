@@ -113,6 +113,12 @@ const CHECKS = [
     path: join(__dirname, 'check-selftest-coverage.mjs'),
     selfTargetDir: join(__dirname, '..', 'scripts'),
   },
+  // ★新しい実装を作る前にCANONICAL CHECKを通した記録が無ければ完了扱いにできない
+  //   最小の仕組み(2026-09-02、_docs/DESIGN-canonical-boundary-rules.md v1.0の実装)。
+  //   新規source fileがある変更にのみDecision Receiptを要求する。
+  //   ★scripts/直下（templates/scripts/、証明3点台帳と同じ置き場所）にあるため
+  //   check-tracked-importsと同じ相対パスで参照する。
+  { name: 'check-decision-receipt', path: join(__dirname, '..', 'scripts', 'check-decision-receipt.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);

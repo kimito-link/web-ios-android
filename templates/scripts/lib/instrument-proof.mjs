@@ -47,6 +47,16 @@
  *     }
  *   }
  *
+ * ■ ★Decision Receipt拡張（2026-09-02、_docs/DESIGN-canonical-boundary-rules.md v1.0の実装）
+ *   新規source fileを含む変更には、SEARCH→CANONICAL CHECKを経た記録（Decision Receipt）を
+ *   要求する。台帳は別ファイル `.decision-receipts.json`（record-decision-receipt.mjsが書く）。
+ *   1回の変更に複数の新規ファイル・複数の責務判断がありうるため、ProofEntry(スクリプト単位の
+ *   台帳)とは別に配列で持つ:
+ *     { "schemaVersion": 1, "receipts": [ DecisionReceipt, ... ] }
+ *   ★judgeDecisionReceiptが検証するのは客観的事実のみ（decisionがenumの値か・
+ *   canonicalSourceが実在するか・ESTABLISH_REHOMEのsourceが今回の変更に含まれるか）。
+ *   「この判断が正しかったか」というSemantic Judgmentは機械が行わない（規約の原則）。
+ *
  * ■ ★PRE-FLIGHT拡張（2026-09-02、AIの行動監視ではなく証拠の有無で完了判定するための追加）
  *   `preflightSearchPath` / `preflightSearch` / `changedFiles` は★optionalフィールド。無い記録
  *   （このフィールドが追加される前の既存エントリ含む）を壊れている・不合格とは扱わない。
@@ -247,6 +257,104 @@ export function judgePreflight(entry) {
     howToFix: 'node ../ai-hub/bin/hub.mjs find --tag <t> --log <path> を実行してから、'
       + 'record-instrument-proof.mjs --preflight <path> で記録する',
     limitation: '★台帳に永続コピーされたreceiptの有無だけを見ます。検索しなかったことの確定証明ではなく、記録がないことの検出です'
+  };
+}
+
+/**
+ * @typedef {object} DecisionReceipt
+ * @property {string} at ISO8601
+ * @property {string} responsibility ★何の責務についての判断か（人が読む短い説明）
+ * @property {'REUSE'|'ESTABLISH_REHOME'|'CONTRACT'|'SYNC'|'KEEP_SEPARATE'|'LOCAL'} decision
+ * @property {string|null} canonicalSource ★REUSE/ESTABLISH_REHOMEで参照/確立するCanonicalの相対パス。無ければnull
+ * @property {string[]} scopePaths ★この判断が対象にするファイルの相対パス一覧
+ */
+
+/**
+ * ★Decision Receipt 1件が、客観的事実として成立しているかを判定する（純関数・fsに触らない）。
+ *
+ * ★これはSemantic Judgment（「この2つは本当に同じ責務か」等）を機械が行わない、という
+ * 設計規約（_docs/DESIGN-canonical-boundary-rules.md）の原則に従う。ここで検証するのは
+ * 「receiptの形が客観的に成立しているか」だけであり、「その判断が正しかったか」は見ない。
+ *
+ * @param {DecisionReceipt|undefined|null} receipt
+ * @param {{ changedFiles?: string[], sourceExists?: (path: string) => boolean }} [ctx]
+ * @returns {import('./instrument-core.mjs').ProbeResult}
+ */
+export function judgeDecisionReceipt(receipt, ctx = {}) {
+  const changedFiles = Array.isArray(ctx.changedFiles) ? ctx.changedFiles : [];
+  const sourceExists = typeof ctx.sourceExists === 'function' ? ctx.sourceExists : () => true;
+  const VALID_DECISIONS = new Set(['REUSE', 'ESTABLISH_REHOME', 'CONTRACT', 'SYNC', 'KEEP_SEPARATE', 'LOCAL']);
+
+  if (!receipt || typeof receipt !== 'object') {
+    return {
+      probe: 'Decision Receipt',
+      verdict: 'inconclusive',
+      evidence: null,
+      detail: '新規ファイルがあるのにDecision Receiptが記録されていません',
+      howToFix: 'CANONICAL CHECKを行い、record-decision-receipt.mjs でreceiptを記録してから再実行する',
+      limitation: '★receiptの形が客観的に成立しているかだけを見ます。判断の中身が正しいかは見ません'
+    };
+  }
+
+  if (!VALID_DECISIONS.has(receipt.decision)) {
+    return {
+      probe: 'Decision Receipt',
+      verdict: 'fail',
+      evidence: { decision: receipt.decision ?? null },
+      detail: `decisionが規約の6種類のいずれでもありません: ${String(receipt.decision)}`,
+      howToFix: 'decisionをREUSE/ESTABLISH_REHOME/CONTRACT/SYNC/KEEP_SEPARATE/LOCALのいずれかにする',
+      limitation: '★enumの値であるかだけを見ます。選んだ理由の妥当性は見ません'
+    };
+  }
+
+  if ((receipt.decision === 'REUSE' || receipt.decision === 'ESTABLISH_REHOME')) {
+    if (!receipt.canonicalSource) {
+      return {
+        probe: 'Decision Receipt',
+        verdict: 'fail',
+        evidence: { decision: receipt.decision, canonicalSource: null },
+        detail: `${receipt.decision}にはcanonicalSourceが必要です`,
+        howToFix: 'canonicalSourceに、参照/確立するCanonicalの相対パスを指定する',
+        limitation: '★canonicalSourceの有無だけを見ます'
+      };
+    }
+    if (!sourceExists(receipt.canonicalSource)) {
+      return {
+        probe: 'Decision Receipt',
+        verdict: 'fail',
+        evidence: { decision: receipt.decision, canonicalSource: receipt.canonicalSource },
+        detail: `canonicalSourceが実在しません: ${receipt.canonicalSource}`,
+        howToFix: 'canonicalSourceのpathを実在するファイルに直す',
+        limitation: '★pathが実在するかだけを見ます。中身が正しい正本かは見ません'
+      };
+    }
+  }
+
+  if (receipt.decision === 'ESTABLISH_REHOME') {
+    if (!changedFiles.includes(receipt.canonicalSource)) {
+      return {
+        probe: 'Decision Receipt',
+        verdict: 'fail',
+        evidence: { decision: receipt.decision, canonicalSource: receipt.canonicalSource, changedFiles },
+        detail: 'ESTABLISH_REHOMEのcanonicalSourceが今回の変更ファイルに含まれていません'
+          + '（新しく確立するはずのCanonicalが今回作られていません）',
+        howToFix: 'canonicalSourceに指定したファイルを今回の変更に含める',
+        limitation: '★changedFilesとの一致だけを見ます'
+      };
+    }
+  }
+
+  return {
+    probe: 'Decision Receipt',
+    verdict: 'pass',
+    evidence: {
+      responsibility: receipt.responsibility ?? null,
+      decision: receipt.decision,
+      canonicalSource: receipt.canonicalSource ?? null,
+      scopePaths: Array.isArray(receipt.scopePaths) ? receipt.scopePaths.length : 0
+    },
+    limitation: '★receiptが客観的な形で成立しているかだけを見ます。'
+      + 'その判断（本当にこの責務がLOCALか等）が正しいかはSemantic Judgmentであり、この検査は行いません'
   };
 }
 
