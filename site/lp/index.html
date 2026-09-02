@@ -13,6 +13,7 @@
 <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="../assets/css/common.css?v=1">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -343,11 +344,11 @@
   .final-cta .sub { margin: 18px auto 0; max-width: 50ch; color: #d9dfec; font-size: 14.5px; }
   .final-cta .btn-primary { margin-top: 28px; padding: 16px 36px; font-size: 16px; }
 
-  footer {
+  footer.lp-footer {
     padding: 34px 0 50px; text-align: center;
     font-size: 12px; color: var(--muted);
   }
-  footer a { color: var(--muted); text-decoration: underline; }
+  footer.lp-footer a { color: var(--muted); text-decoration: underline; }
 
   @media (prefers-reduced-motion: no-preference) {
     .reveal { opacity: 0; transform: translateY(12px); animation: rise .6s ease forwards; }
@@ -356,6 +357,7 @@
 </style>
 </head>
 <body>
+<div id="site-header"></div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -604,10 +606,13 @@
   </div>
 </div>
 
-<footer>
+<footer class="lp-footer">
   Kimito Link — App Launch Accelerator ／ お問い合わせ: <a href="mailto:info@best-trust.biz">info@best-trust.biz</a>
   ／ <a href="../" style="color:inherit;">個人クリエイター向けトップページ</a>
 </footer>
+
+<div id="site-footer"></div>
+<script src="../scripts/site-chrome.js"></script>
 
 </body>
 </html>
