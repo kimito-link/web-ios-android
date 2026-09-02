@@ -43,6 +43,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gitSnapshot, gitTrackedFiles, scanRepoStructure, findPairsRole, classifyGate } from './lib/architecture-map-core.mjs';
 import { fetchVisibilityFromGitHub, readVisibilityCache, writeVisibilityCache, isPublishable } from './lib/architecture-map-visibility.mjs';
+import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
@@ -532,7 +533,7 @@ function renderHtml() {
 <meta name="robots" content="noindex, nofollow" />
 <title>Architecture Map — 今あるコードの現在地</title>
 <style>
-  :root { color-scheme: light; }
+${TREE_VIEW_CSS}
   body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
   h1 { font-size: 1.4rem; }
   .intro { color: #444; font-size: 0.92rem; line-height: 1.7; margin: 0.6rem 0 1rem; }
@@ -548,37 +549,10 @@ function renderHtml() {
   .empty-note { color: #888; font-style: italic; font-size: 0.85rem; }
   .disclaimer { color: #888; font-size: 0.78rem; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 0.8rem; line-height: 1.6; }
 
-  /* --- repo tree（フォルダ＋線） --- */
+  /* --- Architecture Map固有: リポ単位のラッパー・チップの色・ファイル詳細 --- */
   .repo { margin-bottom: 1.6rem; border: 1px solid #e2e2e2; border-radius: 8px; padding: 0.8rem 1rem; overflow-x: auto; }
   .repo-head { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
   .repo-head .count { font-weight: normal; color: #888; font-size: 0.82rem; }
-  .tree { font-size: 0.9rem; }
-  .tree ul { list-style: none; margin: 0; padding-left: 1.15rem; }
-  .tree > ul { padding-left: 0; }
-  .tree li { position: relative; padding-left: 0.9rem; line-height: 1.9; white-space: nowrap; }
-  .tree li::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-    border-left: 1px solid #c7c7c7;
-  }
-  .tree li:last-child::before { bottom: auto; height: 0.95em; }
-  .tree li::after {
-    content: ''; position: absolute; left: 0; top: 0.95em; width: 0.7rem;
-    border-top: 1px solid #c7c7c7;
-  }
-  .tree summary { list-style: none; cursor: pointer; font-weight: 700; display: inline; }
-  .tree summary::-webkit-details-marker { display: none; }
-  .tree summary::marker { content: ''; }
-  .tree .fold::before { content: '📁'; margin-right: 0.3rem; }
-  .tree details[open] > summary .fold::before { content: '📂'; }
-  .tree .file-row { cursor: pointer; }
-  .tree .file-row:hover, .tree summary:hover { background: #f3f6fb; border-radius: 3px; }
-  .tree .dircount { color: #888; font-weight: normal; font-size: 0.78rem; margin-left: 0.35rem; }
-
-  /* --- 事実/推測チップ: 実線塗り=事実、破線白抜き=推測 --- */
-  .chip { display: inline-block; font-size: 0.7rem; padding: 0.02rem 0.4rem; margin-left: 0.3rem;
-    border-radius: 3px; border-width: 1.5px; border-style: solid; vertical-align: middle; }
-  .chip.fact { border-style: solid; }
-  .chip.guess { border-style: dashed; background: transparent !important; }
   .chip-gate { color: #6a1b9a; border-color: #6a1b9a; background: #f3e5f5; }
   .chip-canonical { color: #1b5e20; border-color: #1b5e20; background: #e8f5e9; }
   .chip-copy { color: #a05a00; border-color: #a05a00; background: #fff3e0; }
@@ -590,7 +564,6 @@ function renderHtml() {
   .file-detail dd { margin: 0.15rem 0 0; font-size: 0.86rem; }
 
   @media (max-width: 600px) {
-    .tree ul { padding-left: 0.85rem; }
     .repo { padding: 0.6rem 0.7rem; }
   }
 </style>

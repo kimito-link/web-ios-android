@@ -213,6 +213,25 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
      従う設計の心臓部**であるべき場所。ここに実装がある＝全プロジェクトから使える、では
      ない。`templates/`に格上げして初めて他プロジェクトから見える。
      （実装: [`templates/web/site-chrome/`](templates/web/site-chrome/README.md)）
+  6. **同一プロジェクト内でも、2箇所目を書く前に立ち止まる（2026-09-02確立）**: 基準⑤は
+     「複数プロジェクトをまたぐ再利用」の話だが、**同じリポジトリ内の複数ファイルにまたがる
+     部品**でも同じ判断が要る。UIコンポーネント・CSS・共通ロジックを2つ目の場所へ書こうと
+     したら、その前に「1つ目の実装を呼び出せないか」を必ず検討する。呼び出せるなら
+     `scripts/lib/`（Node生成スクリプトが共有するコンポーネント）や
+     `site/assets/css/common.css`（静的HTMLページ群が共有するスタイル）のような、
+     **役割ごとに決まった共有置き場**へ切り出してから両方から使う。「後で共通化すればいい」
+     と先送りしない（今回は同じ会話内で2箇所目を書いた直後に指摘され、事後修正になった）。
+     ★実損（2026-09-02）: Architecture Map（`generate-architecture-map.mjs`）にフォルダ
+     ツリー表示のCSS（`.tree`/`.chip`、接続線・事実推測チップの描画）を実装した直後、
+     同じ日の同じ会話の中で`/hub/`ダッシュボード（`generate-hub-dashboard.mjs`）にも
+     同じ視覚表現が必要になり、**共通化を検討せずCSSをもう一度手で書いた**。結果、
+     `.repo`ラッパーの有無・`white-space:nowrap`の有無等で2箇所が微妙にズレた。
+     指摘を受けて`scripts/lib/tree-view-component.mjs`（`TREE_VIEW_CSS`）へ切り出し、
+     両方の生成スクリプトからimportする形に修正した。★このキット自身が1日かけて
+     「実装着手前に既存資産を検索する」ルールをCLAUDE.mdへ積み上げていた、まさにその日に
+     同じキットの実装作業で違反した。ルールを書くことと実行中に自分の書いたルールを
+     思い出すことは別問題であり、**「これは前にも書いた気がする」と一瞬でも思ったら、
+     grepしてから2箇所目を書く**。
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。

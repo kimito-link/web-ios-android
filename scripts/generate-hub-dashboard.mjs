@@ -26,6 +26,7 @@ import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { scanKitMatrix, scanProjectGates, detectProfile, loadOverrides } from './lib/hub-kit-matrix.mjs';
+import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -363,7 +364,7 @@ ${rows}
 <meta name="robots" content="noindex, nofollow" />
 <title>次にやることリスト（作業台）</title>
 <style>
-  :root { color-scheme: light; }
+${TREE_VIEW_CSS}
   body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
   h1 { font-size: 1.4rem; }
   .intro { color: #444; font-size: 0.95rem; line-height: 1.7; margin: 0.6rem 0; }
@@ -393,25 +394,7 @@ ${rows}
   .todo-evidence { color: #999; font-size: 0.78rem; }
   .todo-empty { color: #2e7d32; }
   /* --- kit matrix --- */
-  /* --- ツリー（フォルダ＋線）。Architecture Mapと共通の視覚言語。2026-09-02追加 --- */
-  .tree { font-size: 0.9rem; margin-bottom: 1rem; }
-  .tree ul { list-style: none; margin: 0; padding-left: 1.15rem; }
-  .tree > ul { padding-left: 0; }
-  .tree li { position: relative; padding-left: 0.9rem; line-height: 1.9; }
-  .tree li::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid #c7c7c7; }
-  .tree li:last-child::before { bottom: auto; height: 0.95em; }
-  .tree li::after { content: ''; position: absolute; left: 0; top: 0.95em; width: 0.7rem; border-top: 1px solid #c7c7c7; }
-  .tree summary { list-style: none; cursor: pointer; font-weight: 700; }
-  .tree summary::-webkit-details-marker { display: none; }
-  .tree summary::marker { content: ''; }
-  .tree .fold::before { content: '📁'; margin-right: 0.3rem; }
-  .tree details[open] > summary .fold::before { content: '📂'; }
-  .tree summary:hover { background: #f3f6fb; border-radius: 3px; }
-  .tree .dircount { color: #888; font-weight: normal; font-size: 0.78rem; margin-left: 0.35rem; }
-  .chip { display: inline-block; font-size: 0.7rem; padding: 0.02rem 0.4rem; margin-left: 0.3rem;
-    border-radius: 3px; border-width: 1.5px; border-style: solid; vertical-align: middle; }
-  .chip.fact { border-style: solid; }
-  .chip.guess { border-style: dashed; }
+  /* --- /hub/固有のチップ色（ツリー本体の.tree/.chipはlib/tree-view-component.mjs由来） --- */
   .chip-ok { color: #1b5e20; border-color: #1b5e20; background: #e8f5e9; }
   .chip-missing { color: #b00020; border-color: #b00020; background: #ffebee; }
   .chip-unknown { color: #8a6d00; border-color: #8a6d00; background: #fff8e1; }
