@@ -292,8 +292,13 @@ export const PAIRS = [
 /** ★selftest が単体で使う正本（土台）。 */
 const CANONICAL = PAIRS[0].canonical;
 
-/** ★コメント・文字列内は触らず、行コメント/ブロックコメント/空行だけ落とす。 */
-function codeOnly(text) {
+/**
+ * ★コメント・文字列内は触らず、行コメント/ブロックコメント/空行だけ落とす。
+ * ★`templates/scripts/lib/instrument-proof.mjs` に同一ロジックの独立コピーがある。
+ *   このファイルは配布物ではない（templates/配下ではない）ため import では
+ *   共有できず、意図的に2箇所へ複製している。どちらかを変えたらもう片方も揃える。
+ */
+export function codeOnly(text) {
   const noBlock = text.replace(/\/\*[\s\S]*?\*\//g, '');
   return noBlock
     .split('\n')

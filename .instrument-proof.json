@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "checks": {
+    "templates/scripts/context-engine.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "245745f55bd0782efca0cf724d90a8abfcb5aa50b765ed6b303c787cb6c98d38"
+      }
+    },
+    "scripts/check-improvement.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "c587c9816532679e09f99858d438dbccfd378562bef690fb20f6c901a7e3f2ad"
+      }
+    },
+    "_docs/instruments/check-drift.mjs": {
+      "lastRealRed": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "9cf77b5693e767e281212201cdd368e93eea06de67cfb6ffaacaaf2cfc306cc2"
+      }
+    },
+    "templates/scripts/verify-root-cause-claim.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "c474a18eed77b62502522fbf85c922e6d37e5a6b46b67c4e3a2bd58ce7081240"
+      }
+    },
+    "templates/scripts/verify-responsive-design.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "72eac8baf368d5416e4aae1d254b3aabebbb2313ac47fcc262f5bf04ce1decb4"
+      }
+    },
+    "scripts/verify-numeric-claims-provenance.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "e50d43f154dc397f81f09b4d86d0d85e82c7538e2f17f570de6f4c08f6de92f9"
+      }
+    },
+    "templates/scripts/verify-app-config-schema.mjs": {
+      "lastRealRed": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "a9577b416091bccb93c92f9d944c850c761b5b8de1c22b3bbc1c7960b9f863f6"
+      }
+    },
+    "scripts/verify-doc-impl-coverage.mjs": {
+      "lastRealGreen": {
+        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
+        "at": "2026-09-02T06:41:46.386Z",
+        "sourceHash": "26fa6d5441df4d8263e1f4b29f28912fe35b28ded1035bd1387f9ed162596965"
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@
  */
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -45,19 +45,22 @@ function aggregate(results) {
 }
 
 function run(label, script, args = []) {
+  // ★scriptPath: 証明3点台帳(instrument-proof)がこの検査を再特定するためのキー。
+  //   ROOTからの相対パスに揃える（絶対パスだと環境で変わり、台帳のキーとして不安定）。
+  const scriptPath = script ? relative(ROOT, script).split('\\').join('/') : null;
   if (!script) {
     console.log(`\n[instruments] 🟡 ${label}: 実体がありません（測れませんでした）`);
-    return { label, verdict: 'inconclusive', code: EXIT.INCONCLUSIVE };
+    return { label, script: scriptPath, verdict: 'inconclusive', code: EXIT.INCONCLUSIVE };
   }
   console.log(`\n[instruments] ▶ ${label}`);
   try {
     execFileSync(process.execPath, [script, ...args], {
       cwd: ROOT, encoding: 'utf8', stdio: 'inherit', timeout: 10 * 60 * 1000
     });
-    return { label, verdict: 'pass', code: EXIT.PASS };
+    return { label, script: scriptPath, verdict: 'pass', code: EXIT.PASS };
   } catch (error) {
     const code = Number.isInteger(error.status) ? error.status : EXIT.FAIL;
-    return { label, verdict: classifyExit(code), code };
+    return { label, script: scriptPath, verdict: classifyExit(code), code };
   }
 }
 
@@ -90,6 +93,14 @@ const splashConfig = firstExisting(['scripts/check-splash-config.mjs', 'template
 const splashSafe = firstExisting(['scripts/check-splash-safe-circle.mjs', 'templates/scripts/check-splash-safe-circle.mjs']);
 const splashDrift = firstExisting(['scripts/check-splash-template-drift.mjs', 'templates/scripts/check-splash-template-drift.mjs']);
 const shindanPage = firstExisting(['scripts/generate-shindan-version.mjs', 'templates/scripts/generate-shindan-version.mjs']);
+// ★2026-09-02発見: 他のverify-*検査はすべて firstExisting で配布先/金型の両方を探すのに
+//   これだけが一覧に無かった＝作った・文書化した(templates/README.md)が、統合入口からは
+//   一度も呼ばれていない孤児だった。check-gates-are-wired.mjs は templates/scripts/ を
+//   意図的に対象外にしている（それ自体は正しい設計判断）ため、この孤児は検出されなかった
+//   ＝「検査を作ったのに誰も呼んでいない」を検出する検査自身の死角。
+const rootCauseClaim = firstExisting(['scripts/verify-root-cause-claim.mjs', 'templates/scripts/verify-root-cause-claim.mjs']);
+const instrumentProofCheck = firstExisting(['scripts/check-instrument-proof.mjs', 'templates/scripts/check-instrument-proof.mjs']);
+const instrumentProofRecord = firstExisting(['scripts/record-instrument-proof.mjs', 'templates/scripts/record-instrument-proof.mjs']);
 
 const results = [];
 results.push(run('全文脈パケット', context, ['--write', '.instrument-context.md', ROOT]));
@@ -97,6 +108,7 @@ results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
 results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
 if (drift) results.push(run('配布コードのドリフト', drift));
+if (rootCauseClaim) results.push(run('直近コミットの根治宣言の根拠', rootCauseClaim));
 results.push(run(
   '公開サイトのセキュリティ満点チェック',
   security,
@@ -116,6 +128,8 @@ if (DEEP) {
   results.push(run('実行記録 selftest', ran, ['--selftest']));
   results.push(run('統合入口 selftest', fileURLToPath(import.meta.url), ['--selftest']));
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
+  if (rootCauseClaim) results.push(run('根治宣言の根拠 selftest', rootCauseClaim, ['--selftest']));
+  if (instrumentProofCheck) results.push(run('証明3点台帳 selftest', instrumentProofCheck, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
   if (responsive) results.push(run('レスポンシブ計器 selftest', responsive, ['--selftest']));
   if (claimsProvenance) results.push(run('数値主張スクリーニング selftest', claimsProvenance, ['--selftest']));
@@ -154,6 +168,9 @@ if (REPORT) {
     results
   }, null, 2) + '\n');
   console.log(`\n[instruments] レポート: ${reportPath}`);
+  // ★reportが書かれた直後に証明3点台帳へ反映する。record-instrument-proof.mjs自身は
+  //   このスクリプトの集約exitに影響させない（記録の成否とrun-instruments全体の緑/赤は別軸）。
+  if (instrumentProofRecord) run('証明3点台帳への記録', instrumentProofRecord, ['--report', REPORT, ROOT]);
 }
 if (code === EXIT.INCONCLUSIVE) console.log('\n[instruments] 🟡 測れなかった項目があります。緑とは数えません。');
 if (code === EXIT.FAIL) console.log('\n[instruments] 🔴 赤があります。上の「直し方」から直してください。');

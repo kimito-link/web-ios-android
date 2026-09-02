@@ -36,6 +36,7 @@
 | ★レスポンシブ設計の静的先取り＋実ブラウザ実測の使い分け | [`templates/scripts/verify-responsive-design.mjs`](../../templates/scripts/verify-responsive-design.mjs) / [`RESPONSIVE-CHECK.md`](RESPONSIVE-CHECK.md) | ★2026-08-25 配布開始。`--selftest` 3ケース。正式判定は実ブラウザ実測に委ねる |
 | ★本体の診断・進化進捗ページ | [`templates/scripts/generate-shindan-version.mjs`](../../templates/scripts/generate-shindan-version.mjs) / [`templates/next-app/app/check-shindan-version/`](../../templates/next-app/app/check-shindan-version/) | ★各アプリの `/check-shindan-version/` に、導入・実測・履歴・公開の進み具合と次の一手を表示 |
 | ★数値主張の出典スクリーニング | [`scripts/verify-numeric-claims-provenance.mjs`](../../scripts/verify-numeric-claims-provenance.mjs) | ★2026-08-25配布開始。`site/**/*.html`全体の「実際に○件」等の数値主張に`<!-- 出典: -->`コメントがあるか軽く検査。`verify-claims-coverage.mjs`（LPのdata-claim 9件限定）とは別物。`--selftest` 4ケース |
+| ★根治宣言の根拠検査 | [`templates/scripts/verify-root-cause-claim.mjs`](../../templates/scripts/verify-root-cause-claim.mjs) | ★2026-08-31配布開始（`tsuioku-no-kirameki.com`から移植）。コミットメッセージの「根治した」等の宣言に、修正**後**の実機確認を示す語が伴っているかを検査。`--selftest` 5ケース。★2026-09-02までrun-instruments.mjsに未配線だった（下記§3.10参照） |
 
 ★台帳は「実装が無かった」のではなく、[`IMPROVEMENT-RULES.md`](IMPROVEMENT-RULES.md) §5 の
 **配布条件**（自動記録3版以上／記録忘れで門番が実際に鳴る）を満たすまで★**待っていた**もの。
@@ -238,6 +239,89 @@ audit-gates.mjs が raw（コメント込み）を見ていた
 ★**計器の価値は「真因に導いたか」だけで測る。数を誇らない。**
 1本足すたびに判定し、導かなかったものは消す。「数えること」は「直すこと」ではない。
 
+### ⑫ ★「検査を作ったのに誰も呼んでいない」を検出する検査自身にも死角がある
+
+> 出どころ: `web-ios-android`（このキット自身・2026-09-02発見）
+
+```
+verify-root-cause-claim.mjs（2026-08-31移植）が、統合入口 run-instruments.mjs の
+firstExisting() 一覧に一度も載っていなかった＝作った・templates/README.mdに文書化した
+だけで、実行フローからは一度も呼ばれていない孤児だった。
+
+check-gates-are-wired.mjs で検出できるはずが「✅ 合格（孤児0本）」と出ていた。
+理由: この検査は templates/scripts/（配布先へコピーして使う金型）を意図的に対象外に
+している（コメント70-74行に明記済みの正しい設計判断＝金型を孤児扱いすると18本が
+一度に赤くなり「配布先で使うのが正しい」ので直しようがない）。
+
+★つまり「検査を作ったのに誰も呼んでいない」は2種類ある:
+  (a) 配布先アプリのscripts/に置いたのにpackage.json/workflowsから呼ばれていない
+      → check-gates-are-wired.mjs が検出できる
+  (b) キット自身のtemplates/scripts/に置いたのに、キット自身の統合入口
+      （run-instruments.mjs）からも配布先からも呼ばれていない
+      → check-gates-are-wired.mjs の対象外なので★検出できない（この検査の限界）
+```
+
+★対処（実施済み）: `run-instruments.mjs` の一覧を見ると、他の同種検査
+（security・responsive・appConfigSchema・assetlinksPublished・splashConfig等）は
+すべて `firstExisting(['scripts/verify-X.mjs', 'templates/scripts/verify-X.mjs'])`
+という「配布先/金型どちらでも動く」パターンに乗っていた。
+`verify-root-cause-claim.mjs` だけがこの一覧に無かった＝単純な追加漏れと判断し、
+同じパターンで配線した（通常実行＋`--deep`のselftestの両方）。
+
+★教訓: (b)の死角は自動検出できないので、**新しい検査を`templates/scripts/`へ足すたびに
+「run-instruments.mjsのfirstExisting一覧に追加したか」を人が確認する**しかない。
+掟⑪（計器は増やすほど良い、ではない）と対をなす: 検査を「作る」ときは同時に
+「呼ばれる場所へ繋ぐ」までを1セットで終わらせること。
+
+---
+
+### ⑬ ★「所有」ではなく「証明」を見る（§6 未解決#2・#3の解、Fable 5.1設計・2026-09-02）
+
+> 出どころ: `web-ios-android`（このキット自身。Fable 5.1へ「大元の診断計器をパワーアップして」と依頼した設計の実装）
+
+```
+掟②が示した通り「exit 2を持っているか」は所有（grepで見つかる）でしかなく、
+行動（実際に赤・緑の両方を経験したか）の証明にはならない。
+壊れていた3本のうち2本は exit 2 を持っていたのに守れていなかった。
+
+★答え: 所有の代わりに「行動の証明3点」を台帳(.instrument-proof.json)に記録する。
+  1. 実対象で赤になったことがある（lastRealRed）─ 検知が本当に効くか
+  2. 実対象で緑になったことがある（lastRealGreen）─ 誤検知しないか
+  3. 直近のソース変更後にその両方が観測されている（sourceHash一致）─ #3の機械化
+
+「直した検査が実機で緑のままか」は「直した後に実機の緑が観測されたか」に
+言い換えられる。ソースのハッシュが変わった瞬間、過去の緑を無効化することで
+機械的に測れる（check-instrument-ran.mjsが「4つ目の状態」を外部記録との
+突き合わせで解いたのと同型の設計）。
+```
+
+★実装: [`lib/instrument-proof.mjs`](../../templates/scripts/lib/instrument-proof.mjs)（純関数の判定本体）
+/ [`check-instrument-proof.mjs`](../../templates/scripts/check-instrument-proof.mjs)（門番）
+/ [`record-instrument-proof.mjs`](../../templates/scripts/record-instrument-proof.mjs)（記録の口。
+`run-instruments.mjs --report`実行のたびに自動で呼ばれる＝配線済み）。
+
+★fail ではなく inconclusive(2) で鳴らす: 証明が足りないのは「測れていない」であって
+「壊れた」ではない（掟⑥と同型）。fail は台帳がJSONとして壊れているときだけ。
+
+★掟⑪の機械化（一度も赤を経験していない検査の扱い）: 90日を超えて一度も実対象の赤を
+経験していなければ、それをinconclusiveとして明示する。「毒の設計が要る」という宿題を
+可視化するだけで、自動で毒を作ったりはしない（掟③「毒が本当に入ったか確認してから
+読む」に反しない。毒の設計は人が行う＝§6の未解決#4として残した）。
+
+★車輪の再発明をしない、が「配布境界」に負けた例: `sourceHash`のコメント除去正規化
+（`codeOnly()`）は`_docs/instruments/check-drift.mjs`に既にある。だが`check-drift.mjs`は
+`templates/`配下ではない＝配布先リポジトリには存在しないファイルなので、配布物である
+`lib/instrument-proof.mjs`からimportすると配布先で壊れる。`instrument-core.mjs`と同じ
+「依存ゼロ・コピー1枚で動く」原則を優先し、**同じロジックを意図的に2箇所へ複製した**
+（どちらかを変えたらもう片方も見て揃える。自動同期の仕組みは無い）。
+
+★現状の限界（正直に書く）: `check-instrument-proof.mjs --check`の結果は
+`run-instruments.mjs`の集約exitにまだ混ぜていない。混ぜると既存の2件のfailに加えて
+多くの検査がinconclusive化し、影響範囲が大きすぎるため（このキット自身で実測: 導入
+直後は8件中2件しか証明3点を満たさなかった）。当面は`node scripts/check-instrument-proof.mjs
+--check`を個別に実行して現状を可視化する運用から始め、台帳が育ってから集約への統合を
+再検討する。
+
 ---
 
 ## 3.3 ★常にリアルタイムで診断する ＋ コピペ1回で伝える
@@ -367,5 +451,6 @@ soushin ──(exit2は保証にならない・Invoke-WithPoison)──→ tsuio
 | # | 問い | 出どころ |
 |---|---|---|
 | ~~1~~ | ~~★「検査がそもそも走っていない」をどう検出するか（4つ目の状態）~~ → ★**2026-08-22 解決**: [`check-instrument-ran.mjs`](../../templates/scripts/check-instrument-ran.mjs)。★走らなかった検査は何も出力しない＝内側では観測できないので、**緑のときだけ記録を残し、常に前へ進むもの（コミット）との距離**で測る。実地確認: 12コミット放置で exit 2、走らせ直すと緑。★限界: 手で stamp を打てばだませる（うっかり用であって意図的な回避は防がない） | `soushin` の実測2件 |
-| 2 | 「exit 2 を持っているか」の代わりに**何を見れば**正しさに近づくか | `soushin` の実証 |
-| 3 | 直した検査が**実機で緑のまま**か（`soushin` 側12本が未測定） | `soushin` 申告 |
+| ~~2~~ | ~~「exit 2 を持っているか」の代わりに**何を見れば**正しさに近づくか~~ → ★**2026-09-02 解決**: [`lib/instrument-proof.mjs`](../../templates/scripts/lib/instrument-proof.mjs) / [`check-instrument-proof.mjs`](../../templates/scripts/check-instrument-proof.mjs) / [`record-instrument-proof.mjs`](../../templates/scripts/record-instrument-proof.mjs)。★「所有(exit 2を持つ)」は掟②が示す通り行動の証明にならない（壊れていた3本のうち2本はexit 2を持っていたのに守れなかった）ので、代わりに**「実対象で赤になったことがある」「実対象で緑になったことがある」「直近のソース変更後にその両方が観測されている」の証明3点**を台帳(`.instrument-proof.json`)に記録し、それを見る。`run-instruments.mjs --report`実行のたびに`record-instrument-proof.mjs`が自動で記録する（配線済み）。★限界: 台帳への書き込み自体は`record-instrument-proof.mjs`を手で叩けば偽装できる（`check-instrument-ran.mjs`のstampと同じ限界）。★現時点で`check-instrument-proof.mjs --check`の結果は`run-instruments.mjs`の集約exitには混ぜていない（既存の2件のfailに加えて多くの検査がinconclusive化し影響が大きすぎるため。個別に`node scripts/check-instrument-proof.mjs --check`で確認する運用から始める） | `soushin` の実証 |
+| ~~3~~ | ~~直した検査が**実機で緑のまま**か（`soushin` 側12本が未測定）~~ → ★**2026-09-02 部分解決**: 上記の証明3点台帳が「直した後に実対象で緑が観測されたか」を`sourceHash`一致で機械的に判定する（#2と同じ仕組みで解ける問いだった）。★残る宿題: この判定はこのキット自身の12本以外（`soushin`側の12本）にはまだ適用していない。各リポが`run-instruments.mjs`を通すたびに台帳が自然に埋まる設計なので、強制移行はせず自然拡散に任せる | `soushin` 申告 |
+| 4 | 証明3点台帳が「一度も赤を経験していない」と鳴らす検査に対し、**実対象での毒（意図的に壊れた状態）をどう安全に自動生成するか**（`judgeProof`のinconclusive分岐が「毒の設計は人が行う」と明記して止めている先） | `instrument-proof.mjs` 設計時に明記 |
