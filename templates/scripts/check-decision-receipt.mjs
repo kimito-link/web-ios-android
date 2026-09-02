@@ -38,6 +38,10 @@ import { judgeDecisionReceipt } from './lib/instrument-proof.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
+// ★findRepoRootはtemplates/scripts/check-instrument-proof.mjs・record-instrument-proof.mjs・
+// check-instrument-ran.mjsと同一実装の意図的な複製（KEEP_SEPARATE、2026-09-02のCANONICAL CHECKで
+// DECLARED）。templates/scripts/は配布先にそのままコピーされるファイルで、scripts/lib/repo-root.mjs
+// （scripts/側の正本）をimportできない配布境界があるため。Decision Receipt: .decision-receipts.json参照。
 function findRepoRoot(startDir) {
   let dir = startDir;
   for (let i = 0; i < 10; i++) {

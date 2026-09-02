@@ -18,6 +18,16 @@
       "scopePaths": [
         "templates/scripts/record-decision-receipt.mjs"
       ]
+    },
+    {
+      "at": "2026-09-02T14:46:35.981Z",
+      "responsibility": "findRepoRoot（.gitを遡ってリポジトリルートを探す）の配置",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/check-decision-receipt.mjs",
+        "templates/scripts/record-decision-receipt.mjs"
+      ]
     }
   ]
 }
