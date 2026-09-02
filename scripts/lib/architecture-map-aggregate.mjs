@@ -114,15 +114,36 @@ export async function buildArchitectureMap(githubRoot, opts = {}) {
   // ★シンボリックリンク/ディレクトリジャンクションは対象外にする（hub-kit-matrix.mjsの
   //   walkFilesと同じ方針＝ループ防止）。Dirent.isDirectory()はreparse point（Windowsの
   //   ジャンクション含む）でfalseを返すため、素の.isDirectory()フィルタだけだと該当ディレクトリが
-  //   ★無言で欠落する（実測: tsuioku-no-kirameki.comがジャンクションで、これにより発覚）。
-  //   fail-closedの原則(README掟)に従い、無言で欠けさせず skippedReparsePoints として記録する。
-  const { readdirSync } = await import('node:fs');
+  //   無言で欠落する。fail-closedの原則(README掟)に従い、無言で欠けさせず
+  //   skippedReparsePoints として記録する。
+  //
+  // ★2026-09-02、誤検知バグの修正: 当初はDirent.isSymbolicLink()だけで判定していたが、
+  //   これはWindows+OneDrive環境で「OneDriveのオンデマンドファイル(reparse pointだが
+  //   実体は通常のフォルダ)」も true と誤判定する（実測: tsuioku-no-kirameki.comが
+  //   isSymbolicLink()=trueだったが、lstatSync().isSymbolicLink()は false で実体は
+  //   通常のディレクトリだった。PowerShellのGet-Itemでも LinkType が空でReparsePoint
+  //   属性のみ＝真のシンボリックリンク/ジャンクションではない）。この誤検知により、
+  //   PUBLICで実在するリポジトリが「未解析」として無言でArchitecture Mapから
+  //   欠落していた。Dirent.isSymbolicLink()に加えてlstatSync()でも二重確認し、
+  //   実体が通常のディレクトリなら除外しない（真のシンボリックリンク/ジャンクション
+  //   だけをskippedReparsePointsとして扱う）。
+  const { readdirSync, lstatSync } = await import('node:fs');
+  const { join: joinPath } = await import('node:path');
   const rawEntries = readdirSync(githubRoot, { withFileTypes: true });
+  const isTrueSymlink = (name) => {
+    try {
+      return lstatSync(joinPath(githubRoot, name)).isSymbolicLink();
+    } catch {
+      return true; // ★測れなければ安全側に倒し「未解析」扱いのまま
+    }
+  };
   const skippedReparsePoints = rawEntries
-    .filter((e) => e.isSymbolicLink() && !e.name.startsWith('.'))
+    .filter((e) => e.isSymbolicLink() && !e.name.startsWith('.') && isTrueSymlink(e.name))
     .map((e) => e.name);
+  const skippedNames = new Set(skippedReparsePoints);
   const allDirs = rawEntries
-    .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+    .filter((e) => !e.name.startsWith('.') && !skippedNames.has(e.name)
+      && (e.isDirectory() || (e.isSymbolicLink() && !isTrueSymlink(e.name))))
     .map((e) => e.name)
     .sort((a, b) => a.localeCompare(b));
 
