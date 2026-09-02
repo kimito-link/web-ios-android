@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-02T08:44:20.164Z",
-  "generationMs": 14202,
+  "generatedAt": "2026-09-02T09:18:07.169Z",
+  "generationMs": 13166,
   "note": "解析対象はgithub/配下の全リポジトリだが、ここにはGitHub上でPUBLICと確認できたリポジトリのうち、working treeがdirtyでないものだけを、git ls-files で追跡されているファイルのみに絞って含む",
   "repos": [
     {

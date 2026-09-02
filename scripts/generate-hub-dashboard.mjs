@@ -236,10 +236,16 @@ function renderMatrixHtml(matrix) {
       ? `<br><span class="row-note-inline">${escapeHtml(p.rowNote)}</span>`
       : '';
     const scoreText = p.score.applicable > 0 ? `${p.score.ok}/${p.score.applicable}` : '—';
+    // ★導入率を横棒として視覚化（一目で「多いか少ないか」が分かるように。
+    //   2026-09-02、Architecture Mapと同じ「事実を視覚的に一目で見せる」思想を反映。
+    //   既存のscore.ok/score.applicable(事実の集計)を表示するだけで、新しい判定は増やさない）。
+    const ratio = p.score.applicable > 0 ? Math.round((p.score.ok / p.score.applicable) * 100) : null;
+    const barHtml = ratio === null ? '' :
+      `<div class="score-bar" title="${ratio}%"><div class="score-bar-fill" style="width:${ratio}%"></div></div>`;
     return `        <tr${p.rowNote ? ' class="row-na"' : ''}>
           <th scope="row" class="proj-col"><code>${escapeHtml(p.name)}</code>${noteHtml}</th>
 ${cells}
-          <td class="score-col">${scoreText}</td>
+          <td class="score-col">${scoreText}${barHtml}</td>
         </tr>`;
   }).join('\n');
 
@@ -268,6 +274,9 @@ ${cells}
     <span class="cell" data-state="na">— このアプリには関係ない</span>
     <span class="cell" data-state="unknown">? 確認できなかった</span>
   </p>
+  ${renderMatrixTree(matrix)}
+  <details class="matrix-table-toggle">
+    <summary>アプリ×ゲートを横並びで比較する表を開く（全項目を1画面で見比べたいとき用）</summary>
   <div class="matrix-scroll" tabindex="0" role="region" aria-label="アプリごとの自動チェック導入状況（横スクロール可）">
     <table class="kit-matrix">
       <caption class="sr-only">プロジェクトごとの出荷事故ゲート${matrix.gates.length}項目の導入状況</caption>
@@ -290,10 +299,41 @@ ${footCells}
       </tfoot>
     </table>
   </div>
+  </details>
 </section>
 <script type="application/json" id="kit-matrix-json">
 ${JSON.stringify(matrix).replaceAll('</', '<\\/')}
 </script>`;
+}
+
+/**
+ * ★アプリ→ゲートのツリーサマリー（フォルダアイコン＋接続線）。
+ * 2026-09-02、Architecture Mapと同じ視覚言語に統一する作業で追加。
+ * 120マス(12アプリ×12ゲート)のテーブルは全体比較に有用なので残すが、
+ * 「まずどこが弱いか一目で分かる」導線としてこちらを先に見せる。
+ * 表示するのは既存のcells(state)をそのまま集計するだけ。新しい判定は増やさない。
+ */
+function renderMatrixTree(matrix) {
+  const items = matrix.projects.map((p) => {
+    const gateItems = matrix.gates.map((g) => {
+      const cell = p.cells[g.id] || { state: 'unknown' };
+      const state = cell.state;
+      if (state === 'na') return null; // 対象外は行を増やすだけなので出さない
+      // ★ok/missingは実際にファイルをスキャンして確認した事実（fact＝実線）。
+      //   unknownだけが「測れなかった」（guess＝破線）。Architecture Mapと同じ
+      //   「事実／推測」の分離思想（missingを推測扱いにしない）。
+      const cls = state === 'ok' ? 'fact chip-ok' : state === 'missing' ? 'fact chip-missing' : 'guess chip-unknown';
+      const sym = STATE_SYMBOL[state] || '?';
+      return `<li class="file"><span class="file-row">${sym} ${escapeHtml(g.label)} <span class="chip ${cls}">${STATE_LABEL[state] || '不明'}</span></span></li>`;
+    }).filter(Boolean).join('');
+    const missingCount = matrix.gates.filter((g) => (p.cells[g.id] || {}).state === 'missing').length;
+    const scoreText = p.score.applicable > 0 ? `${p.score.ok}/${p.score.applicable}` : '—';
+    const noteHtml = p.rowNote ? ` <span class="chip guess chip-unknown">${escapeHtml(p.rowNote)}</span>` : '';
+    return `<li class="dir"><details${missingCount > 0 ? '' : ''}><summary><span class="fold"></span>${escapeHtml(p.name)}` +
+      `<span class="dircount">(導入 ${scoreText})</span>${noteHtml}</summary><ul>${gateItems}</ul></details></li>`;
+  }).join('');
+
+  return `<div class="tree matrix-tree"><ul>${items}</ul></div>`;
 }
 
 function renderHtml(data) {
@@ -323,7 +363,8 @@ ${rows}
 <meta name="robots" content="noindex, nofollow" />
 <title>次にやることリスト（作業台）</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  :root { color-scheme: light; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
   h1 { font-size: 1.4rem; }
   .intro { color: #444; font-size: 0.95rem; line-height: 1.7; margin: 0.6rem 0; }
   .intro--honest { color: #666; font-size: 0.85rem; font-style: italic; }
@@ -352,6 +393,30 @@ ${rows}
   .todo-evidence { color: #999; font-size: 0.78rem; }
   .todo-empty { color: #2e7d32; }
   /* --- kit matrix --- */
+  /* --- ツリー（フォルダ＋線）。Architecture Mapと共通の視覚言語。2026-09-02追加 --- */
+  .tree { font-size: 0.9rem; margin-bottom: 1rem; }
+  .tree ul { list-style: none; margin: 0; padding-left: 1.15rem; }
+  .tree > ul { padding-left: 0; }
+  .tree li { position: relative; padding-left: 0.9rem; line-height: 1.9; }
+  .tree li::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid #c7c7c7; }
+  .tree li:last-child::before { bottom: auto; height: 0.95em; }
+  .tree li::after { content: ''; position: absolute; left: 0; top: 0.95em; width: 0.7rem; border-top: 1px solid #c7c7c7; }
+  .tree summary { list-style: none; cursor: pointer; font-weight: 700; }
+  .tree summary::-webkit-details-marker { display: none; }
+  .tree summary::marker { content: ''; }
+  .tree .fold::before { content: '📁'; margin-right: 0.3rem; }
+  .tree details[open] > summary .fold::before { content: '📂'; }
+  .tree summary:hover { background: #f3f6fb; border-radius: 3px; }
+  .tree .dircount { color: #888; font-weight: normal; font-size: 0.78rem; margin-left: 0.35rem; }
+  .chip { display: inline-block; font-size: 0.7rem; padding: 0.02rem 0.4rem; margin-left: 0.3rem;
+    border-radius: 3px; border-width: 1.5px; border-style: solid; vertical-align: middle; }
+  .chip.fact { border-style: solid; }
+  .chip.guess { border-style: dashed; }
+  .chip-ok { color: #1b5e20; border-color: #1b5e20; background: #e8f5e9; }
+  .chip-missing { color: #b00020; border-color: #b00020; background: #ffebee; }
+  .chip-unknown { color: #8a6d00; border-color: #8a6d00; background: #fff8e1; }
+  .matrix-table-toggle { margin-top: 0.4rem; }
+  .matrix-table-toggle summary { cursor: pointer; font-size: 0.85rem; color: #1a73e8; margin-bottom: 0.6rem; }
   .matrix-section { margin-bottom: 1.5rem; }
   .matrix-meta { color: #666; font-size: 0.85rem; }
   .matrix-legend .cell { display: inline-block; padding: 0.1rem 0.5rem; margin-right: 0.4rem;
@@ -375,6 +440,8 @@ ${rows}
   .kit-matrix tfoot td, .kit-matrix tfoot th { border-top: 2px solid #ddd; color: #555;
     position: sticky; bottom: 0; background: #fff; }
   .kit-matrix .score-col { font-weight: 600; text-align: right; }
+  .score-bar { width: 48px; height: 5px; background: #eee; border-radius: 3px; margin: 0.2rem 0 0 auto; overflow: hidden; }
+  .score-bar-fill { height: 100%; background: #43a047; }
   .row-note-inline { font-style: italic; color: #888; font-size: 0.75rem; font-weight: normal; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

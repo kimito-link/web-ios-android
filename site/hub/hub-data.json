@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-01T09:38:04.411Z",
+  "generatedAt": "2026-09-02T09:22:48.814Z",
   "entryCount": 72,
   "doctorOk": true,
   "doctorProblems": [],
@@ -40,6 +40,8 @@
     "未インデックスの検証資産: best-trust.biz/scripts/verify-seo-consistency.mjs（index化を検討）",
     "未インデックスの検証資産: dns-osint-pro-ver2.0/scripts/check-fast.mjs（index化を検討）",
     "未インデックスの検証資産: doin-challenge.com/scripts/check-auth-health.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/check-env-sanitize.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/check-visible-text.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-actions-usage.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-identity.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-local.mjs（index化を検討）",
@@ -79,6 +81,7 @@
     "未インデックスの検証資産: sakkino.link/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-global-assigned.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-hub-registered.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-lockfile-sync.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-selftest-coverage.mjs（index化を検討）",
@@ -140,6 +143,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-actions-usage.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-dependabot-queue.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-instrument-proof.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-instrument-ran.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-pwa-splash.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-splash-config.mjs（index化を検討）",
@@ -163,7 +167,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 156,
+  "doctorWarningCount": 160,
   "shelves": [
     {
       "id": "shipping",
@@ -2065,7 +2069,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-01T09:38:04.411Z",
+    "generatedAt": "2026-09-02T09:22:48.814Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3077,7 +3081,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが156件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが160件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }

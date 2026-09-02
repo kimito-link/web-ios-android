@@ -341,12 +341,42 @@ if (isMain && argv.includes('--selftest')) {
       fails.push('★Gateでもcandidateでもないファイルを誤検知した');
     }
   }
+  // buildTree: 中間ディレクトリの欠落を検知する（実データでapp/apiがdirectoriesから
+  // 欠けていた実損の再発防止。directoriesではなくnodesから組む設計の根拠）。
+  {
+    const nodes = [
+      { path: 'app/api/lookup/route.ts', name: 'route.ts', isGate: false, gateCandidate: false, pairs: null, aiHubRegistered: null },
+      { path: 'app/page.tsx', name: 'page.tsx', isGate: false, gateCandidate: false, pairs: null, aiHubRegistered: null },
+      { path: 'next.config.mjs', name: 'next.config.mjs', isGate: false, gateCandidate: false, pairs: null, aiHubRegistered: null }
+    ];
+    const tree = buildTree(nodes);
+    const app = tree.dirs.get('app');
+    const api = app && app.dirs.get('api');
+    const lookup = api && api.dirs.get('lookup');
+    if (!app) fails.push('★buildTree: appディレクトリが組み立てられていない');
+    else if (!api) fails.push('★buildTree: 中間ディレクトリ(app/api)が欠落した(実損の再発)');
+    else if (!lookup) fails.push('★buildTree: app/api/lookupが欠落した');
+    if (tree.files.length !== 1) fails.push('★buildTree: ルート直下ファイル(next.config.mjs)の数が正しくない');
+    if (tree.agg.files !== 3) fails.push('★buildTree: ルートの集計files数が3件になっていない（集計の合算漏れ）');
+  }
+  // buildTree: 事実(isGate)と推測(gateCandidate)の集計を混同しない
+  {
+    const nodes = [
+      { path: 'src/check-a.mjs', name: 'check-a.mjs', isGate: true, gateCandidate: false, pairs: null, aiHubRegistered: null },
+      { path: 'src/check-b.js', name: 'check-b.js', isGate: false, gateCandidate: true, pairs: null, aiHubRegistered: null }
+    ];
+    const tree = buildTree(nodes);
+    const src = tree.dirs.get('src');
+    if (!src || src.agg.gate !== 1) fails.push('★buildTree: Gate(事実)の集計が正しくない');
+    if (!src || src.agg.gateCandidate !== 1) fails.push('★buildTree: Gate候補(推測)の集計が正しくない');
+  }
+
   if (fails.length) {
     console.error('[generate-architecture-map] ★selftest 失敗:');
     for (const f of fails) console.error('  - ' + f);
     process.exit(1);
   }
-  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・dirty・dirty不明のリポを公開しない / untrackedファイルを漏らさない）');
+  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・dirty・dirty不明のリポを公開しない / untrackedファイルを漏らさない / 中間ディレクトリを欠落させない / 事実推測の集計を混同しない）');
   process.exit(0);
 }
 
@@ -416,7 +446,79 @@ if (isMain && !argv.includes('--selftest')) {
 }
 
 /**
- * ★公開データを読み込むだけの静的HTML（progressive disclosure UI）を生成する。
+ * ★フラットなファイルパス配列から、ネストしたディレクトリツリーを組み立てる（純関数）。
+ *
+ * ★2026-09-02、Fable設計により追加。「コードの図がぱっとわからない」というフィードバックを
+ * 受け、progressive disclosure（1階層ずつクリックで掘る）から、フォルダアイコン＋接続線の
+ * 視覚的なツリー表示へ作り替える際の中核ロジック。
+ *
+ * ★これは「表示用データ整形」であり、新しい解析ロジックではない。既存の真偽値
+ * （isGate/gateCandidate/pairs/aiHubRegistered）を判定・変更・推測することは一切せず、
+ * パスを`/`で分割してネストし、既存フラグを合計するだけ（buildDirectoryRollupと同種の集計）。
+ *
+ * ★repo.directoriesではなくrepo.nodesから組む。directoriesは「ファイルを直接含む
+ * ディレクトリ」しか持たず、中間ディレクトリ（例: app/apiにファイルが無くapp/api/lookupにだけ
+ * ある場合のapi）が欠落する（実データで確認済み）。
+ *
+ * ★この関数はモジュールスコープの外部参照を一切持たない自己完結関数にする。
+ * クライアントサイドJSへ`${buildTree.toString()}`として文字列埋め込みするため
+ * （変数・import・他関数の参照があると埋め込み先でReferenceErrorになる）。
+ *
+ * @param {Array<{path:string, name:string, isGate:boolean, gateCandidate:boolean, pairs:object|null, aiHubRegistered:boolean|null}>} nodes
+ * @returns {object} ルートディレクトリノード
+ */
+function buildTree(nodes) {
+  function emptyAgg() { return { files: 0, gate: 0, gateCandidate: 0, pairs: 0, aiHub: 0 }; }
+  function newDir(name, path) {
+    return { kind: 'dir', name, path, dirs: new Map(), files: [], agg: emptyAgg() };
+  }
+  const root = newDir('', '');
+
+  for (const n of (Array.isArray(nodes) ? nodes : [])) {
+    const parts = String(n.path || '').split('/').filter(Boolean);
+    if (parts.length === 0) continue;
+    let cur = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      if (!cur.dirs.has(seg)) {
+        cur.dirs.set(seg, newDir(seg, cur.path ? cur.path + '/' + seg : seg));
+      }
+      cur = cur.dirs.get(seg);
+    }
+    cur.files.push(n);
+  }
+
+  function aggregate(dir) {
+    for (const f of dir.files) {
+      dir.agg.files++;
+      if (f.isGate) dir.agg.gate++;
+      if (f.gateCandidate) dir.agg.gateCandidate++;
+      if (f.pairs) dir.agg.pairs++;
+      if (f.aiHubRegistered === true) dir.agg.aiHub++;
+    }
+    for (const child of dir.dirs.values()) {
+      aggregate(child);
+      dir.agg.files += child.agg.files;
+      dir.agg.gate += child.agg.gate;
+      dir.agg.gateCandidate += child.agg.gateCandidate;
+      dir.agg.pairs += child.agg.pairs;
+      dir.agg.aiHub += child.agg.aiHub;
+    }
+  }
+  aggregate(root);
+
+  function sortRec(dir) {
+    dir.files.sort((a, b) => a.name.localeCompare(b.name));
+    dir.dirs = new Map([...dir.dirs.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+    for (const child of dir.dirs.values()) sortRec(child);
+  }
+  sortRec(root);
+
+  return root;
+}
+
+/**
+ * ★公開データを読み込むだけの静的HTML（フォルダツリー表示 UI）を生成する。
  * データ本体はmap-data.jsonから取得し、HTML自身には解析結果の値を埋め込まない
  * （生成のたびに差分が肥大化しない・「生成物・手編集禁止」という既存パターンに合わせる）。
  */
@@ -436,27 +538,61 @@ function renderHtml() {
   .intro { color: #444; font-size: 0.92rem; line-height: 1.7; margin: 0.6rem 0 1rem; }
   .meta { color: #666; font-size: 0.85rem; margin-bottom: 1.2rem; }
   .meta.stale { color: #b00; font-weight: bold; }
-  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0 1.5rem; font-size: 0.82rem; }
-  .legend span { padding: 0.15rem 0.5rem; border-radius: 4px; }
-  .breadcrumb { font-size: 0.85rem; color: #666; margin-bottom: 0.8rem; }
-  .breadcrumb a { color: #1a73e8; text-decoration: none; cursor: pointer; }
-  .breadcrumb a:hover { text-decoration: underline; }
-  ul.level-list { list-style: none; padding: 0; }
-  ul.level-list li { padding: 0.35rem 0.2rem; border-bottom: 1px solid #eee; font-size: 0.92rem; }
-  ul.level-list a { color: #0d3b8c; text-decoration: none; cursor: pointer; font-weight: 700; }
-  ul.level-list a:hover { color: #1a73e8; text-decoration: underline; }
-  .badge { display: inline-block; padding: 0.05rem 0.4rem; border-radius: 3px; font-size: 0.72rem; margin-left: 0.35rem; }
-  .badge-canonical { background: #e8f5e9; color: #1b5e20; }
-  .badge-copy { background: #fff3e0; color: #a05a00; }
-  .badge-aihub { background: #e3f2fd; color: #0d47a1; }
-  .badge-gate { background: #f3e5f5; color: #6a1b9a; }
-  .badge-platform { background: #e0f7fa; color: #00695c; }
-  .count { color: #888; font-weight: normal; font-size: 0.85rem; }
+  .toolbar { display: flex; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .toolbar button { font-size: 0.82rem; padding: 0.3rem 0.7rem; border: 1px solid #ccc; border-radius: 5px;
+    background: #fafafa; cursor: pointer; }
+  .toolbar button:hover { background: #eee; }
+  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0 1.5rem; font-size: 0.8rem; }
+  .legend .chip { margin-left: 0; }
+  .legend-note { color: #666; }
   .empty-note { color: #888; font-style: italic; font-size: 0.85rem; }
-  .file-detail { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.2rem; margin-top: 1rem; }
-  .file-detail dt { font-weight: 600; margin-top: 0.6rem; font-size: 0.85rem; color: #555; }
-  .file-detail dd { margin: 0.2rem 0 0; font-size: 0.88rem; }
   .disclaimer { color: #888; font-size: 0.78rem; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 0.8rem; line-height: 1.6; }
+
+  /* --- repo tree（フォルダ＋線） --- */
+  .repo { margin-bottom: 1.6rem; border: 1px solid #e2e2e2; border-radius: 8px; padding: 0.8rem 1rem; overflow-x: auto; }
+  .repo-head { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .repo-head .count { font-weight: normal; color: #888; font-size: 0.82rem; }
+  .tree { font-size: 0.9rem; }
+  .tree ul { list-style: none; margin: 0; padding-left: 1.15rem; }
+  .tree > ul { padding-left: 0; }
+  .tree li { position: relative; padding-left: 0.9rem; line-height: 1.9; white-space: nowrap; }
+  .tree li::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    border-left: 1px solid #c7c7c7;
+  }
+  .tree li:last-child::before { bottom: auto; height: 0.95em; }
+  .tree li::after {
+    content: ''; position: absolute; left: 0; top: 0.95em; width: 0.7rem;
+    border-top: 1px solid #c7c7c7;
+  }
+  .tree summary { list-style: none; cursor: pointer; font-weight: 700; display: inline; }
+  .tree summary::-webkit-details-marker { display: none; }
+  .tree summary::marker { content: ''; }
+  .tree .fold::before { content: '📁'; margin-right: 0.3rem; }
+  .tree details[open] > summary .fold::before { content: '📂'; }
+  .tree .file-row { cursor: pointer; }
+  .tree .file-row:hover, .tree summary:hover { background: #f3f6fb; border-radius: 3px; }
+  .tree .dircount { color: #888; font-weight: normal; font-size: 0.78rem; margin-left: 0.35rem; }
+
+  /* --- 事実/推測チップ: 実線塗り=事実、破線白抜き=推測 --- */
+  .chip { display: inline-block; font-size: 0.7rem; padding: 0.02rem 0.4rem; margin-left: 0.3rem;
+    border-radius: 3px; border-width: 1.5px; border-style: solid; vertical-align: middle; }
+  .chip.fact { border-style: solid; }
+  .chip.guess { border-style: dashed; background: transparent !important; }
+  .chip-gate { color: #6a1b9a; border-color: #6a1b9a; background: #f3e5f5; }
+  .chip-canonical { color: #1b5e20; border-color: #1b5e20; background: #e8f5e9; }
+  .chip-copy { color: #a05a00; border-color: #a05a00; background: #fff3e0; }
+  .chip-aihub { color: #0d47a1; border-color: #0d47a1; background: #e3f2fd; }
+  .chip-guess-gate, .chip-platform { color: #6a4b7c; border-color: #6a4b7c; }
+
+  .file-detail { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.8rem 1rem; margin: 0.3rem 0 0.6rem 1.6rem; white-space: normal; }
+  .file-detail dt { font-weight: 600; margin-top: 0.5rem; font-size: 0.82rem; color: #555; }
+  .file-detail dd { margin: 0.15rem 0 0; font-size: 0.86rem; }
+
+  @media (max-width: 600px) {
+    .tree ul { padding-left: 0.85rem; }
+    .repo { padding: 0.6rem 0.7rem; }
+  }
 </style>
 </head>
 <body>
@@ -467,15 +603,20 @@ function renderHtml() {
 </p>
 <div id="meta" class="meta">読み込み中…</div>
 
-<div class="legend">
-  <span class="badge-canonical">🟢 正本（PAIRS canonical・同期関係の基準。再利用推奨の意味ではありません）</span>
-  <span class="badge-copy">🟠 同期対象（PAIRS copy）</span>
-  <span class="badge-aihub">🔷 ai-hub登録済み</span>
-  <span class="badge-gate">🟣 Gate（事実：正本 check-gates-are-wired.mjs の判定基準 .mjsファイルに一致）</span>
-  <span class="badge-platform">🔵 Gate候補・platform固有候補（推測：ファイル名の命名規則のみ・確定情報ではありません）</span>
+<div class="toolbar">
+  <button type="button" id="expand-all">すべて開く</button>
+  <button type="button" id="collapse-all">すべて閉じる</button>
 </div>
 
-<div id="breadcrumb" class="breadcrumb"></div>
+<div class="legend">
+  <span class="chip fact chip-canonical">正本</span><span class="legend-note">PAIRS canonical・同期関係の基準（再利用推奨の意味ではありません）</span>
+  <span class="chip fact chip-copy">同期対象</span><span class="legend-note">PAIRS copy</span>
+  <span class="chip fact chip-aihub">ai-hub</span><span class="legend-note">ai-hub登録済み</span>
+  <span class="chip fact chip-gate">Gate</span><span class="legend-note">事実（正本 check-gates-are-wired.mjs の判定基準に一致）</span>
+  <span class="chip guess chip-guess-gate">Gate候補(推測)</span><span class="legend-note">ファイル名の命名規則のみ・確定情報ではありません</span>
+</div>
+<p class="legend-note" style="font-size:0.78rem;margin-top:-0.6rem">実線・塗り＝事実（機械的に確認済み） ／ 破線・白抜き＝推測（heuristic、断定ではありません）</p>
+
 <div id="content"></div>
 
 <p class="disclaimer">
@@ -491,18 +632,28 @@ function renderHtml() {
 <script>
 (function () {
   const contentEl = document.getElementById('content');
-  const breadcrumbEl = document.getElementById('breadcrumb');
   const metaEl = document.getElementById('meta');
+
+  // ★buildTree: generate-architecture-map.mjs の同名関数をそのまま文字列埋め込みしたもの。
+  // 表示用データ整形のみ（isGate/gateCandidate/pairs等の判定・変更・推測は一切しない）。
+  ${buildTree.toString()}
 
   fetch('./map-data.json', { cache: 'no-store' })
     .then((r) => r.json())
     .then((data) => {
       renderMeta(data);
-      renderLevel1(data);
+      renderRepos(data);
     })
     .catch((e) => {
       contentEl.innerHTML = '<p class="empty-note">map-data.json を読み込めませんでした: ' + escapeHtml(String(e)) + '</p>';
     });
+
+  document.getElementById('expand-all').addEventListener('click', () => {
+    contentEl.querySelectorAll('details').forEach((d) => { d.open = true; });
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    contentEl.querySelectorAll('details').forEach((d, i) => { d.open = i === 0; }); // ルートだけ残す
+  });
 
   function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -524,88 +675,83 @@ function renderHtml() {
       'dirty判定不能で除外 ' + (data.excludedDirtyUnknownCount ?? 0) + '件）';
   }
 
-  function renderLevel1(data) {
-    breadcrumbEl.innerHTML = '<span>リポジトリ一覧</span>';
+  /** ★事実/推測チップを組み立てる。1つの要素に混同させない（属性ごとに別チップ）。 */
+  function nodeChips(n) {
+    const chips = [];
+    if (n.pairs && n.pairs.role === 'canonical') chips.push('<span class="chip fact chip-canonical">正本</span>');
+    if (n.pairs && n.pairs.role === 'copy') chips.push('<span class="chip fact chip-copy">同期対象</span>');
+    if (n.aiHubRegistered === true) chips.push('<span class="chip fact chip-aihub">ai-hub</span>');
+    if (n.isGate) chips.push('<span class="chip fact chip-gate">Gate</span>');
+    if (n.gateCandidate) chips.push('<span class="chip guess chip-guess-gate">Gate候補(推測)</span>');
+    if (n.platformHint) chips.push('<span class="chip guess chip-platform">' + escapeHtml(n.platformHint) + '(推測)</span>');
+    return chips.join('');
+  }
+
+  /** ★ディレクトリの部分木集計チップ（0件は出さない）。 */
+  function dirChips(agg) {
+    const chips = [];
+    if (agg.gate) chips.push('<span class="chip fact chip-gate">Gate ' + agg.gate + '</span>');
+    if (agg.gateCandidate) chips.push('<span class="chip guess chip-guess-gate">Gate候補 ' + agg.gateCandidate + '(推測)</span>');
+    if (agg.pairs) chips.push('<span class="chip fact chip-canonical">PAIRS ' + agg.pairs + '</span>');
+    if (agg.aiHub) chips.push('<span class="chip fact chip-aihub">ai-hub ' + agg.aiHub + '</span>');
+    return chips.join('');
+  }
+
+  const AUTO_EXPAND_MAX_FILES = 300;
+
+  function renderDirNode(dir, depth, autoOpen) {
+    const openAttr = autoOpen ? ' open' : '';
+    const childDirs = [...dir.dirs.values()].map((d) => '<li class="dir">' + renderDirNode(d, depth + 1, autoOpen) + '</li>').join('');
+    const childFiles = dir.files.map((f) => renderFileNode(f)).join('');
+    return '<details' + openAttr + '><summary><span class="fold"></span>' + escapeHtml(dir.name) +
+      '<span class="dircount">(' + dir.agg.files + ')</span>' + dirChips(dir.agg) + '</summary>' +
+      '<ul>' + childDirs + childFiles + '</ul></details>';
+  }
+
+  function renderFileNode(n) {
+    return '<li class="file"><span class="file-row" data-file="' + escapeHtml(n.path) + '">📄 ' +
+      escapeHtml(n.name) + nodeChips(n) + '</span><div class="file-detail-slot"></div></li>';
+  }
+
+  function renderRepos(data) {
     if (!data.repos || data.repos.length === 0) {
       contentEl.innerHTML = '<p class="empty-note">公開対象のリポジトリがありません。</p>';
       return;
     }
-    const items = data.repos.map((r) => {
-      const dirtyBadge = r.dirty === true ? ' <span class="badge badge-copy">未コミット変更あり</span>' : '';
-      const headStr = r.head ? r.head.slice(0, 8) : '不明';
-      const candStr = r.gateCandidateCount ? ' / Gate候補(推測) ' + r.gateCandidateCount + '本' : '';
-      return '<li><a data-repo="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) + '</a>' +
-        ' <span class="count">(' + r.fileCount + 'ファイル / Gate ' + r.gateCount + '本' + candStr + ' / HEAD ' + headStr + ')</span>' + dirtyBadge + '</li>';
+    contentEl.innerHTML = data.repos.map((repo) => {
+      const tree = buildTree(repo.nodes || []);
+      const autoOpen = repo.fileCount <= AUTO_EXPAND_MAX_FILES;
+      const headStr = repo.head ? repo.head.slice(0, 8) : '不明';
+      const dirtyNote = repo.dirty === true ? ' <span class="chip guess chip-platform">未コミット変更あり</span>' : '';
+      // ★ルートdirノード自体は描画せず、直下の子(ディレクトリ・ファイル)だけを並べる。
+      //   repo-headの見出しとツリールートが「rolex」を二重表示するのを避けるため。
+      const childDirs = [...tree.dirs.values()].map((d) => '<li class="dir">' + renderDirNode(d, 1, autoOpen) + '</li>').join('');
+      const childFiles = tree.files.map((f) => renderFileNode(f)).join('');
+      return '<section class="repo" data-repo="' + escapeHtml(repo.name) + '">' +
+        '<div class="repo-head">📦 ' + escapeHtml(repo.name) +
+        '<span class="count"> ' + repo.fileCount + 'ファイル / HEAD ' + headStr + '</span>' + dirtyNote + '</div>' +
+        '<div class="tree"><ul>' + childDirs + childFiles + '</ul></div>' +
+        '</section>';
     }).join('');
-    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul>';
-    contentEl.querySelectorAll('a[data-repo]').forEach((a) => {
-      a.addEventListener('click', () => {
-        const repo = data.repos.find((r) => r.name === a.dataset.repo);
-        renderLevel2(data, repo);
+
+    contentEl.querySelectorAll('.file-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        const repoName = row.closest('.repo').dataset.repo;
+        const repo = data.repos.find((r) => r.name === repoName);
+        renderFileDetail(repo, row.dataset.file, row);
       });
     });
   }
 
-  function renderLevel2(data, repo) {
-    breadcrumbEl.innerHTML =
-      '<a data-back="level1">リポジトリ一覧</a> ＞ ' + escapeHtml(repo.name);
-    breadcrumbEl.querySelector('a[data-back="level1"]').addEventListener('click', () => renderLevel1(data));
-
-    if (!repo.directories || repo.directories.length === 0) {
-      contentEl.innerHTML = '<p class="empty-note">ディレクトリ情報がありません。</p>';
-      return;
-    }
-    const items = repo.directories.map((d) => {
-      return '<li><a data-dir="' + escapeHtml(d.path) + '">' + escapeHtml(d.path) + '</a>' +
-        ' <span class="count">(' + d.fileCount + 'ファイル' +
-        (d.gateCount ? ' / Gate ' + d.gateCount + '本' : '') +
-        (d.gateCandidateCount ? ' / Gate候補(推測) ' + d.gateCandidateCount + '本' : '') +
-        (d.pairsCount ? ' / PAIRS該当 ' + d.pairsCount + '件' : '') + ')</span></li>';
-    }).join('');
-    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul>';
-    contentEl.querySelectorAll('a[data-dir]').forEach((a) => {
-      a.addEventListener('click', () => renderLevel3(data, repo, a.dataset.dir));
-    });
-  }
-
-  function renderLevel3(data, repo, dirPath) {
-    breadcrumbEl.innerHTML =
-      '<a data-back="level1">リポジトリ一覧</a> ＞ <a data-back="level2">' + escapeHtml(repo.name) + '</a> ＞ ' + escapeHtml(dirPath);
-    breadcrumbEl.querySelector('a[data-back="level1"]').addEventListener('click', () => renderLevel1(data));
-    breadcrumbEl.querySelector('a[data-back="level2"]').addEventListener('click', () => renderLevel2(data, repo));
-
-    const nodes = repo.nodes.filter((n) => {
-      const parts = n.path.split('/');
-      const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
-      return dir === dirPath;
-    });
-    if (nodes.length === 0) {
-      contentEl.innerHTML = '<p class="empty-note">ファイルがありません。</p>';
-      return;
-    }
-    const items = nodes.map((n) => {
-      const badges = [];
-      if (n.pairs?.role === 'canonical') badges.push('<span class="badge badge-canonical">正本</span>');
-      if (n.pairs?.role === 'copy') badges.push('<span class="badge badge-copy">同期対象</span>');
-      if (n.aiHubRegistered === true) badges.push('<span class="badge badge-aihub">ai-hub登録済み</span>');
-      if (n.isGate) badges.push('<span class="badge badge-gate">Gate</span>');
-      if (n.gateCandidate) badges.push('<span class="badge badge-platform">Gate候補(推測)</span>');
-      if (n.platformHint) badges.push('<span class="badge badge-platform">' + escapeHtml(n.platformHint) + '(推測)</span>');
-      return '<li><a data-file="' + escapeHtml(n.path) + '">' + escapeHtml(n.name) + '</a>' + badges.join('') + '</li>';
-    }).join('');
-    contentEl.innerHTML = '<ul class="level-list">' + items + '</ul><div id="file-detail"></div>';
-    contentEl.querySelectorAll('a[data-file]').forEach((a) => {
-      a.addEventListener('click', () => renderFileDetail(repo, a.dataset.file));
-    });
-  }
-
-  function renderFileDetail(repo, filePath) {
+  function renderFileDetail(repo, filePath, rowEl) {
+    // ★同時に開く詳細は1件だけ（多重展開の防止）。
+    contentEl.querySelectorAll('.file-detail-slot').forEach((slot) => { slot.innerHTML = ''; });
     const node = repo.nodes.find((n) => n.path === filePath);
-    const detailEl = document.getElementById('file-detail');
-    if (!node) { detailEl.innerHTML = ''; return; }
+    const slot = rowEl.nextElementSibling;
+    if (!node || !slot) return;
     const dependsOn = repo.edges.filter((e) => e.from === filePath).map((e) => e.to);
     const referencedBy = repo.edges.filter((e) => e.to === filePath).map((e) => e.from);
-    detailEl.innerHTML =
+    slot.innerHTML =
       '<div class="file-detail"><dl>' +
       '<dt>パス</dt><dd>' + escapeHtml(node.path) + '</dd>' +
       '<dt>Gate（事実）</dt><dd>' + (node.isGate ? 'はい（正本 check-gates-are-wired.mjs の判定基準に一致）' : 'いいえ') + '</dd>' +
