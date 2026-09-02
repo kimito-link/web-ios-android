@@ -216,10 +216,12 @@ if (isMain) {
   const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));
   const root = resolve(argDir || process.cwd());
 
-  const sharedArgIdx = process.argv.indexOf('--shared-dir');
-  const sharedDirs = sharedArgIdx >= 0 && process.argv[sharedArgIdx + 1]
-    ? [process.argv[sharedArgIdx + 1]]
-    : DEFAULT_SHARED_DIRS;
+  // ★--shared-dir は複数回指定できる（2026-09-03、キット自身がscripts/lib＋
+  //   templates/scripts/libの2箇所を持つため、単一指定では片方しか測れなかった）。
+  const sharedArgs = process.argv
+    .map((a, i) => (a === '--shared-dir' ? process.argv[i + 1] : null))
+    .filter((v) => typeof v === 'string' && v.trim());
+  const sharedDirs = sharedArgs.length > 0 ? sharedArgs : DEFAULT_SHARED_DIRS;
 
   // ★git 追跡ファイルだけを見る（worktree/node_modules を数えない）。
   let tracked;

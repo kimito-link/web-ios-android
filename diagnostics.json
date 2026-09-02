@@ -3,6 +3,6 @@
   "_note": "★実在するものだけを書く。無いものを宣言すると案内板そのものが嘘になる。",
   "index": "../ai-hub/index.json",
   "_srcDir_why": "★check-timing-instrumented は scripts/ を指定しても『測れませんでした』(exit 2)のままになる。これは正しい: このリポの scripts/ は CLI ツール群で、★『利用者が待たされる画面操作』(handleSubmit / PasteImage 等)が1つも無い。無理に measured へ倒すために対象を広げない——それは『測ったことにする』であって、このキットが最も嫌う形。画面を持つプロジェクトでは app/ や src/ を指す。",
-  "sharedDir": "templates/scripts/lib",
+  "sharedDir": ["scripts/lib", "templates/scripts/lib"],
   "srcDir": "scripts"
 }

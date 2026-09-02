@@ -178,7 +178,17 @@ for (const check of CHECKS) {
     if (check.declares) {
       for (const [key, flag] of Object.entries(check.declares)) {
         const v = declared[key];
-        if (typeof v === 'string' && v.trim()) declaredArgs.push(flag, v.trim());
+        // ★配列宣言は複数回のフラグへ展開する（2026-09-03追加）。
+        //   実損: sharedDirを配列化してscripts/lib+templates/scripts/libの両方を
+        //   宣言しても、ここが文字列しか受け付けないため無言でフラグが渡らず、
+        //   run.mjs経由の実行だけ既定値(shared/common/lib/shared)に戻っていた。
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (typeof item === 'string' && item.trim()) declaredArgs.push(flag, item.trim());
+          }
+        } else if (typeof v === 'string' && v.trim()) {
+          declaredArgs.push(flag, v.trim());
+        }
       }
     }
 

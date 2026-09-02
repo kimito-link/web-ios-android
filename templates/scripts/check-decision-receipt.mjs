@@ -19,6 +19,19 @@
  *   ・新規関数・新規class・新規CSS selector・類似ロジック（MVPの対象外。新規source fileのみ）
  *   ・receiptがそのタスクの意図と一致しているか（記録があるかだけを見る）
  *
+ * ■ ★Just-in-time提示（2026-09-02、パイロット#1の実損を受けて追加）
+ *   実損: check-decision-receipt.mjs/record-decision-receipt.mjs自身を新規作成した際、
+ *   CANONICAL CHECKを行わずfindRepoRootを既存ファイルからそのままコピーし、事後に
+ *   check-shared-parts-usedで重複を指摘されるまで気づかなかった。原因は「Decisionが
+ *   間違っていた」ことではなく「必要な情報が実装の瞬間のクリティカルパスに無かった」こと。
+ *   ★対策: receiptが無い（inconclusive）新規ファイルについて、templates/diagnostics/
+ *   check-shared-parts-used.mjsの判定関数（extractDefinedFunctions/judgeSharedPartsUsed、
+ *   新規に作らずそのままimport）を使い、そのファイルが定義する関数のうち共有dirと同名の
+ *   ものを「関連する既存共有部品の候補」として提示する。新しい重複検出器は作らない。
+ *   ★これは強制ではなく提示のみ：判定結果（pass/fail/inconclusive）は変えない。
+ *   「候補があるのにLOCAL以外を選んだらfailにする」のようなSemantic Judgmentの自動化はしない
+ *   （規約の原則：機械は客観的事実だけを見る）。
+ *
  * ■ 使い方
  *   node scripts/check-decision-receipt.mjs --check [対象リポ]
  *   node scripts/check-decision-receipt.mjs --selftest
@@ -35,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 import { judgeDecisionReceipt } from './lib/instrument-proof.mjs';
+import { extractDefinedFunctions, judgeSharedPartsUsed } from '../diagnostics/check-shared-parts-used.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -111,6 +125,61 @@ function readReceipts(file = RECEIPTS_FILE) {
   } catch {
     return null; // ★壊れている（無いのと区別する）
   }
+}
+
+/**
+ * ★共有dirの一覧を取得する。check-shared-parts-used.mjsのDEFAULT_SHARED_DIRSと
+ * diagnostics.jsonのsharedDir宣言（配列も可）の両方を合成する。新しい設定源は作らない。
+ * @returns {string[]}
+ */
+function resolveSharedDirs() {
+  const DEFAULTS = ['shared', 'common', 'lib/shared'];
+  const cfgPath = join(ROOT, 'diagnostics.json');
+  if (!existsSync(cfgPath)) return DEFAULTS;
+  try {
+    const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+    if (Array.isArray(cfg.sharedDir)) return cfg.sharedDir;
+    if (typeof cfg.sharedDir === 'string' && cfg.sharedDir) return [cfg.sharedDir];
+    return DEFAULTS;
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+/**
+ * ★新規ファイル1件が定義する関数のうち、共有dirと同名のものを「関連する既存共有部品の候補」
+ * として返す（提示のみ・判定には使わない）。extractDefinedFunctions/judgeSharedPartsUsedは
+ * check-shared-parts-used.mjsからのimportで、新しい重複検出ロジックは作らない。
+ * @param {string} file 新規ファイルの相対パス
+ * @param {string[]} sharedDirs
+ * @returns {{name:string, sharedAt:string}[]}
+ */
+function relatedSharedCandidates(file, sharedDirs) {
+  const isShared = (p) => sharedDirs.some((d) => p === d || p.startsWith(`${d}/`));
+  if (isShared(file)) return []; // ★共有dir自身の新規ファイルは対象外（自分自身との比較になる）
+
+  const abs = resolve(ROOT, file);
+  if (!existsSync(abs)) return [];
+  let defined;
+  try { defined = extractDefinedFunctions(readFileSync(abs, 'utf8')); } catch { return []; }
+  if (defined.length === 0) return [];
+
+  let tracked;
+  try {
+    tracked = execFileSync('git', ['ls-files', '*.js', '*.mjs', '*.ts', '*.tsx'], {
+      cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024
+    }).split('\n').map((s) => s.trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+  const load = (p) => {
+    try { return { path: p, defined: extractDefinedFunctions(readFileSync(join(ROOT, p), 'utf8')) }; }
+    catch { return null; }
+  };
+  const sharedFiles = tracked.filter(isShared).map(load).filter(Boolean);
+  const judged = judgeSharedPartsUsed(sharedFiles, [{ path: file, defined }], null);
+  if (judged.verdict === 'inconclusive') return [];
+  return judged.duplicates.map((d) => ({ name: d.name, sharedAt: d.sharedAt }));
 }
 
 /* ── --selftest ─────────────────────────────────────────────── */
@@ -216,6 +285,7 @@ if (receiptsDoc === null) {
 
 const changedFiles = changedFilesFromGit() || [];
 const receipts = receiptsDoc.receipts;
+const sharedDirs = resolveSharedDirs();
 
 // ★新規ファイルごとに、そのファイルをscopePathsに含むreceiptが1件でもあるかを見る。
 const results = newFiles.map((file) => {
@@ -224,13 +294,25 @@ const results = newFiles.map((file) => {
     changedFiles,
     sourceExists: (p) => existsSync(resolve(ROOT, p))
   });
-  return { ...judged, probe: `Decision Receipt: ${file}` };
+  return { ...judged, probe: `Decision Receipt: ${file}`, _file: file };
 });
 
 console.log(formatProbeReport(results, { label: 'check-decision-receipt' }));
 for (const r of results) {
   if (r.verdict !== 'pass') {
     console.log('   → この検査はreceiptの客観的な形（有無・enum値・pathの実在）だけを見ます。判断の中身の妥当性は見ません');
+  }
+  // ★Just-in-time提示: receiptがまだ無い（inconclusive）ファイルについて、
+  //   このファイルが定義する関数のうち共有dirと同名のものを候補として見せる。
+  //   提示のみ・判定には使わない（規約の原則: 機械は客観的事実だけを見る）。
+  if (r.verdict === 'inconclusive') {
+    const candidates = relatedSharedCandidates(r._file, sharedDirs);
+    if (candidates.length > 0) {
+      console.log(`   💡 関連する既存共有部品の候補（CANONICAL CHECKの材料。判定はしません）:`);
+      for (const c of candidates) {
+        console.log(`      - ${c.name}() は ${c.sharedAt} に既に定義されています`);
+      }
+    }
   }
 }
 
