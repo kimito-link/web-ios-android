@@ -171,6 +171,13 @@ export function classifyGate(fileName) {
 
 /**
  * ★1リポジトリを解析し、ファイルノード・import辺・Gate候補を集める。
+ *
+ * ★nodesは拡張子を問わずwalkFilesの全ファイルを対象にする（2026-09-02修正）。
+ *   以前はコード拡張子(.mjs/.js/.ts等)だけに絞っていたため、md/json/html/画像等の
+ *   ファイルが表示から無言で欠落していた（実測: rolexは51ファイル中29件しか出ていなかった）。
+ *   「今あるコードの現在地」を謳う以上、一部のファイルだけを黙って間引いてはならない。
+ *   import解析(edges)・Gate判定はコード系ファイルのみ意味を持つため、そちらは
+ *   従来通りcodeFilesに限定する。
  * @param {string} repoDir リポジトリの絶対パス
  * @param {string} repoName
  * @returns {{nodes: object[], edges: object[], errors: string[]}}
@@ -178,7 +185,7 @@ export function classifyGate(fileName) {
 export function scanRepoStructure(repoDir, repoName) {
   const { files, errors } = walkFiles(repoDir);
   const codeFiles = files.filter((f) => /\.(mjs|js|cjs|ts|tsx)$/.test(f));
-  const nodes = codeFiles.map((f) => {
+  const nodes = files.map((f) => {
     const relPath = relative(repoDir, f).split('\\').join('/');
     const name = basename(f);
     const gate = classifyGate(name);

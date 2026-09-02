@@ -1,27 +1,55 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-02T10:02:39.858Z",
-  "generationMs": 13597,
+  "generatedAt": "2026-09-02T10:24:08.227Z",
+  "generationMs": 13940,
   "note": "解析対象はgithub/配下の全リポジトリだが、ここにはGitHub上でPUBLICと確認できたリポジトリのうち、working treeがdirtyでないものだけを、git ls-files で追跡されているファイルのみに絞って含む",
   "repos": [
     {
       "name": "rolex",
       "head": "c0ae690861d78015fc0b21c69eef2b7234811d39",
       "dirty": false,
-      "fileCount": 29,
+      "fileCount": 50,
       "gateCount": 0,
       "gateCandidateCount": 0,
       "directories": [
         {
           "path": "(root)",
-          "fileCount": 3,
+          "fileCount": 8,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
         },
         {
           "path": "public",
-          "fileCount": 1,
+          "fileCount": 5,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "public/brand",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "public/characters/konta",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "public/characters/link",
+          "fileCount": 4,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "public/characters/tanunee",
+          "fileCount": 2,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -35,7 +63,7 @@
         },
         {
           "path": "src/app",
-          "fileCount": 3,
+          "fileCount": 4,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -57,8 +85,38 @@
       ],
       "nodes": [
         {
+          "path": ".gitignore",
+          "name": ".gitignore",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "next.config.mjs",
           "name": "next.config.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "package-lock.json",
+          "name": "package-lock.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "package.json",
+          "name": "package.json",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -77,6 +135,156 @@
           "aiHubRegistered": false
         },
         {
+          "path": "public/apple-touch-icon.png",
+          "name": "apple-touch-icon.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/brand/logo-orange.png",
+          "name": "logo-orange.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/brand/logo-white.png",
+          "name": "logo-white.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/konta/normal.png",
+          "name": "normal.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/konta/smile.png",
+          "name": "smile.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/konta/warn.png",
+          "name": "warn.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/link/blink.png",
+          "name": "blink.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/link/normal.png",
+          "name": "normal.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/link/smile.png",
+          "name": "smile.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/link/think.png",
+          "name": "think.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/tanunee/normal.png",
+          "name": "normal.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/characters/tanunee/smile.png",
+          "name": "smile.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/icon-192.png",
+          "name": "icon-192.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/icon-512.png",
+          "name": "icon-512.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "public/icon-maskable-512.png",
+          "name": "icon-maskable-512.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "public/sw.js",
           "name": "sw.js",
           "isGate": false,
@@ -87,8 +295,28 @@
           "aiHubRegistered": false
         },
         {
+          "path": "README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "scripts/gen-icons.mjs",
           "name": "gen-icons.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "src/app/globals.css",
+          "name": "globals.css",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -345,6 +573,16 @@
           "platformHint": null,
           "pairs": null,
           "aiHubRegistered": false
+        },
+        {
+          "path": "tsconfig.json",
+          "name": "tsconfig.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
         }
       ],
       "edges": [
@@ -358,20 +596,20 @@
       "name": "Target-List-maker",
       "head": "16ccedf6d68ba52a173035dc3cb697d557342ec1",
       "dirty": false,
-      "fileCount": 6,
+      "fileCount": 12,
       "gateCount": 0,
       "gateCandidateCount": 0,
       "directories": [
         {
           "path": "(root)",
-          "fileCount": 3,
+          "fileCount": 8,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
         },
         {
           "path": "app",
-          "fileCount": 2,
+          "fileCount": 3,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -386,8 +624,38 @@
       ],
       "nodes": [
         {
+          "path": ".env.local.example",
+          "name": ".env.local.example",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": ".gitignore",
+          "name": ".gitignore",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "app/api/lookup/route.ts",
           "name": "route.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "app/globals.css",
+          "name": "globals.css",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -426,6 +694,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "package.json",
+          "name": "package.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "postcss.config.js",
           "name": "postcss.config.js",
           "isGate": false,
@@ -436,8 +714,28 @@
           "aiHubRegistered": false
         },
         {
+          "path": "README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "tailwind.config.ts",
           "name": "tailwind.config.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "tsconfig.json",
+          "name": "tsconfig.json",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,

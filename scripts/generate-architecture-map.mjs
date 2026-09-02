@@ -292,6 +292,12 @@ ${TREE_VIEW_CSS}
   .file-detail dt { font-weight: 600; margin-top: 0.5rem; font-size: 0.82rem; color: #555; }
   .file-detail dd { margin: 0.15rem 0 0; font-size: 0.86rem; }
 
+  /* --- ソース中身プレビュー: 読み取り専用（GitHub raw URLへの遅延fetch、編集機能は無い） --- */
+  .file-preview { margin-top: 0.8rem; border-top: 1px solid #e0e0e0; padding-top: 0.6rem; }
+  .preview-head { font-size: 0.78rem; color: #666; margin-bottom: 0.3rem; }
+  .preview-body { background: #282c34; color: #dcdcdc; font-size: 0.78rem; line-height: 1.5; padding: 0.7rem 0.9rem;
+    border-radius: 6px; overflow-x: auto; max-height: 420px; overflow-y: auto; white-space: pre; }
+
   @media (max-width: 600px) {
     .repo { padding: 0.6rem 0.7rem; }
   }
@@ -445,6 +451,16 @@ ${TREE_VIEW_CSS}
     });
   }
 
+  // ★ソース中身プレビュー: GitHub raw URLへ遅延fetchするだけで、書き込み・編集は一切しない
+  // （2026-09-02、ユーザー要望「ページ内で中身を見せたい」。編集機能は今回のスコープ外と明示された）。
+  const PREVIEW_MAX_BYTES = 200 * 1024; // ★これを超えるサイズはfetch自体せず案内のみ表示
+  const BINARY_EXT_RE = /\.(png|jpg|jpeg|gif|webp|ico|svg|pdf|zip|gz|woff2?|ttf|eot|mp3|mp4|mov|db|sqlite)$/i;
+
+  function rawGithubUrl(repoName, head, filePath) {
+    return 'https://raw.githubusercontent.com/kimito-link/' + encodeURIComponent(repoName) + '/' + head + '/' +
+      filePath.split('/').map(encodeURIComponent).join('/');
+  }
+
   function renderFileDetail(repo, filePath, rowEl) {
     // ★同時に開く詳細は1件だけ（多重展開の防止）。
     contentEl.querySelectorAll('.file-detail-slot').forEach((slot) => { slot.innerHTML = ''; });
@@ -453,6 +469,7 @@ ${TREE_VIEW_CSS}
     if (!node || !slot) return;
     const dependsOn = repo.edges.filter((e) => e.from === filePath).map((e) => e.to);
     const referencedBy = repo.edges.filter((e) => e.to === filePath).map((e) => e.from);
+    const previewId = 'preview-' + Math.random().toString(36).slice(2);
     slot.innerHTML =
       '<div class="file-detail"><dl>' +
       '<dt>パス</dt><dd>' + escapeHtml(node.path) + '</dd>' +
@@ -463,7 +480,42 @@ ${TREE_VIEW_CSS}
       '<dt>platform推測</dt><dd>' + (node.platformHint ? escapeHtml(node.platformHint) + '（ファイル名からの推測）' : 'なし') + '</dd>' +
       '<dt>依存先（import）</dt><dd>' + (dependsOn.length ? dependsOn.map(escapeHtml).join('<br>') : 'なし') + '</dd>' +
       '<dt>参照元（このファイルをimportしている）</dt><dd>' + (referencedBy.length ? referencedBy.map(escapeHtml).join('<br>') : 'なし') + '</dd>' +
-      '</dl></div>';
+      '</dl>' +
+      '<div class="file-preview" id="' + previewId + '">読み込み中…</div>' +
+      '</div>';
+    loadFilePreview(repo, node, document.getElementById(previewId));
+  }
+
+  /** ★中身プレビュー: GitHub raw URLから取得して表示するだけ（書き込み・編集はしない）。 */
+  function loadFilePreview(repo, node, previewEl) {
+    if (!previewEl) return;
+    if (BINARY_EXT_RE.test(node.name)) {
+      previewEl.innerHTML = '<p class="empty-note">バイナリ/画像系ファイルのためプレビューは表示しません。</p>';
+      return;
+    }
+    if (!repo.head) {
+      previewEl.innerHTML = '<p class="empty-note">HEADが不明なためプレビューできません。</p>';
+      return;
+    }
+    const url = rawGithubUrl(repo.name, repo.head, node.path);
+    const githubUrl = 'https://github.com/kimito-link/' + encodeURIComponent(repo.name) + '/blob/' + repo.head + '/' +
+      node.path.split('/').map(encodeURIComponent).join('/');
+    fetch(url, { cache: 'no-store' })
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const len = Number(r.headers.get('content-length') || 0);
+        if (len > PREVIEW_MAX_BYTES) throw new Error('ファイルが大きすぎます（' + Math.round(len / 1024) + 'KB）');
+        return r.text();
+      })
+      .then((text) => {
+        previewEl.innerHTML =
+          '<div class="preview-head">中身プレビュー（<a href="' + escapeHtml(githubUrl) + '" target="_blank" rel="noopener">GitHubで開く</a>・読み取り専用）</div>' +
+          '<pre class="preview-body">' + escapeHtml(text.length > PREVIEW_MAX_BYTES ? text.slice(0, PREVIEW_MAX_BYTES) + '\\n…（以下省略）' : text) + '</pre>';
+      })
+      .catch((e) => {
+        previewEl.innerHTML = '<p class="empty-note">プレビューを読み込めませんでした（' + escapeHtml(String(e.message || e)) +
+          '）。<a href="' + escapeHtml(githubUrl) + '" target="_blank" rel="noopener">GitHubで開く</a></p>';
+      });
   }
 })();
 </script>
