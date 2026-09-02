@@ -39,10 +39,21 @@
  *     "checks": {
  *       "scripts/verify-security-score.mjs": {
  *         "lastRealGreen": { "commit": "...", "at": "ISO8601", "sourceHash": "ab12..." },
- *         "lastRealRed":   { "commit": "...", "at": "ISO8601", "sourceHash": "ab12...", "detail": "..." }
+ *         "lastRealRed":   { "commit": "...", "at": "ISO8601", "sourceHash": "ab12...", "detail": "..." },
+ *         "preflightSearchPath": ".ai-hub-search.log",
+ *         "changedFiles": ["templates/scripts/lib/instrument-proof.mjs"]
  *       }
  *     }
  *   }
+ *
+ * ■ ★PRE-FLIGHT拡張（2026-09-02、AIの行動監視ではなく証拠の有無で完了判定するための追加）
+ *   `preflightSearchPath` / `changedFiles` は★optionalフィールド。無い記録（このフィールドが
+ *   追加される前の既存エントリ含む）を壊れている・不合格とは扱わない。judgeProof()の証明3点判定
+ *   （lastRealGreen/lastRealRed）はこの2フィールドの有無に一切影響されない＝後方互換を壊さない。
+ *   ★changedFilesはGitから自動取得する（record-instrument-proof.mjs参照。tracked変更+untracked
+ *   新規ファイルの合成）。AIの自己申告ではなく機械的に観測できる事実を優先する。
+ *   ★意味の注意: changedFilesは「このタスクだけが変更したファイル」ではなく、★記録時点で
+ *   HEADとの差分として存在するworkspace変更の一覧（タスク単位で区切る入れ物はまだ無い）。
  *
  * ■ ★コメント除去の正規化は「配布境界」をまたがない
  *   `_docs/instruments/check-drift.mjs`（このキット自身専用・templates/配下ではない
@@ -94,6 +105,8 @@ export function hashSource(normalizedSourceText) {
  * @typedef {object} ProofEntry
  * @property {ProofEvent} [lastRealGreen]
  * @property {ProofEvent} [lastRealRed]
+ * @property {string} [preflightSearchPath] ★ai-hub find --logが書いたログファイルへの相対パス（PRE-FLIGHT証拠）
+ * @property {string[]} [changedFiles] ★記録時点でHEADとの差分として存在するworkspace変更（tracked+untracked、POST-FLIGHT証拠、自動取得）
  */
 
 /**
@@ -176,13 +189,44 @@ export function judgeProof(entry, currentSourceHash, opts = {}) {
 }
 
 /**
+ * ★PRE-FLIGHT証拠（ai-hub検索の記録）があるかを判定する（純関数）。証明3点(judgeProof)とは別軸。
+ *
+ * ★changedFilesが無いエントリ（この拡張が入る前に書かれた既存の記録）は判定対象外として
+ * `null` を返す（新フィールドが無いという理由だけで既存の正常な証明履歴を壊さないため）。
+ * `null` は「この軸では判定しない」を表し、inconclusive/pass/failのいずれとも異なる。
+ *
+ * @param {ProofEntry|undefined|null} entry
+ * @returns {import('./instrument-core.mjs').ProbeResult|null}
+ */
+export function judgePreflight(entry) {
+  if (!entry || !Array.isArray(entry.changedFiles)) return null; // ★拡張前の記録は対象外
+  if (entry.preflightSearchPath) {
+    return {
+      probe: 'PRE-FLIGHT証拠(ai-hub検索)',
+      verdict: 'pass',
+      evidence: { ログ: entry.preflightSearchPath },
+      limitation: '★ログファイルが存在することだけを見ます。検索条件が今回の変更に妥当だったかは見ません'
+    };
+  }
+  return {
+    probe: 'PRE-FLIGHT証拠(ai-hub検索)',
+    verdict: 'inconclusive',
+    evidence: null,
+    detail: 'この記録にはai-hub検索の証拠(preflightSearchPath)がありません',
+    howToFix: 'node ../ai-hub/bin/hub.mjs find --tag <t> --log <path> を実行してから、'
+      + 'record-instrument-proof.mjs --preflight <path> で記録する',
+    limitation: '★ログの存在だけを見ます。検索しなかったことの確定証明ではなく、記録がないことの検出です'
+  };
+}
+
+/**
  * ★report（run-instruments.mjsの--report出力）1件の結果から、台帳を更新した新しい台帳を返す（純関数）。
  *
  * ★inconclusiveは記録しない（測れなかったを証明に混ぜない・掟⑤と同型）。
  *
  * @param {Record<string, ProofEntry>} checks 現在の台帳（checks部分）
  * @param {{ script: string, verdict: 'pass'|'fail'|'inconclusive' }} resultItem
- * @param {{ commit: string, at: string, sourceHash: string, detail?: string }} context
+ * @param {{ commit: string, at: string, sourceHash: string, detail?: string, preflightSearchPath?: string, changedFiles?: string[] }} context
  * @returns {Record<string, ProofEntry>}
  */
 export function applyProofUpdate(checks, resultItem, context) {
@@ -202,6 +246,10 @@ export function applyProofUpdate(checks, resultItem, context) {
   const nextEntry = { ...prevEntry };
   if (resultItem.verdict === 'pass') nextEntry.lastRealGreen = event;
   if (resultItem.verdict === 'fail') nextEntry.lastRealRed = event;
+  // ★optional: 無ければ書かない（既存フィールドを消さない・後方互換）。
+  //   渡されたときだけ、その回の観測として上書きする。
+  if (context.preflightSearchPath) nextEntry.preflightSearchPath = String(context.preflightSearchPath);
+  if (Array.isArray(context.changedFiles)) nextEntry.changedFiles = context.changedFiles.map(String);
 
   base[key] = nextEntry;
   return base;

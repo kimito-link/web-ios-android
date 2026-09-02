@@ -17,6 +17,17 @@
  * ■ 使い方
  *   node scripts/run-instruments.mjs --report .instrument-report.json .
  *   node scripts/record-instrument-proof.mjs --report .instrument-report.json .
+ *   node scripts/record-instrument-proof.mjs --report ... --preflight .ai-hub-search.log .
+ *
+ * ■ ★PRE-FLIGHT/POST-FLIGHT証拠の記録方針（2026-09-02、AIの行動監視ではなく証拠の有無で判定するための拡張）
+ *   - `changedFiles`（POST-FLIGHT証拠）は★常にGitから自動取得する（`git diff --name-only HEAD`。
+ *     ステージ済み・未ステージ両方を含む「HEADから見た現在の作業ツリーの差分」で、基準commitは
+ *     常にHEADと一意に決まるため自己申告(--files)は不要と判断した。gitが使えない/対象がgit管理下に
+ *     無い場合のみ自動取得を諦め、その旨をログに出す（無音で空配列にしない）
+ *   - `preflightSearchPath`（PRE-FLIGHT証拠）はAIが`hub.mjs find --log <path>`で書いたログファイルへの
+ *     パスを`--preflight`で渡す。ai-hub側の検索は本スクリプトの外で起きる行為なので、これだけは
+ *     自動取得できず引数で受け取る（ただし記録するのは「そのログファイルが存在するか」という
+ *     事実であって、検索結果の中身ではない。中身の検証はcheck-instrument-proof.mjs側の責務）
  *
  * ■ 終了コード
  *   0 = 記録できた（1件以上のpass/failを反映） / 1 = report がJSONとして壊れている
@@ -48,12 +59,13 @@ function opt(name, fallback = null) {
   const i = argv.indexOf(name);
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : fallback;
 }
-const VALUE_OPTIONS = new Set(['--report']);
+const VALUE_OPTIONS = new Set(['--report', '--preflight']);
 const positional = argv.find((arg, index) => !arg.startsWith('-') && !VALUE_OPTIONS.has(argv[index - 1]));
 
 const ROOT = positional ? resolve(positional) : findRepoRoot(HERE);
 const REPORT_PATH = resolve(ROOT, opt('--report', '.instrument-report.json'));
 const PROOF_PATH = join(ROOT, '.instrument-proof.json');
+const PREFLIGHT_PATH = opt('--preflight'); // ★hub.mjs find --logが書いたログファイルへの相対パス。無指定なら記録しない
 
 function git(args, cwd = ROOT) {
   try {
@@ -88,6 +100,63 @@ const results = Array.isArray(report.value?.results) ? report.value.results : []
 const head = git(['rev-parse', 'HEAD']);
 const at = new Date().toISOString();
 
+/**
+ * ★POST-FLIGHT証拠: 記録時点でHEADとの差分として存在するworkspace変更のファイル一覧を
+ * Gitから自動取得する。★「このタスクだけが変更したファイル」という意味ではない
+ * （タスク単位で区切る入れ物はまだ無い。持たせるのは③の話で、今回は作らない）。
+ *
+ * 2つを合成する:
+ *   - `git diff --name-only HEAD`      … tracked（ステージ済み・未ステージ両方）
+ *   - `git ls-files --others --exclude-standard` … untracked（gitignore対象は除く新規ファイル）
+ * ★untrackedを含めないと、AIが新規ファイルだけを作ったタスクの証拠が抜ける
+ *   （既存ファイルの変更が0件の回はchangedFilesが常に空になってしまう）。
+ * 取れなければnull（自己申告での穴埋めはしない。fail-closedのまま「取れなかった」を明示する）。
+ */
+function changedFilesFromGit() {
+  if (!head) return null;
+  const tracked = git(['diff', '--name-only', 'HEAD']);
+  const untracked = git(['ls-files', '--others', '--exclude-standard']);
+  if (tracked === null || untracked === null) return null;
+  const combined = new Set([
+    ...tracked.split('\n').map((l) => l.trim()).filter(Boolean),
+    ...untracked.split('\n').map((l) => l.trim()).filter(Boolean)
+  ]);
+  return [...combined].sort();
+}
+const changedFiles = changedFilesFromGit();
+if (changedFiles === null) {
+  console.log('[record-instrument-proof] 🟡 Gitから変更ファイル一覧を取得できません（changedFilesは記録しません）');
+}
+
+/**
+ * ★PRE-FLIGHT証拠: ログファイルの最小限の構造だけを見る（署名検証・改ざん防止はしない）。
+ * 目的は「全く関係ないファイルを誤ってpreflight証拠として渡す事故」を防ぐことだけ。
+ * hub.mjs find --logは1行1JSON追記形式なので、末尾の（＝最新の）行を見る。
+ * @returns {boolean}
+ */
+function looksLikeHubFindLog(text) {
+  const lines = String(text || '').split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return false;
+  let last;
+  try { last = JSON.parse(lines[lines.length - 1]); } catch { return false; }
+  if (!last || typeof last !== 'object') return false;
+  if (last.cmd !== 'find') return false;
+  if (typeof last.at !== 'string' || !last.at) return false;
+  if (typeof last.exitCode !== 'number') return false;
+  if (typeof last.hits !== 'number') return false;
+  if (!last.tag && !last.sig) return false; // ★検索条件(tag/sig)のどちらかは要る
+  return true;
+}
+
+/** ★PRE-FLIGHT証拠: ログファイルが実在し、hub.mjs find --logの最小構造を満たすかを見る。 */
+const preflightAbs = PREFLIGHT_PATH ? resolve(ROOT, PREFLIGHT_PATH) : null;
+const preflightSearchPath = preflightAbs && existsSync(preflightAbs) && looksLikeHubFindLog(readFileSync(preflightAbs, 'utf8'))
+  ? PREFLIGHT_PATH
+  : null;
+if (PREFLIGHT_PATH && !preflightSearchPath) {
+  console.log(`[record-instrument-proof] 🟡 --preflightで指定されたファイルがai-hub検索ログの形をしていません: ${PREFLIGHT_PATH}（preflightSearchPathは記録しません）`);
+}
+
 const existingProof = readJson(PROOF_PATH);
 if (existingProof.value && !existingProof.ok) {
   console.error(`[record-instrument-proof] 🔴 既存の台帳がJSONとして壊れています: ${PROOF_PATH}`);
@@ -119,7 +188,11 @@ for (const item of results) {
   const sourceHash = currentSourceHash(item.script);
   if (!sourceHash) { skippedNoHash++; continue; } // ★hashが測れない結果を無音の空hashで書かない(fail-closed)
   const before = checks;
-  checks = applyProofUpdate(checks, item, { commit: head || '', at, sourceHash });
+  checks = applyProofUpdate(checks, item, {
+    commit: head || '', at, sourceHash,
+    ...(preflightSearchPath ? { preflightSearchPath } : {}),
+    ...(changedFiles !== null ? { changedFiles } : {})
+  });
   if (checks !== before) applied++;
 }
 

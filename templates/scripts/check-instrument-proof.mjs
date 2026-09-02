@@ -11,10 +11,20 @@
  *   ★判定ロジック本体は lib/instrument-proof.mjs の judgeProof()（純関数）。
  *   このファイルは「台帳を読み、対象を並べ、結果をまとめる」だけの薄い門番。
  *
+ * ■ ★PRE-FLIGHT証拠の判定（2026-09-02追加、証明3点とは別軸）
+ *   `changedFiles`（POST-FLIGHT証拠、record側がGitから自動記録）が付いているエントリ、
+ *   つまり★この拡張が入った後に record-instrument-proof.mjs が書いた記録に限り、
+ *   `preflightSearchPath`（ai-hub検索を実行した証拠）が伴っているかを追加で見る。
+ *   ★changedFilesが無い古いエントリ（この拡張前の記録）はこの軸の判定対象から外す
+ *   （新フィールドが無いという理由だけで既存の正常な証明履歴を壊さないため）。
+ *   この軸はinconclusiveのみで、fail/passの集約exitには混ぜない設計は据え置き
+ *   （下記--checkの出力で別枠として表示するのみ）。
+ *
  * ■ ★何を判定しないか（限界の明記）
  *   ・台帳の記録が本当に実対象からの実行結果か（record-instrument-proof.mjsを
  *     手で叩けば偽装できる＝check-instrument-ran.mjsのstampと同じ限界）
  *   ・検査ロジックそのものの正しさ（各検査の--selftestの仕事）
+ *   ・preflightSearchPathが指すログの中身（存在確認だけ。record側の責務）
  *
  * ■ 使い方
  *   node scripts/check-instrument-proof.mjs --check [対象リポ]
@@ -29,7 +39,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
-import { judgeProof, codeOnly, hashSource } from './lib/instrument-proof.mjs';
+import { judgeProof, judgePreflight, codeOnly, hashSource } from './lib/instrument-proof.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -146,6 +156,21 @@ if (has('--selftest')) {
         const missing = readProof(join(HERE, '__does-not-exist__.json'));
         return missing !== null && typeof missing.checks === 'object';
       }
+    },
+    {
+      name: '★changedFiles(POST-FLIGHT証拠)が無い旧エントリはPRE-FLIGHT判定の対象外(null)にする（既存記録を壊さない）',
+      poison: () => {}, restore: () => {},
+      isRed: () => judgePreflight({ lastRealGreen: { commit: 'a', at: new Date().toISOString(), sourceHash: 'h1' } }) === null
+    },
+    {
+      name: '★changedFilesはあるがpreflightSearchPathが無ければinconclusive',
+      poison: () => {}, restore: () => {},
+      isRed: () => judgePreflight({ changedFiles: ['x.mjs'] })?.verdict === 'inconclusive'
+    },
+    {
+      name: '★preflightSearchPathがあればpass（誤検知しない）',
+      poison: () => {}, restore: () => {},
+      isRed: () => judgePreflight({ changedFiles: ['x.mjs'], preflightSearchPath: '.log' })?.verdict === 'pass'
     }
   ]);
   if (!ok) {
@@ -195,4 +220,22 @@ for (const r of results) {
     console.log(`   → この検査は「所有(exit 2を持つ)」ではなく「証明(実対象で赤緑を観測した記録)」で判定しています。限界: 台帳への書き込み自体が偽装可能`);
   }
 }
+
+// ★PRE-FLIGHT証拠は証明3点(judgeProof)とは別軸の判定だが、★最終的な完了可否には合流させる。
+//   changedFilesが無い(この拡張前の)旧形式エントリはjudgePreflightがnullを返すため対象外のまま
+//   （既存の証明履歴を壊さない）。changedFilesがある新形式エントリだけ、この軸の結果を
+//   results（=computeExitCodeが見る配列）へ加える。「表示するだけで完了扱いを止めない」を避けるため。
+//   新しいexit code体系は増やさない（EXIT.PASS/FAIL/INCONCLUSIVEをそのまま使う）。
+const preflightResults = names
+  .map((name) => ({ name, r: judgePreflight(proof.checks[name]) }))
+  .filter((x) => x.r !== null);
+if (preflightResults.length > 0) {
+  console.log('\n--- PRE-FLIGHT証拠（新形式の記録のみ・結果は下の完了判定に合流します） ---');
+  for (const { name, r } of preflightResults) {
+    const mark = r.verdict === 'pass' ? '✓' : '?';
+    console.log(`${mark} ${name}: ${r.verdict === 'pass' ? `ログあり(${r.evidence.ログ})` : r.detail}`);
+  }
+  results.push(...preflightResults.map(({ name, r }) => ({ ...r, probe: `${r.probe}: ${name}` })));
+}
+
 process.exit(computeExitCode(results));

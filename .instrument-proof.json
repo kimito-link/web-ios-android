@@ -3,59 +3,187 @@
   "checks": {
     "templates/scripts/context-engine.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "245745f55bd0782efca0cf724d90a8abfcb5aa50b765ed6b303c787cb6c98d38"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "scripts/check-improvement.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "c587c9816532679e09f99858d438dbccfd378562bef690fb20f6c901a7e3f2ad"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "_docs/instruments/check-drift.mjs": {
       "lastRealRed": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "9cf77b5693e767e281212201cdd368e93eea06de67cfb6ffaacaaf2cfc306cc2"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "templates/scripts/verify-root-cause-claim.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "c474a18eed77b62502522fbf85c922e6d37e5a6b46b67c4e3a2bd58ce7081240"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "templates/scripts/verify-responsive-design.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "72eac8baf368d5416e4aae1d254b3aabebbb2313ac47fcc262f5bf04ce1decb4"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "scripts/verify-numeric-claims-provenance.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "e50d43f154dc397f81f09b4d86d0d85e82c7538e2f17f570de6f4c08f6de92f9"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "templates/scripts/verify-app-config-schema.mjs": {
       "lastRealRed": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "a9577b416091bccb93c92f9d944c850c761b5b8de1c22b3bbc1c7960b9f863f6"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     },
     "scripts/verify-doc-impl-coverage.mjs": {
       "lastRealGreen": {
-        "commit": "4a95f5d65e5686def8ebbeabfb13432ae837aad9",
-        "at": "2026-09-02T06:41:46.386Z",
+        "commit": "ab93ec633de29dc37ee18453d37083679b72a29b",
+        "at": "2026-09-02T07:21:34.751Z",
         "sourceHash": "26fa6d5441df4d8263e1f4b29f28912fe35b28ded1035bd1387f9ed162596965"
-      }
+      },
+      "changedFiles": [
+        ".instrument-proof.json",
+        "_docs/DESIGN-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/IMPLEMENTATION-HANDOFF-two-channel-acquisition-strategy-2026-09-01.md",
+        "_docs/clerk-x-oauth-e2e-verification-playbook.md",
+        "templates/scripts/check-instrument-proof.mjs",
+        "templates/scripts/clerk-auto-login.mjs",
+        "templates/scripts/lib/instrument-proof.mjs",
+        "templates/scripts/record-instrument-proof.mjs",
+        "シュガーマンのマーケティング30の法則.pdf",
+        "伝え方が9割 2　佐々木,圭一 (1).pdf",
+        "伝え方が9割　佐々木,圭一 (1).pdf",
+        "影響力の武器  なぜ、人は動かされるのか　CialdiniRobertB 社会行動研究会.pdf",
+        "影響力の武器［新版］  人を動かす七つの原理　ロバート・Ｂ・チャルディーニ／著 社会行動研究会／監修.pdf"
+      ],
+      "preflightSearchPath": ".ai-hub-search.log"
     }
   }
 }
