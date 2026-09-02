@@ -440,6 +440,10 @@ ${TREE_VIEW_CSS}
   この一覧表自体が壊れていないかの自己点検: ${data.doctorOk ? '✓ 問題なし' : '✗ 問題あり'}（問題${data.doctorProblemCount}件・気になる点${data.doctorWarningCount}件）
   <!-- 出典: ai-hub/bin/hub.mjs doctor --json -->
 </div>
+<p class="intro">
+  🗺 <a href="/hub/architecture-map/">Architecture Map（今あるコードの現在地・フォルダツリーで見る）</a>
+  も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
+</p>
 <section class="todo-section">
   <h2>🎯 次にやることリスト（優先順の高い順に、機械が毎回洗い出した分だけ）</h2>
   <p class="section-lead">人が「次はこれ」と決めたのではなく、下の一覧表やチェック結果から自動で見つかったものです。</p>
