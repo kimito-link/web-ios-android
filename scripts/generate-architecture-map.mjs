@@ -336,7 +336,7 @@ ${TREE_VIEW_CSS}
   const contentEl = document.getElementById('content');
   const metaEl = document.getElementById('meta');
 
-  // ★buildTree: generate-architecture-map.mjs の同名関数をそのまま文字列埋め込みしたもの。
+  // ★buildTree: scripts/lib/tree-view-component.mjs の同名関数をそのまま文字列埋め込みしたもの。
   // 表示用データ整形のみ（isGate/gateCandidate/pairs等の判定・変更・推測は一切しない）。
   ${buildTree.toString()}
 
