@@ -8,11 +8,18 @@
  * site-chromeの外部JS/CSSを全ブロックし、旧UI削除後に新UIも表示されない事故を
  * 実際に起こした反省から追加）。
  *
+ * v1.1（2026-09-03追記）: meta CSPが無いことは「CSPが無い」ことを意味しない。
+ * HTTPレスポンスヘッダー側のCSP（_headers=Cloudflare Pages形式、vercel.json=Vercel形式）が
+ * 別に存在しうる。meta無しを無条件ALLOWにすると、Mass Rolloutでfalse READYになるため、
+ * hosting設定を確認できない場合はUNKNOWNへ倒す。metaとhosting両方がある場合は両方を
+ * 満たす場合のみREADY。
+ *
  * ★観測専用。書き込みは一切しない。CSP変更もこのスクリプトは行わない
  *   （CSP変更はrolloutが自動で行わず、別の明示判断とする）。
  * ★UNKNOWNをREADYへ丸めない。1ページでもBLOCKがあればverdict=BLOCKED。
  *
- * 使い方: node scripts/rollout-preflight.mjs --project <name> --site-root <相対パス> [--pages <path1,path2,...>]
+ * 使い方: node scripts/rollout-preflight.mjs --project <name> --site-root <相対パス> --pages <path1,path2,...> [--repo-root <相対パス>]
+ *   --repo-root省略時はprojectディレクトリ直下をvercel.json探索先とする。
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -29,11 +36,13 @@ function main() {
     process.exit(1);
   }
 
+  const repoRootIdx = args.indexOf('--repo-root');
   const project = args[projectIdx + 1];
   const siteRoot = args[siteRootIdx + 1];
   const pagesArg = args[pagesIdx + 1];
   const githubRoot = resolve(import.meta.dirname, '..', '..');
   const siteRootDir = resolve(githubRoot, project, siteRoot);
+  const repoRootDir = repoRootIdx >= 0 ? resolve(githubRoot, project, args[repoRootIdx + 1]) : resolve(githubRoot, project);
 
   const relativePaths = pagesArg.split(',').map((p) => p.trim()).filter(Boolean);
   const pages = relativePaths.map((relPath) => {
@@ -45,11 +54,12 @@ function main() {
     return { path: relPath, content: readFileSync(fullPath, 'utf8') };
   });
 
-  const result = checkCspDeliveryPreflight(pages);
+  const result = checkCspDeliveryPreflight(pages, { siteRootDir, repoRootDir });
 
   console.log(`[rollout-preflight] ${project}::${siteRoot} verdict=${result.verdict}`);
+  console.log(`  hosting: present=${result.hosting.present} source=${result.hosting.source} script=${result.hosting.externalScript} style=${result.hosting.externalStyle}`);
   for (const p of result.perPage) {
-    console.log(`  ${p.path}: present=${p.present} script=${p.externalScript} style=${p.externalStyle}`);
+    console.log(`  ${p.path}: meta.present=${p.meta.present} combined.script=${p.externalScript} combined.style=${p.externalStyle}`);
   }
 
   if (result.verdict === 'BLOCKED') {

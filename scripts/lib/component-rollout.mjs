@@ -52,18 +52,15 @@ export function canonicalDigest(text) {
  * @param {string} htmlContent
  * @returns {{present: boolean, externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN', raw: string|null}}
  */
-export function analyzeCspMetaTag(htmlContent) {
-  // ★content属性値はダブルクォートで囲まれる想定だが、CSP値自体に'none'等の
-  //   シングルクォートを含むため、[^"']+ではシングルクォートで早期終端する誤りを
-  //   実データ(soushin-suggest.link)で踏んだ。クォート文字を後方参照で揃えて対応する。
-  const metaMatch = htmlContent.match(
-    /<meta\s+http-equiv=(["'])Content-Security-Policy\1\s+content=(["'])([\s\S]+?)\2\s*\/?>/i
-  );
-  if (!metaMatch) {
-    return { present: false, externalScript: 'ALLOW', externalStyle: 'ALLOW', raw: null };
-  }
-
-  const raw = metaMatch[3];
+/**
+ * CSPディレクティブ文字列（"default-src 'none'; script-src 'self'; ..."の形）を解析し、
+ * same-origin外部リソース（script/style）が許可されるかを判定する共通ロジック。
+ * meta CSPとhosting設定CSP（_headers/vercel.json）の両方から使う
+ * （2026-09-03、GPT指摘: Delivery Preflight v1.1でCSP文字列解析を共通化）。
+ * @param {string} raw
+ * @returns {{externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN'}}
+ */
+export function resolveCspAllowanceFromDirectiveString(raw) {
   const directives = {};
   for (const part of raw.split(';')) {
     const trimmed = part.trim();
@@ -90,27 +87,125 @@ export function analyzeCspMetaTag(htmlContent) {
   }
 
   // script-src-elem → script-src → default-src の優先順でfallbackする（CSP仕様通り）。
-  let externalScript = resolvesToAllow(['script-src-elem', 'script-src', 'default-src']);
-  let externalStyle = resolvesToAllow(['style-src-elem', 'style-src', 'default-src']);
+  const externalScript = resolvesToAllow(['script-src-elem', 'script-src', 'default-src']) ?? 'UNKNOWN';
+  const externalStyle = resolvesToAllow(['style-src-elem', 'style-src', 'default-src']) ?? 'UNKNOWN';
 
-  externalScript = externalScript ?? 'UNKNOWN';
-  externalStyle = externalStyle ?? 'UNKNOWN';
+  return { externalScript, externalStyle };
+}
 
+/**
+ * @returns {{present: boolean, externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN', raw: string|null}}
+ */
+export function analyzeCspMetaTag(htmlContent) {
+  // ★content属性値はダブルクォートで囲まれる想定だが、CSP値自体に'none'等の
+  //   シングルクォートを含むため、[^"']+ではシングルクォートで早期終端する誤りを
+  //   実データ(soushin-suggest.link)で踏んだ。クォート文字を後方参照で揃えて対応する。
+  const metaMatch = htmlContent.match(
+    /<meta\s+http-equiv=(["'])Content-Security-Policy\1\s+content=(["'])([\s\S]+?)\2\s*\/?>/i
+  );
+  if (!metaMatch) {
+    return { present: false, externalScript: 'ALLOW', externalStyle: 'ALLOW', raw: null };
+  }
+
+  const raw = metaMatch[3];
+  const { externalScript, externalStyle } = resolveCspAllowanceFromDirectiveString(raw);
   return { present: true, externalScript, externalStyle, raw };
 }
 
 /**
- * 1 siteRootについて、expectedなHTMLページ全部のCSPが、site-chromeの外部JS/CSSを
- * 配布可能かをread-onlyで判定する（Delivery Preflight）。
+ * hosting設定（_headers = Cloudflare Pages形式、vercel.json = Vercel形式）から、
+ * HTTPレスポンスヘッダーとして配信されるContent-Security-Policyを読み取る。
+ *
+ * ★meta CSPが無いことは「CSP無し」を意味しない。HTTPレスポンスヘッダー側のCSPが
+ *   別に存在しうる（2026-09-03実データ: surechigai-romi.link-deploy-886aeff/vercel.json
+ *   に script-src 'self' ... を含むCSPが実在した）。これを見ずにmeta無し=ALLOWと
+ *   丸めると、Mass Rolloutでfalse READYになる。
+ * ★新しい巨大なdeployment detectorは作らない。_headers/vercel.jsonという既存の
+ *   設定ファイルをそのまま読むだけ（Cloudflare Pages/Vercelの実配置パターンを
+ *   カバー。netlify.tomlは将来必要になったら追加する）。
+ *
+ * @param {string} siteRootDir サイトのpublicディレクトリ（_headersの探索起点）
+ * @param {string} repoRootDir リポジトリルート（vercel.jsonの探索起点）
+ * @returns {{present: boolean, source: '_headers'|'vercel.json'|null, externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN', raw: string|null}}
+ */
+export function analyzeHostingHeadersCsp(siteRootDir, repoRootDir) {
+  // _headers（Cloudflare Pages）: 全体（/*）に効くCSP行を探す。
+  //   構文は "# comment" / "パスパターン" 行 / インデントされた "Key: Value" 行の並び。
+  const headersPath = join(siteRootDir, '_headers');
+  if (existsSync(headersPath)) {
+    const content = readFileSync(headersPath, 'utf8');
+    const cspLine = content
+      .split('\n')
+      .find((line) => /^\s+Content-Security-Policy:/i.test(line));
+    if (cspLine) {
+      const raw = cspLine.replace(/^\s*Content-Security-Policy:\s*/i, '').trim();
+      const { externalScript, externalStyle } = resolveCspAllowanceFromDirectiveString(raw);
+      return { present: true, source: '_headers', externalScript, externalStyle, raw };
+    }
+  }
+
+  // vercel.json: headers[].headers[] 配列からContent-Security-Policyキーを探す。
+  const vercelJsonPath = join(repoRootDir, 'vercel.json');
+  if (existsSync(vercelJsonPath)) {
+    try {
+      const config = JSON.parse(readFileSync(vercelJsonPath, 'utf8'));
+      for (const rule of config.headers || []) {
+        const cspHeader = (rule.headers || []).find((h) => h.key?.toLowerCase() === 'content-security-policy');
+        if (cspHeader) {
+          const { externalScript, externalStyle } = resolveCspAllowanceFromDirectiveString(cspHeader.value);
+          return { present: true, source: 'vercel.json', externalScript, externalStyle, raw: cspHeader.value };
+        }
+      }
+    } catch {
+      return { present: false, source: null, externalScript: 'UNKNOWN', externalStyle: 'UNKNOWN', raw: null };
+    }
+  }
+
+  // ★どちらの設定ファイルも見つからない、またはCSP行が無い場合、「CSPが本当に無い」のか
+  //   「別のホスティング方式(Netlify等)でこのツールが対応していないだけ」なのか区別できない。
+  //   ALLOWへ丸めずUNKNOWNとする。
+  return { present: false, source: null, externalScript: 'UNKNOWN', externalStyle: 'UNKNOWN', raw: null };
+}
+
+/**
+ * 1ページについて、meta CSPとhosting設定CSPの両方を考慮したDelivery判定を行う。
+ * 両方に制約がある場合、両方を満たす（ALLOW）場合のみALLOWとする。どちらかがBLOCKなら
+ * BLOCK、UNKNOWNが残ればUNKNOWN（ALLOWへ丸めない）。
+ * @param {{externalScript: string, externalStyle: string}} metaResult
+ * @param {{externalScript: string, externalStyle: string}} hostingResult
+ * @returns {{externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN'}}
+ */
+function combineCspVerdicts(metaResult, hostingResult) {
+  function combine(a, b) {
+    if (a === 'BLOCK' || b === 'BLOCK') return 'BLOCK';
+    if (a === 'UNKNOWN' || b === 'UNKNOWN') return 'UNKNOWN';
+    return 'ALLOW';
+  }
+  return {
+    externalScript: combine(metaResult.externalScript, hostingResult.externalScript),
+    externalStyle: combine(metaResult.externalStyle, hostingResult.externalStyle),
+  };
+}
+
+/**
+ * 1 siteRootについて、expectedなHTMLページ全部のCSP（meta + hosting設定）が、
+ * site-chromeの外部JS/CSSを配布可能かをread-onlyで判定する（Delivery Preflight v1.1）。
  * UNKNOWNをPASSへ丸めない。1ページでもBLOCKがあれば全体をBLOCKとして返す。
  *
  * @param {Array<{path: string, content: string}>} pages 対象ページ（絶対パス+中身）
- * @returns {{verdict: 'READY'|'BLOCKED'|'UNKNOWN', perPage: Array<object>}}
+ * @param {{siteRootDir: string, repoRootDir: string}} [hostingContext] _headers/vercel.json探索用。
+ *   省略時はhosting設定CSPをUNKNOWNとして扱う（後方互換）。
+ * @returns {{verdict: 'READY'|'BLOCKED'|'UNKNOWN', perPage: Array<object>, hosting: object|null}}
  */
-export function checkCspDeliveryPreflight(pages) {
+export function checkCspDeliveryPreflight(pages, hostingContext) {
+  const hosting = hostingContext
+    ? analyzeHostingHeadersCsp(hostingContext.siteRootDir, hostingContext.repoRootDir)
+    : { present: false, source: null, externalScript: 'UNKNOWN', externalStyle: 'UNKNOWN', raw: null };
+
   const perPage = pages.map((p) => {
-    const analysis = analyzeCspMetaTag(p.content);
-    return { path: p.path, ...analysis };
+    const metaAnalysis = analyzeCspMetaTag(p.content);
+    const combined = combineCspVerdicts(metaAnalysis, hosting);
+    return { path: p.path, meta: metaAnalysis, hosting, ...combined };
   });
 
   const hasBlock = perPage.some((p) => p.externalScript === 'BLOCK' || p.externalStyle === 'BLOCK');
@@ -121,7 +216,7 @@ export function checkCspDeliveryPreflight(pages) {
   else if (hasUnknown) verdict = 'UNKNOWN';
   else verdict = 'READY';
 
-  return { verdict, perPage };
+  return { verdict, perPage, hosting };
 }
 
 /**
@@ -642,6 +737,67 @@ export function runSelfTest() {
     if (result.externalStyle !== 'ALLOW') failures.push(`ケース17期待externalStyle=ALLOW、実際${result.externalStyle}`);
   }
 
+  // ケース18: Delivery Preflight v1.1 — meta CSP無し・hosting設定も無し → UNKNOWN
+  //   （2026-09-03、GPT指摘: meta無しを無条件ALLOWにするとfalse READYになる。
+  //   HTTPレスポンスヘッダー側CSPを確認できない場合はUNKNOWNへ倒す）
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-hosting-'));
+    const pages = [{ path: 'index.html', content: '<html></html>' }];
+    const result = checkCspDeliveryPreflight(pages, { siteRootDir: dir, repoRootDir: dir });
+    if (result.verdict !== 'UNKNOWN') failures.push(`ケース18期待verdict=UNKNOWN、実際${result.verdict}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース19: _headers（Cloudflare Pages形式）にContent-Security-Policy: default-src 'self'... →
+  //   meta無し・hosting ALLOW → 全体ALLOW/READY
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-hosting-'));
+    writeFileSync(
+      join(dir, '_headers'),
+      '# comment\n/*\n  Content-Security-Policy: default-src \'self\'; script-src \'self\'; style-src \'self\' \'unsafe-inline\'\n'
+    );
+    const pages = [{ path: 'index.html', content: '<html></html>' }];
+    const result = checkCspDeliveryPreflight(pages, { siteRootDir: dir, repoRootDir: dir });
+    if (result.hosting.source !== '_headers') failures.push(`ケース19期待source=_headers、実際${result.hosting.source}`);
+    if (result.verdict !== 'READY') failures.push(`ケース19期待verdict=READY、実際${result.verdict}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース20: vercel.json（Vercel形式）headers[].headers[]にCSP → 実データ形式(surechigai
+  //   -romi.link-deploy-886aeffの実例)を模した構造。script-src 'self'を含むためALLOW
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-hosting-'));
+    writeFileSync(
+      join(dir, 'vercel.json'),
+      JSON.stringify({
+        headers: [
+          {
+            source: '/(.*)',
+            headers: [{ key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'" }],
+          },
+        ],
+      })
+    );
+    const pages = [{ path: 'index.html', content: '<html></html>' }];
+    const result = checkCspDeliveryPreflight(pages, { siteRootDir: dir, repoRootDir: dir });
+    if (result.hosting.source !== 'vercel.json') failures.push(`ケース20期待source=vercel.json、実際${result.hosting.source}`);
+    if (result.verdict !== 'READY') failures.push(`ケース20期待verdict=READY、実際${result.verdict}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース21: meta CSPはALLOW(default 'self'相当)だがhosting設定がBLOCK →
+  //   両方を満たさないとREADYにしない。全体BLOCKED
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-hosting-'));
+    writeFileSync(join(dir, '_headers'), '/*\n  Content-Security-Policy: default-src \'none\'\n');
+    const pages = [
+      { path: 'index.html', content: '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'"></head></html>' },
+    ];
+    const result = checkCspDeliveryPreflight(pages, { siteRootDir: dir, repoRootDir: dir });
+    if (result.verdict !== 'BLOCKED') failures.push(`ケース21期待verdict=BLOCKED、実際${result.verdict}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
   const adoptionMeta = {
     adoption: {
       requiredMarkers: ['site-chrome.js', 'id="site-header"', 'id="site-footer"'],
@@ -765,7 +921,7 @@ if (process.argv[1] && basename(process.argv[1]) === basename(new URL(import.met
       console.error(`[component-rollout] FAIL\n${failures.map((f) => `  - ${f}`).join('\n')}`);
       process.exit(1);
     }
-    console.log('[component-rollout] OK selftest 17/17 passed');
+    console.log('[component-rollout] OK selftest 21/21 passed');
     process.exit(0);
   }
 }

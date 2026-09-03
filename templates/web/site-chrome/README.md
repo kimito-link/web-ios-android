@@ -119,3 +119,11 @@ Cloudflareは`beacon.min.js`（Web Analytics）を自動注入し、`/cdn-cgi/ru
 **ローカルサーバでは原理的に再現しない**（beaconは本番でしか注入されない）ため、
 CSP変更は本番へ配ってから実ブラウザで確認するまで検証が終わらない。既存サイト全体の
 `_headers`等が同じ許可範囲を持っているなら、meta CSPをそれに揃えるのが安全。
+
+★meta CSPが無い ≠ READY（Delivery Preflight v1.1、2026-09-03）:
+`<meta http-equiv="Content-Security-Policy">`が無くても、HTTPレスポンスヘッダー側に
+CSP（`_headers`=Cloudflare Pages形式、`vercel.json`=Vercel形式の`headers[].headers[]`）が
+別途設定されていることがある。これを見ずにmeta無し=ALLOWと丸めると、Mass Rolloutで
+false READYになる。`rollout-preflight.mjs`はhosting設定を確認し、確認できない場合は
+ALLOWへ丸めずUNKNOWNとする。metaとhosting両方にCSPがある場合は、両方を満たす場合のみ
+READY（`BLOCK > UNKNOWN > ALLOW`の優先順で合成）。
