@@ -44,13 +44,35 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { EXIT, computeExitCode, formatProbeReport, runSelfTest } from './lib/instrument-core.mjs';
 import { judgeDecisionReceipt } from './lib/instrument-proof.mjs';
-import { extractDefinedFunctions, judgeSharedPartsUsed } from '../diagnostics/check-shared-parts-used.mjs';
-
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+// ★check-shared-parts-used.mjs の置き場所は配布先ごとに違う（2026-09-03・実損）。
+//   キット内は templates/scripts/ の隣が templates/diagnostics/ なので '../diagnostics/' で届くが、
+//   surechigai-romi.link は scripts/ の【下】に scripts/diagnostics/ を置いている。
+//   ★静的 import だと解決できない配置で **読み込んだ瞬間に落ちる**（--selftest すら動かない）。
+//   実測: Cannot find module '.../surechigai-romi.link/diagnostics/check-shared-parts-used.mjs'
+//   ⟹ 実在する場所を順に探して動的に読む。どこにも無ければ「その判定だけ諦める」で、
+//     この検査自体は動かす（依存が1本無いだけで全部止めない）。
+const SHARED_PARTS_CANDIDATES = [
+  join(HERE, '..', 'diagnostics', 'check-shared-parts-used.mjs'),
+  join(HERE, 'diagnostics', 'check-shared-parts-used.mjs'),
+  join(HERE, 'check-shared-parts-used.mjs'),
+];
+let extractDefinedFunctions = null;
+let judgeSharedPartsUsed = null;
+for (const p of SHARED_PARTS_CANDIDATES) {
+  if (!existsSync(p)) continue;
+  try {
+    const m = await import(pathToFileURL(p).href);
+    extractDefinedFunctions = m.extractDefinedFunctions;
+    judgeSharedPartsUsed = m.judgeSharedPartsUsed;
+    break;
+  } catch { /* 次の候補へ */ }
+}
 
 // ★findRepoRootはtemplates/scripts/check-instrument-proof.mjs・record-instrument-proof.mjs・
 // check-instrument-ran.mjsと同一実装の意図的な複製（KEEP_SEPARATE、2026-09-02のCANONICAL CHECKで
