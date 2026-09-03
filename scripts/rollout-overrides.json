@@ -76,6 +76,38 @@
       "path": "check-shindan-version/index.html",
       "reason": "独立した共通生成器（全プロジェクト配布・web-ios-android専有ではない）が生成する、site-chrome非依存の独自ヘッダーを持つページ",
       "evidence": "templates/scripts/generate-shindan-version.mjs。2026-09-03実測: displayName/primary/accentパラメータ駆動の独自<header class=\"site-header\">を持ち、site-chrome.jsへの参照なし"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "soushin-suggest.link",
+      "siteRoot": "public",
+      "path": "404.html",
+      "reason": "エラー時専用の独立ページ。通常サイト回遊用の共通chrome対象ページではない",
+      "evidence": "2026-09-03実測: 46行、他の実コンテンツページ(topbar/pagefoot持ち)とは無関係な単発エラー表示のみ"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "soushin-suggest.link",
+      "siteRoot": "public",
+      "path": "shindan/index.html",
+      "reason": "実コンテンツページではなく、/check-shindan-version/へ遷移するだけのredirect-onlyページ",
+      "evidence": "2026-09-03実測: <meta http-equiv=\"refresh\" content=\"0;url=/check-shindan-version/\">とlocation.replace()のみの21行。header/footerを持たず、site-chrome配線もない"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "soushin-suggest.link",
+      "siteRoot": "public",
+      "path": "check-shindan-version/index.html",
+      "reason": "独立した共通生成器（generate-shindan-version.mjs、全プロジェクト配布・soushin-suggest.link専有ではない）が生成する、site-chrome非依存の独自ヘッダーを持つページ。web-ios-android::siteで確認済みと同じ責務だが、project::siteRootごとに個別実証した",
+      "evidence": "templates/scripts/generate-shindan-version.mjs。2026-09-03実測: web-ios-android::siteのcheck-shindan-version/index.htmlと同型の生成物"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "soushin-suggest.link",
+      "siteRoot": "public",
+      "path": "map/index.html",
+      "reason": "自己完結したコード構造可視化の開発ツール画面。ページ固有headerとJS制御のhealth footerを持ち、通常サイト回遊用のsite-chrome header/footerとは責務が異なる。またstrict CSPにより外部site-chrome JS/CSSの導入にはCSP設計変更が必要なため、標準rollout対象から除外する",
+      "evidence": "2026-09-03実測: noindex、Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'。<header>は「コードの地図」のページ固有見出し、<footer id=\"health\" hidden>はJSが状態表示に利用する要素"
     }
   ]
 }

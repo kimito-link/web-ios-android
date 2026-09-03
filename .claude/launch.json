@@ -12,6 +12,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["http-server", "../best-trust.biz/public", "-p", "8768", "-c-1"],
       "port": 8768
+    },
+    {
+      "name": "soushin-suggest-link",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "../soushin-suggest.link/public", "-p", "8769", "-c-1"],
+      "port": 8769
     }
   ]
 }

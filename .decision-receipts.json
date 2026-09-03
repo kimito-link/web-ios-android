@@ -50,6 +50,16 @@
         "site/scripts/site-chrome.config.js",
         "site/assets/css/common.css"
       ]
+    },
+    {
+      "at": "2026-09-03T05:37:28.416Z",
+      "responsibility": "Delivery Preflight（apply前のCSP互換性検査）の新設。Applicability/Adoptionとは別軸として、site-chrome配布先の実行環境制約(CSP)を書き込み前に機械確認する",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "scripts/rollout-preflight.mjs",
+      "scopePaths": [
+        "scripts/rollout-preflight.mjs",
+        "scripts/lib/component-rollout.mjs"
+      ]
     }
   ]
 }

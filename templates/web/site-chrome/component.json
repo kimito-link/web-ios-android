@@ -5,7 +5,8 @@
   "scope": "site",
   "canonicalSource": "templates/web/site-chrome/core/",
   "appliesTo": {
-    "requires": ["staticHtml.multiPage", "staticHtml.buildless"]
+    "requires": ["staticHtml.multiPage", "staticHtml.buildless"],
+    "excludes": ["browserExtension.uiContext"]
   },
   "delivery": {
     "mode": "generated-copy",

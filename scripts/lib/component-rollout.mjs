@@ -38,16 +38,131 @@ export function canonicalDigest(text) {
 }
 
 /**
+ * HTML内の <meta http-equiv="Content-Security-Policy" content="..."> から、
+ * same-origin外部リソース（script-src-elem/script-src、style-src-elem/style-src）が
+ * 許可されているかを判定する。
+ *
+ * ★Delivery Preflight専用（Applicabilityとは別軸）。2026-09-03、soushin-suggest.link
+ *   実apply中に4ページ(features/help/help-sites/thanks)がstrict CSPで
+ *   site-chromeの外部JS/CSSを全ブロックし、旧UI削除後に新UIも表示されない壊れた状態を
+ *   実際に発生させた。この教訓から、apply前に確認するGateとして追加した。
+ * ★既存verify-security-score.mjsはHTTPレスポンスヘッダーのCSP有無のみを見ており、
+ *   <meta>埋め込みCSPのディレクティブ解析は行っていない（確認済み、再利用不可）。
+ *
+ * @param {string} htmlContent
+ * @returns {{present: boolean, externalScript: 'ALLOW'|'BLOCK'|'UNKNOWN', externalStyle: 'ALLOW'|'BLOCK'|'UNKNOWN', raw: string|null}}
+ */
+export function analyzeCspMetaTag(htmlContent) {
+  // ★content属性値はダブルクォートで囲まれる想定だが、CSP値自体に'none'等の
+  //   シングルクォートを含むため、[^"']+ではシングルクォートで早期終端する誤りを
+  //   実データ(soushin-suggest.link)で踏んだ。クォート文字を後方参照で揃えて対応する。
+  const metaMatch = htmlContent.match(
+    /<meta\s+http-equiv=(["'])Content-Security-Policy\1\s+content=(["'])([\s\S]+?)\2\s*\/?>/i
+  );
+  if (!metaMatch) {
+    return { present: false, externalScript: 'ALLOW', externalStyle: 'ALLOW', raw: null };
+  }
+
+  const raw = metaMatch[3];
+  const directives = {};
+  for (const part of raw.split(';')) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const [name, ...values] = trimmed.split(/\s+/);
+    directives[name.toLowerCase()] = values;
+  }
+
+  // same-origin外部リソースを許すか判定する。'self' または 'unsafe-inline' があれば
+  // <script src="/xxx.js">/<link rel="stylesheet" href="/xxx.css">は通る
+  // （'unsafe-inline'はインラインscript/style用の許可だが、'self'が無くdefault-srcも
+  //   'none'の場合、外部srcは通らない点に注意して個別に判定する）。
+  function resolvesToAllow(directiveNames) {
+    for (const name of directiveNames) {
+      if (directives[name]) {
+        const values = directives[name];
+        if (values.includes("'none'")) return 'BLOCK';
+        if (values.includes("'self'") || values.includes('*')) return 'ALLOW';
+        // unsafe-inlineだけではsrc属性の外部リソース読み込みは許可されない。
+        return 'BLOCK';
+      }
+    }
+    return null; // このディレクティブ階層では判定できない
+  }
+
+  // script-src-elem → script-src → default-src の優先順でfallbackする（CSP仕様通り）。
+  let externalScript = resolvesToAllow(['script-src-elem', 'script-src', 'default-src']);
+  let externalStyle = resolvesToAllow(['style-src-elem', 'style-src', 'default-src']);
+
+  externalScript = externalScript ?? 'UNKNOWN';
+  externalStyle = externalStyle ?? 'UNKNOWN';
+
+  return { present: true, externalScript, externalStyle, raw };
+}
+
+/**
+ * 1 siteRootについて、expectedなHTMLページ全部のCSPが、site-chromeの外部JS/CSSを
+ * 配布可能かをread-onlyで判定する（Delivery Preflight）。
+ * UNKNOWNをPASSへ丸めない。1ページでもBLOCKがあれば全体をBLOCKとして返す。
+ *
+ * @param {Array<{path: string, content: string}>} pages 対象ページ（絶対パス+中身）
+ * @returns {{verdict: 'READY'|'BLOCKED'|'UNKNOWN', perPage: Array<object>}}
+ */
+export function checkCspDeliveryPreflight(pages) {
+  const perPage = pages.map((p) => {
+    const analysis = analyzeCspMetaTag(p.content);
+    return { path: p.path, ...analysis };
+  });
+
+  const hasBlock = perPage.some((p) => p.externalScript === 'BLOCK' || p.externalStyle === 'BLOCK');
+  const hasUnknown = perPage.some((p) => p.externalScript === 'UNKNOWN' || p.externalStyle === 'UNKNOWN');
+
+  let verdict;
+  if (hasBlock) verdict = 'BLOCKED';
+  else if (hasUnknown) verdict = 'UNKNOWN';
+  else verdict = 'READY';
+
+  return { verdict, perPage };
+}
+
+/**
+ * manifest.jsonのUI参照キー（値がそのままファイル名/相対パス、またはpage/default_popupの
+ * ネストされたオブジェクト）を、実際にsiteRoot内に存在するHTMLファイル名の集合に対して
+ * 参照しているか調べる。
+ * @param {object} manifest
+ * @param {Set<string>} htmlBasenames
+ * @returns {boolean}
+ */
+function manifestReferencesLocalHtml(manifest, htmlBasenames) {
+  const candidates = [];
+  if (manifest.action?.default_popup) candidates.push(manifest.action.default_popup);
+  if (manifest.browser_action?.default_popup) candidates.push(manifest.browser_action.default_popup);
+  if (typeof manifest.options_page === 'string') candidates.push(manifest.options_page);
+  if (typeof manifest.options_ui?.page === 'string') candidates.push(manifest.options_ui.page);
+  if (typeof manifest.devtools_page === 'string') candidates.push(manifest.devtools_page);
+  if (manifest.chrome_url_overrides && typeof manifest.chrome_url_overrides === 'object') {
+    candidates.push(...Object.values(manifest.chrome_url_overrides));
+  }
+
+  return candidates.some((c) => {
+    if (typeof c !== 'string') return false;
+    const basename = c.split('/').pop();
+    return htmlBasenames.has(basename);
+  });
+}
+
+/**
  * サイトの事実（FACT）を検出する。detectProfile()と対になる、Web向けの判定材料。
- * ドット区切りのフラットキーで返す（component.json の appliesTo.requires と直接対応させるため）。
+ * ドット区切りのフラットキーで返す（component.json の appliesTo.requires/excludes と
+ * 直接対応させるため）。
  * @param {string} siteRootDir
- * @returns {{'staticHtml.multiPage': boolean|null, 'staticHtml.buildless': boolean|null, readErrors: string[]}}
+ * @returns {{'staticHtml.multiPage': boolean|null, 'staticHtml.buildless': boolean|null, 'browserExtension.uiContext': boolean|null, readErrors: string[]}}
  */
 export function detectSiteFacts(siteRootDir) {
   const { files, errors } = walkFiles(siteRootDir);
 
   const htmlFiles = files.filter((f) => extname(f) === '.html');
   const htmlCount = htmlFiles.length;
+  const htmlBasenames = new Set(htmlFiles.map((f) => basename(f)));
 
   // 読み取り不能な領域があった場合、multiPageの判定材料が欠けている可能性があるためnull(unknown)にする。
   const staticHtmlMultiPage = errors.length > 0 ? null : htmlCount >= 2;
@@ -69,23 +184,52 @@ export function detectSiteFacts(siteRootDir) {
     buildless = true;
   }
 
+  // ★browserExtension.uiContext: ファイル名（popup.html等）ではなく、Chrome/Firefox拡張の
+  //   manifest.jsonが実際にsiteRoot内のHTMLをUI画面として参照しているかで判定する
+  //   （2026-09-03、GPT相談: manifestが同じrepoにあるだけで除外するのは広すぎる。
+  //   「manifestがそのtarget内HTMLを拡張UIとして参照している」まで確認する）。
+  let browserExtensionUiContext = false;
+  const manifestPath = join(siteRootDir, 'manifest.json');
+  if (existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      // manifest_versionの存在で「拡張のmanifest」であることを確認する
+      // （webmanifest等、無関係なmanifest.jsonとの混同を避ける）。
+      if (typeof manifest.manifest_version === 'number') {
+        browserExtensionUiContext = manifestReferencesLocalHtml(manifest, htmlBasenames);
+      }
+    } catch {
+      browserExtensionUiContext = false; // 壊れたmanifest.jsonは拡張UIとして扱わない
+    }
+  }
+
   return {
     'staticHtml.multiPage': staticHtmlMultiPage,
     'staticHtml.buildless': buildless,
+    'browserExtension.uiContext': browserExtensionUiContext,
     htmlCount,
     readErrors: errors,
   };
 }
 
 /**
- * component.json（appliesTo.requires: FACTキーの配列）を読み、facts に対して3値判定する。
- * 判定ロジックはこの関数だけに存在する（component.json側にもコード側にも条件を複製しない）。
- * @param {{appliesTo:{requires:string[]}}} componentMeta
+ * component.json（appliesTo.requires/excludes: FACTキーの配列）を読み、facts に対して
+ * 3値判定する。判定ロジックはこの関数だけに存在する（component.json側にもコード側にも
+ * 条件を複製しない）。
+ *
+ * requires: 全て true であることを要求するFACT（1つでもfalseならNOT_APPLICABLE）
+ * excludes: 1つでも true があってはならないFACT（trueが1つでもあればNOT_APPLICABLE）。
+ *   汎用的な除外条件のための機構（2026-09-03、GPT相談: Chrome拡張UI等、requires側の
+ *   条件だけでは表現できない「これに該当したら対象外」を、site-chrome専用のコードに
+ *   ハードコードせず一般化する）。3値（APPLIES/NOT_APPLICABLE/UNKNOWN）は増やさない。
+ *
+ * @param {{appliesTo:{requires?:string[], excludes?:string[]}}} componentMeta
  * @param {Record<string, boolean|null>} facts
  * @returns {'APPLIES'|'NOT_APPLICABLE'|'UNKNOWN'}
  */
 export function evaluateApplicability(componentMeta, facts) {
   const requires = componentMeta?.appliesTo?.requires || [];
+  const excludes = componentMeta?.appliesTo?.excludes || [];
   let sawUnknown = false;
 
   for (const key of requires) {
@@ -96,6 +240,17 @@ export function evaluateApplicability(componentMeta, facts) {
     }
     if (value === false) {
       return 'NOT_APPLICABLE'; // 明確にfalseが1つでもあれば、unknownの有無に関わらず対象外
+    }
+  }
+
+  for (const key of excludes) {
+    const value = facts[key];
+    if (value === null || value === undefined) {
+      sawUnknown = true;
+      continue;
+    }
+    if (value === true) {
+      return 'NOT_APPLICABLE'; // 除外条件に明確に該当すれば対象外
     }
   }
 
@@ -334,7 +489,10 @@ export function detectAdoption(siteRootDir, componentMeta, pageExclusions = []) 
 export function runSelfTest() {
   const failures = [];
   const siteChromeMeta = {
-    appliesTo: { requires: ['staticHtml.multiPage', 'staticHtml.buildless'] },
+    appliesTo: {
+      requires: ['staticHtml.multiPage', 'staticHtml.buildless'],
+      excludes: ['browserExtension.uiContext'],
+    },
   };
 
   // ケース1: repo直下の静的HTML複数ページ → APPLIES
@@ -397,6 +555,91 @@ export function runSelfTest() {
     const facts = { 'staticHtml.multiPage': true }; // staticHtml.buildlessが欠落
     const state = evaluateApplicability(siteChromeMeta, facts);
     if (state !== 'UNKNOWN') failures.push(`ケース5期待UNKNOWN、実際${state}`);
+  }
+
+  // ケース11: manifest.jsonのaction.default_popupが実際にpopup.htmlを参照 → NOT_APPLICABLE
+  //   （2026-09-03、GPT相談: ファイル名ヒューリスティックではなくmanifest参照で判定する）
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'popup.html'), '<html></html>');
+    writeFileSync(join(dir, 'options.html'), '<html></html>');
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify({
+      manifest_version: 3,
+      action: { default_popup: 'popup.html' },
+      options_page: 'options.html',
+    }));
+    const facts = detectSiteFacts(dir);
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (facts['browserExtension.uiContext'] !== true) failures.push(`ケース11期待uiContext=true、実際${facts['browserExtension.uiContext']}`);
+    if (state !== 'NOT_APPLICABLE') failures.push(`ケース11期待NOT_APPLICABLE、実際${state}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース12: manifest.jsonは存在するが、対象HTMLをどのUIキーからも参照していない
+  //   （例: 拡張repo内の別の公開マーケティングサイト）→ APPLIES（除外しない）
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'index.html'), '<html></html>');
+    writeFileSync(join(dir, 'about.html'), '<html></html>');
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify({
+      manifest_version: 3,
+      action: { default_popup: 'unrelated-popup.html' }, // 対象siteRoot内には存在しないファイル名
+    }));
+    const facts = detectSiteFacts(dir);
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (facts['browserExtension.uiContext'] !== false) failures.push(`ケース12期待uiContext=false、実際${facts['browserExtension.uiContext']}`);
+    if (state !== 'APPLIES') failures.push(`ケース12期待APPLIES、実際${state}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース13: CSPなし → present=false, ALLOW/ALLOW
+  //   （2026-09-03、GPT相談: Delivery Preflight。soushin-suggest.link実applyで
+  //   4ページがCSPで全ブロックされ、旧UI削除後に新UIも表示されない事故を実際に起こした）
+  {
+    const result = analyzeCspMetaTag('<html><head><title>x</title></head><body></body></html>');
+    if (result.present !== false) failures.push(`ケース13期待present=false、実際${result.present}`);
+    if (result.externalScript !== 'ALLOW') failures.push(`ケース13期待externalScript=ALLOW、実際${result.externalScript}`);
+    if (result.externalStyle !== 'ALLOW') failures.push(`ケース13期待externalStyle=ALLOW、実際${result.externalStyle}`);
+  }
+
+  // ケース14: default-src 'none'のみ（script-src/style-src未定義）→ 両方BLOCK
+  //   （実データ: soushin-suggest.link/public/features/index.htmlと同型。
+  //   content属性値にシングルクォート'none'を含むため、クォート文字の後方参照一致が必須
+  //   だったことを実データで発見・修正した）
+  {
+    const html = '<html><head><meta http-equiv="Content-Security-Policy"\n content="default-src \'none\'; style-src \'unsafe-inline\'; img-src \'self\' data:; base-uri \'none\'"></head><body></body></html>';
+    const result = analyzeCspMetaTag(html);
+    if (result.present !== true) failures.push(`ケース14期待present=true、実際${result.present}`);
+    if (result.externalScript !== 'BLOCK') failures.push(`ケース14期待externalScript=BLOCK、実際${result.externalScript}`);
+    if (result.externalStyle !== 'BLOCK') failures.push(`ケース14期待externalStyle=BLOCK、実際${result.externalStyle}`);
+  }
+
+  // ケース15: script-src 'self'; style-src 'self' 'unsafe-inline' → 両方ALLOW
+  //   （GPT提案のCSP変更後の想定形）
+  {
+    const html = '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data:; base-uri \'none\'"></head><body></body></html>';
+    const result = analyzeCspMetaTag(html);
+    if (result.externalScript !== 'ALLOW') failures.push(`ケース15期待externalScript=ALLOW、実際${result.externalScript}`);
+    if (result.externalStyle !== 'ALLOW') failures.push(`ケース15期待externalStyle=ALLOW、実際${result.externalStyle}`);
+  }
+
+  // ケース16: checkCspDeliveryPreflight — 1ページでもBLOCKがあれば全体BLOCKED、
+  //   UNKNOWNをPASSへ丸めない
+  {
+    const pages = [
+      { path: 'a.html', content: '<html></html>' }, // CSPなし→ALLOW
+      { path: 'b.html', content: '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'"></head></html>' }, // BLOCK
+    ];
+    const result = checkCspDeliveryPreflight(pages);
+    if (result.verdict !== 'BLOCKED') failures.push(`ケース16期待verdict=BLOCKED、実際${result.verdict}`);
+  }
+
+  // ケース17: style-src-elem 'self'; style-src 'unsafe-inline' → style-src-elemが優先され
+  //   ALLOW（2026-09-03、GPT指摘: style-src単体だけを見ると誤判定するCSP Level 3のケース）
+  {
+    const html = '<html><head><meta http-equiv="Content-Security-Policy" content="style-src-elem \'self\'; style-src \'unsafe-inline\'"></head></html>';
+    const result = analyzeCspMetaTag(html);
+    if (result.externalStyle !== 'ALLOW') failures.push(`ケース17期待externalStyle=ALLOW、実際${result.externalStyle}`);
   }
 
   const adoptionMeta = {
@@ -522,7 +765,7 @@ if (process.argv[1] && basename(process.argv[1]) === basename(new URL(import.met
       console.error(`[component-rollout] FAIL\n${failures.map((f) => `  - ${f}`).join('\n')}`);
       process.exit(1);
     }
-    console.log('[component-rollout] OK selftest 10/10 passed');
+    console.log('[component-rollout] OK selftest 17/17 passed');
     process.exit(0);
   }
 }

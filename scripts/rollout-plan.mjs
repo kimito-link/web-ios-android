@@ -165,6 +165,7 @@ function buildReason(state, facts, siteRoot) {
   if (state === 'NOT_APPLICABLE') {
     if (facts['staticHtml.multiPage'] === false) reasons.push(`HTML ${facts.htmlCount}枚（複数ページ条件を満たさない）`);
     if (facts['staticHtml.buildless'] === false) reasons.push('フレームワーク検出（ビルドレス条件を満たさない）');
+    if (facts['browserExtension.uiContext'] === true) reasons.push('manifest.jsonがこのHTMLをブラウザ拡張UI(popup/options/devtools等)として参照している（除外条件browserExtension.uiContext）');
   }
   if (state === 'APPLIES' && NEEDS_REVIEW_PATTERNS.some((re) => re.test(siteRoot))) {
     reasons.push(`要確認: パス名"${siteRoot}"はテスト/ビルド成果物/一時ファイルの可能性（自動除外はしていない）`);
