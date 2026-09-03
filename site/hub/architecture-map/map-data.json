@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-02T11:19:17.409Z",
-  "generationMs": 18978,
+  "generatedAt": "2026-09-03T08:08:54.943Z",
+  "generationMs": 16992,
   "note": "解析対象はgithub/配下の全リポジトリだが、ここにはGitHub上でPUBLICと確認できたリポジトリのうち、HEADコミット時点でGit管理下にあるファイル（git ls-tree HEAD）のみに絞って含む。未コミットの変更（working treeの差分）は一切含まれない",
   "repos": [
     {
       "name": "Exosome",
       "githubRepoName": "yukkuri-exosome.link",
-      "head": "858a0ae0e21c8a2d17bc9b80d1d8e59e1ab61360",
+      "head": "bea292f494869c8d489413b6e4e459f14ddf818f",
       "dirty": true,
-      "fileCount": 267,
+      "fileCount": 274,
       "gateCount": 0,
       "gateCandidateCount": 0,
       "directories": [
@@ -163,6 +163,27 @@
         {
           "path": "app-review-replies",
           "fileCount": 8,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack/canned",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack/docs",
+          "fileCount": 1,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -1003,6 +1024,76 @@
         {
           "path": "HANDOFF.md",
           "name": "HANDOFF.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/escalation.txt",
+          "name": "escalation.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/greeting.txt",
+          "name": "greeting.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/usage-overview.txt",
+          "name": "usage-overview.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/exosome-basics.md",
+          "name": "exosome-basics.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/guardrails.md",
+          "name": "guardrails.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/persona.md",
+          "name": "persona.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/README.md",
+          "name": "README.md",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -3269,17 +3360,1790 @@
       ]
     },
     {
+      "name": "henshin-hisho",
+      "githubRepoName": "henshin-hisho",
+      "head": "8416fdeea22d16cd0c210da7ddaacc9396609d7f",
+      "dirty": true,
+      "fileCount": 120,
+      "gateCount": 2,
+      "gateCandidateCount": 0,
+      "directories": [
+        {
+          "path": "(root)",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend",
+          "fileCount": 5,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/docs",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/migrations",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/src",
+          "fileCount": 16,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/src/connectors",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/src/projects",
+          "fileCount": 6,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "backend/test",
+          "fileCount": 13,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "docs",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app",
+          "fileCount": 5,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/docs",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/release-notes",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/review-notes",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/scripts",
+          "fileCount": 15,
+          "gateCount": 2,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/scripts/lib",
+          "fileCount": 8,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/store-assets",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/store-assets/appstore",
+          "fileCount": 5,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/store-assets/cover-assets",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/store-assets/covers",
+          "fileCount": 6,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "ios-app/www",
+          "fileCount": 4,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack/canned",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-pack/docs",
+          "fileCount": 5,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "web-app",
+          "fileCount": 6,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "web-app/billing",
+          "fileCount": 1,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        }
+      ],
+      "nodes": [
+        {
+          "path": ".gitignore",
+          "name": ".gitignore",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/.dev.vars.example",
+          "name": ".dev.vars.example",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/CORS-FIX-HANDOFF.md",
+          "name": "CORS-FIX-HANDOFF.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": true
+        },
+        {
+          "path": "backend/docs/PROJECT-AI-DESIGN.md",
+          "name": "PROJECT-AI-DESIGN.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/docs/PROJECT-AI-IMPLEMENTATION-HANDOFF.md",
+          "name": "PROJECT-AI-IMPLEMENTATION-HANDOFF.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/docs/PROJECT-AI-SETUP.md",
+          "name": "PROJECT-AI-SETUP.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/migrations/0001_project_ai.sql",
+          "name": "0001_project_ai.sql",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/package.json",
+          "name": "package.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/account-policy.js",
+          "name": "account-policy.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/auth.js",
+          "name": "auth.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/connectors/chatwork.js",
+          "name": "chatwork.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/connectors/gmail.js",
+          "name": "gmail.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/connectors/line.js",
+          "name": "line.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/crypto.js",
+          "name": "crypto.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/digest.js",
+          "name": "digest.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/draft-gen.js",
+          "name": "draft-gen.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/http.js",
+          "name": "http.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/inbox.js",
+          "name": "inbox.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/index.js",
+          "name": "index.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/kv.js",
+          "name": "kv.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/llm.js",
+          "name": "llm.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/mailer.js",
+          "name": "mailer.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/assist.js",
+          "name": "assist.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/db.js",
+          "name": "db.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/leak-guard.js",
+          "name": "leak-guard.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/masker.js",
+          "name": "masker.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/routes.js",
+          "name": "routes.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/projects/visibility.js",
+          "name": "visibility.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/push.js",
+          "name": "push.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/risk-gate.js",
+          "name": "risk-gate.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/schema.js",
+          "name": "schema.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/triage.js",
+          "name": "triage.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/src/weekly-report.js",
+          "name": "weekly-report.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/account-policy.test.js",
+          "name": "account-policy.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/auth.test.js",
+          "name": "auth.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/connectors-chatwork.test.js",
+          "name": "connectors-chatwork.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/cors.test.js",
+          "name": "cors.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/digest.test.js",
+          "name": "digest.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/inbox.test.js",
+          "name": "inbox.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/line-license.test.js",
+          "name": "line-license.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/projects-assist.test.js",
+          "name": "projects-assist.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/projects-leak-guard.test.js",
+          "name": "projects-leak-guard.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/projects-masker.test.js",
+          "name": "projects-masker.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/projects-routes.test.js",
+          "name": "projects-routes.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/projects-visibility.test.js",
+          "name": "projects-visibility.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/test/weekly-report.test.js",
+          "name": "weekly-report.test.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "backend/wrangler.toml",
+          "name": "wrangler.toml",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "CLAUDE.md",
+          "name": "CLAUDE.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "docs/ACCOUNT-POLICY-ENGINE-DESIGN.md",
+          "name": "ACCOUNT-POLICY-ENGINE-DESIGN.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "docs/ACCOUNT-POLICY-ENGINE-IMPLEMENTATION-HANDOFF.md",
+          "name": "ACCOUNT-POLICY-ENGINE-IMPLEMENTATION-HANDOFF.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/.gitignore",
+          "name": ".gitignore",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/app.config.json",
+          "name": "app.config.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/capacitor.config.json",
+          "name": "capacitor.config.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/docs/APPLE-KB-MITIGATION-MATRIX.md",
+          "name": "APPLE-KB-MITIGATION-MATRIX.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/docs/APPSTORE-SUBMISSION-RUNBOOK.md",
+          "name": "APPSTORE-SUBMISSION-RUNBOOK.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/docs/REJECTION-REPLY-TEMPLATES.md",
+          "name": "REJECTION-REPLY-TEMPLATES.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/package.json",
+          "name": "package.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/release-notes/CURRENT-ja.txt",
+          "name": "CURRENT-ja.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/review-notes/CURRENT-en.txt",
+          "name": "CURRENT-en.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/appstore-submit.mjs",
+          "name": "appstore-submit.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/asc-create-app.mjs",
+          "name": "asc-create-app.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/asc-create-profile.mjs",
+          "name": "asc-create-profile.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/asc-review-check.mjs",
+          "name": "asc-review-check.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/asc-set-content-rights.mjs",
+          "name": "asc-set-content-rights.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/capture-appstore-screenshots.mjs",
+          "name": "capture-appstore-screenshots.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/frame-appstore-screenshots.mjs",
+          "name": "frame-appstore-screenshots.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/generate-appstore-covers.mjs",
+          "name": "generate-appstore-covers.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/generate-capacitor-splash.mjs",
+          "name": "generate-capacitor-splash.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/generate-release-notes.mjs",
+          "name": "generate-release-notes.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/ios-sim-logscan.mjs",
+          "name": "ios-sim-logscan.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/app-config.mjs",
+          "name": "app-config.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-api.mjs",
+          "name": "asc-api.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-availability.mjs",
+          "name": "asc-availability.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-pricing.mjs",
+          "name": "asc-pricing.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-readonly-checks.mjs",
+          "name": "asc-readonly-checks.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-rejection-classify.mjs",
+          "name": "asc-rejection-classify.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/asc-screenshot-upload.mjs",
+          "name": "asc-screenshot-upload.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lib/play-api.mjs",
+          "name": "play-api.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/lint-pre-submission.mjs",
+          "name": "lint-pre-submission.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/patch-ios-launch-dark.mjs",
+          "name": "patch-ios-launch-dark.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/verify-ios-splash-not-default.mjs",
+          "name": "verify-ios-splash-not-default.mjs",
+          "isGate": true,
+          "gateCandidate": false,
+          "gateClassification": "fact",
+          "platformHint": "ios",
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/scripts/verify-reviewer-account.mjs",
+          "name": "verify-reviewer-account.mjs",
+          "isGate": true,
+          "gateCandidate": false,
+          "gateClassification": "fact",
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/appstore/app-icon-1024.png",
+          "name": "app-icon-1024.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/appstore/description-ja.txt",
+          "name": "description-ja.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/appstore/keywords-ja.txt",
+          "name": "keywords-ja.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/appstore/promotional-text-ja.txt",
+          "name": "promotional-text-ja.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/appstore/subtitle-ja.txt",
+          "name": "subtitle-ja.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/cover-assets/link.png",
+          "name": "link.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-65-0a.png",
+          "name": "iphone-65-0a.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-65-0b.png",
+          "name": "iphone-65-0b.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-65-0c.png",
+          "name": "iphone-65-0c.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-67-0a.png",
+          "name": "iphone-67-0a.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-67-0b.png",
+          "name": "iphone-67-0b.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/covers/iphone-67-0c.png",
+          "name": "iphone-67-0c.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/store-assets/screenshot-plan.json",
+          "name": "screenshot-plan.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/www/app.js",
+          "name": "app.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/www/index.html",
+          "name": "index.html",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/www/manifest.webmanifest",
+          "name": "manifest.webmanifest",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "ios-app/www/styles.css",
+          "name": "styles.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/escalation.txt",
+          "name": "escalation.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/greeting.txt",
+          "name": "greeting.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/canned/usage-overview.txt",
+          "name": "usage-overview.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/platforms-status.md",
+          "name": "platforms-status.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/policy-engine.md",
+          "name": "policy-engine.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/pricing-trial.md",
+          "name": "pricing-trial.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/product-overview.md",
+          "name": "product-overview.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/docs/safety-and-limits.md",
+          "name": "safety-and-limits.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/guardrails.md",
+          "name": "guardrails.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/persona.md",
+          "name": "persona.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-pack/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/app.js",
+          "name": "app.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/billing/billing.js",
+          "name": "billing.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/index.html",
+          "name": "index.html",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/manifest.webmanifest",
+          "name": "manifest.webmanifest",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/manual-checklist.md",
+          "name": "manual-checklist.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/styles.css",
+          "name": "styles.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "web-app/sw.js",
+          "name": "sw.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "backend/src/account-policy.js",
+          "to": "backend/src/crypto.js"
+        },
+        {
+          "from": "backend/src/account-policy.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/account-policy.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/account-policy.js",
+          "to": "backend/src/draft-gen.js"
+        },
+        {
+          "from": "backend/src/auth.js",
+          "to": "backend/src/crypto.js"
+        },
+        {
+          "from": "backend/src/auth.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/auth.js",
+          "to": "backend/src/mailer.js"
+        },
+        {
+          "from": "backend/src/auth.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/connectors/chatwork.js",
+          "to": "backend/src/projects/visibility.js"
+        },
+        {
+          "from": "backend/src/connectors/chatwork.js",
+          "to": "backend/src/projects/masker.js"
+        },
+        {
+          "from": "backend/src/connectors/chatwork.js",
+          "to": "backend/src/projects/db.js"
+        },
+        {
+          "from": "backend/src/connectors/line.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/connectors/line.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/digest.js",
+          "to": "backend/src/crypto.js"
+        },
+        {
+          "from": "backend/src/digest.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/digest.js",
+          "to": "backend/src/mailer.js"
+        },
+        {
+          "from": "backend/src/draft-gen.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/auth.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/http.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/llm.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/draft-gen.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/account-policy.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/connectors/line.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/risk-gate.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/inbox.js",
+          "to": "backend/src/triage.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/auth.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/account-policy.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/connectors/gmail.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/connectors/line.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/digest.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/inbox.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/push.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/projects/routes.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/connectors/chatwork.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/projects/db.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/weekly-report.js"
+        },
+        {
+          "from": "backend/src/index.js",
+          "to": "backend/src/http.js"
+        },
+        {
+          "from": "backend/src/kv.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/projects/assist.js",
+          "to": "backend/src/llm.js"
+        },
+        {
+          "from": "backend/src/projects/assist.js",
+          "to": "backend/src/projects/masker.js"
+        },
+        {
+          "from": "backend/src/projects/assist.js",
+          "to": "backend/src/projects/leak-guard.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/auth.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/http.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/connectors/chatwork.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/projects/assist.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/projects/db.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/projects/visibility.js"
+        },
+        {
+          "from": "backend/src/projects/routes.js",
+          "to": "backend/src/projects/masker.js"
+        },
+        {
+          "from": "backend/src/push.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/triage.js",
+          "to": "backend/src/schema.js"
+        },
+        {
+          "from": "backend/src/weekly-report.js",
+          "to": "backend/src/crypto.js"
+        },
+        {
+          "from": "backend/src/weekly-report.js",
+          "to": "backend/src/digest.js"
+        },
+        {
+          "from": "backend/src/weekly-report.js",
+          "to": "backend/src/kv.js"
+        },
+        {
+          "from": "backend/src/weekly-report.js",
+          "to": "backend/src/mailer.js"
+        },
+        {
+          "from": "backend/test/account-policy.test.js",
+          "to": "backend/src/account-policy.js"
+        },
+        {
+          "from": "backend/test/account-policy.test.js",
+          "to": "backend/src/draft-gen.js"
+        },
+        {
+          "from": "backend/test/auth.test.js",
+          "to": "backend/src/index.js"
+        },
+        {
+          "from": "backend/test/auth.test.js",
+          "to": "backend/src/auth.js"
+        },
+        {
+          "from": "backend/test/connectors-chatwork.test.js",
+          "to": "backend/src/connectors/chatwork.js"
+        },
+        {
+          "from": "backend/test/cors.test.js",
+          "to": "backend/src/index.js"
+        },
+        {
+          "from": "backend/test/digest.test.js",
+          "to": "backend/src/index.js"
+        },
+        {
+          "from": "backend/test/digest.test.js",
+          "to": "backend/src/digest.js"
+        },
+        {
+          "from": "backend/test/digest.test.js",
+          "to": "backend/src/push.js"
+        },
+        {
+          "from": "backend/test/inbox.test.js",
+          "to": "backend/src/index.js"
+        },
+        {
+          "from": "backend/test/inbox.test.js",
+          "to": "backend/src/triage.js"
+        },
+        {
+          "from": "backend/test/line-license.test.js",
+          "to": "backend/src/index.js"
+        },
+        {
+          "from": "backend/test/projects-assist.test.js",
+          "to": "backend/src/projects/assist.js"
+        },
+        {
+          "from": "backend/test/projects-leak-guard.test.js",
+          "to": "backend/src/projects/leak-guard.js"
+        },
+        {
+          "from": "backend/test/projects-masker.test.js",
+          "to": "backend/src/projects/masker.js"
+        },
+        {
+          "from": "backend/test/projects-routes.test.js",
+          "to": "backend/src/projects/routes.js"
+        },
+        {
+          "from": "backend/test/projects-visibility.test.js",
+          "to": "backend/src/projects/visibility.js"
+        },
+        {
+          "from": "backend/test/weekly-report.test.js",
+          "to": "backend/src/weekly-report.js"
+        },
+        {
+          "from": "ios-app/scripts/appstore-submit.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/appstore-submit.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/appstore-submit.mjs",
+          "to": "ios-app/scripts/lib/asc-screenshot-upload.mjs"
+        },
+        {
+          "from": "ios-app/scripts/appstore-submit.mjs",
+          "to": "ios-app/scripts/lib/asc-pricing.mjs"
+        },
+        {
+          "from": "ios-app/scripts/appstore-submit.mjs",
+          "to": "ios-app/scripts/lib/asc-availability.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-create-app.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-create-app.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-create-profile.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-create-profile.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-review-check.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-review-check.mjs",
+          "to": "ios-app/scripts/lib/asc-rejection-classify.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-review-check.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-set-content-rights.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/asc-set-content-rights.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/capture-appstore-screenshots.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/frame-appstore-screenshots.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/generate-capacitor-splash.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "ios-app/scripts/lib/asc-readonly-checks.mjs",
+          "to": "ios-app/scripts/lib/asc-api.mjs"
+        },
+        {
+          "from": "ios-app/scripts/verify-reviewer-account.mjs",
+          "to": "ios-app/scripts/lib/app-config.mjs"
+        }
+      ]
+    },
+    {
       "name": "line-bot",
       "githubRepoName": "linebot",
-      "head": "bce1423a50cdc937d2e79a789ca91e0a0af9567a",
+      "head": "704fd2d3f34fa9d8050121bfb139ce3f751e8966",
       "dirty": false,
-      "fileCount": 966,
+      "fileCount": 987,
       "gateCount": 3,
       "gateCandidateCount": 0,
       "directories": [
         {
           "path": "_docs",
           "fileCount": 20,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "_docs/demo-talent-liff",
+          "fileCount": 8,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -3370,7 +5234,7 @@
         },
         {
           "path": "apps/lp",
-          "fileCount": 10,
+          "fileCount": 14,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -3440,7 +5304,7 @@
         },
         {
           "path": "apps/lp/talent/assets",
-          "fileCount": 13,
+          "fileCount": 16,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -3979,7 +5843,7 @@
         },
         {
           "path": "apps/worker/src/services",
-          "fileCount": 128,
+          "fileCount": 129,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4035,21 +5899,7 @@
         },
         {
           "path": "knowledge-packs/ai-shain",
-          "fileCount": 2,
-          "gateCount": 0,
-          "gateCandidateCount": 0,
-          "pairsCount": 0
-        },
-        {
-          "path": "knowledge-packs/ai-shain/canned",
-          "fileCount": 3,
-          "gateCount": 0,
-          "gateCandidateCount": 0,
-          "pairsCount": 0
-        },
-        {
-          "path": "knowledge-packs/ai-shain/docs",
-          "fileCount": 3,
+          "fileCount": 1,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4077,7 +5927,7 @@
         },
         {
           "path": "knowledge-packs/henshin-hisho",
-          "fileCount": 2,
+          "fileCount": 3,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4098,7 +5948,7 @@
         },
         {
           "path": "knowledge-packs/soushin-suggest",
-          "fileCount": 2,
+          "fileCount": 3,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4118,8 +5968,29 @@
           "pairsCount": 0
         },
         {
-          "path": "knowledge-packs/web-health-check",
+          "path": "knowledge-packs/talent-oshikatsu",
           "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/canned",
+          "fileCount": 3,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/docs",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "knowledge-packs/web-health-check",
+          "fileCount": 3,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4140,7 +6011,7 @@
         },
         {
           "path": "knowledge-packs/yukkuri-exosome",
-          "fileCount": 2,
+          "fileCount": 3,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -4427,7 +6298,7 @@
         },
         {
           "path": "scripts",
-          "fileCount": 10,
+          "fileCount": 11,
           "gateCount": 3,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -5219,6 +7090,26 @@
           "aiHubRegistered": false
         },
         {
+          "path": "apps/lp/site-chrome.config.js",
+          "name": "site-chrome.config.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "apps/lp/site-chrome.config.json",
+          "name": "site-chrome.config.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "apps/lp/site-chrome.css",
           "name": "site-chrome.css",
           "isGate": false,
@@ -5231,6 +7122,26 @@
         {
           "path": "apps/lp/site-chrome.js",
           "name": "site-chrome.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "apps/lp/site-chrome.layout.css",
+          "name": "site-chrome.layout.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "apps/lp/site-chrome.theme.css",
+          "name": "site-chrome.theme.css",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -5399,8 +7310,38 @@
           "aiHubRegistered": false
         },
         {
+          "path": "apps/lp/talent/assets/talent-avatar-neutral.svg",
+          "name": "talent-avatar-neutral.svg",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "apps/lp/talent/assets/talent-avatar.png",
           "name": "talent-avatar.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "apps/lp/talent/assets/talent-demo-poster.jpg",
+          "name": "talent-demo-poster.jpg",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "apps/lp/talent/assets/talent-demo.mp4",
+          "name": "talent-demo.mp4",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -9119,6 +11060,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "apps/worker/src/services/talent-oshikatsu-knowledge-content.ts",
+          "name": "talent-oshikatsu-knowledge-content.ts",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "apps/worker/src/services/token-refresh.ts",
           "name": "token-refresh.ts",
           "isGate": false,
@@ -9899,78 +11850,8 @@
           "aiHubRegistered": false
         },
         {
-          "path": "knowledge-packs/ai-shain/canned/escalation.txt",
-          "name": "escalation.txt",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/canned/greeting.txt",
-          "name": "greeting.txt",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/canned/usage-overview.txt",
-          "name": "usage-overview.txt",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/docs/google-auth-troubleshooting.md",
-          "name": "google-auth-troubleshooting.md",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/docs/onboarding-steps.md",
-          "name": "onboarding-steps.md",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/docs/unsupported-features.md",
-          "name": "unsupported-features.md",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/guardrails.md",
-          "name": "guardrails.md",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "knowledge-packs/ai-shain/persona.md",
-          "name": "persona.md",
+          "path": "knowledge-packs/ai-shain/README.md",
+          "name": "README.md",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -10129,6 +12010,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "knowledge-packs/henshin-hisho/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "knowledge-packs/soushin-suggest/canned/escalation.txt",
           "name": "escalation.txt",
           "isGate": false,
@@ -10219,6 +12110,86 @@
           "aiHubRegistered": false
         },
         {
+          "path": "knowledge-packs/soushin-suggest/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/canned/escalation.txt",
+          "name": "escalation.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/canned/greeting.txt",
+          "name": "greeting.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/canned/usage-overview.txt",
+          "name": "usage-overview.txt",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/docs/participation.md",
+          "name": "participation.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/docs/what-we-do-not-do.md",
+          "name": "what-we-do-not-do.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/guardrails.md",
+          "name": "guardrails.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/talent-oshikatsu/persona.md",
+          "name": "persona.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "knowledge-packs/web-health-check/canned/escalation.txt",
           "name": "escalation.txt",
           "isGate": false,
@@ -10299,6 +12270,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "knowledge-packs/web-health-check/README.md",
+          "name": "README.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "knowledge-packs/yukkuri-exosome/canned/escalation.txt",
           "name": "escalation.txt",
           "isGate": false,
@@ -10351,6 +12332,16 @@
         {
           "path": "knowledge-packs/yukkuri-exosome/persona.md",
           "name": "persona.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "knowledge-packs/yukkuri-exosome/README.md",
+          "name": "README.md",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -13709,6 +15700,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "scripts/seed-talent-demo.mjs",
+          "name": "seed-talent-demo.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "scripts/update-banner-toggle.test.ts",
           "name": "update-banner-toggle.test.ts",
           "isGate": false,
@@ -13801,6 +15802,86 @@
         {
           "path": "_docs/CHARACTER-VIDEO-IMPLEMENTATION-HANDOFF.md",
           "name": "CHARACTER-VIDEO-IMPLEMENTATION-HANDOFF.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/.gitignore",
+          "name": ".gitignore",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/demo.html",
+          "name": "demo.html",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/make-richmenu-image.mjs",
+          "name": "make-richmenu-image.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/publish-richmenu.mjs",
+          "name": "publish-richmenu.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/richmenu.png",
+          "name": "richmenu.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/richmenu.svg",
+          "name": "richmenu.svg",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/screen.png",
+          "name": "screen.png",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/demo-talent-liff/serve.mjs",
+          "name": "serve.mjs",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -72540,15 +74621,15 @@
     {
       "name": "web-ios-android",
       "githubRepoName": "web-ios-android",
-      "head": "d6b27f0d1be7791561096cb9c1427c2c9c23e38c",
+      "head": "fb304db8e59ed2f02da2d983e1559df8138c7335",
       "dirty": true,
-      "fileCount": 431,
-      "gateCount": 55,
+      "fileCount": 451,
+      "gateCount": 56,
       "gateCandidateCount": 0,
       "directories": [
         {
           "path": "_docs",
-          "fileCount": 43,
+          "fileCount": 45,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -72569,7 +74650,7 @@
         },
         {
           "path": "(root)",
-          "fileCount": 14,
+          "fileCount": 15,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -72604,7 +74685,7 @@
         },
         {
           "path": "scripts",
-          "fileCount": 16,
+          "fileCount": 19,
           "gateCount": 9,
           "gateCandidateCount": 0,
           "pairsCount": 3
@@ -72618,7 +74699,7 @@
         },
         {
           "path": "scripts/lib",
-          "fileCount": 10,
+          "fileCount": 11,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 3
@@ -72828,7 +74909,7 @@
         },
         {
           "path": "site/scripts",
-          "fileCount": 7,
+          "fileCount": 14,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -73073,8 +75154,8 @@
         },
         {
           "path": "templates/scripts",
-          "fileCount": 68,
-          "gateCount": 29,
+          "fileCount": 70,
+          "gateCount": 30,
           "gateCandidateCount": 0,
           "pairsCount": 8
         },
@@ -73108,7 +75189,28 @@
         },
         {
           "path": "templates/web/site-chrome",
-          "fileCount": 3,
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "templates/web/site-chrome/config",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "templates/web/site-chrome/core",
+          "fileCount": 2,
+          "gateCount": 0,
+          "gateCandidateCount": 0,
+          "pairsCount": 0
+        },
+        {
+          "path": "templates/web/site-chrome/generator",
+          "fileCount": 1,
           "gateCount": 0,
           "gateCandidateCount": 0,
           "pairsCount": 0
@@ -73122,6 +75224,16 @@
         }
       ],
       "nodes": [
+        {
+          "path": ".decision-receipts.json",
+          "name": ".decision-receipts.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
         {
           "path": ".gitattributes",
           "name": ".gitattributes",
@@ -73589,6 +75701,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "scripts/lib/component-rollout.mjs",
+          "name": "component-rollout.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "scripts/lib/hub-kit-matrix.mjs",
           "name": "hub-kit-matrix.mjs",
           "isGate": false,
@@ -73668,6 +75790,36 @@
             "role": "copy",
             "label": "進化台帳（記録の口）"
           },
+          "aiHubRegistered": false
+        },
+        {
+          "path": "scripts/rollout-overrides.json",
+          "name": "rollout-overrides.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "scripts/rollout-plan.mjs",
+          "name": "rollout-plan.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "scripts/rollout-preflight.mjs",
+          "name": "rollout-preflight.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
           "aiHubRegistered": false
         },
         {
@@ -74691,8 +76843,78 @@
           "aiHubRegistered": false
         },
         {
+          "path": "site/scripts/site-chrome.config.js",
+          "name": "site-chrome.config.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.config.json",
+          "name": "site-chrome.config.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.css",
+          "name": "site-chrome.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "site/scripts/site-chrome.js",
           "name": "site-chrome.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.layout.css",
+          "name": "site-chrome.layout.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.local.css",
+          "name": "site-chrome.local.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.local.js",
+          "name": "site-chrome.local.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "site/scripts/site-chrome.theme.css",
+          "name": "site-chrome.theme.css",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -75894,6 +78116,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "templates/scripts/check-decision-receipt.mjs",
+          "name": "check-decision-receipt.mjs",
+          "isGate": true,
+          "gateCandidate": false,
+          "gateClassification": "fact",
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "templates/scripts/check-dependabot-queue.mjs",
           "name": "check-dependabot-queue.mjs",
           "isGate": true,
@@ -76438,6 +78670,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "templates/scripts/record-decision-receipt.mjs",
+          "name": "record-decision-receipt.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "templates/scripts/record-improvement.mjs",
           "name": "record-improvement.mjs",
           "isGate": false,
@@ -76787,28 +79029,68 @@
           "aiHubRegistered": false
         },
         {
+          "path": "templates/web/site-chrome/component.json",
+          "name": "component.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "templates/web/site-chrome/config/example.json",
+          "name": "example.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "templates/web/site-chrome/config/schema.json",
+          "name": "schema.json",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "templates/web/site-chrome/core/site-chrome.css",
+          "name": "site-chrome.css",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "templates/web/site-chrome/core/site-chrome.js",
+          "name": "site-chrome.js",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "templates/web/site-chrome/generator/generate-site-chrome-consumer.mjs",
+          "name": "generate-site-chrome-consumer.mjs",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "templates/web/site-chrome/README.md",
           "name": "README.md",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "templates/web/site-chrome/site-chrome.template.css",
-          "name": "site-chrome.template.css",
-          "isGate": false,
-          "gateCandidate": false,
-          "gateClassification": null,
-          "platformHint": null,
-          "pairs": null,
-          "aiHubRegistered": false
-        },
-        {
-          "path": "templates/web/site-chrome/site-chrome.template.js",
-          "name": "site-chrome.template.js",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -76989,6 +79271,16 @@
         {
           "path": "_docs/DESIGN-architecture-map-componentize-2026-09-02.md",
           "name": "DESIGN-architecture-map-componentize-2026-09-02.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
+          "path": "_docs/DESIGN-canonical-boundary-rules.md",
+          "name": "DESIGN-canonical-boundary-rules.md",
           "isGate": false,
           "gateCandidate": false,
           "gateClassification": null,
@@ -77417,6 +79709,16 @@
           "aiHubRegistered": false
         },
         {
+          "path": "_docs/PILOT-LOG-canonical-check.md",
+          "name": "PILOT-LOG-canonical-check.md",
+          "isGate": false,
+          "gateCandidate": false,
+          "gateClassification": null,
+          "platformHint": null,
+          "pairs": null,
+          "aiHubRegistered": false
+        },
+        {
           "path": "_docs/pre-submission-compliance-checklist.md",
           "name": "pre-submission-compliance-checklist.md",
           "isGate": false,
@@ -77565,8 +79867,20 @@
           "to": "scripts/lib/architecture-map-aggregate.mjs"
         },
         {
+          "from": "scripts/lib/component-rollout.mjs",
+          "to": "scripts/lib/hub-kit-matrix.mjs"
+        },
+        {
           "from": "scripts/record-improvement.mjs",
           "to": "scripts/lib/instrument-core.mjs"
+        },
+        {
+          "from": "scripts/rollout-plan.mjs",
+          "to": "scripts/lib/component-rollout.mjs"
+        },
+        {
+          "from": "scripts/rollout-preflight.mjs",
+          "to": "scripts/lib/component-rollout.mjs"
         },
         {
           "from": "scripts/verify-numeric-claims-provenance.mjs",
@@ -77675,6 +79989,18 @@
         {
           "from": "templates/scripts/check-actions-usage.mjs",
           "to": "templates/scripts/lib/actions-usage-core.mjs"
+        },
+        {
+          "from": "templates/scripts/check-decision-receipt.mjs",
+          "to": "templates/scripts/lib/instrument-core.mjs"
+        },
+        {
+          "from": "templates/scripts/check-decision-receipt.mjs",
+          "to": "templates/scripts/lib/instrument-proof.mjs"
+        },
+        {
+          "from": "templates/scripts/check-decision-receipt.mjs",
+          "to": "templates/diagnostics/check-shared-parts-used.mjs"
         },
         {
           "from": "templates/scripts/check-dependabot-queue.mjs",
@@ -77791,6 +80117,10 @@
         {
           "from": "templates/scripts/play-publish.mjs",
           "to": "templates/scripts/lib/app-config.mjs"
+        },
+        {
+          "from": "templates/scripts/record-decision-receipt.mjs",
+          "to": "templates/scripts/lib/instrument-core.mjs"
         },
         {
           "from": "templates/scripts/record-improvement.mjs",
@@ -77915,9 +80245,9 @@
       ]
     }
   ],
-  "excludedCount": 65,
-  "publicCandidateCount": 13,
-  "excludedNotPublicCount": 61,
+  "excludedCount": 62,
+  "publicCandidateCount": 14,
+  "excludedNotPublicCount": 58,
   "excludedTrackedFilesUnknownCount": 2,
   "excludedDuplicateGithubRepoCount": 2
 }

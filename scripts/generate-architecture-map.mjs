@@ -279,6 +279,10 @@ function renderHtml() {
 <meta name="robots" content="noindex, nofollow" />
 <title>Architecture Map — 今あるコードの現在地</title>
 <link rel="stylesheet" href="../../assets/css/common.css?v=2" />
+<link rel="stylesheet" href="../../scripts/site-chrome.css">
+<link rel="stylesheet" href="../../scripts/site-chrome.theme.css">
+<link rel="stylesheet" href="../../scripts/site-chrome.layout.css">
+<link rel="stylesheet" href="../../scripts/site-chrome.local.css">
 <style>
 ${TREE_VIEW_CSS}
   body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: #222; background: #fff; }
@@ -544,7 +548,9 @@ ${TREE_VIEW_CSS}
 })();
 </script>
 <div id="site-footer"></div>
+<script src="../../scripts/site-chrome.config.js"></script>
 <script src="../../scripts/site-chrome.js"></script>
+<script src="../../scripts/site-chrome.local.js"></script>
 </body>
 </html>
 `;
