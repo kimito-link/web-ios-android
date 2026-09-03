@@ -1,0 +1,528 @@
+#!/usr/bin/env node
+/**
+ * component-rollout.mjs — 配布可能コンポーネント（templates/配下）の適用対象判定（Phase 1: Applicability）。
+ *
+ * hub-kit-matrix.mjs の「detectProfile → appliesTo述語 → 4値state」という既存パターンを
+ * 出荷ゲート以外（UI部品・診断ページ等の配布物）にも拡張したもの。walkFiles/EXCLUDED_DIRS は
+ * そのままimportして使う。discoverProjects()（isKitTarget||hasExpoのみを候補にする、
+ * 出荷Gate Matrix専用の発見処理）は再利用しない — 純静的HTMLサイトが分母から消えるため。
+ *
+ * Phase 1のスコープは「対象かどうか（Applicability）」の3値判定のみ。
+ *   APPLIES / NOT_APPLICABLE / UNKNOWN
+ * 「導入済みか（Adoption/Coverage）」は別フェーズで扱う（このファイルには実装しない）。
+ *
+ * 正本は各コンポーネントの component.json（例: templates/web/site-chrome/component.json）。
+ * appliesTo条件をこのファイルのコード側にハードコードしない — 正本が2箇所にできてドリフトする
+ * 事故を、今回の設計そのもので再発させないため（GPT相談 2026-09-03 で指摘・修正）。
+ *
+ * 第1号: ui/site-chrome。
+ */
+import { existsSync, readFileSync, readdirSync, mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { join, extname, basename, relative } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { walkFiles, EXCLUDED_DIRS } from './hub-kit-matrix.mjs';
+
+const MAX_SITE_ROOT_DEPTH = 3;
+
+/**
+ * Canonical digest: UTF-8テキストをLF正規化してからSHA-256する。
+ * ★Windows/UnixのCRLF/LF差だけでDRIFTED誤判定になる事故を避けるため（2026-09-03、
+ *   GPT相談での指摘）。生バイトのhashは使わない。
+ * @param {string} text
+ * @returns {string} hex digest
+ */
+export function canonicalDigest(text) {
+  const normalized = text.replace(/\r\n/g, '\n');
+  return createHash('sha256').update(normalized, 'utf8').digest('hex');
+}
+
+/**
+ * サイトの事実（FACT）を検出する。detectProfile()と対になる、Web向けの判定材料。
+ * ドット区切りのフラットキーで返す（component.json の appliesTo.requires と直接対応させるため）。
+ * @param {string} siteRootDir
+ * @returns {{'staticHtml.multiPage': boolean|null, 'staticHtml.buildless': boolean|null, readErrors: string[]}}
+ */
+export function detectSiteFacts(siteRootDir) {
+  const { files, errors } = walkFiles(siteRootDir);
+
+  const htmlFiles = files.filter((f) => extname(f) === '.html');
+  const htmlCount = htmlFiles.length;
+
+  // 読み取り不能な領域があった場合、multiPageの判定材料が欠けている可能性があるためnull(unknown)にする。
+  const staticHtmlMultiPage = errors.length > 0 ? null : htmlCount >= 2;
+
+  const FRAMEWORK_MARKERS = ['next', 'react', 'vite', 'astro', '@remix-run/dev', 'gatsby'];
+  let buildless = null;
+  const pkgPath = join(siteRootDir, 'package.json');
+  if (existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+      const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+      const hasFrameworkMarker = FRAMEWORK_MARKERS.some((m) => Object.keys(deps).includes(m));
+      buildless = !hasFrameworkMarker;
+    } catch {
+      buildless = null; // 壊れたpackage.jsonはunknown（ビルド方式を確定できない）
+    }
+  } else {
+    // package.json自体が無いディレクトリは、Node系ビルドツールを持たないと判断してよい。
+    buildless = true;
+  }
+
+  return {
+    'staticHtml.multiPage': staticHtmlMultiPage,
+    'staticHtml.buildless': buildless,
+    htmlCount,
+    readErrors: errors,
+  };
+}
+
+/**
+ * component.json（appliesTo.requires: FACTキーの配列）を読み、facts に対して3値判定する。
+ * 判定ロジックはこの関数だけに存在する（component.json側にもコード側にも条件を複製しない）。
+ * @param {{appliesTo:{requires:string[]}}} componentMeta
+ * @param {Record<string, boolean|null>} facts
+ * @returns {'APPLIES'|'NOT_APPLICABLE'|'UNKNOWN'}
+ */
+export function evaluateApplicability(componentMeta, facts) {
+  const requires = componentMeta?.appliesTo?.requires || [];
+  let sawUnknown = false;
+
+  for (const key of requires) {
+    const value = facts[key];
+    if (value === null || value === undefined) {
+      sawUnknown = true;
+      continue;
+    }
+    if (value === false) {
+      return 'NOT_APPLICABLE'; // 明確にfalseが1つでもあれば、unknownの有無に関わらず対象外
+    }
+  }
+
+  return sawUnknown ? 'UNKNOWN' : 'APPLIES';
+}
+
+/**
+ * component.json をファイルから読む。壊れている/無い場合はnull。
+ * @param {string} componentJsonPath
+ * @returns {object|null}
+ */
+export function loadComponentMeta(componentJsonPath) {
+  if (!existsSync(componentJsonPath)) return null;
+  try {
+    return JSON.parse(readFileSync(componentJsonPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * リポジトリ配下から「サイトルート候補」を発見する。project + siteRoot 単位。
+ * discoverProjects()（出荷Gate Matrix専用、isKitTarget||hasExpoのみ候補化）は使わない。
+ * 判定材料: そのディレクトリ直下に *.html が1つ以上あるか。
+ * ★浅い探索（MAX_SITE_ROOT_DEPTH）。node_modules等はEXCLUDED_DIRSで除外。
+ * @param {string} repoDir
+ * @returns {Array<{siteRoot: string, relativePath: string}>}
+ */
+export function discoverSiteTargets(repoDir) {
+  const targets = [];
+
+  function hasDirectHtml(dir) {
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return false;
+    }
+    return entries.some((e) => e.isFile() && extname(e.name) === '.html');
+  }
+
+  function walk(dir, depth, relativePath) {
+    if (depth > MAX_SITE_ROOT_DEPTH) return;
+    if (hasDirectHtml(dir)) {
+      targets.push({ siteRoot: dir, relativePath: relativePath || '.' });
+      return; // このディレクトリをサイトルートとして確定したら、配下は別サイトとして深掘りしない
+    }
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (EXCLUDED_DIRS.has(entry.name)) continue;
+      // ★ドットで始まるディレクトリ（.expo-check等のツール中間生成物、.browseruse等の
+      //   自動化ツール内部データ）は一律除外する。EXCLUDED_DIRSは名指しリストのため
+      //   未知の".xxx"ディレクトリを個別追加し続けるのは対症療法。実データ(2026-09-03、
+      //   doin-challenge.com/.expo-check、kimitolink-linktree/.browseruse)で
+      //   誤検出を確認して追加。
+      if (entry.name.startsWith('.')) continue;
+      // ★"dist-"プレフィックスもビルド成果物として機械的に除外する（EXCLUDED_DIRSの
+      //   完全一致'dist'では拾えなかった実例: surechigai-romi.link/dist-map,dist-perf等、
+      //   2026-09-03実データで確認）。これ以上の命名パターン（prerendered, test/fixtures等）は
+      //   機械的に確実とは言えないため除外せず、targetsに残してreasonで要確認と明示する。
+      if (entry.name.startsWith('dist-')) continue;
+      walk(join(dir, entry.name), depth + 1, relativePath ? `${relativePath}/${entry.name}` : entry.name);
+    }
+  }
+
+  walk(repoDir, 0, '');
+  return targets;
+}
+
+/**
+ * 1リポジトリについて、登録済み全コンポーネント × 発見した全サイトターゲットの適用可否を判定する。
+ * @param {string} repoDir
+ * @param {Array<{id: string, componentJsonPath: string}>} componentRegistry
+ * @returns {Array<{componentId: string, siteRoot: string, relativePath: string, facts: object, state: string}>}
+ */
+export function scanRepoApplicability(repoDir, componentRegistry) {
+  const targets = discoverSiteTargets(repoDir);
+  const results = [];
+
+  for (const target of targets) {
+    const facts = detectSiteFacts(target.siteRoot);
+    for (const component of componentRegistry) {
+      const meta = loadComponentMeta(component.componentJsonPath);
+      const state = meta ? evaluateApplicability(meta, facts) : 'UNKNOWN';
+      results.push({
+        componentId: component.id,
+        siteRoot: target.siteRoot,
+        relativePath: target.relativePath,
+        facts,
+        state,
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 1 siteRootについて、コンポーネントの導入状況（Adoption）をread-onlyで観測する。
+ *
+ * ★ファイル全体のhash不一致だけでDRIFTEDにしない。site-chromeはSITE_CONFIG/NAV_ITEMS/
+ *   ブランド色をサイトごとに書き換える正式仕様であり、実測（2026-09-03）で正本
+ *   (site/scripts/site-chrome.js)と配布テンプレ(site-chrome.template.js)自体が
+ *   コメント文言・行数からして既に完全一致しないことを確認済み。「変更してよい領域」と
+ *   「一致すべき領域」の境界を機械的に定義できていない間は、Canonical比較そのものを
+ *   "not-yet-provable"として扱い、無理にCURRENT/DRIFTEDへ寄せずUNKNOWNに倒す。
+ *
+ * 4状態:
+ *   CURRENT  = 必要な配線が存在し、Canonicalの変更禁止部分が現在版と一致すると証明できる
+ *   MISSING  = 必要な実装・配線が存在しない（site-chrome.js相当が無い）
+ *   DRIFTED  = 導入済みだが変更禁止部分がCanonicalと違うことを証明できる
+ *   UNKNOWN  = 導入らしきものはあるが、driftと許可されたカスタマイズを区別できない、
+ *              またはCanonical比較が未実装で測定不能
+ *
+ * @param {string} siteRootDir
+ * @param {object} componentMeta component.jsonのadoptionセクション込みの中身
+ * @param {Array<{glob?: string, path?: string}>} [pageExclusions] このsiteRootで確認済みの
+ *   ページ単位除外（rollout-overrides.jsonのpageExclusionsから、呼び出し側がproject::siteRootで
+ *   絞り込んで渡す）。ここに無いパターンを一般化・推測して除外しない。
+ * @returns {{adoption: 'CURRENT'|'MISSING'|'DRIFTED'|'UNKNOWN', evidence: object}}
+ */
+export function detectAdoption(siteRootDir, componentMeta, pageExclusions = []) {
+  const adoptionSpec = componentMeta?.adoption;
+  if (!adoptionSpec) {
+    return { adoption: 'UNKNOWN', evidence: { reason: 'component.jsonにadoptionセクションが無い' } };
+  }
+
+  const { files, errors } = walkFiles(siteRootDir);
+  if (errors.length > 0) {
+    return { adoption: 'UNKNOWN', evidence: { reason: '読み取り不能なサブディレクトリがある', readErrors: errors } };
+  }
+
+  const canonicalFileBasenames = adoptionSpec.canonicalFiles || [];
+  const scriptFound = canonicalFileBasenames.some((name) => files.some((f) => basename(f) === name));
+
+  const allHtmlFiles = files.filter((f) => extname(f) === '.html');
+  const htmlDiscovered = allHtmlFiles.length;
+
+  const isExcluded = (absPath) => {
+    const rel = relative(siteRootDir, absPath).split('\\').join('/');
+    return pageExclusions.some((ex) => {
+      if (ex.path) return rel === ex.path;
+      if (ex.glob) {
+        // ★シンプルな "prefix/**" globのみサポート。汎用glob実装は増やさない
+        //   （scriptタグ・スロット検出と同じ、必要最小限の文字列一致方針）。
+        const prefix = ex.glob.endsWith('/**') ? ex.glob.slice(0, -3) : ex.glob;
+        return rel === prefix || rel.startsWith(`${prefix}/`);
+      }
+      return false;
+    });
+  };
+
+  const htmlFiles = allHtmlFiles.filter((f) => !isExcluded(f));
+  const excludedPages = htmlDiscovered - htmlFiles.length;
+  const expectedPages = htmlFiles.length;
+
+  let headerSlotCount = 0;
+  let footerSlotCount = 0;
+  let scriptRefCount = 0;
+  const requiredMarkers = adoptionSpec.requiredMarkers || [];
+  const headerMarker = requiredMarkers.find((m) => m.includes('site-header'));
+  const footerMarker = requiredMarkers.find((m) => m.includes('site-footer'));
+  const scriptFileMarker = canonicalFileBasenames[0];
+
+  for (const htmlFile of htmlFiles) {
+    let content;
+    try {
+      content = readFileSync(htmlFile, 'utf8');
+    } catch {
+      continue;
+    }
+    if (headerMarker && content.includes(headerMarker)) headerSlotCount += 1;
+    if (footerMarker && content.includes(footerMarker)) footerSlotCount += 1;
+    if (scriptFileMarker && content.includes(scriptFileMarker)) scriptRefCount += 1;
+  }
+
+  const pagesUsingChrome = Math.min(headerSlotCount, footerSlotCount, scriptRefCount);
+  const wiringComplete = expectedPages > 0 && pagesUsingChrome === expectedPages;
+
+  const evidence = {
+    scriptFound,
+    headerSlotFound: headerSlotCount > 0,
+    footerSlotFound: footerSlotCount > 0,
+    scriptRefFound: scriptRefCount > 0,
+    htmlDiscovered,
+    excludedPages,
+    expectedPages,
+    pagesUsingChrome,
+    canonicalComparison: adoptionSpec.canonicalComparisonAvailable ? 'checked' : 'not-yet-provable',
+  };
+
+  if (!scriptFound && headerSlotCount === 0 && footerSlotCount === 0) {
+    return { adoption: 'MISSING', evidence };
+  }
+
+  if (!adoptionSpec.canonicalComparisonAvailable || !adoptionSpec.canonicalSourceDir) {
+    // Canonical比較の材料（正本ディレクトリ）が無い間は、配線100%であっても
+    // CURRENT/DRIFTEDへ寄せずUNKNOWNに倒す（GPT指摘の判定原則を厳守）。
+    return { adoption: 'UNKNOWN', evidence };
+  }
+
+  const digestComparison = {};
+  let allMatch = true;
+  for (const name of canonicalFileBasenames) {
+    const canonicalPath = join(adoptionSpec.canonicalSourceDir, name);
+    const consumerPath = files.find((f) => basename(f) === name);
+    if (!existsSync(canonicalPath) || !consumerPath) {
+      digestComparison[name] = 'missing';
+      allMatch = false;
+      continue;
+    }
+    const canonicalDigestValue = canonicalDigest(readFileSync(canonicalPath, 'utf8'));
+    const consumerDigestValue = canonicalDigest(readFileSync(consumerPath, 'utf8'));
+    const match = canonicalDigestValue === consumerDigestValue;
+    digestComparison[name] = match ? 'match' : 'mismatch';
+    if (!match) allMatch = false;
+  }
+  evidence.digestComparison = digestComparison;
+
+  if (!wiringComplete) {
+    // 配線が完全でない場合、Core一致有無に関わらずCURRENTとは言えない。
+    // ただしCanonical比較自体はできているので、drift有無の情報はevidenceに残す。
+    return { adoption: allMatch ? 'UNKNOWN' : 'DRIFTED', evidence };
+  }
+
+  return { adoption: allMatch ? 'CURRENT' : 'DRIFTED', evidence };
+}
+
+/** 自己診断: 毒フィクスチャで5ケースを再現できるか確認する。 */
+export function runSelfTest() {
+  const failures = [];
+  const siteChromeMeta = {
+    appliesTo: { requires: ['staticHtml.multiPage', 'staticHtml.buildless'] },
+  };
+
+  // ケース1: repo直下の静的HTML複数ページ → APPLIES
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'index.html'), '<html></html>');
+    writeFileSync(join(dir, 'about.html'), '<html></html>');
+    const facts = detectSiteFacts(dir);
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (state !== 'APPLIES') failures.push(`ケース1期待APPLIES、実際${state}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース2: HTML1ページのみ → NOT_APPLICABLE
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'index.html'), '<html></html>');
+    const facts = detectSiteFacts(dir);
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (state !== 'NOT_APPLICABLE') failures.push(`ケース2期待NOT_APPLICABLE、実際${state}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース3: Next.js repo内のapps/lpだけが静的サイト → apps/lpだけAPPLIES、repo直下はNOT_APPLICABLE
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { next: '15.0.0' } }));
+    mkdirSync(join(dir, 'app'), { recursive: true });
+    writeFileSync(join(dir, 'app', 'page.tsx'), 'export default function Page(){return null}');
+    mkdirSync(join(dir, 'apps', 'lp'), { recursive: true });
+    writeFileSync(join(dir, 'apps', 'lp', 'index.html'), '<html></html>');
+    writeFileSync(join(dir, 'apps', 'lp', 'about.html'), '<html></html>');
+
+    const targets = discoverSiteTargets(dir);
+    const lpTarget = targets.find((t) => t.relativePath === 'apps/lp');
+    if (!lpTarget) {
+      failures.push('ケース3: apps/lpがsite targetとして発見されなかった');
+    } else {
+      const facts = detectSiteFacts(lpTarget.siteRoot);
+      const state = evaluateApplicability(siteChromeMeta, facts);
+      if (state !== 'APPLIES') failures.push(`ケース3期待APPLIES(apps/lp)、実際${state}`);
+    }
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース4: package.jsonが壊れていてbuild方式を確定できない → UNKNOWN
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'index.html'), '<html></html>');
+    writeFileSync(join(dir, 'about.html'), '<html></html>');
+    writeFileSync(join(dir, 'package.json'), '{ invalid json');
+    const facts = detectSiteFacts(dir);
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (state !== 'UNKNOWN') failures.push(`ケース4期待UNKNOWN、実際${state}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース5: component.jsonのrequired FACTがUNKNOWN（facts自体にキーが無い）→ UNKNOWN
+  {
+    const facts = { 'staticHtml.multiPage': true }; // staticHtml.buildlessが欠落
+    const state = evaluateApplicability(siteChromeMeta, facts);
+    if (state !== 'UNKNOWN') failures.push(`ケース5期待UNKNOWN、実際${state}`);
+  }
+
+  const adoptionMeta = {
+    adoption: {
+      requiredMarkers: ['site-chrome.js', 'id="site-header"', 'id="site-footer"'],
+      canonicalFiles: ['site-chrome.js'],
+      canonicalComparisonAvailable: false,
+    },
+  };
+
+  // ケース6: site-chrome.js無し・スロットも無し → MISSING
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'index.html'), '<html><body>no chrome here</body></html>');
+    const { adoption } = detectAdoption(dir, adoptionMeta);
+    if (adoption !== 'MISSING') failures.push(`ケース6期待MISSING、実際${adoption}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース7: site-chrome.js・スロット・script参照すべて揃っている → 配線ありだがCanonical比較不可のためUNKNOWN
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'site-chrome.js'), '// stub');
+    writeFileSync(
+      join(dir, 'index.html'),
+      '<html><body><div id="site-header"></div>x<div id="site-footer"></div><script src="site-chrome.js"></script></body></html>'
+    );
+    const { adoption, evidence } = detectAdoption(dir, adoptionMeta);
+    if (adoption !== 'UNKNOWN') failures.push(`ケース7期待UNKNOWN、実際${adoption}`);
+    if (evidence.canonicalComparison !== 'not-yet-provable') {
+      failures.push(`ケース7期待canonicalComparison=not-yet-provable、実際${evidence.canonicalComparison}`);
+    }
+    if (!evidence.scriptFound || !evidence.headerSlotFound || !evidence.footerSlotFound) {
+      failures.push('ケース7: evidenceのフラグが揃っていない');
+    }
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース8: pageExclusions(glob)で除外したページはhtmlDiscoveredには残り、
+  //   expectedPagesからは消える。除外後の全ページが配線済みならUNKNOWN(配線100%、Canonical未証明)。
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'component-rollout-test-'));
+    writeFileSync(join(dir, 'site-chrome.js'), '// stub');
+    writeFileSync(
+      join(dir, 'index.html'),
+      '<html><body><div id="site-header"></div>x<div id="site-footer"></div><script src="site-chrome.js"></script></body></html>'
+    );
+    mkdirSync(join(dir, 'captures', '_sources'), { recursive: true });
+    writeFileSync(join(dir, 'captures', '_sources', 'shot1.html'), '<html><body>capture canvas</body></html>');
+    writeFileSync(join(dir, 'captures', '_sources', 'shot2.html'), '<html><body>capture canvas</body></html>');
+
+    const pageExclusions = [{ glob: 'captures/_sources/**' }];
+    const { adoption, evidence } = detectAdoption(dir, adoptionMeta, pageExclusions);
+    if (evidence.htmlDiscovered !== 3) failures.push(`ケース8期待htmlDiscovered=3、実際${evidence.htmlDiscovered}`);
+    if (evidence.excludedPages !== 2) failures.push(`ケース8期待excludedPages=2、実際${evidence.excludedPages}`);
+    if (evidence.expectedPages !== 1) failures.push(`ケース8期待expectedPages=1、実際${evidence.expectedPages}`);
+    if (evidence.pagesUsingChrome !== 1) failures.push(`ケース8期待pagesUsingChrome=1、実際${evidence.pagesUsingChrome}`);
+    if (adoption !== 'UNKNOWN') failures.push(`ケース8期待UNKNOWN、実際${adoption}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // ケース9: canonicalComparisonAvailable=true・Core hash完全一致・配線100% → CURRENT
+  {
+    const canonicalDir = mkdtempSync(join(tmpdir(), 'component-rollout-canonical-'));
+    writeFileSync(join(canonicalDir, 'site-chrome.js'), '// canonical core\r\nconsole.log(1);\n');
+
+    const consumerDir = mkdtempSync(join(tmpdir(), 'component-rollout-consumer-'));
+    // ★CRLFとLFが混在していても正規化後は同じ内容 → CURRENTになることを確認
+    //   （Canonical digestのLF正規化を検証する主目的のケース）。
+    writeFileSync(join(consumerDir, 'site-chrome.js'), '// canonical core\nconsole.log(1);\r\n');
+    writeFileSync(
+      join(consumerDir, 'index.html'),
+      '<html><body><div id="site-header"></div>x<div id="site-footer"></div><script src="site-chrome.js"></script></body></html>'
+    );
+
+    const meta = {
+      adoption: {
+        requiredMarkers: ['site-chrome.js', 'id="site-header"', 'id="site-footer"'],
+        canonicalFiles: ['site-chrome.js'],
+        canonicalComparisonAvailable: true,
+        canonicalSourceDir: canonicalDir,
+      },
+    };
+    const { adoption, evidence } = detectAdoption(consumerDir, meta);
+    if (adoption !== 'CURRENT') failures.push(`ケース9期待CURRENT、実際${adoption}（digest: ${JSON.stringify(evidence.digestComparison)}）`);
+    rmSync(canonicalDir, { recursive: true, force: true });
+    rmSync(consumerDir, { recursive: true, force: true });
+  }
+
+  // ケース10: Core hashが不一致（consumer側が無断で変更） → DRIFTED
+  {
+    const canonicalDir = mkdtempSync(join(tmpdir(), 'component-rollout-canonical-'));
+    writeFileSync(join(canonicalDir, 'site-chrome.js'), '// canonical core\nconsole.log(1);\n');
+
+    const consumerDir = mkdtempSync(join(tmpdir(), 'component-rollout-consumer-'));
+    writeFileSync(join(consumerDir, 'site-chrome.js'), '// consumer edited this without going through config\nconsole.log(2);\n');
+    writeFileSync(
+      join(consumerDir, 'index.html'),
+      '<html><body><div id="site-header"></div>x<div id="site-footer"></div><script src="site-chrome.js"></script></body></html>'
+    );
+
+    const meta = {
+      adoption: {
+        requiredMarkers: ['site-chrome.js', 'id="site-header"', 'id="site-footer"'],
+        canonicalFiles: ['site-chrome.js'],
+        canonicalComparisonAvailable: true,
+        canonicalSourceDir: canonicalDir,
+      },
+    };
+    const { adoption, evidence } = detectAdoption(consumerDir, meta);
+    if (adoption !== 'DRIFTED') failures.push(`ケース10期待DRIFTED、実際${adoption}（digest: ${JSON.stringify(evidence.digestComparison)}）`);
+    rmSync(canonicalDir, { recursive: true, force: true });
+    rmSync(consumerDir, { recursive: true, force: true });
+  }
+
+  return failures;
+}
+
+if (process.argv[1] && basename(process.argv[1]) === basename(new URL(import.meta.url).pathname)) {
+  if (process.argv.includes('--selftest')) {
+    const failures = runSelfTest();
+    if (failures.length > 0) {
+      console.error(`[component-rollout] FAIL\n${failures.map((f) => `  - ${f}`).join('\n')}`);
+      process.exit(1);
+    }
+    console.log('[component-rollout] OK selftest 10/10 passed');
+    process.exit(0);
+  }
+}

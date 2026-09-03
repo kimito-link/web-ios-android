@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "brandName": "サイト名",
+  "brandCopyright": "サイト名 — サブタイトル",
+  "logoSrc": "/images/logo.png",
+  "homeLabel": "🏠 トップ",
+  "navCollapseAt": 1100,
+  "colors": {
+    "accent": "#667eea",
+    "accentSoft": "#f0f0ff",
+    "ink": "#555",
+    "line": "#eee"
+  },
+  "navItems": []
+}

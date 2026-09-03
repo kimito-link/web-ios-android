@@ -53,130 +53,15 @@ table tr { display: table-row; }
 table th, table td { display: table-cell; }
 img, video { max-width: 100%; height: auto; }
 
-/* ── ヘッダー ── */
-header {
-  background: white;
-  border-bottom: 3px solid #eee;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 60px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-header img.logo { height: 40px; }
-header nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
-header nav a {
-  color: #555;
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-header nav a:hover { background: #f0f0ff; color: #667eea; }
-header nav a.active { background: #667eea; color: white; }
-
-/* ── AIに共有ボタン（ヘッダー常設・ハンバーガーに隠れない） ── */
-.share-to-ai-btn {
-  flex-shrink: 0;
-  margin-left: auto;
-  background: #1a1a2e;
-  color: white;
-  border: none;
-  border-radius: 999px;
-  padding: 7px 14px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, transform 0.1s;
-}
-.share-to-ai-btn:hover { background: #667eea; }
-.share-to-ai-btn:active { transform: scale(0.97); }
-/* ハンバーガーが出る幅では nav が margin-left:auto を失うので、
-   このボタン側の margin-left:auto は不要になるが、悪さもしないため単純化のため残す */
-@media (max-width: 1100px) {
-  .share-to-ai-btn { margin-left: 0; }
-}
-@media (max-width: 480px) {
-  .share-to-ai-btn { padding: 7px 10px; font-size: 0.72rem; }
-}
-
-/* ── ハンバーガーメニュー（幅1100px以下でnavを折りたたむ） ── */
-.nav-toggle {
-  display: none;
-  margin-left: auto;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-}
-.nav-toggle span {
-  display: block;
-  width: 22px;
-  height: 2px;
-  background: #333;
-  border-radius: 2px;
-  position: relative;
-  transition: background 0.15s;
-}
-.nav-toggle span::before, .nav-toggle span::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 22px;
-  height: 2px;
-  background: #333;
-  border-radius: 2px;
-  transition: transform 0.2s;
-}
-.nav-toggle span::before { top: -7px; }
-.nav-toggle span::after { top: 7px; }
-.nav-toggle[aria-expanded="true"] span { background: transparent; }
-.nav-toggle[aria-expanded="true"] span::before { transform: translateY(7px) rotate(45deg); }
-.nav-toggle[aria-expanded="true"] span::after { transform: translateY(-7px) rotate(-45deg); }
-
-@media (max-width: 1100px) {
-  .nav-toggle { display: flex; }
-  header nav {
-    display: none;
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    background: white;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 14px 18px;
-    max-height: calc(100vh - 60px);
-    overflow-y: auto;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-  }
-  header nav.nav-open { display: flex; }
-  header nav a { font-size: 0.88rem; padding: 10px 12px; }
-}
-
-/* ── サイト共通フッター（全ページ主要リンク集） ──
-   注意: サイト共通フッターの実体は <footer class="site-footer"> なので、
-   下の「── フッター ──」にある要素セレクタ footer{} の見た目（黒背景・中央寄せ）と
-   ここの .site-footer{}（余白・幅）が両方効く。競合ではなく意図した二層適用:
-     footer          … 外枠の見た目（背景色・パディング・文字色）
-     .site-footer    … 内側の中身のレイアウト（リンクの並び・最大幅） */
-.site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e7eaf0; max-width: 760px; margin-left: auto; margin-right: auto; padding-left: 18px; padding-right: 18px; }
-.site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
-.site-footer-links a { color: #1565c0; text-decoration: none; font-size: .85em; font-weight: 700; }
-.site-footer-links a:hover { text-decoration: underline; }
-.site-footer-copy { font-size: .78em; color: #6b7280; }
+/* ── ヘッダー・ハンバーガーメニュー・サイト共通フッター（内側リンク一覧） ──
+ * ★2026-09-03: templates/web/site-chrome/ のCore/Config分離に伴い、このcommon.cssから
+ *   scripts/site-chrome.css（Core・無改変）+ site-chrome.theme.css（生成・色）+
+ *   site-chrome.layout.css（生成・ハンバーガー折りたたみ幅=1100px）へ移管した。
+ *   .share-to-ai-btn とフッター外枠(黒背景のfooter要素セレクタ・.site-footer-links aの
+ *   #1565c0上書き)は web-ios-android固有のLocal Extensionのため
+ *   scripts/site-chrome.local.css に残る（Canonical freshness判定対象外）。
+ *   読み込み順は scripts/site-chrome.js の使い方コメント、または
+ *   templates/web/site-chrome/README.md「使い方」を参照。 */
 
 /* ── コマ（吹き出し＋画面）── howto系ページ共通 */
 .koma { margin-bottom: 36px; }

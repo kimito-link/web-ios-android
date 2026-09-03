@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "ui/site-chrome",
+  "label": "サイト共通ヘッダー/フッター/ハンバーガーメニュー",
+  "scope": "site",
+  "canonicalSource": "templates/web/site-chrome/core/",
+  "appliesTo": {
+    "requires": ["staticHtml.multiPage", "staticHtml.buildless"]
+  },
+  "delivery": {
+    "mode": "generated-copy",
+    "generator": "templates/web/site-chrome/generator/generate-site-chrome-consumer.mjs",
+    "consumerSourceOfTruth": "site-chrome.config.json",
+    "configSchema": "templates/web/site-chrome/config/schema.json"
+  },
+  "adoption": {
+    "requiredMarkers": [
+      "site-chrome.js",
+      "id=\"site-header\"",
+      "id=\"site-footer\""
+    ],
+    "canonicalFiles": ["site-chrome.js", "site-chrome.css"],
+    "generatedFiles": ["site-chrome.config.js", "site-chrome.theme.css", "site-chrome.layout.css"],
+    "localExtensionFiles": ["site-chrome.local.js", "site-chrome.local.css"],
+    "canonicalComparisonAvailable": true
+  }
+}

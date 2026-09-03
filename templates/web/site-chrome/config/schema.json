@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "site-chrome consumer config",
+  "description": "consumer固有の正本（site-chrome.config.json）が満たすべきschema。ここからruntime成果物(site-chrome.config.js/theme.css/layout.css)を決定論的に生成する。JSON側を正本にすることで、JSを解析するための新しいAST/parser/regexを作らずにschema検証できる（2026-09-03、GPT相談での設計）。",
+  "type": "object",
+  "required": ["schemaVersion", "brandName", "brandCopyright", "logoSrc", "homeLabel", "navItems"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "brandName": { "type": "string", "minLength": 1 },
+    "brandCopyright": { "type": "string", "minLength": 1 },
+    "logoSrc": { "type": "string", "minLength": 1 },
+    "homeLabel": { "type": "string", "minLength": 1 },
+    "navCollapseAt": {
+      "type": "integer",
+      "minimum": 320,
+      "maximum": 1920,
+      "default": 1100,
+      "description": "ハンバーガーメニューへ折りたたむビューポート幅(px)。実測(2026-09-03)でline-botが760pxへ意図的に変更していたことを踏まえ、consumer固有のlayout customizationとして正式にschema化した。"
+    },
+    "colors": {
+      "type": "object",
+      "properties": {
+        "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" },
+        "accentSoft": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" },
+        "ink": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" },
+        "line": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" }
+      },
+      "additionalProperties": false
+    },
+    "navItems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["href", "label"],
+        "properties": {
+          "href": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

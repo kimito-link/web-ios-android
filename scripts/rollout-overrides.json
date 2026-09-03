@@ -1,0 +1,81 @@
+{
+  "_why": "rollout-plan.mjsの機械スキャンだけでは判断できない例外を記録する薄いoverride台帳。一般ロジック（component-rollout.mjsの検出条件）へ名前パターンを追加し続けると対症療法になるため、判断が要るケースはここにreason+evidence必須で個別記録する（2026-09-03、GPT相談での方針）。",
+  "_format": "各エントリは {component, project, siteRoot, state, reason, evidence} の5項目必須。stateはAPPLIES/NOT_APPLICABLE/UNKNOWNのいずれか。",
+  "overrides": [
+    {
+      "component": "ui/site-chrome",
+      "project": "line-bot",
+      "siteRoot": "_docs/demo-voice-riri",
+      "state": "NOT_APPLICABLE",
+      "reason": "複数ページの静的サイトではなく、音声録音デモの単発ツール（Dockerfile+server.mjsを持つ実行可能アプリ）",
+      "evidence": "2026-09-03実測: ディレクトリ直下にDockerfile, app.js, server.mjs, record.mjs, compose.yamlが存在。index.html/record.htmlはこのデモツールのUIであり複数ページ静的サイトの体裁ではない"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "partnership_program_website",
+      "siteRoot": "prerendered",
+      "state": "NOT_APPLICABLE",
+      "reason": "ビルド成果物（SSGのプリレンダー出力）。正本はビルド元のソースにあり、このディレクトリを手動編集しても次回ビルドで上書きされる",
+      "evidence": "2026-09-03実測: article/company/contact/it-support/lp/privacy/reputation/services/terms等、実サイトの全ページ構造がそのまま出力されている＝ビルドプロセスの出力先"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "traffic-seo",
+      "siteRoot": "_extracted_zip",
+      "state": "NOT_APPLICABLE",
+      "reason": "zipから展開された一時作業物。大量のノウハウMarkdown文書と2つのHTML(index.html, waiting.html)が混在しており、運用中サイトではない",
+      "evidence": "2026-09-03実測: ディレクトリ名自体が展開物であることを示す。01_IMPROVE_APP_PY.md等の連番Markdown文書が大半を占める"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "web-health-check-app",
+      "siteRoot": "ios-signing",
+      "state": "NOT_APPLICABLE",
+      "reason": "iOS署名鍵・証明書の置き場（秘密鍵を含む）。HTMLファイルの混入は偶然で、実サイトではない",
+      "evidence": "2026-09-03実測: AuthKey_*.p8, dist-cert.p12, distribution.cer, *.key.pem等の署名関連ファイルが大半。dns-osint-report-*.htmlは調査ログの保存物"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "web-health-check-app",
+      "siteRoot": "public/legacy",
+      "state": "NOT_APPLICABLE",
+      "reason": "廃止済みChrome拡張機能の旧バージョンコード。legacyという命名自体が新規導入対象でないことを示す",
+      "evidence": "2026-09-03実測: background.js, chrome-shim.js, popup.html等、Chrome拡張の内部ファイル構成"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "web-health-check-app",
+      "siteRoot": "public/ui-mocks",
+      "state": "NOT_APPLICABLE",
+      "reason": "UIデザイン案のモックアップ集。本番導線として公開されるページではなく検討用",
+      "evidence": "2026-09-03実測: A-cockpit.html, B-friendly.html, C-modern.html等、同一画面の複数デザイン案が並ぶ構成"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "web-health-check-app",
+      "siteRoot": "test/fixtures",
+      "state": "NOT_APPLICABLE",
+      "reason": "テストで使う保存済みHTMLスナップショット。本番サイトではない",
+      "evidence": "2026-09-03実測: freee-company-2026-07-24.html等、日付入りファイル名で外部サイトのスナップショットを保存したもの"
+    }
+  ],
+  "_pageExclusionsFormat": "各エントリは {component, project, siteRoot, glob or path, reason, evidence} 必須。ここのproject::siteRootで確認した事実のみを記録する — 他プロジェクトの同名パス（captures/check-shindan-version等）へは一般化しない（各project::siteRootで個別に確認して追記する）。adoption計測時にexpectedPagesの分母から除外される。",
+  "pageExclusions": [
+    {
+      "component": "ui/site-chrome",
+      "project": "web-ios-android",
+      "siteRoot": "site",
+      "glob": "assets/captures/_sources/**",
+      "reason": "固定サイズのスクリーンショット撮影用キャンバスで、ユーザー向けサイトページではない",
+      "evidence": "templates/scripts/verify-responsive-design.mjs（2026-08-25時点で既に同じ理由でレスポンシブ検査から除外済み）。2026-09-03実測: 10ファイル、全て#capture-root{width:1180px}の固定キャンバス、site-chrome配線なし"
+    },
+    {
+      "component": "ui/site-chrome",
+      "project": "web-ios-android",
+      "siteRoot": "site",
+      "path": "check-shindan-version/index.html",
+      "reason": "独立した共通生成器（全プロジェクト配布・web-ios-android専有ではない）が生成する、site-chrome非依存の独自ヘッダーを持つページ",
+      "evidence": "templates/scripts/generate-shindan-version.mjs。2026-09-03実測: displayName/primary/accentパラメータ駆動の独自<header class=\"site-header\">を持ち、site-chrome.jsへの参照なし"
+    }
+  ]
+}

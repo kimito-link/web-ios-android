@@ -28,6 +28,28 @@
         "templates/scripts/check-decision-receipt.mjs",
         "templates/scripts/record-decision-receipt.mjs"
       ]
+    },
+    {
+      "at": "2026-09-03T03:55:28.965Z",
+      "responsibility": "site-chromeのCore/Config/Local extension境界確定（templates/web/site-chrome/配下の再編とscripts/lib/component-rollout.mjs+scripts/rollout-plan.mjsの新設）",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/web/site-chrome/core/site-chrome.js",
+      "scopePaths": [
+        "templates/web/site-chrome/component.json",
+        "templates/web/site-chrome/core/site-chrome.js",
+        "templates/web/site-chrome/core/site-chrome.css",
+        "templates/web/site-chrome/config/schema.json",
+        "templates/web/site-chrome/config/example.json",
+        "templates/web/site-chrome/generator/generate-site-chrome-consumer.mjs",
+        "templates/web/site-chrome/README.md",
+        "scripts/lib/component-rollout.mjs",
+        "scripts/rollout-plan.mjs",
+        "scripts/rollout-overrides.json",
+        "site/scripts/site-chrome.js",
+        "site/scripts/site-chrome.local.js",
+        "site/scripts/site-chrome.config.js",
+        "site/assets/css/common.css"
+      ]
     }
   ]
 }

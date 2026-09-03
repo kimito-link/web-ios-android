@@ -13,19 +13,48 @@
 この金型が`templates/`へ一般化されていなかったため、他プロジェクト（line-bot/apps/lp配下の複数LP）が
 新規サイトを作る際に再利用できず、結局ページごとに個別のheader/footerを書いてしまう事故が実際に起きた。
 
-## 使い方
+## 使い方（2026-09-03、Core/Config分離版）
 
-1. `site-chrome.template.js` を対象サイトへ `site-chrome.js` としてコピーする
-2. `site-chrome.template.css` を対象サイトへ `site-chrome.css`（または既存の共通CSSに統合）としてコピーする
-3. `site-chrome.js` の先頭にある `SITE_CONFIG`（ブランド名・ロゴ・トップページラベル）と `NAV_ITEMS`
-   （ページ一覧）を対象サイトの値に書き換える
+★2026-09-02までは`site-chrome.template.js`（Core処理+ブランド値混在の単一ファイル）を
+直接コピーしてブランド値を書き換える方式だった。この方式だと配布元と各サイトのファイルが
+永久に一致せず、「最新版が入っているか」を機械的に検証できなかった。今回、Core（変更禁止・
+全サイト共通）とConfig（サイト固有値、JSONから自動生成）を物理的に分離した。
+
+1. `core/site-chrome.js` と `core/site-chrome.css` を対象サイトへ**無改変で**
+   `site-chrome.js` / `site-chrome.css` としてコピーする（このファイルは編集しない）
+2. `config/schema.json` を見ながら、対象サイト固有の `site-chrome.config.json`
+   （ブランド名・ロゴ・NAV_ITEMS・ナビ折りたたみ幅`navCollapseAt`・アクセントカラー等）を書く
+   （`config/example.json` がひな形）
+3. `generator/generate-site-chrome-consumer.mjs --config <site-chrome.config.jsonのパス> --out <対象サイトのディレクトリ>`
+   を実行する。`site-chrome.config.js` / `site-chrome.theme.css` / `site-chrome.layout.css` が
+   config.jsonから決定論的に生成され、Coreファイル2点もコピーされる
 4. 各ページの `<body>` 直後に `<div id="site-header"></div>`、`</body>` 直前に
    `<div id="site-footer"></div>` を置く
-5. `<link rel="stylesheet" href="/site-chrome.css">` と `<script src="/site-chrome.js"></script>` を
-   全ページの `<head>`/`<body>` 末尾に追加する（パスはサイトルート相対の絶対パスに統一すること。
-   相対パスの深さ違いが元々の事故原因なので、ここで再発させない）
-6. ブランド色を変える場合は `site-chrome.css` の `:root` にある `--site-chrome-accent` 等の
-   カスタムプロパティだけを書き換える。構造（padding・breakpoint）は変更不要
+5. `<head>` に以下の順で読み込む（**順序を間違えると壊れる。詳細は次項参照**）:
+   ```html
+   <link rel="stylesheet" href="/site-chrome.css">
+   <link rel="stylesheet" href="/site-chrome.theme.css">
+   <link rel="stylesheet" href="/site-chrome.layout.css">
+   <script src="/site-chrome.config.js"></script>
+   <script src="/site-chrome.js"></script>
+   ```
+   パスはサイトルート相対の絶対パスに統一すること（相対パスの深さ違いが元々の事故原因）
+6. ブランド色・ナビ折りたたみ幅を変える場合は `site-chrome.config.json` を直接編集し、
+   generatorを再実行する（生成された`.theme.css`/`.layout.css`を手で編集しない）
+7. web-ios-android固有のAI共有ボタン等、そのサイトだけの拡張機能が要る場合は
+   `site-chrome.local.js`を任意で追加し、`"site-chrome:mounted"`イベントを購読する
+   （Coreの末尾でこのイベントが1回発火される。plugin機構ではなく最小限の1フックのみ）
+
+### ★CSS読み込み順の罠（2026-09-03、line-bot/apps/lp移行で実際に踏んだ事故）
+
+`core/site-chrome.css`は`.nav-toggle { display:none }`を持ち、`site-chrome.layout.css`の
+メディアクエリが折りたたみ幅以下でのみ`display:flex`に戻す作りになっている。**同じ詳細度の
+CSSは後に読んだ方が勝つ**ため、読み込み順を `theme → layout → core` にすると、coreの
+`display:none`がlayoutの指定を打ち消し、**ナビが常に縦展開したまま本文を押し下げる**（見た目上、
+折りたたみが一切効かなくなる）。
+
+正しい順序は **`site-chrome.css`（core）→ `site-chrome.theme.css` → `site-chrome.layout.css`**。
+上記「使い方」5番の順序を必ずそのまま使うこと。
 
 ## 既存の独自デザインページへ後から導入する場合（新規サイトではなく既存ページへの追加導入）
 
@@ -52,9 +81,17 @@
   レイアウト/共通コンポーネント機構（Next.jsなら`layout.tsx`等）を使うこと
 - この金型はビルドレスな静的HTML複数ページサイト専用
 
-## 元になった実装
+## 元になった実装・Canonical再編の実証記録
 
-`web-ios-android/site/scripts/site-chrome.js` と `site/assets/css/common.css`（39-179行目）。
-キット自身のサイトが実際にこの方式で24ページ以上を運用している。
-このディレクトリのファイルは、そこからキット固有の値（NAV_ITEMS・ブランド・「AIに共有」ボタン等）を
-抜いて一般化したもの。
+`web-ios-android/site/scripts/site-chrome.js`（旧・単一ファイル方式）から出発し、
+2026-09-03のGPT相談を経てCore/Config/Local extension分離を設計・実装した
+（`_docs/`配下に設計記録があれば参照）。
+
+★実証第1号: `line-bot/apps/lp`（kimitotalk.link）を標準consumer
+（Config/Layoutのみサイト固有）として移行し、`node scripts/rollout-plan.mjs`
+（web-ios-android側の観測専用ツール）でCore JS/CSSのhash完全一致・配線100%を確認、
+CURRENT判定を実測で得た（コミット`75d1de5`, 2026-09-03）。
+
+導入判定・導入状況の機械計測（Applicability/Adoption/CURRENT-MISSING-DRIFTED-UNKNOWN）は
+`web-ios-android/scripts/lib/component-rollout.mjs`と`scripts/rollout-plan.mjs`が持つ。
+このコンポーネント自身の`component.json`がその判定条件の正本。

@@ -1,0 +1,87 @@
+/* site-chrome.css — サイト共通ヘッダー・フッターの見た目（Distribution Canonical）
+ * 出典: web-ios-androidキット自身のsite/assets/css/common.cssから抽出・一般化。
+ * site-chrome.js が差し込むHTML（header, nav, footer.site-footer）に対応する。
+ *
+ * ★このファイルはconsumer側で変更禁止（SHA-256でCURRENT/DRIFTED判定される対象）。
+ *   色はvar(--site-chrome-accent)等の参照のみで、値そのものは持たない
+ *   （site-chrome.theme.css で定義）。ハンバーガー折りたたみのbreakpointも
+ *   持たない（実測2026-09-03: line-botが1100pxから760pxへ意図的に変更していた
+ *   ため、breakpoint自体をconsumer固有のlayout customizationとして分離した。
+ *   site-chrome.layout.css を参照）。
+ *
+ * 読み込み順: site-chrome.theme.css → site-chrome.css(このファイル) → site-chrome.layout.css
+ */
+
+/* ── ヘッダー ── */
+header {
+  background: white;
+  border-bottom: 3px solid var(--site-chrome-line);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+header img.logo { height: 40px; }
+header nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+header nav a {
+  color: var(--site-chrome-ink);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+header nav a:hover { background: var(--site-chrome-accent-soft); color: var(--site-chrome-accent); }
+header nav a.active { background: var(--site-chrome-accent); color: white; }
+
+/* ── ハンバーガーメニューのボタン自体（折りたたみ判定=breakpointはlayout.cssが持つ） ── */
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+  position: relative;
+  transition: background 0.15s;
+}
+.nav-toggle span::before, .nav-toggle span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 22px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+  transition: transform 0.2s;
+}
+.nav-toggle span::before { top: -7px; }
+.nav-toggle span::after { top: 7px; }
+.nav-toggle[aria-expanded="true"] span { background: transparent; }
+.nav-toggle[aria-expanded="true"] span::before { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span::after { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── サイト共通フッター（全ページ主要リンク集） ── */
+.site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--site-chrome-line); max-width: 760px; margin-left: auto; margin-right: auto; padding-left: 18px; padding-right: 18px; }
+.site-footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+.site-footer-links a { color: var(--site-chrome-accent); text-decoration: none; font-size: .85em; font-weight: 700; }
+.site-footer-links a:hover { text-decoration: underline; }
+.site-footer-copy { font-size: .78em; color: #6b7280; }

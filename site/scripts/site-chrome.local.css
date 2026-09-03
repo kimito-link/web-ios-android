@@ -1,0 +1,47 @@
+/* site-chrome.local.css — web-ios-android固有のsite-chrome拡張スタイル（Local Extension）。
+ * ★rolloutのCanonical freshness判定対象外。以下2種類を含む:
+ *   1. 「🤖 AIに共有」ボタン（site-chrome.local.jsがDOM追加する）のスタイル
+ *   2. フッターの外枠を黒背景にする独自レイアウト（Coreの.site-footerは透明・シンプル、
+ *      web-ios-android::siteはfooter要素セレクタで黒背景+別配色を意図的に重ねる二層設計。
+ *      実測(2026-09-03): common.cssに「footerとsite-footerが両方効く意図した二層適用」
+ *      とコメントが既に残っていた）
+ */
+
+/* ── フッター外枠（黒背景） ── */
+footer {
+  background: #1a1a2e;
+  color: #aaa;
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 0.85rem;
+}
+/* footer a はリンク色の既定値。.site-footer-links a（下記）の方が詳細度で勝つため、
+   共通フッター配下では実際には使われない（他ページの単発フッターへの保険として残す）。 */
+footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82em; display: inline-block; }
+/* 黒背景上での視認性のため、Coreのvar(--site-chrome-accent)ではなくこの色を明示的に使う。 */
+.site-footer-links a { color: #1565c0; }
+
+.share-to-ai-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+.share-to-ai-btn:hover { background: #667eea; }
+.share-to-ai-btn:active { transform: scale(0.97); }
+/* ハンバーガーが出る幅では nav が margin-left:auto を失うので、
+   このボタン側の margin-left:auto は不要になるが、悪さもしないため単純化のため残す */
+@media (max-width: 1100px) {
+  .share-to-ai-btn { margin-left: 0; }
+}
+@media (max-width: 480px) {
+  .share-to-ai-btn { padding: 7px 10px; font-size: 0.72rem; }
+}
