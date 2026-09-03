@@ -95,3 +95,27 @@ CURRENT判定を実測で得た（コミット`75d1de5`, 2026-09-03）。
 導入判定・導入状況の機械計測（Applicability/Adoption/CURRENT-MISSING-DRIFTED-UNKNOWN）は
 `web-ios-android/scripts/lib/component-rollout.mjs`と`scripts/rollout-plan.mjs`が持つ。
 このコンポーネント自身の`component.json`がその判定条件の正本。
+
+★実証第3号: `soushin-suggest.link::public`（完全MISSINGの実サイト、6ページ）へ
+ゼロから導入し、CURRENT判定を得た（コミット`6080567`, 2026-09-03）。apply前に
+`scripts/rollout-preflight.mjs`（Delivery Preflight、下記「導入先のContent-Security-Policyに注意」参照）
+でCSPブロックを検知し、CSP変更→再applyの順で安全に導入した実例。
+
+## 導入先のContent-Security-Policy（CSP）に注意
+
+対象ページが`<meta http-equiv="Content-Security-Policy">`を持つ場合、
+`site-chrome.js`/`.css`等の外部リソース読み込みが`default-src`/`script-src`/`style-src`で
+ブロックされることがある。apply前に`node scripts/rollout-preflight.mjs`（web-ios-android側）で
+機械確認すること。1ページでもBLOCKedならHTMLを書き換える前に停止する設計になっている
+（Applicabilityとは別軸のGate。2026-09-03、soushin-suggest.link第3pilotで実際に
+旧UI削除後・新UIもCSPで非表示という壊れた状態を発生させた反省から追加）。
+
+★CSP変更でCloudflare配信サイトを踏んだ場合の追加の罠（2026-09-03実戦）:
+Cloudflareは`beacon.min.js`（Web Analytics）を自動注入し、`/cdn-cgi/rum`等へ送信する。
+これは「読み込む」（`script-src`に`https://static.cloudflareinsights.com`が必要）と
+「送る」（`connect-src`に`https://cloudflareinsights.com`と
+`https://static.cloudflareinsights.com`が必要）の**両方**を許可しないと動かない。
+`script-src`だけ直すと次は`connect-src`がブロックされる、を2周する事故が実際に起きた。
+**ローカルサーバでは原理的に再現しない**（beaconは本番でしか注入されない）ため、
+CSP変更は本番へ配ってから実ブラウザで確認するまで検証が終わらない。既存サイト全体の
+`_headers`等が同じ許可範囲を持っているなら、meta CSPをそれに揃えるのが安全。
