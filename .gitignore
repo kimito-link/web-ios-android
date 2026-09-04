@@ -37,3 +37,10 @@ kimitolink-line/
 # 抽出した site/hub/architecture-map/map-data.json のみコミット対象にする。
 .architecture-map-internal.json
 .architecture-map-visibility-cache.json
+
+# リポジトリ直下に置かれた資料PDF・作業メモ（コードではない・巨大でGitHubの上限を
+# 超えることがある）。実際に2026-09-04、別セッションが誤ってマーケティング書籍PDF
+# （最大204MB）をコミットしpushが拒否される事故があった。直下限定（サブディレクトリの
+# 正当な配布物PDFは対象外）。
+/*.pdf
+/*.txt
