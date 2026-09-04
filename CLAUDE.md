@@ -266,6 +266,46 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 
 ---
 
+## ★Webの独自ドメイン接続は1コマンド（2026-09-04 追記・characterlive から書き戻し）
+
+**Cloudflare のドメインを Vercel に向ける作業を自動化した。管理画面を人が開かない。**
+
+> 発端（ユーザーの言葉）:**「なんか毎回トークン発行する作業があるの大変　おわりにできない？」**
+> 実際 `characterlive.link` の公開時、**A レコード 1 本**を足すためだけに人の手が要り、そこで止まった。
+
+```bash
+node ../ai-hub/bin/domain-connect.mjs <domain>          # A/CNAME を設定
+node ../ai-hub/bin/domain-connect.mjs <domain> --check   # 今の状態を見るだけ
+```
+実体: `github/ai-hub/bin/domain-connect.mjs`（横断ツールなので正本は ai-hub 側）
+
+### ★1回だけやること（以後ずっと自動）
+Cloudflare → マイプロフィール → APIトークン → **トークンを作成**
+→ テンプレート **「ゾーンDNSを編集する」** → ゾーンリソース **すべてのゾーン**
+→ 環境変数 **`CLOUDFLARE_DNS_TOKEN`** に入れる。★値はここに書かない（このリポは public）。
+
+★**既存の `CLOUDFLARE_API_TOKEN` では動かない**（実測）。
+　ゾーン一覧は 21 件見えるのに、DNS 操作だけ `10000: Authentication error` で弾かれる。
+　**「見えている＝編集できる」ではない。** ツールがこの理由を画面に出すので迷わない。
+
+### ★ネームサーバーは Cloudflare のまま変えない
+Vercel の NS に移せば DNS 作業は消えるが、**他ドメインで Cloudflare の機能を使っているので不可**。
+A レコードを足すだけにする。
+
+### 覚えておく値（毎回調べ直さない）
+| 何 | 値 |
+|---|---|
+| Vercel の A レコード | `76.76.21.21` |
+| www の CNAME | `cname.vercel-dns.com` |
+| プロキシ(オレンジ雲) | ★**必ず OFF**。ON だと Vercel の証明書発行が通らない |
+
+### ★同時に踏んだ罠（`vercel.json` はコメント不可）
+`vercel.json` に `"//"` でコメントを書くと **デプロイが落ちる**:
+`Invalid vercel.json - should NOT have additional property`
+→ 設定の理由は**別ファイル**に残す（実例: `characterlive/DEPLOY.md`）。
+　特に `/src/*.js` の `Content-Type: text/javascript` は、間違えると
+　ES モジュールが実行されず**画面が真っ白**になるので、理由を残す価値が高い。
+
 ## ⚠️ 公開でハマりやすいポイント（実体験ベース）
 
 `docs/TROUBLESHOOTING.md` に詳細。要点：
