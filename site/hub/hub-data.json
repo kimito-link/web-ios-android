@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-02T11:07:24.403Z",
+  "generatedAt": "2026-09-03T08:08:55.931Z",
   "entryCount": 72,
   "doctorOk": true,
   "doctorProblems": [],
@@ -145,6 +145,7 @@
     "未インデックスの検証資産: web-ios-android/scripts/verify-learnings-map.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/verify-numeric-claims-provenance.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-actions-usage.mjs（index化を検討）",
+    "未インデックスの検証資産: web-ios-android/templates/scripts/check-decision-receipt.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-dependabot-queue.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-improvement.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/check-instrument-proof.mjs（index化を検討）",
@@ -171,7 +172,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 164,
+  "doctorWarningCount": 165,
   "shelves": [
     {
       "id": "shipping",
@@ -2073,7 +2074,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-02T11:07:24.403Z",
+    "generatedAt": "2026-09-03T08:08:55.931Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3035,7 +3036,6 @@
         "ouenmovie",
         "patents",
         "pincers",
-        "Push成功 🎉 リポが完全に初期化できました",
         "qa-results",
         "Qwen3.6-35B-A3B",
         "removal",
@@ -3058,7 +3058,6 @@
         "_backups",
         "_enforcement-test",
         "_pending-deletion-review",
-        "でｒa",
         "デルタもん"
       ],
       "errors": []
@@ -3085,7 +3084,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが164件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが165件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }

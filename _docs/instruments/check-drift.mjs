@@ -128,7 +128,15 @@ export const PAIRS = [
        *     ＝次に正本が動いた瞬間に無言で割れる時限爆弾。
        */
       resolve(KIT_ROOT, 'scripts/lib/instrument-core.mjs'),
-      resolve(GH_ROOT, 'best-trust.biz/scripts/lib/instrument-core.mjs')
+      resolve(GH_ROOT, 'best-trust.biz/scripts/lib/instrument-core.mjs'),
+      /*
+       * ★2026-09-04 追加（check-drift-coverage.mjs が再び登録漏れを検出）。
+       *   soushin-suggest.link は【配っているのに台帳に無い】状態が続いていた。
+       *   ★登録時点で正本と実コードが完全一致（diff ゼロ）＝まだ割れていないが、
+       *     これは安全の証拠ではなく★「次に正本が動いた瞬間に無言で割れる」形。
+       *     best-trust.biz と同じ時限爆弾で、同じ理由で登録する。
+       */
+      resolve(GH_ROOT, 'soushin-suggest.link/scripts/lib/instrument-core.mjs')
     ]
   },
   {
@@ -147,8 +155,19 @@ export const PAIRS = [
       // ★kimitolink-linktree は 2026-08-24 に採用（キット外で初の採用先）。
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/improvement-ledger.mjs'),
       // ★2026-08-28 追加（登録漏れ）。配っていたのに表に無かった。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-ledger.mjs'),
-      resolve(GH_ROOT, 'soushin-suggest.link/scripts/improvement-ledger.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-ledger.mjs')
+      /*
+       * ★soushin-suggest.link は 2026-09-04 に【登録から外した】。
+       *   1日 放置・正本にしか無い行 70・コピーにしか無い行 178 と出ていたが、
+       *   ★実際に両方を読むと「古いコピー」ではなく別物だった:
+       *     正本   … 依存ゼロの【ライブラリ】。表を引数で受け取り関数を export する
+       *     soushin … dist/soushin-suggest.exe を見る【単体の実行スクリプト】
+       *   ★名前が同じだけで役割が違うので、どちらへ寄せても片方が壊れる。
+       *   tsuioku の improvementLedger.js を「旧世代だから入れない」と判断したのと
+       *   同じ扱い（上のコメント参照）。
+       *   ★寄せるなら先に soushin 側を「ライブラリ＋薄い実行部」に分ける作業が要る。
+       *   それをやったときに、このパスをここへ戻すこと。
+       */
     ]
   },
   {
@@ -285,6 +304,13 @@ export const PAIRS = [
     label: '本体の診断・進化進捗ページ（生成器）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/generate-shindan-version.mjs'),
     // ★2026-08-28: 同上。
+      /*
+       * ★2026-09-04 時点で割れている（正本 440行 / このコピー 221行）。
+       *   ★あえて今回は寄せていない: これは【公開ページを生成する】スクリプトで、
+       *     CANONICAL_URL・製品名・homeUrl が本体ロジックに直書きされている。
+       *   正本へ寄せると本番の出力が変わるため、★生成結果を実ページと突き合わせて
+       *     から入れ替えること（登録は外さない＝割れたままだと分かる方が安全）。
+       */
     copies: [resolve(GH_ROOT, 'soushin-suggest.link/scripts/generate-shindan-version.mjs')]
   }
 ];
