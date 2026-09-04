@@ -186,7 +186,11 @@ export function resolveImportCandidates(fromRepoPath, specifier) {
   if (!base) return [];
   const candidates = [];
   const push = (p) => { if (p && !candidates.includes(p)) candidates.push(p); };
-  if (/\.[a-zA-Z0-9]+$/.test(base)) {
+  // ★「拡張子付き」と見なすのは、実際にソースの拡張子である場合だけ。
+  //   `./Foo.styles` のような【拡張子ではないドット】を拡張子と誤認すると、
+  //   `.styles.ts` を候補に入れず、追跡済みのファイルを未追跡と誤検知する
+  //   （doin-challenge.com で6件が誤検知された・2026-09-04 実測）。
+  if (/\.(js|mjs|cjs|ts|tsx|jsx|json)$/.test(base)) {
     push(base);
     // TS プロジェクトで `./x.js` 指定→実体 x.ts の moduleResolution(bundler/nodenext)対応
     push(base.replace(/\.js$/, '.ts'));
@@ -246,6 +250,15 @@ function selftest() {
       text: '/**\n *   import { getTestAuth } from "./auth.config";\n */\nexport const x = 1;\n',
       tracked: ['e2e/auth.config.ts'],
       from: 'e2e/auth.config.ts',
+      wantViolation: false
+    },
+    {
+      // ★2026-09-04 doin-challenge.com で6件を誤検知した形。`.styles` を拡張子と
+      //   誤認し、`.styles.ts` を候補に入れていなかった（追跡済みなのに赤くなる）。
+      name: '毒2.5: ★拡張子でないドット（.styles）を拡張子と誤認しない',
+      text: "import { s } from './Foo.styles';\n",
+      tracked: ['src/Foo.styles.ts', 'src/app.tsx'],
+      from: 'src/app.tsx',
       wantViolation: false
     },
     {
