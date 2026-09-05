@@ -60,6 +60,15 @@
         "scripts/rollout-preflight.mjs",
         "scripts/lib/component-rollout.mjs"
       ]
+    },
+    {
+      "at": "2026-09-05T23:38:52.626Z",
+      "responsibility": "「1つの手段だけで断定していないか」を数える検査（check-cross-checked.mjs）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-cross-checked.mjs"
+      ]
     }
   ]
 }

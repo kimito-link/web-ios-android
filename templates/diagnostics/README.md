@@ -27,6 +27,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-large-tracked-files.mjs` | 巨大ファイル（既定5MB超）の誤追跡 | git管理下のみ。閾値は第2引数で変更可 |
 | `check-selftest-coverage.mjs` | ★検査自身が「サボると赤くなるか」を確かめているか（メタ検査） | このキット自身を見る |
 | `check-symptom-index.mjs` | 症状の言葉から原因の索引を引けるか | `SYMPTOMS.md` 等。無ければskip |
+| `check-cross-checked.mjs` | ★**1つの手段だけで断定していないか**（別の手段でも確かめた回数を数える） | `--baseline <数>` で下限。減ったら赤 |
 | `check-timing-instrumented.mjs` | 「遅い」と言われる経路に**時間**を測る計器があるか | `.ahk/.js/.mjs/.ts/.cs/.py` |
 | `check-heartbeat-present.mjs` | ★製品が「異常なし」を自分で名乗れるか（心拍） | ログを書く製品のみ。書かなければskip |
 | `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |
