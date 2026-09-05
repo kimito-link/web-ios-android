@@ -318,6 +318,49 @@ A レコードを足すだけにする。
 | www の CNAME | `cname.vercel-dns.com` |
 | プロキシ(オレンジ雲) | ★**必ず OFF**。ON だと Vercel の証明書発行が通らない |
 
+### ★★Cloudflareのトークンは「用途ごとに権限が独立している」（2026-09-05 line-bot から書き戻し）
+
+**同じ症状を3回踏んだので、ここに一般化して置く。**
+
+上の DNS の話は特殊事情ではない。**Cloudflare の権限は機能ごとに完全に分かれていて、
+1つの権限が他に波及しない。** 実測した例:
+
+| やりたいこと | 要る権限 | ★これでは通らない |
+|---|---|---|
+| DNSレコードを足す | Zone → DNS → Edit | Zone→Read（見えるだけ） |
+| メール受信を設定 | Zone → **Email Routing Rules** → Edit | Zone→DNS→Edit を持っていても**不可** |
+| ページに鍵をかける | Account → Access: Apps and Policies → Edit | 他のAccount権限では**不可** |
+| Workerを一覧する | Account → Workers Scripts → Read | — |
+
+**★「ゾーンが21件見えている」は、そのゾーンに何かできる保証にならない。**
+実測（2026-09-05, kimitotalk.link）:
+```
+見えるゾーン: 21件           ← Zone→Read はある
+Worker: 8件                  ← Workers Scripts→Read もある
+Access アプリ: 0件（触れる） ← Access→Edit もある
+✗ Email Routing — 10000: Authentication error   ← ここだけ無い
+```
+
+**対処**: 足りない権限**だけ**を既存トークンに追記する。
+新しく作り直さない（作り直すと GitHub Secrets 等の再登録が発生して事故る）。
+→ ダッシュボード → マイプロフィール → APIトークン → 対象トークンの **Edit** →
+　 Permissions に1行足す → Save。**値は変わらないので再登録は不要。**
+
+### ★★トークンは「手元に持ってこない」で済むことが多い（2026-09-05）
+
+GitHub Secrets のトークンは**読み出せない**（設計上そうなっている）。
+しかし **workflow の中では使える**ので、設定作業を workflow に置けば
+**値を誰の目にも触れさせずに**実行できる。クリップボード経由すら要らない。
+
+実例: `line-bot/.github/workflows/cloudflare-setup.yml` +
+`line-bot/scripts/cloudflare-setup.mjs`
+- `mode=check` … 何ができるかを読み取るだけ（★変更しない）
+- `mode=email-routing` / `mode=access` … 実際に設定する
+
+★**いきなり設定を変えず、必ず check から**。権限不足がその場で分かるので、
+「設定したつもりが効いていない」を作らない。
+★エラー本文にトークンが混ざり得るので、出力前に必ず伏せる（redact）。
+
 ### ★同時に踏んだ罠（`vercel.json` はコメント不可）
 `vercel.json` に `"//"` でコメントを書くと **デプロイが落ちる**:
 `Invalid vercel.json - should NOT have additional property`
