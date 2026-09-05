@@ -285,6 +285,69 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256
 
 ---
 
+## 🤖 Android：アプリの上にURLの帯（アドレスバー）が出たままになる
+
+### こんな症状
+
+TWAで作ったAndroidアプリを開くと、画面のいちばん上に `🔒 example.com` のような
+URLの帯が出る。ふつうのブラウザのように見えてしまい、アプリらしくない。
+
+### 原因
+
+**assetlinks.json に「配布される署名」が載っていない。**
+
+Play App Signing が有効だと、アップロードしたAABを **Google が別の鍵で再署名して**
+配布する。assetlinks.json にアップロード鍵しか書いていないと、実機での
+Digital Asset Links 検証に失敗し、TWAがCustom Tabに落ちて帯が出る。
+
+★**この不一致は、ふつうの手段では気づけない：**
+
+| 手段 | なぜ駄目か |
+|---|---|
+| Google の Digital Asset Links API | statementの構文と到達性しか見ない。不一致でも通る |
+| `keytool` / `apksigner` でAAB検査 | 出るのはアップロード鍵。配布される署名ではない |
+| `bubblewrap validate` / `doctor` | validateはPWA品質、doctorはJDK/SDKパス。署名は見ない |
+| `adb shell pm get-app-links` | Android App Linksの検証状態。TWAのDAL検証とは別物 |
+| `verify-assetlinks-published.mjs` | 配信の有無とpackage_nameまで。指紋は判定対象外 |
+
+しかも**アプリ自体は動く**ので、帯が出ていることに気づかないまま配信されうる。
+
+### 直し方（Webのデプロイだけ。APKの作り直しは不要）
+
+```bash
+# 1. 不一致かどうかを機械で判定する
+GOOGLE_PLAY_SA_JSON_PATH=.secrets/google-play-sa.json   npm run twa:signing:check
+
+# 🔴 不一致なら、追加すべき指紋が出力される
+```
+
+出力された指紋を `assetlinks.json` の `sha256_cert_fingerprints` に**追加**する
+（アップロード鍵は消さない。ローカルビルドの検証が通らなくなる）。
+
+```json
+"sha256_cert_fingerprints": [
+  "E0:C1:...",   ← アップロード鍵（残す）
+  "5B:06:..."    ← Play App Signing の鍵（追加）
+]
+```
+
+デプロイすれば直る。既にインストール済みの端末も、Chromeのキャッシュが
+切れれば（通常30分〜1時間）帯が消える。
+
+### 手で見るなら
+
+Play Console → テストとリリース → **アプリの完全性** → Play アプリ署名 に、
+「アップロード鍵」と「アプリ署名鍵」の両方のSHA-256が並んでいる。
+後者が assetlinks.json に入っていなければアウト。
+
+### 実例
+
+2026-09-05、Exosome のドメイン移行（`yukkuri-exosome.link` →
+`exosome.kimito.link`）で発生。製品版へ昇格する直前にこの検査を入れて発見。
+入れていなければ全ユーザーのアプリに帯が出たまま配信されていた。
+
+---
+
 ## 💡 覚えておく3つのこと
 
 1. **承認 ≠ 公開**：iOSは「配信地域」、Androidは「審査送信」という別ステップがある

@@ -37,6 +37,8 @@
     "config:schema:selftest": "node templates/scripts/verify-app-config-schema.mjs --selftest",
     "assetlinks:check": "node templates/scripts/verify-assetlinks-published.mjs",
     "assetlinks:check:selftest": "node templates/scripts/verify-assetlinks-published.mjs --selftest",
+    "twa:signing:check": "node templates/scripts/verify-twa-signing-matches-assetlinks.mjs",
+    "twa:signing:check:selftest": "node templates/scripts/verify-twa-signing-matches-assetlinks.mjs --selftest",
     "links:external": "node templates/scripts/verify-external-links.mjs site",
     "links:external:selftest": "node templates/scripts/verify-external-links.mjs --selftest",
     "splash:check": "node templates/scripts/check-splash-config.mjs",
