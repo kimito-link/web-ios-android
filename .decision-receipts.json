@@ -69,6 +69,15 @@
       "scopePaths": [
         "templates/diagnostics/check-cross-checked.mjs"
       ]
+    },
+    {
+      "at": "2026-09-06T12:21:37.603Z",
+      "responsibility": "HTML内インラインJSの構文検査（check-inline-script-syntax.mjs・依存ゼロ）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-inline-script-syntax.mjs"
+      ]
     }
   ]
 }
