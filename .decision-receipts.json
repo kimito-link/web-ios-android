@@ -78,6 +78,15 @@
       "scopePaths": [
         "templates/diagnostics/check-inline-script-syntax.mjs"
       ]
+    },
+    {
+      "at": "2026-09-06T20:30:00.857Z",
+      "responsibility": "near-dup-detection",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-near-duplicates.mjs"
+      ]
     }
   ]
 }

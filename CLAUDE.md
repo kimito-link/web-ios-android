@@ -258,6 +258,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
      共通部分の使いまわしができる」とX上で説明していた通り、**連携先が増えるほど「同じ形の
      画面を毎回新しく書く」誘惑が強くなるからこそ、最初から共通置き場を決めておく価値が
      大きい**、という基準⑤⑥の生きた実例。
+     ★機械検出: `templates/diagnostics/check-near-duplicates.mjs`（`npm run diagnostics`で走る。2026-09-07追加）。
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。

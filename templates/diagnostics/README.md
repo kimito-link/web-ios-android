@@ -36,6 +36,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-hotkey-scope.mjs` | ★AutoHotkey製常駐アプリで**前面判定(WinActive)の無いホットキー**（他アプリのキーボードを奪う） | `.ahk`。無ければskip |
 | `check-build-fresh.mjs` | ★配る実体（exe/app/apk）が**ソースより古い**（ビルドが無言で失敗している） | 成果物。無ければskip |
 | `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
+| `check-near-duplicates.mjs` | ★**同名ではない**「少しずつ違う実装」が複数箇所に増える数（基準⑦の機械検出）。行を正規化し連続一致の塊を検出 | ラチェット。`--baseline` で下限。`.js/.mjs/.cjs/.jsx/.ts/.tsx/.html` |
 | `check-gates-are-wired.mjs` | ★検査を**作った/格上げしたのに誰も呼んでいない**数 | ラチェット。`--dirs` で置き場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
 | `check-doc-rot.mjs` | ★AI向け指示書（CLAUDE.md）が指す実体が消えていないか（**文書→実体**の向き。上の1本は**コード→文書**で向きが逆・補完関係） | `CLAUDE.md`。無ければ skip |
@@ -163,6 +164,7 @@ JS以外の製品や、置き場所の流儀が違うリポはこれで参加で
 | `checkPattern` | **どれがゲートか**の正規表現 |
 | `sharedDir` | 共有部品の置き場所（`check-shared-parts-used` が使う）。既定は `shared`/`common`/`lib/shared` |
 | `srcDir` | 画面ソースの置き場所（`check-timing-instrumented` が使う）。Next.js なら `app` 等 |
+| `nearDupBaseline` | `check-near-duplicates` のラチェット上限（既知の塊数）。宣言が無ければ初回実行時の値を提案 |
 
 ### ★`sharedDir` / `srcDir` がなぜ要るか（2026-09-01・実損）
 

@@ -307,6 +307,11 @@
           <td><code>check-shared-parts-used</code></td>
           <td>★<b>共有部品があるのに使わず、同じ名前の関数を自前で書いている数</b>。重複の代償は行数ではなく、<b>一度直したはずのバグが別の画面では直っていない</b>ことです（共有部品に入った修正が、その部品を読み込まない画面には永久に届きません）。重複禁止はルールとして既に3箇所に書かれていましたが守られませんでした ——<b>検査していない規範は守られない</b>ため、数える側に回しました。<b>統合すべきかは判定しません</b>（描画戦略の違いなど、分けている理由が正当なものも混ざります）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-near-duplicates.mjs（2026-09-07追加・CLAUDE.md基準⑦の機械検出） -->
+        <tr>
+          <td><code>check-near-duplicates</code></td>
+          <td>★<b>同名ではない「少しずつ違う実装」が複数箇所に増えている数</b>。<code>check-shared-parts-used</code>は同じ名前の関数しか拾えませんが、実際に増えるのは<b>コピー&amp;ペーストで名前や変数だけ変えた画面・カード</b>です。行を正規化して連続する一致の塊を検出し、<b>3ファイル以上に同じ塊があれば</b>共通化のサインとして数えます。<b>統合すべきかは判定しません</b>（構造が違う同目的コードは拾えず、意図的な複製が混ざることもあります）。</td>
+        </tr>
         <!-- 出典: templates/scripts/check-decision-receipt.mjs（2026-09-02追加・_docs/DESIGN-canonical-boundary-rules.md v1.0の実装） -->
         <tr>
           <td><code>check-decision-receipt</code></td>

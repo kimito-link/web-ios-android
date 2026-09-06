@@ -115,6 +115,15 @@ const CHECKS = [
     path: join(__dirname, 'check-shared-parts-used.mjs'),
     declares: { sharedDir: '--shared-dir' },
   },
+  // ★「少しずつ違う実装」が複数箇所に増える状態を数える(2026-09-07追加、基準⑦の機械検出)。
+  //   check-shared-parts-usedは【同名】関数しか拾えないため、名前も違う「似た塊」は
+  //   別の検査として分離した(事実と推測を混ぜない。KEEP_SEPARATE)。
+  //   詳細: _docs/DESIGN-criterion7-near-duplicate-detection-2026-09-07.md
+  {
+    name: 'check-near-duplicates',
+    path: join(__dirname, 'check-near-duplicates.mjs'),
+    declares: { nearDupBaseline: '--baseline' },
+  },
   // ★説明した置き場所と、コードが実際に探す場所がズレていないか。
   //   ★説明はコードより先に腐る(このリポはLP本文が242版前で止まっていた実績あり)。
   { name: 'check-docs-match-code', path: join(__dirname, 'check-docs-match-code.mjs'), kitRoot: true },

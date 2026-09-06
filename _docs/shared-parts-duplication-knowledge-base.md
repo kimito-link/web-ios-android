@@ -116,7 +116,7 @@ Ctrl+F・HTML保存・印刷はいずれも DOM に無いものを拾えない�
 grep -l "重複|duplicate|reuse|再利用" templates/diagnostics/*.mjs → 0件
 ```
 
-⟹ `check-shared-parts-used.mjs`（未実装・要検討）。
+⟹ `check-shared-parts-used.mjs`（実装済み・2026-09-01、`templates/diagnostics/run.mjs`に配線済み）。
 既存の `check-instruments-reachable.mjs`（「計器は置いただけでは動かない」）と同じ型で:
 - 冒頭に「★なぜ要るか」＝実損の記録
 - 「★この検査が判定しないこと」を明記
@@ -130,6 +130,8 @@ shared/ に公開部品があるのに、
 ／共有部品を1つも読み込まずに同じ種類の画面を描いている
 ```
 
-★**未確認**: 名前が違う同目的関数をどこまで機械的に拾えるかは未検証。
-　まず1リポで効くことを確かめてから、キットへ昇格させること
-　（逆順にすると「キットに置いたが実は機能しない」になる）。
+★**実測結果（2026-09-07）**: 名前が違う同目的関数（少し違う実装）は`check-shared-parts-used.mjs`
+　単体では拾えないと判明したため、別検査`check-near-duplicates.mjs`（行の正規化＋連続一致の
+　塊検出）として新設した。`reply-copilot-openrouter-v2`で実測し、本KBが記録した実損
+　（`popup/features/shiori-expanded.js`と`popup/features/bookmarks.js`の重複）が実際にクラスタ
+　として検出されることを確認済み。詳細: `DESIGN-criterion7-near-duplicate-detection-2026-09-07.md`。

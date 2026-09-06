@@ -268,6 +268,14 @@ MVPの次の一歩（1つずつ）: ②`findRepoRoot`を`templates/scripts/lib/r
    実装済みへ更新し、`ai-hub/index.json`へharvestする。CLAUDE.mdには新しい基準⑦を足さない
    （文章を増やさない、が本設計の主張そのもの）。
 
+   ★2026-09-07追記: この9番目の判断とは別に、実際には基準⑦「同じ画面が複数箇所に増える
+   のは共通化のサイン」がCLAUDE.mdへ追記された（2026-09-04）。これは「別名・少しずつ違う
+   実装」という、本設計が対象にした「同名関数の重複」とは異なる問題を指しており、本設計の
+   `check-shared-parts-used.mjs`（同名一致のみ）では検出できない。基準⑦を機械検出する
+   別検査 `check-near-duplicates.mjs` を新設し（KEEP_SEPARATE、事実と推測を混ぜないため）、
+   基準⑦の文章は「検査済み規範」として残すことで決着させた。
+   詳細: `DESIGN-criterion7-near-duplicate-detection-2026-09-07.md`。
+
 ### 参照した実ファイル（設計の根拠・司令塔が全て実在確認済み）
 
 - `templates/diagnostics/check-shared-parts-used.mjs`（主戦場。`--shared-dir`単一・名前のみ・ラチェット）

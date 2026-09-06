@@ -4,5 +4,7 @@
   "index": "../ai-hub/index.json",
   "_srcDir_why": "★check-timing-instrumented は scripts/ を指定しても『測れませんでした』(exit 2)のままになる。これは正しい: このリポの scripts/ は CLI ツール群で、★『利用者が待たされる画面操作』(handleSubmit / PasteImage 等)が1つも無い。無理に measured へ倒すために対象を広げない——それは『測ったことにする』であって、このキットが最も嫌う形。画面を持つプロジェクトでは app/ や src/ を指す。",
   "sharedDir": ["scripts/lib", "templates/scripts/lib"],
-  "srcDir": "scripts"
+  "srcDir": "scripts",
+  "_nearDupBaseline_why": "★2026-09-07実測値。site/配下の生成HTML群がテンプレート由来で同じヘッダー/フッター断片を持つため、53件のうち大半は生成物間の正当な一致（scripts/lib/tree-view-component.mjs↔site/hub/配下等、共有部品が正しく使われている証拠）。増えた分だけ見るラチェットなので、この値をそのまま初期値とする。",
+  "nearDupBaseline": 53
 }
