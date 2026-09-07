@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T08:08:55.931Z",
+  "generatedAt": "2026-09-07T10:28:20.958Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -66,141 +66,7 @@
   ],
   "projects": [
     {
-      "name": "doin-challenge.com",
-      "profile": {
-        "hasCapacitor": false,
-        "hasExpo": true,
-        "hasTwa": false,
-        "hasIosDir": false,
-        "hasAndroidDir": false,
-        "hasAppConfig": true,
-        "isKitTarget": true
-      },
-      "cells": {
-        "ios-splash": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "android-splash": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "android-signing": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "webdir": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "signing-path": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "tracked-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "app-config-schema": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "assetlinks": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "instrument-core": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "no-secrets-in-dist": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "hermes-unsafe-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "root-cause-claim": {
-          "state": "missing",
-          "provenance": "scan"
-        }
-      },
-      "score": {
-        "ok": 0,
-        "applicable": 6
-      },
-      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
-    },
-    {
-      "name": "Exosome",
-      "profile": {
-        "hasCapacitor": true,
-        "hasExpo": false,
-        "hasTwa": false,
-        "hasIosDir": true,
-        "hasAndroidDir": false,
-        "hasAppConfig": true,
-        "isKitTarget": true
-      },
-      "cells": {
-        "ios-splash": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "android-splash": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "android-signing": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "webdir": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "signing-path": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "tracked-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "app-config-schema": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "assetlinks": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "instrument-core": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "no-secrets-in-dist": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "hermes-unsafe-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "root-cause-claim": {
-          "state": "missing",
-          "provenance": "scan"
-        }
-      },
-      "score": {
-        "ok": 0,
-        "applicable": 9
-      },
-      "rowNote": null
-    },
-    {
-      "name": "fujisan-clean",
+      "name": "compass",
       "profile": {
         "hasCapacitor": true,
         "hasExpo": false,
@@ -263,6 +129,140 @@
       "score": {
         "ok": 0,
         "applicable": 9
+      },
+      "rowNote": null
+    },
+    {
+      "name": "doin-challenge.com",
+      "profile": {
+        "hasCapacitor": true,
+        "hasExpo": true,
+        "hasTwa": false,
+        "hasIosDir": false,
+        "hasAndroidDir": true,
+        "hasAppConfig": true,
+        "isKitTarget": true
+      },
+      "cells": {
+        "ios-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-signing": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "webdir": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "signing-path": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "tracked-imports": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "app-config-schema": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "assetlinks": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "instrument-core": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "no-secrets-in-dist": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
+        }
+      },
+      "score": {
+        "ok": 3,
+        "applicable": 12
+      },
+      "rowNote": null
+    },
+    {
+      "name": "kimito-Link-Voice",
+      "profile": {
+        "hasCapacitor": true,
+        "hasExpo": false,
+        "hasTwa": false,
+        "hasIosDir": false,
+        "hasAndroidDir": true,
+        "hasAppConfig": true,
+        "isKitTarget": true
+      },
+      "cells": {
+        "ios-splash": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "android-splash": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "android-signing": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "webdir": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "signing-path": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "tracked-imports": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "app-config-schema": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "assetlinks": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "instrument-core": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "no-secrets-in-dist": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "ok",
+          "provenance": "scan"
+        }
+      },
+      "score": {
+        "ok": 12,
+        "applicable": 12
       },
       "rowNote": null
     },
@@ -535,7 +535,7 @@
       "rowNote": null
     },
     {
-      "name": "resend.kimito-link.com",
+      "name": "resend.kimito-link.com-",
       "profile": {
         "hasCapacitor": true,
         "hasExpo": false,
@@ -868,56 +868,123 @@
         "applicable": 12
       },
       "rowNote": null
+    },
+    {
+      "name": "yukkuri-exosome.link",
+      "profile": {
+        "hasCapacitor": true,
+        "hasExpo": false,
+        "hasTwa": false,
+        "hasIosDir": true,
+        "hasAndroidDir": false,
+        "hasAppConfig": true,
+        "isKitTarget": true
+      },
+      "cells": {
+        "ios-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-signing": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "webdir": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "signing-path": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "tracked-imports": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "app-config-schema": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "assetlinks": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "instrument-core": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "no-secrets-in-dist": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
+        }
+      },
+      "score": {
+        "ok": 0,
+        "applicable": 9
+      },
+      "rowNote": null
     }
   ],
   "totals": {
     "ios-splash": {
-      "ok": 2,
-      "applicable": 8
+      "ok": 3,
+      "applicable": 10
     },
     "android-splash": {
-      "ok": 1,
-      "applicable": 8
+      "ok": 2,
+      "applicable": 10
     },
     "android-signing": {
-      "ok": 3,
-      "applicable": 5
+      "ok": 5,
+      "applicable": 7
     },
     "webdir": {
-      "ok": 0,
-      "applicable": 8
-    },
-    "signing-path": {
-      "ok": 0,
-      "applicable": 5
-    },
-    "tracked-imports": {
-      "ok": 3,
-      "applicable": 12
-    },
-    "app-config-schema": {
-      "ok": 0,
-      "applicable": 12
-    },
-    "assetlinks": {
-      "ok": 0,
-      "applicable": 5
-    },
-    "instrument-core": {
-      "ok": 2,
-      "applicable": 12
-    },
-    "no-secrets-in-dist": {
-      "ok": 1,
-      "applicable": 12
-    },
-    "hermes-unsafe-imports": {
       "ok": 1,
       "applicable": 10
     },
-    "root-cause-claim": {
+    "signing-path": {
       "ok": 1,
-      "applicable": 12
+      "applicable": 7
+    },
+    "tracked-imports": {
+      "ok": 5,
+      "applicable": 13
+    },
+    "app-config-schema": {
+      "ok": 1,
+      "applicable": 13
+    },
+    "assetlinks": {
+      "ok": 1,
+      "applicable": 7
+    },
+    "instrument-core": {
+      "ok": 4,
+      "applicable": 13
+    },
+    "no-secrets-in-dist": {
+      "ok": 2,
+      "applicable": 13
+    },
+    "hermes-unsafe-imports": {
+      "ok": 2,
+      "applicable": 11
+    },
+    "root-cause-claim": {
+      "ok": 2,
+      "applicable": 13
     }
   },
   "scan": {
@@ -929,11 +996,13 @@
       ".codex",
       ".git",
       ".pnpm-store",
+      "ai-business-secretary",
+      "ai-generic-rules",
       "ai-health-check.link",
       "ai-shain-worker",
       "ai-shain.link",
-      "AI汎用ルール",
       "appium",
+      "best-price",
       "best-trust.biz",
       "characterlive",
       "codex",
@@ -941,14 +1010,13 @@
       "discordai",
       "dns-osint-pro-ver2.0",
       "gmail-secretary-extension",
-      "gpthisho",
       "grok-build",
       "hacking-tool",
       "henshin-hisho",
       "henshin-hisho-lp-deploy",
       "Kali",
       "kimi-no-oto",
-      "kimito-Link-Voice",
+      "kimito-link-reply-suggest",
       "kimito-link-yukkuri-douga",
       "knowledge",
       "line-bot",
@@ -957,14 +1025,12 @@
       "nagano_giin_complete_guide",
       "Negative-suggestion-checker",
       "nicolive-dl-master",
-      "OpenClaude",
       "ouenmovie",
       "patents",
       "pincers",
       "qa-results",
       "Qwen3.6-35B-A3B",
       "removal",
-      "reply-copilot-openrouter-v2",
       "reviewcheck.jp",
       "reviewcheck.jp-kenshin",
       "rolex",

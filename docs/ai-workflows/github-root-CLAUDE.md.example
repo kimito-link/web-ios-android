@@ -1,0 +1,147 @@
+<!--
+  これは github/CLAUDE.md を「橋渡しに痩せさせる前」の全文バックアップ（2026-09-07時点）。
+  github/直下は git 管理外なので、誤って内容を消してしまっても復元できるようにここに置く。
+  正本は github/CLAUDE.md 自身。このファイルは参考保存であり、以後の同期対象ではない
+  （_docs/instruments/check-drift.mjs の PAIRS に「参考保存・同期不要」として登録済み）。
+-->
+
+# github/ — 横断の入口（AIはまずここ）
+
+このディレクトリは数十のプロダクトリポの集合。**横断の知見・自動化は `ai-hub` に集約**している。
+
+## 人間向けの入口
+人間はブラウザで https://kimito-skill.link/hub/ を開くと、ai-hub/index.json の内容がURL付きで見られる（Cloudflare Access保護・生成物・正本はai-hub/index.json）。AIはこのCLAUDE.mdからCLIで辿る。
+
+## まず ai-hub を読む
+- 入口: [`ai-hub/CLAUDE.md`](ai-hub/CLAUDE.md)（find/doctor の使い方・役割エージェント・harvestの掟）
+- 資産を探す: `node ai-hub/bin/hub.mjs find --tag <t1,t2>` / `--sig "<エラー実文言>"`
+- 索引の健全性: `node ai-hub/bin/hub.mjs doctor`
+- 全体設計: [`ai-hub-DESIGN.md`](ai-hub-DESIGN.md) ／ 実装引き継ぎ: [`ai-hub-IMPLEMENTATION-HANDOFF.md`](ai-hub-IMPLEMENTATION-HANDOFF.md)
+
+## 3段構えワークフロー（会議→Fable設計→実装）
+`/council-fable 〈お題〉`（グローバルスキル）。正本 [`../web-ios-android/docs/ai-workflows/COUNCIL-HOWTO.md`](../web-ios-android/docs/ai-workflows/COUNCIL-HOWTO.md) / [`../web-ios-android/docs/ai-workflows/FABLE-3STEP-HOWTO.md`](../web-ios-android/docs/ai-workflows/FABLE-3STEP-HOWTO.md)。
+ゼロから理想像を発散させたい設計向き。
+
+## 地図→仕様ワークフロー（wayfinder→to-spec、2026-07-30採用）
+`/wayfinder-to-spec 〈お題〉`（グローバルスキル）。正本 [`../web-ios-android/docs/ai-workflows/WAYFINDER-TO-SPEC-HOWTO.md`](../web-ios-android/docs/ai-workflows/WAYFINDER-TO-SPEC-HOWTO.md)。
+**既存コードの真因を特定してから直す**バグ修正・機能追加向き（司令塔が実コードを読んで地図を作り、
+その地図をFableに渡して仕様設計→実装引き継ぎ）。council-fableとの使い分けはHOWTO冒頭に明記。
+
+## 役割エージェント（~/.claude/agents/ に配備済）
+`reality-checker`（動作の判定役）/ `store-guard`（ストア審査官）/ `harvester`（知見の収穫役）。正本は `ai-hub/agents/`。
+
+## ★LP・自社サイトを作るときは「ロゴが主役」（2026-09-04 ユーザー指摘）
+
+> ユーザーの言葉: **「ロゴがいのちなのにひどすぎる」**
+
+**キミトリンクのロゴはブランドの顔。小さく飾ってはいけない。**
+
+### 正本の置き場（ここから取る。作らない・加工しない）
+- `kimito-link/src/images/brand/logo/color/` … 全バリエーション
+- ★**既定は `logo_kimito-link_RGB_maru_ginga.png`**（丸が銀河テクスチャの特別版）
+- favicon は `logo_kimito-link_RGB_favi_blue.png`
+- 比率は **800x600**（横長ではない）
+
+### 本家 `kimito-link/src/index.html` の扱い方（これに合わせる）
+```html
+<img src=".../logo_kimito-link_RGB_maru_ginga.png"
+     width="220" height="220" fetchpriority="high" alt="Kimito-Link Logo">
+```
+- ファーストビューに **220〜400px** で置く
+- `fetchpriority="high"` で**最優先読み込み**
+- ★つまり **ロゴは主役**。ヘッダーの隅に置く飾りではない。
+
+### 実際にやらかした失敗（繰り返さない）
+1. **高さ30pxの飾りにした** → 潰れて読めない。「ひどすぎる」と指摘された
+2. **別素材のサイズ指定を流用した** → 追憶LPの**横長**ロゴ用の `width=160 height=40` を、
+   比率800x600の**正方形寄り**ロゴに当てて歪ませた。
+   ★**素材ごとに比率が違う。コピペする前に実寸を測る**
+3. **暗い背景に置いた** → ロゴが濃紺(#1c4b7d)なので沈む。
+   ★**明るい地にする**（追憶のきらめきLPも明るい地）
+
+### 配色（ロゴから取る）
+- 紺 `#1c4b7d` / 濃紺 `#14375c` / オレンジ `#c8721c`
+- 地は生成りの明るい色（例 `#fffaf4` / `#fff3e6`）
+
+### 参考にするLP（この3つを見てから書く）
+- `kimito-link/src/index.html` … ★ロゴの扱いの正本
+- `tsuioku-no-kirameki.com/tsuioku-no-kirameki/index.html` … 構成と「弱点も正直に書く」姿勢
+- `characterlive/index.html` … 上記を踏まえた最小構成の実例
+
+## ★ドメイン公開は1コマンド（毎回の手作業を終わらせる・2026-09-04）
+
+> ユーザーの言葉:**「なんか毎回トークン発行する作業があるの大変　おわりにできない？」**
+
+**Cloudflare のドメインを Vercel に向ける作業は自動化済み。管理画面を開かない。**
+
+```bash
+# ★ドメイン名は直接書く。<> を付けて貼ると PowerShell が
+#   「The '<' operator is reserved for future use.」で止まる（実際に踏んだ）。
+node ai-hub/bin/domain-connect.mjs characterlive.link           # A/CNAME を設定
+node ai-hub/bin/domain-connect.mjs characterlive.link --check   # 今の状態を見るだけ
+```
+
+### ★1回だけやること（2026-09-04 実施済み・以後ずっと自動）
+Cloudflare → マイプロフィール → APIトークン → **トークンを作成**
+→ 権限を選ぶ → 有効期限 **期限なし** → **IPフィルタは空のまま** → 作成
+→ 出た値を環境変数 **`CLOUDFLARE_DNS_TOKEN`** に入れる。
+
+★**権限は「Write all resources」を選んだ**（ユーザー判断）。
+　理由:「ゾーンだけじゃなくいろいろやるので全部の権限にしたい。毎回この作業がある」。
+　DNS だけで足りるなら「Edit zone DNS」でもツールは動く。
+　※ Write all resources はアカウント全体を操作できる強い権限。承知の上で選んでいる。
+- ゾーンリソース: **すべてのゾーン**
+- ★**クライアントIPフィルタは空にする**。入れると自宅IPが変わった時に黙って壊れる。
+- ★**トークンの値はどのファイルにも書かない**（このリポは public）。
+  環境変数として渡す。★受け渡しは**クリップボード経由**にして会話ログにも残さない
+  （グローバルルール「トークン・鍵の受け渡しはクリップボード経由」に従う）。
+
+★**既存の `CLOUDFLARE_API_TOKEN`（line-bot/.env）は使えない。**
+　ゾーン一覧は21件見えるのに、DNS 編集だけ `10000: Authentication error` になる（実測）。
+　★**「見えている＝編集できる」ではない。** 別トークンが要る。
+　ツールがこの理由を画面に出すので、迷わない。
+
+### ★実行例（characterlive.link・2026-09-04 実測）
+```
+ゾーン: characterlive.link (cca5a9be...)
+いまのレコード: 0 件
+  A     characterlive.link → 76.76.21.21              … 追加した
+  CNAME www.characterlive.link → cname.vercel-dns.com … 追加した
+✓ DNS 設定が完了しました。
+```
+★**冪等**。2回目以降は「既に正しい」と出て何もしない。安全に何度でも叩ける。
+★DNS 反映と SSL 証明書の発行に**数分かかる**。直後に curl して `000` でも失敗ではない。
+
+### ★ネームサーバーは Cloudflare のまま変えない
+Vercel の NS に移すと Cloudflare 側の機能が効かなくなる。
+**A レコードを足すだけ**にする（他ドメインで Cloudflare を使っているため）。
+
+### ★★www は作らない（2026-09-04 ユーザー方針）
+
+> ユーザーの言葉:**「www なしに統一 方針です」**
+
+**すべてのドメインで www なしに統一する。** `https://example.com` が唯一の正。
+
+★**実現方法は「DNS に www を作らない」。これが一番確実。**
+`domain-connect.mjs` は既定で www を作らない（要るときだけ `--with-www`）。
+
+★**Vercel 側でリダイレクトしようとすると詰まる（実際に踏んだ）**:
+1. `vercel.json` に `redirects`（`permanent:true`）を書いた → **効かない**
+2. 理由: www を Vercel プロジェクトに登録すると、その割り当てが
+   `vercel.json` の redirects **より優先**され、www が普通に 200 を返す
+3. `vercel alias rm` で外すと 307 で転送されるようになるが、
+   **再デプロイすると復活する**
+→ ★**DNS に www が無ければ、そもそも悩む余地がない。** レコードごと消すのが正解。
+
+★なぜ統一するか: 同じ内容が www あり/なしの2つのURLで見えると、
+どちらが正か分からず、検索エンジンにも重複コンテンツとして扱われる。
+
+### 覚えておく値
+- Vercel の A レコード: **76.76.21.21**
+- www の CNAME: **cname.vercel-dns.com**
+- ★**プロキシ(オレンジ雲)は必ず OFF**。ON だと Vercel の証明書発行が通らない。
+  （ツールは常に `proxied:false` で作る）
+
+## 原則
+正本1つ・コピー散らさない ／ fail-closed ／ 既存資産を作り直さず薄く束ねる ／
+Windows: 日本語パスは引用符・PowerShellに日本語を渡さない。

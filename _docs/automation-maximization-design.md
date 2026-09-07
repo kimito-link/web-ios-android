@@ -1,6 +1,6 @@
 # 設計書：自動化の最大化（web-ios-android キット）
 
-> 司令塔Claude（Opus 4.8）が、地雷マップ実地調査＋無料LLM会議ハーネス（[COUNCIL-HOWTO.md](../../COUNCIL-HOWTO.md)、design分類・4体動的召集）の素材を統合して作成。
+> 司令塔Claude（Opus 4.8）が、地雷マップ実地調査＋無料LLM会議ハーネス（[COUNCIL-HOWTO.md](../docs/ai-workflows/COUNCIL-HOWTO.md)、design分類・4体動的召集）の素材を統合して作成。
 > Fableサブエージェントへの委譲は安全分類器の一時障害（Agent呼び出しが3回連続失敗）で不可となったため、司令塔が直接統合した。次の実装フェーズ（別モデル/別チャット）にそのまま渡せる粒度で書く。
 > 作成日: 2026-07-02
 

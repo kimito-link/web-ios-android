@@ -87,6 +87,15 @@
       "scopePaths": [
         "templates/diagnostics/check-near-duplicates.mjs"
       ]
+    },
+    {
+      "at": "2026-09-07T10:31:22.350Z",
+      "responsibility": "cross-repo-doc-move-with-reference-rewrite",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": "scripts/lib/hub-kit-matrix.mjs",
+      "scopePaths": [
+        "templates/scripts/move-doc.mjs"
+      ]
     }
   ]
 }

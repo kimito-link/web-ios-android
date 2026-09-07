@@ -93,7 +93,7 @@
 ## 関連ファイル(キット内 + 参照元)
 
 - 金型アプリ(連動型の正解): `../partnership_program_website`(capacitor.config.json は server.url、patch は2点だけ)
-- 解決の記録: `../fujisan-clean/_docs/POSTMORTEM-ios-blackscreen.md`(2ヶ月の苦闘と真因の全記録)
-- 6原則の原典: `../fujisan-clean/AGENTS.md`「iOS Capacitor シェル運用の原則」
-- リリース移植手順: `../fujisan-clean/_docs/release-pipeline-playbook.md`(git push 一発で3ストア配信)
-- CIガード現物: `../fujisan-clean/.github/workflows/ios-shell-guardrail.yml` / `ios-blackscreen-check.yml`
+- 解決の記録: `../compass/_docs/POSTMORTEM-ios-blackscreen.md`(2ヶ月の苦闘と真因の全記録)
+- 6原則の原典: `../compass/AGENTS.md`「iOS Capacitor シェル運用の原則」
+- リリース移植手順: `../compass/_docs/release-pipeline-playbook.md`(git push 一発で3ストア配信)
+- CIガード現物: `../compass/.github/workflows/ios-shell-guardrail.yml` / `ios-blackscreen-check.yml`

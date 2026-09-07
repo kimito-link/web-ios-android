@@ -151,8 +151,8 @@ node scripts/android-patch-signing.mjs
 
 ## 実証済みの参照アプリ（金型の出どころ）
 
-- `../../../Exosome/android-twa` — TWA の最小実物（manifest / app build.gradle の署名注入後の姿）。
-- `../../../Exosome/scripts/android-patch-signing.mjs` — 署名注入スクリプトの本体。
+- `../../../yukkuri-exosome.link/android-twa` — TWA の最小実物（manifest / app build.gradle の署名注入後の姿）。
+- `../../../yukkuri-exosome.link/scripts/android-patch-signing.mjs` — 署名注入スクリプトの本体。
 - `../../../partnership_program_website/scripts/{create-android-keystore,print-android-fingerprint,build-android-aab}.ps1` — Windows ビルド/署名 ps1 の本体。
 
 > これらの稼働リポは**読み取り専用**。金型を更新するときは現物を読んで diff を取り込む

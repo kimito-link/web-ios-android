@@ -64,8 +64,8 @@ cd web-ios-android
 node templates/diagnostics/check-near-duplicates.mjs .
 # → 何らかの塊が出ることを確認（findRepoRootは閾値未満で出ない可能性あり、それは正常）
 
-# reply-copilot-openrouter-v2（2026-09-01実損の現場）
-cd ../reply-copilot-openrouter-v2
+# reply-copilot-openrouter-v2（旧フォルダ名。現kimito-link-reply-suggest。2026-09-01実損の現場）
+cd ../kimito-link-reply-suggest
 node ../web-ios-android/templates/diagnostics/check-near-duplicates.mjs .
 # → 同じ画面部品の3実装がクラスタとして出ることを確認
 ```

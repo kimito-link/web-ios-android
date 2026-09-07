@@ -11,6 +11,22 @@
 **①だけを見て「ストア申請ツール」と思わないこと**（2026-09-01: 実際にAIが繰り返しai-hubを
 見落とし、既存の共通実装を重複実装した事故を受けて、この節を最上部に移動した）。
 
+### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
+
+github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。
+「これはどこにある？」と思ったら、まずこの表で行き先を確認する。
+
+| 種類 | 正本の場所 | 公開可否 |
+|---|---|---|
+| 非交渉ルール・4基準・5類型 | このファイル（`CLAUDE.md`） | 公開 |
+| 規則本文 | [`docs/ai-rules/`](docs/ai-rules/) | 公開 |
+| 進め方HOWTO（council-fable / wayfinder-to-spec） | [`docs/ai-workflows/`](docs/ai-workflows/) | 公開 |
+| 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
+| ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
+| 事故と教訓（実証知見） | [`site/learnings/`](site/learnings/index.html) | 公開 |
+| 横断資産カタログ・個別プロジェクトの固有知見 | `../ai-hub/`（URL窓口は非公開ダッシュボード `/hub/`） | 非公開 |
+| 会議ログ・改修履歴 | `../ai-hub/history/` | 非公開 |
+
 ## セッション開始時の必須アクション（この順で・作業に入る前に）
 
 1. `Read ../CLAUDE.md`（横断の入口。正本1つ・コピー散らさないの原則を再確認）
@@ -286,7 +302,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
-- **品質ルールは「AI汎用ルール」に従う**（`../AI汎用ルール/` または同梱の `docs/ai-rules/`）。
+- **品質ルールは「AI汎用ルール」に従う**（`../ai-generic-rules/` または同梱の `docs/ai-rules/`）。
   特に: URLはディレクトリ形式 / index.html を出さない / www統一 / http→https 301 / canonical明示。
 - Chrome申請は [`docs/CHROME-WEBSTORE.md`](docs/CHROME-WEBSTORE.md) を参照（OAuthは「デスクトップアプリ」型・認証コードは短命）。
 - iOS/Android/Chrome のGUI操作が必要なときは、**自動化できないことを明示**してユーザーに手順を伝える。
@@ -299,7 +315,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   小学生〜90歳でもわかる言葉で。りんく=案内役、こん太=背中を押す、たぬ姉=注意点を教える。
 - **暴走（同じ単語・文の無限繰り返し）を見つけたら即座に会話を打ち切る（2026-09-04追記）。**
   チャットの応答本文で同じ単語・短いフレーズが数十〜数百回連続する現象（例:「count count count …」）は
-  LLM一般に知られる退行的な出力ループであり、ツール呼び出しのスピン（`../AI汎用ルール/docs/policies/AI_HARNESS_OPERATION.md`
+  LLM一般に知られる退行的な出力ループであり、ツール呼び出しのスピン（`../ai-generic-rules/docs/policies/AI_HARNESS_OPERATION.md`
   §1が正本）とは別種。**待っても自然には止まらない**ため、気づいた側（人間・別セッションの
   どちらでも）がその場で入力を止め、新しいメッセージ（別の話題でもよい）を送って会話をリセットする。
   同じセッションを励ましたり指摘したりして継続させようとしない（暴走中の出力に対する追加指示は

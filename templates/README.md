@@ -157,5 +157,5 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 ## 実証済みの参照アプリ(金型の出どころ)
 
 - `../../partnership_program_website` — 金型本体(リバースハック)。capacitor.config.json は server.url、patch は2点だけ。
-- `../../fujisan-clean` — 黒画面を2ヶ月かけて解決した記録(`_docs/POSTMORTEM-ios-blackscreen.md` / `AGENTS.md`)。**触らない**(解決済み・安定)。
-- `../../Exosome` — server.url 連動型の最小実物。
+- `../../compass` — 黒画面を2ヶ月かけて解決した記録(`_docs/POSTMORTEM-ios-blackscreen.md` / `AGENTS.md`)。**触らない**(解決済み・安定)。
+- `../../yukkuri-exosome.link` — server.url 連動型の最小実物。

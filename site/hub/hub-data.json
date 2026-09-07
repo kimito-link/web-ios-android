@@ -1,7 +1,7 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-03T08:08:55.931Z",
-  "entryCount": 72,
+  "generatedAt": "2026-09-07T10:28:20.958Z",
+  "entryCount": 76,
   "doctorOk": true,
   "doctorProblems": [],
   "doctorWarnings": [
@@ -14,6 +14,7 @@
     "gate-doc-impl-coverage: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "gate-site-health: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "kb-apple-reject: summary が80字超（1行厳守）",
+    "kb-unnamed-bucket-instrument: summary が80字超（1行厳守）",
     "kb-extension-popup-perf-fixes: summary が80字超（1行厳守）",
     "kb-soushin-false-green: summary が80字超（1行厳守）",
     "kb-soushin-windows-landmines: summary が80字超（1行厳守）",
@@ -32,6 +33,8 @@
     "gate-gates-are-wired: summary が80字超（1行厳守）",
     "gate-gates-are-wired: kind:gate だが selftest 未設定（D章ネガティブコントロール未整備）",
     "kb-diagnostics-unmeasured-jsts: summary が80字超（1行厳守）",
+    "component-site-chrome: summary が80字超（1行厳守）",
+    "gate-twa-signing-assetlinks: summary が80字超（1行厳守）",
     "未インデックスの検証資産: ai-shain-worker/scripts/check-frames.mjs（index化を検討）",
     "未インデックスの検証資産: best-trust.biz/scripts/verify-claims-provenance.mjs（index化を検討）",
     "未インデックスの検証資産: best-trust.biz/scripts/verify-external-links.mjs（index化を検討）",
@@ -40,8 +43,48 @@
     "未インデックスの検証資産: best-trust.biz/scripts/verify-seo-consistency.mjs（index化を検討）",
     "未インデックスの検証資産: dns-osint-pro-ver2.0/scripts/check-fast.mjs（index化を検討）",
     "未インデックスの検証資産: doin-challenge.com/scripts/check-auth-health.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/check-doc-rot.mjs（index化を検討）",
     "未インデックスの検証資産: doin-challenge.com/scripts/check-env-sanitize.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/check-tracked-imports.mjs（index化を検討）",
     "未インデックスの検証資産: doin-challenge.com/scripts/check-visible-text.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/verify-bundle-has-clerk-key.mjs（index化を検討）",
+    "未インデックスの検証資産: doin-challenge.com/scripts/verify-reviewer-account.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-link-reply-suggest/scripts/check-dist-write-path.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-link-reply-suggest/scripts/check-shared-parts.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-actions-usage.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-decision-receipt.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-dependabot-queue.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-improvement.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-instrument-proof.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-instrument-ran.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-pwa-splash.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-splash-config.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-splash-safe-circle.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-splash-template-drift.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/check-workflow-timeouts.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/lint-pre-submission.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-android-signing-config.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-android-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-app-config-schema.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-assetlinks-published.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-claims-provenance.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-external-links.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-hermes-unsafe-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-key-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-no-secrets-in-dist.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-responsive-design.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-responsive-runtime.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-reviewer-account.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-root-cause-claim.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-security-score.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-signing-material-path.mjs（index化を検討）",
+    "未インデックスの検証資産: kimito-Link-Voice/scripts/verify-webdir-consistency.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-actions-usage.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-identity.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-auth-local.mjs（index化を検討）",
@@ -56,6 +99,8 @@
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-sanity-surface.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-site-structure.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-tracked-imports.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-ui-primitive-duplication.mjs（index化を検討）",
+    "未インデックスの検証資産: kimitolink-linktree/scripts/check-ui-primitive-duplication.test.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-workflow-timeouts.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/verify-x-bearer-token.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-bot-silence.mjs（index化を検討）",
@@ -73,7 +118,6 @@
     "未インデックスの検証資産: partnership_program_website/scripts/verify-prod-line-chat-accounts.mjs（index化を検討）",
     "未インデックスの検証資産: partnership_program_website/scripts/verify-production-public.mjs（index化を検討）",
     "未インデックスの検証資産: partnership_program_website/scripts/verify-reviewer-account.mjs（index化を検討）",
-    "未インデックスの検証資産: reply-copilot-openrouter-v2/scripts/check-dist-write-path.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/check-tracked-imports.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/lint-pre-submission.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/verify-android-signing-config.mjs（index化を検討）",
@@ -81,17 +125,28 @@
     "未インデックスの検証資産: sakkino.link/scripts/verify-doc-impl-coverage.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/verify-ios-splash-not-default.mjs（index化を検討）",
     "未インデックスの検証資産: sakkino.link/scripts/verify-manual-setup-done.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-drag-gates.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-features-not-disabled.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-focus-restore.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-global-assigned.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-hub-registered.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-key-hooks-optional.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-lockfile-sync.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-mouse-passthrough.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-no-tray-icon.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-ocr-searchable.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-selftest-coverage.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-settings-keys.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-suite-freshness.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-symptom-index.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-tab-refill.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-watch-foreground.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/verify-responsive-runtime.mjs（index化を検討）",
     "未インデックスの検証資産: splash/templates/scripts/check-splash-config.mjs（index化を検討）",
     "未インデックスの検証資産: splash/templates/scripts/check-splash-dark-variant.mjs（index化を検討）",
     "未インデックスの検証資産: splash/templates/scripts/check-splash-template-drift.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-actions-usage.mjs（index化を検討）",
+    "未インデックスの検証資産: surechigai-romi.link/scripts/check-decision-receipt.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-dependabot-queue.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-doc-links.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-esm-imports.mjs（index化を検討）",
@@ -172,7 +227,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 0,
-  "doctorWarningCount": 165,
+  "doctorWarningCount": 220,
   "shelves": [
     {
       "id": "shipping",
@@ -512,6 +567,33 @@
             "偽の緑"
           ],
           "verified": "2026-08-25"
+        },
+        {
+          "id": "gate-twa-signing-assetlinks",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-twa-signing-matches-assetlinks.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "twa",
+            "assetlinks",
+            "signing",
+            "play",
+            "gate",
+            "verify",
+            "false-green"
+          ],
+          "summary": "Playが再署名して配布する鍵がassetlinks.jsonに無いとTWAにアドレスバーが出る。DAL API/keytool/bubblewrap/adbはどれも検出できない。generatedApks[].certificateSha256Hashで照合する",
+          "triggers": [
+            "アドレスバーが消えない",
+            "TWA URL bar showing",
+            "address bar visible in TWA",
+            "Digital Asset Links verification failed",
+            "assetlinks.json fingerprint mismatch",
+            "Play App Signing 再署名"
+          ],
+          "selftest": "web-ios-android/templates/scripts/verify-twa-signing-matches-assetlinks.mjs --selftest",
+          "verified": "2026-09-05"
         }
       ]
     },
@@ -895,6 +977,33 @@
             "timeout-minutes 未設定"
           ],
           "verified": "2026-09-01"
+        },
+        {
+          "id": "gate-twa-signing-assetlinks",
+          "kind": "gate",
+          "path": "web-ios-android/templates/scripts/verify-twa-signing-matches-assetlinks.mjs",
+          "tags": [
+            "shipping",
+            "android",
+            "twa",
+            "assetlinks",
+            "signing",
+            "play",
+            "gate",
+            "verify",
+            "false-green"
+          ],
+          "summary": "Playが再署名して配布する鍵がassetlinks.jsonに無いとTWAにアドレスバーが出る。DAL API/keytool/bubblewrap/adbはどれも検出できない。generatedApks[].certificateSha256Hashで照合する",
+          "triggers": [
+            "アドレスバーが消えない",
+            "TWA URL bar showing",
+            "address bar visible in TWA",
+            "Digital Asset Links verification failed",
+            "assetlinks.json fingerprint mismatch",
+            "Play App Signing 再署名"
+          ],
+          "selftest": "web-ios-android/templates/scripts/verify-twa-signing-matches-assetlinks.mjs --selftest",
+          "verified": "2026-09-05"
         }
       ]
     },
@@ -905,7 +1014,7 @@
         {
           "id": "howto-council",
           "kind": "howto",
-          "path": "COUNCIL-HOWTO.md",
+          "path": "web-ios-android/docs/ai-workflows/COUNCIL-HOWTO.md",
           "tags": [
             "council",
             "meeting",
@@ -928,7 +1037,7 @@
         {
           "id": "howto-fable-3step",
           "kind": "howto",
-          "path": "FABLE-3STEP-HOWTO.md",
+          "path": "web-ios-android/docs/ai-workflows/FABLE-3STEP-HOWTO.md",
           "tags": [
             "fable",
             "design",
@@ -1233,7 +1342,7 @@
         {
           "id": "kb-ai-general-rules",
           "kind": "kb",
-          "path": "AI汎用ルール",
+          "path": "ai-generic-rules",
           "tags": [
             "policy",
             "rules",
@@ -1534,6 +1643,29 @@
           "verified": "2026-08-31"
         },
         {
+          "id": "kb-unnamed-bucket-instrument",
+          "kind": "kb",
+          "path": "tsuioku-no-kirameki.com/_docs/TO-web-ios-android-unnamed-bucket-2026-09-03.md",
+          "tags": [
+            "instrument",
+            "diagnosis",
+            "false-signal",
+            "governance",
+            "ai-behavior"
+          ],
+          "summary": "計器が静かに嘘をつく型。状態を持つ変数に理由/発生源を置いて読んだあと消さないと、無関係な経路に前の値が付き「最多の理由」が別の経路を指す。エラーは出ず総数も正しいので気づけない。対策は(1)読んだら消す(2)消していることを1関数の呼び出し規約に限って機械で見張る。★その他を細分化して名前を増やすのは再生産になるので不可。",
+          "triggers": [
+            "最多の理由が unknown",
+            "その他が一番多い",
+            "内訳がずれる",
+            "skip と n/a が同じ値",
+            "描き直しの内訳",
+            "理由タグ",
+            "default に落ちた件数"
+          ],
+          "verified": "2026-09-03"
+        },
+        {
           "id": "kb-extension-popup-perf-fixes",
           "kind": "kb",
           "path": "dns-osint-pro-ver2.0/docs/POPUP-PERF-2026-06-05.md",
@@ -1605,7 +1737,7 @@
         {
           "id": "kb-shiori-symptom-verdicts",
           "kind": "kb",
-          "path": "reply-copilot-openrouter-v2/lib/symptomVerdicts.js",
+          "path": "kimito-link-reply-suggest/lib/symptomVerdicts.js",
           "tags": [
             "shiori",
             "symptom",
@@ -1758,7 +1890,12 @@
             "エラーは出ていないのに動いていない",
             "ログに何も残っていない",
             "沈黙は正常の証拠にならない",
-            "心拍"
+            "心拍",
+            "SG-08",
+            "Loading module",
+            "再試行を押しても直らない",
+            "アプリが開かない",
+            "存在しないファイルが200を返す"
           ],
           "verified": "2026-08-27"
         },
@@ -2065,6 +2202,58 @@
             "Cannot find package vitest"
           ],
           "verified": "2026-09-01"
+        },
+        {
+          "id": "component-site-chrome",
+          "kind": "script",
+          "path": "web-ios-android/templates/web/site-chrome/",
+          "tags": [
+            "component",
+            "site-chrome",
+            "web",
+            "header",
+            "footer",
+            "nav",
+            "canonical",
+            "shared-parts"
+          ],
+          "summary": "サイト共通の枠(ヘッダ/フッタ/ナビ)を配る共有部品。Core(無改変コピー・SHA256で検証)/Config(schema.jsonから生成)/Local拡張(site-chrome:mountedイベント1本)の3層。採用状況は web-ios-android/scripts/rollout-plan.mjs で観測できる。正本マニフェストは component.json",
+          "triggers": [
+            "site-chrome",
+            "共通ヘッダ",
+            "共通フッタ",
+            "サイトの枠",
+            "ヘッダを揃える",
+            "フッタを揃える",
+            "ナビを共通化",
+            "component.json",
+            "rollout-plan",
+            "共有部品",
+            "サイト共通部分"
+          ],
+          "verified": "2026-09-04"
+        },
+        {
+          "id": "kb-render-backend-deploy-pitfalls",
+          "kind": "kb",
+          "path": "~/.claude/skills/ship-app-to-stores/SKILL.md",
+          "tags": [
+            "render",
+            "deploy",
+            "backend",
+            "cloudflare",
+            "dns",
+            "github"
+          ],
+          "summary": "Renderバックエンド初回デプロイの地雷4つ（env未設定クラッシュ/永続ディスク未追加/GitHub所有者不一致/Cloudflareプロキシ525）",
+          "triggers": [
+            "Supabase環境変数が設定されていません",
+            "EACCES: permission denied, mkdir",
+            "No repositories found",
+            "525",
+            "SSL handshake failed"
+          ],
+          "verified": "2026-09-06"
         }
       ]
     }
@@ -2074,7 +2263,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-03T08:08:55.931Z",
+    "generatedAt": "2026-09-07T10:28:20.958Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -2141,141 +2330,7 @@
     ],
     "projects": [
       {
-        "name": "doin-challenge.com",
-        "profile": {
-          "hasCapacitor": false,
-          "hasExpo": true,
-          "hasTwa": false,
-          "hasIosDir": false,
-          "hasAndroidDir": false,
-          "hasAppConfig": true,
-          "isKitTarget": true
-        },
-        "cells": {
-          "ios-splash": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "android-splash": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "android-signing": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "webdir": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "signing-path": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "tracked-imports": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "app-config-schema": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "assetlinks": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "instrument-core": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "no-secrets-in-dist": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "hermes-unsafe-imports": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "root-cause-claim": {
-            "state": "missing",
-            "provenance": "scan"
-          }
-        },
-        "score": {
-          "ok": 0,
-          "applicable": 6
-        },
-        "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
-      },
-      {
-        "name": "Exosome",
-        "profile": {
-          "hasCapacitor": true,
-          "hasExpo": false,
-          "hasTwa": false,
-          "hasIosDir": true,
-          "hasAndroidDir": false,
-          "hasAppConfig": true,
-          "isKitTarget": true
-        },
-        "cells": {
-          "ios-splash": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "android-splash": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "android-signing": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "webdir": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "signing-path": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "tracked-imports": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "app-config-schema": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "assetlinks": {
-            "state": "na",
-            "provenance": "scan"
-          },
-          "instrument-core": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "no-secrets-in-dist": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "hermes-unsafe-imports": {
-            "state": "missing",
-            "provenance": "scan"
-          },
-          "root-cause-claim": {
-            "state": "missing",
-            "provenance": "scan"
-          }
-        },
-        "score": {
-          "ok": 0,
-          "applicable": 9
-        },
-        "rowNote": null
-      },
-      {
-        "name": "fujisan-clean",
+        "name": "compass",
         "profile": {
           "hasCapacitor": true,
           "hasExpo": false,
@@ -2338,6 +2393,140 @@
         "score": {
           "ok": 0,
           "applicable": 9
+        },
+        "rowNote": null
+      },
+      {
+        "name": "doin-challenge.com",
+        "profile": {
+          "hasCapacitor": true,
+          "hasExpo": true,
+          "hasTwa": false,
+          "hasIosDir": false,
+          "hasAndroidDir": true,
+          "hasAppConfig": true,
+          "isKitTarget": true
+        },
+        "cells": {
+          "ios-splash": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "android-splash": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "android-signing": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "webdir": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "signing-path": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "tracked-imports": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "app-config-schema": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "assetlinks": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "instrument-core": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "hermes-unsafe-imports": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "root-cause-claim": {
+            "state": "missing",
+            "provenance": "scan"
+          }
+        },
+        "score": {
+          "ok": 3,
+          "applicable": 12
+        },
+        "rowNote": null
+      },
+      {
+        "name": "kimito-Link-Voice",
+        "profile": {
+          "hasCapacitor": true,
+          "hasExpo": false,
+          "hasTwa": false,
+          "hasIosDir": false,
+          "hasAndroidDir": true,
+          "hasAppConfig": true,
+          "isKitTarget": true
+        },
+        "cells": {
+          "ios-splash": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "android-splash": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "android-signing": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "webdir": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "signing-path": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "tracked-imports": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "app-config-schema": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "assetlinks": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "instrument-core": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "hermes-unsafe-imports": {
+            "state": "ok",
+            "provenance": "scan"
+          },
+          "root-cause-claim": {
+            "state": "ok",
+            "provenance": "scan"
+          }
+        },
+        "score": {
+          "ok": 12,
+          "applicable": 12
         },
         "rowNote": null
       },
@@ -2610,7 +2799,7 @@
         "rowNote": null
       },
       {
-        "name": "resend.kimito-link.com",
+        "name": "resend.kimito-link.com-",
         "profile": {
           "hasCapacitor": true,
           "hasExpo": false,
@@ -2943,56 +3132,123 @@
           "applicable": 12
         },
         "rowNote": null
+      },
+      {
+        "name": "yukkuri-exosome.link",
+        "profile": {
+          "hasCapacitor": true,
+          "hasExpo": false,
+          "hasTwa": false,
+          "hasIosDir": true,
+          "hasAndroidDir": false,
+          "hasAppConfig": true,
+          "isKitTarget": true
+        },
+        "cells": {
+          "ios-splash": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "android-splash": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "android-signing": {
+            "state": "na",
+            "provenance": "scan"
+          },
+          "webdir": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "signing-path": {
+            "state": "na",
+            "provenance": "scan"
+          },
+          "tracked-imports": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "app-config-schema": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "assetlinks": {
+            "state": "na",
+            "provenance": "scan"
+          },
+          "instrument-core": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "no-secrets-in-dist": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "hermes-unsafe-imports": {
+            "state": "missing",
+            "provenance": "scan"
+          },
+          "root-cause-claim": {
+            "state": "missing",
+            "provenance": "scan"
+          }
+        },
+        "score": {
+          "ok": 0,
+          "applicable": 9
+        },
+        "rowNote": null
       }
     ],
     "totals": {
       "ios-splash": {
-        "ok": 2,
-        "applicable": 8
+        "ok": 3,
+        "applicable": 10
       },
       "android-splash": {
-        "ok": 1,
-        "applicable": 8
+        "ok": 2,
+        "applicable": 10
       },
       "android-signing": {
-        "ok": 3,
-        "applicable": 5
+        "ok": 5,
+        "applicable": 7
       },
       "webdir": {
-        "ok": 0,
-        "applicable": 8
-      },
-      "signing-path": {
-        "ok": 0,
-        "applicable": 5
-      },
-      "tracked-imports": {
-        "ok": 3,
-        "applicable": 12
-      },
-      "app-config-schema": {
-        "ok": 0,
-        "applicable": 12
-      },
-      "assetlinks": {
-        "ok": 0,
-        "applicable": 5
-      },
-      "instrument-core": {
-        "ok": 2,
-        "applicable": 12
-      },
-      "no-secrets-in-dist": {
-        "ok": 1,
-        "applicable": 12
-      },
-      "hermes-unsafe-imports": {
         "ok": 1,
         "applicable": 10
       },
-      "root-cause-claim": {
+      "signing-path": {
         "ok": 1,
-        "applicable": 12
+        "applicable": 7
+      },
+      "tracked-imports": {
+        "ok": 5,
+        "applicable": 13
+      },
+      "app-config-schema": {
+        "ok": 1,
+        "applicable": 13
+      },
+      "assetlinks": {
+        "ok": 1,
+        "applicable": 7
+      },
+      "instrument-core": {
+        "ok": 4,
+        "applicable": 13
+      },
+      "no-secrets-in-dist": {
+        "ok": 2,
+        "applicable": 13
+      },
+      "hermes-unsafe-imports": {
+        "ok": 2,
+        "applicable": 11
+      },
+      "root-cause-claim": {
+        "ok": 2,
+        "applicable": 13
       }
     },
     "scan": {
@@ -3004,11 +3260,13 @@
         ".codex",
         ".git",
         ".pnpm-store",
+        "ai-business-secretary",
+        "ai-generic-rules",
         "ai-health-check.link",
         "ai-shain-worker",
         "ai-shain.link",
-        "AI汎用ルール",
         "appium",
+        "best-price",
         "best-trust.biz",
         "characterlive",
         "codex",
@@ -3016,14 +3274,13 @@
         "discordai",
         "dns-osint-pro-ver2.0",
         "gmail-secretary-extension",
-        "gpthisho",
         "grok-build",
         "hacking-tool",
         "henshin-hisho",
         "henshin-hisho-lp-deploy",
         "Kali",
         "kimi-no-oto",
-        "kimito-Link-Voice",
+        "kimito-link-reply-suggest",
         "kimito-link-yukkuri-douga",
         "knowledge",
         "line-bot",
@@ -3032,14 +3289,12 @@
         "nagano_giin_complete_guide",
         "Negative-suggestion-checker",
         "nicolive-dl-master",
-        "OpenClaude",
         "ouenmovie",
         "patents",
         "pincers",
         "qa-results",
         "Qwen3.6-35B-A3B",
         "removal",
-        "reply-copilot-openrouter-v2",
         "reviewcheck.jp",
         "reviewcheck.jp-kenshin",
         "rolex",
@@ -3072,7 +3327,7 @@
     },
     {
       "priority": 3,
-      "title": "安全チェックが1つも入っていないアプリが6件ある（Exosome・fujisan-clean・malwarecheck.site…）",
+      "title": "安全チェックが1つも入っていないアプリが6件ある（compass・malwarecheck.site・partnership_program_website…）",
       "reason": "審査に出せる状態のアプリなのに、うっかりミスを防ぐ仕組みが何も入っていない。よくある事故（初期状態のままの画像を出してしまう等）を素通ししてしまう",
       "evidence": "site/hub/matrix.json（generate-hub-dashboard.mjs 実スキャン）"
     },
@@ -3084,15 +3339,15 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが165件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが220件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }
   ],
   "matrixSummary": {
     "available": true,
-    "projectCount": 12,
-    "fullOkCount": 0,
-    "worstGateId": "webdir"
+    "projectCount": 13,
+    "fullOkCount": 1,
+    "worstGateId": "app-config-schema"
   }
 }

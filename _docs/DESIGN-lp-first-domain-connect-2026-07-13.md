@@ -2,7 +2,7 @@
 
 > 設計=Fable(claude-fable-5) ／ 素材収集=会議ハーネス(6体) ＋ Explore実地調査 ／ 裏取り=司令塔(Claude) ／
 > 日付=2026-07-13（認証方式をAPIトークン方式→`wrangler login`OAuth方式に改訂・同日） ／
-> [council-fable 3段構えワークフロー](../../COUNCIL-HOWTO.md)の手順2〜3の産物。
+> [council-fable 3段構えワークフロー](../docs/ai-workflows/COUNCIL-HOWTO.md)の手順2〜3の産物。
 > 実装は**まだ行っていない**。次チャット/別モデルで着手する前提。
 >
 > **改訂履歴**: 初版はCloudflare認証を「APIトークン手動発行＋コピペ貼り付け」方式とし、
