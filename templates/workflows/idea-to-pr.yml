@@ -15,7 +15,9 @@
 # 1. このファイルをアプリリポの `.github/workflows/idea-to-pr.yml` にコピー。
 # 2. Claude GitHub App（https://github.com/apps/claude）をこのリポジトリにインストールする
 #    （Contents/Issues/Pull requests の読み書き権限を付与。1回だけ）。
-# 3. 下記Secretsのどちらか一方を登録する。
+# 3. ローカルで `claude setup-token` を実行し、発行されたトークンを
+#    リポジトリのGitHub Secretsに `CLAUDE_CODE_OAUTH_TOKEN` として登録する
+#    （Claude Pro/Max/Team/Enterpriseのサブスク利用枠を使う方式。既定はこちら）。
 # 4. Grok（またはChatGPT/Gemini等）にGitHubコネクターを接続し、対象リポジトリへの
 #    Issue作成権限を許可する（Grokアプリの設定 → Connectors → GitHub）。
 # 5. GrokにIssueを起票させたら、このワークフローが自動で実装しPRを作る。
@@ -27,10 +29,16 @@
 #   対象にする（下記 `if:` 参照）。Grok側でIssue作成時に `ai-task` ラベルを
 #   付けるよう指示するか、Issueテンプレートで既定ラベルにする。
 #
-# ── 必要な GitHub Secrets（どちらか一方） ───────────────────────
-#   ANTHROPIC_API_KEY       … Claude APIキー（Claude Console発行）
-#   CLAUDE_CODE_OAUTH_TOKEN … Claude Pro/Max/Team/Enterpriseのサブスク認証
-#                              （ローカルで `claude setup-token` を実行して取得）
+# ── 認証方式（どちらか一方） ───────────────────────────────────
+#   ★既定は CLAUDE_CODE_OAUTH_TOKEN（サブスク認証）。追加の従量課金が発生しない
+#   （契約プランの使用量枠を消費する方式）。
+#   - CLAUDE_CODE_OAUTH_TOKEN … Claude Pro/Max/Team/Enterpriseのサブスク認証
+#                                （ローカルで `claude setup-token` を実行して取得）
+#   - ANTHROPIC_API_KEY       … Claude APIキー（Claude Console発行・従量課金）。
+#                                サブスク契約が無い場合はこちらを使う。使う場合は
+#                                下のステップの `claude_code_oauth_token:` の行を
+#                                `anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}`
+#                                に書き換える。
 #
 # ── 安全上の注意 ──────────────────────────────────────────────
 #   ★誰でもIssueを作れるリポジトリでは、書き込み権限を持たないユーザーが作った
@@ -69,7 +77,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             以下のGitHub Issueを読んで実装してください。
 
