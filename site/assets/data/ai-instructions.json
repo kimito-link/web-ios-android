@@ -87,5 +87,13 @@
     "title": "🤖 このページをAIに実装させたい方へ",
     "text": "このアプリのLINE公式アカウントAI社員botに、画像・動画・音声認識を追加して。\nhttps://github.com/kimito-link/web-ios-android/tree/main/templates/line-bot\nの README.md の「画像・動画・音声認識」の章を読んで、そこに書かれている通りに進めて。\nR2バケット作成・GEMINI_API_KEY投入・wrangler.tomlのr2_bucketsバインディング確認が必要。\n（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して同じ手順で使える。）",
     "note": ""
+  },
+  "qa-no-manual-device": {
+    "order": 12,
+    "page": "/features/health-check/",
+    "indexLabel": "📵 「スマホを手で触って確認する」を無くす",
+    "title": "🤖 このルールをAIに徹底させたい方へ",
+    "text": "このプロジェクトで確認・不具合対応するとき、実機を手で操作してChatworkにスクショと\nメモを残す流れをやめて、web-ios-androidキットの共通ルールに従って。\nhttps://github.com/kimito-link/web-ios-android/blob/main/CLAUDE.md\nの「確認と不具合対応の共通ルール」を読んで、そこに書かれている通りに進めて。\n要点: ①確認・再現・記録・修正・再確認はすべてAIがPC上で完結させ、ユーザーに確認作業を\n依頼しない ②日常確認はPC上のブラウザを主戦場にする ③実機はブラウザで再現できない\nときだけ、外に持ち出さずPCに繋いだ状態で使う ④不具合の有無は推測でなく実際に動かして\n確認する ⑤一次情報はqa/evidence/とqa/bugs.mdにリポジトリ内で残し、Chatworkは共有用に\n留める。（web-ios-androidキットを使っていないプロジェクトでも、上のURLから直接取得して\n同じルールを適用できる。）",
+    "note": "※Mac専用のiOSシミュレータを前提にしない。Windows/Linux PCではPCに繋いだ実機とCI（GitHub Actions）で代替する。"
   }
 }

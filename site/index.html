@@ -859,6 +859,25 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
         <small>見た目の最終判定は自作の判定エンジンではなく、実際のブラウザに任せます。</small>
       </aside>
     </div>
+
+    <!-- 不具合確認・QA実測パネル -->
+    <div class="measure-panel panel-qa" aria-labelledby="qa-title" style="margin-top:16px;">
+      <div>
+        <h3 id="qa-title">「スマホを手で触って確認する」を無くしています</h3>
+        <p class="measure-lead">不具合の確認を実機の手動操作とチャットのメモだけに頼ると、記録が残ったり残らなかったりします。確認・再現・記録・修正・再確認はすべてPC上で完結させ、ユーザーに確認作業を依頼しません。</p>
+        <ol class="measure-flow">
+          <li>日常確認はPC上のブラウザが基本（アプリの中身はほぼ本番Webそのもの）</li>
+          <li>ブラウザで再現できない挙動だけ、PCに繋いだ実機で確認（外に持ち出さない）</li>
+          <li>不具合の有無は推測でなく実際に動かして確認し、証拠をリポジトリへ保存</li>
+        </ol>
+        <div class="measure-links"><a href="features/health-check/#no-manual-device-check">仕組みを詳しく見る</a></div>
+      </div>
+      <aside class="measure-score" aria-label="確認環境の優先順">
+        <strong>PC上のブラウザ → PC接続の実機</strong>
+        <b>スマホの単独持ち出し確認は原則禁止</b>
+        <small>一次情報はqa/evidence/とqa/bugs.mdにリポジトリ内で残します。チャットは共有用です。</small>
+      </aside>
+    </div>
   </div>
 
 </div><!-- /bottom-wrap -->

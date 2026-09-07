@@ -1201,6 +1201,80 @@
         3つとも<b>自己検査に固定</b>してあるので、同じ嘘は二度と出ません。
       </div>
     </div>
+    <div class="section-divider" id="no-manual-device-check">
+      <h2>📵 「スマホを手で触って確認する」を無くす</h2>
+      <div class="lead">
+        不具合を見つける方法が「実機を手で操作して、気づいたらChatworkにスクショと
+        メモを残す」だけだと、<b>記録が人によって残ったり残らなかったりします</b>。
+        後から見返せず、直ったのか不安になる原因はここでした。
+      </div>
+
+      <div class="bad-tip">
+        ⚠️ <b>これまで起きていたこと。</b>実機を外に持ち出して操作 → 気づいた不具合を
+        Chatworkに書く → 直したつもりで終わる → 同じ不具合が後日また見つかる。
+        一次情報がチャットの投稿に散らばっていて、<b>後から誰も見返せません</b>。
+      </div>
+
+      <div class="rule-box">
+        <span class="rule-no">代わりにやること</span>
+        <p><b>確認・再現・記録・修正・再確認は、すべてAIがPC上で完結させます。</b>
+        ユーザーに「触ってみてください」と依頼しません。</p>
+      </div>
+
+      <div class="illust illust-blue">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <div class="fbox"><span class="fi">🖥️</span>PC上の<br>ブラウザで確認</div>
+          <div class="farr">→</div>
+          <div class="fbox"><span class="fi">🔌</span>足りない分だけ<br>PC接続の実機</div>
+          <div class="farr">→</div>
+          <div class="fbox ok"><span class="fi">📁</span>証拠を<br>リポジトリに保存</div>
+        </div>
+        <div style="text-align:center; font-size:0.75rem; color:#4a6350; margin-top:8px;">Chatworkは共有用。一次情報は必ずリポジトリに残す</div>
+      </div>
+
+      <table class="check-table">
+        <tr><th>優先順</th><th>確認環境と使いどころ</th></tr>
+        <tr>
+          <td>1</td>
+          <td><b>PC上のブラウザ。</b>本キットは<code>Capacitor server.url</code>連動型なので、
+          アプリの中身はほぼ本番Webそのもの。日常確認はここが基本で、UI不具合の大半は
+          スマホを触らずに再現・確認できる。</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><b>PCに繋いだ実機。</b>ブラウザで再現できないとき（通知・カメラ・位置情報・
+          課金・機種依存の挙動、iOS/Android固有のネイティブUI）だけ使う。外に持ち出さず、
+          PCに繋いだ状態で確認する。</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><b>CI（GitHub Actions）上の検証。</b>iOSシミュレータ等、Mac環境が要る確認は
+          ここに任せる（例: <code>ios-blackscreen-check.yml</code>）。PC上で直接は測れないが、
+          自動化はできる場合。</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><b>手持ち実機を人が外で操作する確認。</b>原則禁止。</td>
+        </tr>
+      </table>
+
+      <div class="rule-box">
+        <span class="rule-no">推測で「大丈夫です」と言わない</span>
+        <p>不具合の有無はAIが自分で確認します。コードを読んで「動くはず」で済ませず、
+        <b>実際に動かして確認してから報告します</b>（「完膚なきまでの裏取り」の実行）。
+        「見た」「直したつもり」で終わらせず、修正後は同じ手順で再確認し、
+        比較用の証拠（before/after）も残します。</p>
+      </div>
+
+      <div class="tip">
+        💡 一次情報の置き場所は固定です:
+        <code>qa/evidence/YYYY-MM-DD_機能名/{ios,android}_{before,after}.png</code> と
+        <code>qa/evidence/&lt;機能名&gt;/notes.md</code>、不具合台帳は<code>qa/bugs.md</code>。
+      </div>
+
+      <div class="ai-box-slot" data-ai-key="qa-no-manual-device" data-ai-data-path="../../assets/data/ai-instructions.json"></div>
+    </div>
+
     <div class="section-divider">
       <h2>🪞 この仕組みは、まず<b>自分自身</b>に使っています</h2>
       <div class="lead">

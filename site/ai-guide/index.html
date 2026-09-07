@@ -50,7 +50,7 @@
     </section>
     <div class="wrap">
       <p class="notice"><b>最優先：</b>作業中のリポジトリにある指示書とユーザーの最新指示を優先してください。このページは汎用キットの入口であり、個別アプリの確定仕様を上書きしません。</p>
-      <nav class="toc" aria-label="ページ内メニュー"><a href="#purpose">目的</a><a href="#read-order">読む順番</a><a href="#inputs">必要な入力</a><a href="#workflow">実行手順</a><a href="#boundaries">禁止・境界</a><a href="#done">完了条件</a><a href="#report">報告形式</a></nav>
+      <nav class="toc" aria-label="ページ内メニュー"><a href="#purpose">目的</a><a href="#read-order">読む順番</a><a href="#inputs">必要な入力</a><a href="#workflow">実行手順</a><a href="#boundaries">禁止・境界</a><a href="#qa-flow">不具合の確認・対応</a><a href="#done">完了条件</a><a href="#report">報告形式</a></nav>
 
       <section class="card" id="purpose">
         <h2>1. 目的</h2>
@@ -80,7 +80,7 @@
           <li><code>app.config.json</code>を検証し、確定値・未入力・仮の値を分ける。</li>
           <li>対象プラットフォームだけを選び、自動化できる準備を実行する。</li>
           <li>ビルド、診断、リンク、公開ページを確認する。測れないものは未確認として残す。</li>
-          <li>iPhone・Androidが対象なら、起動画面を生成して <code>npm run splash:check</code> を実行する。自動検査後も実機で1回目視する。</li>
+          <li>iPhone・Androidが対象なら、起動画面を生成して <code>npm run splash:check</code> を実行する。目視確認はまずPC上のブラウザで行い、ブラウザで再現できないネイティブ固有の挙動だけPCに繋いだ実機で確認する（外に持ち出さない。手順は「6.5 不具合の確認・対応」参照）。</li>
           <li>Webを公開した場合は <code>npm run security:score</code> を実行する。内部先取りと malwarecheck.site 本体の両方が100点になるまで、公開設定を修正して再実行する。</li>
           <li>外部サービスへの送信・契約・課金・公開など、状態変更の前に必要な承認を確認する。</li>
           <li>最後に、完了・未完了・問題・人が次に行うこと・確認URLをまとめる。</li>
@@ -89,8 +89,22 @@
 
       <section class="card danger" id="boundaries">
         <h2>5. 禁止・安全上の境界</h2>
-        <ul><li>秘密情報、鍵、トークン、証明書の本文を公開ページ・ログ・回答へ出さない。</li><li>ストア送信、料金発生、アカウント作成、外部への連絡を、許可なく行わない。</li><li>未計測・対象外・認証不足を、成功として扱わない。</li><li>既存の未コミット変更を消去・巻き戻し・上書きしない。</li><li>別アプリの固有値、ドメイン、ID、スクリーンショットを流用しない。</li></ul>
+        <ul><li>秘密情報、鍵、トークン、証明書の本文を公開ページ・ログ・回答へ出さない。</li><li>ストア送信、料金発生、アカウント作成、外部への連絡を、許可なく行わない。</li><li>未計測・対象外・認証不足を、成功として扱わない。</li><li>既存の未コミット変更を消去・巻き戻し・上書きしない。</li><li>別アプリの固有値、ドメイン、ID、スクリーンショットを流用しない。</li><li>開発中の不具合確認のために、ユーザーへ「実機を触ってスクショを送って」と依頼しない。</li><li>実機を外で操作した結果だけを根拠に修正しない。</li><li>不具合の記録をChatworkの投稿や個人メモだけに残さない（一次情報は必ずリポジトリ内に残す）。</li></ul>
         <p><b>セキュリティ診断：</b>malwarecheck.siteへ送るのは公開URLだけです。秘密情報やローカルファイルは送信しません。100点は外部から見える簡易診断の満点であり、安全性の保証ではありません。</p>
+      </section>
+
+      <section class="card" id="qa-flow">
+        <h2>6.5 不具合の確認・対応</h2>
+        <p>実機を手で操作してChatworkにスクショ・メモを残す流れはとらない。確認・再現・記録・修正・再確認はすべてPC上で完結させ、ユーザーに確認作業を依頼しない。</p>
+        <h3>確認環境の優先順（固定）</h3>
+        <ol>
+          <li><b>PC上のブラウザ。</b>本キットは<code>Capacitor server.url</code>連動型のため、アプリの中身はほぼ本番Webそのもの。日常確認はここが基本。</li>
+          <li><b>PCに繋いだ実機。</b>ブラウザで再現できない挙動（通知・カメラ・位置情報・課金・機種依存・ネイティブUI）のときだけ。Androidは常時USB接続、iOSは接続していれば使う。無ければPC確認が不可能な理由を明示し、代替手段またはCI検証に切り替える。</li>
+          <li><b>CI（GitHub Actions）上の検証。</b>iOSシミュレータ等、Mac環境が要る確認はここに任せる。</li>
+          <li><b>手持ち実機を人が外で操作する確認。</b>原則禁止。</li>
+        </ol>
+        <p>不具合の有無は推測でなく実際に動かして確認する。「動くはず」「直したつもり」で終わらせず、修正後は同じ手順で再確認し、比較用の証拠（before/after）も残す。一次情報は<code>qa/evidence/YYYY-MM-DD_機能名/</code>と<code>qa/bugs.md</code>に残す。Chatworkは共有用であり一次情報ではない。</p>
+        <p>詳細は<a href="../features/health-check/#no-manual-device-check">仕組みを詳しく見る</a>、正本は<a href="https://github.com/kimito-link/web-ios-android/blob/main/CLAUDE.md" target="_blank" rel="noopener">CLAUDE.mdの「確認と不具合対応の共通ルール」</a>。</p>
       </section>
 
       <section class="card done" id="done">
