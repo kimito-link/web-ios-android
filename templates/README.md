@@ -120,6 +120,7 @@ P=`partnership_program_website`、F=`fujisan-clean`、E=`Exosome`。
 | **F** `.github/workflows/ios-shell-guardrail.yml`(or 本キットの汎用版) | `.github/workflows/` | 無改変 |
 | 本キット `templates/workflows/scheduled-quality-check.yml`(公開サイトのセキュリティ・レスポンシブ・Lighthouse定期チェック。2026-08-25新設、Lighthouseは同日追加) | `.github/workflows/` | 無改変(app.config.json駆動)。既定Web(Vercel)はGit連携自動デプロイでCIを挟まないため、デプロイ手段を問わず定期実行する形にした。Lighthouseはlighthouserc.jsonが無ければステップごとskip |
 | 本キット `templates/workflows/android-cert-expiry.yml`(Android upload keystoreの有効期限監視。apple-cert-expiry.ymlのAndroid版。2026-08-25新設) | `.github/workflows/` | 無改変(android-play-release.yml と同じsecretsを再利用。追加secret不要) |
+| 本キット `templates/workflows/idea-to-pr.yml`(スマホでGrok等に投げた思いつき・不具合報告を、GrokのGitHubコネクター経由のIssue起票→公式`anthropics/claude-code-action`での自動実装→PR作成まで通す。2026-09-07新設) | `.github/workflows/` | 無改変。Claude GitHub App(https://github.com/apps/claude)のインストールと`ANTHROPIC_API_KEY`または`CLAUDE_CODE_OAUTH_TOKEN`のSecret登録が必要。既定では`ai-task`ラベル付きIssueだけ対象(暴発防止) |
 | **P** `scripts/lib/asc-api.mjs` / `scripts/lib/play-api.mjs` | `scripts/lib/` | 無改変(env で制御) |
 | **P** `scripts/appstore-submit.mjs` / `scripts/play-publish.mjs` | `scripts/` | 冒頭の `BUNDLE_ID`/`PACKAGE` 既定値 |
 | **F** `scripts/release-bump.mjs`(版+SWキャッシュ bump・Pは別命名) | `scripts/` | SWキャッシュ regex の prefix |
