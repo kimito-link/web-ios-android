@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/require-claude-md-read.mjs\"",
+            "timeout": 10,
+            "statusMessage": "CLAUDE.md既読チェック中..."
+          }
+        ]
+      }
+    ]
+  }
+}
