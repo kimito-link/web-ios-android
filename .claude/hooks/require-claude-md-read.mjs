@@ -46,8 +46,16 @@ function findRepoRoot(startDir) {
   }
 }
 
+// 改行コードをLFへ正規化してからハッシュ化する。ディスク上のCLAUDE.md(Windows CRLFのことが
+// ある)と、Readツールが返すtool_result(常にLF)を同じ土俵で比較するため。
+// これが無いと、正しく最新版をReadした直後でもハッシュ不一致で「未読」と誤判定される
+// (実際にこのフック自身が本セッションで複数回誤検知した)。
+function normalizeNewlines(text) {
+  return typeof text === 'string' ? text.replace(/\r\n/g, '\n') : text;
+}
+
 function sha256(text) {
-  return createHash('sha256').update(text, 'utf8').digest('hex');
+  return createHash('sha256').update(normalizeNewlines(text), 'utf8').digest('hex');
 }
 
 // Readツールの出力は先頭に "1\t" のような行番号プレフィックスが付く(cat -n形式)。
