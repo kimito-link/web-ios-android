@@ -71,8 +71,33 @@ GitHub上に対応リポ自体が存在せずローカルクローンのみだ�
 書き換えるだけで解決した。**教訓: リポジトリ削除前の参照確認は`grep`ではなく
 必ず`node ai-hub/bin/hub.mjs doctor --json`の`ok`値と`problems`配列を見ること。**
 
-## 残っている未決定事項
+## F. 第2弾の削除（2026-09-08、実地調査で完了済みと確認したもの） ★完了
 
+- `nicolivelog-extension-investigation.zip`（21MB）: 2026-04時点の開発初期スナップショット。
+  現在の`tsuioku-no-kirameki.com`にgit管理下で実質同一内容がv0.1.1507まで発展済みと確認し削除
+- `clibor-mobile-DESIGN.md`・`-IMPLEMENTATION-HANDOFF.md`: `sakkino.link`としてFlutter本体・
+  iOS/Androidネイティブキーボードまで実装済みと確認し削除
+- `council-upgrade-2026-07-03-handoff.md`・`decision-2026-07-01.md`: 文書内に「実装完了」と
+  明記、`meeting.mjs`に反映済みと確認し削除
+- `OKF-meeting-notes.md`: 2026-06-14付の経緯記録、後続実装（ai-generic-rules等）に繋がった
+  決着済み文書として削除
+- `ouenmovie-business-MAP.md`・`-SPEC.md`: 7/30付の事業化検討文書。`ouenmovie`は既に
+  実運用フェーズ（HANDOFF・STATUS・リリースノート多数）に移行済みと確認し削除
+
+削除前に全件`ai-hub doctor`で参照ゼロ（未登録）を確認済み。削除後も`ok: true`のまま。
+
+## 残っている未決定事項（現役と判定・触っていない）
+
+- `ai-reply-draft-tool-DESIGN.md`・`-IMPLEMENTATION-HANDOFF.md`: 実装先は`ai-business-secretary`
+  に移動済みだが、設計思想の経緯文書として価値がある可能性。削除は保留
+- `best-trust-brand-strategy-DESIGN.md`・`-IMPLEMENTATION-HANDOFF.md`: 思想は`best-trust`の
+  READMEに反映済みだがADR未作成の継続文書。削除は保留
+- `KIMITO-CLERK-UNIFICATION-PLAN.md`: 一部リポジトリ（surechigai-romi.link）は実装済みだが、
+  他リポジトリ（kimitolink-linktree等）への展開未確認。現役文書として保留
+- `ANTI-SLOP-ADOPTION-ASSESSMENT.md`: 判定不能（追加調査が必要）
+- `HANDOFF-cloudflare-workers-ai.md`・`HANDOFF-hatsunote-mcp.md`・`HANDOFF-kioku-mcp.md`:
+  ai-hub/index.json登録済みのため削除不可。github直下配置のままでよいかは未検討
 - `linebot`とline-harness-ossの関係は「参考・派生元の可能性」と台帳に記録済みだが、
   統合・整理するかどうかは本人確認待ち（勝手に判断しない）
-- A〜Eは全て完了。github直下の当面の整理整頓はここで一区切り
+
+A〜Fは完了。github直下の当面の整理整頓はここで一区切り。
