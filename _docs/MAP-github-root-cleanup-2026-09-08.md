@@ -429,9 +429,10 @@ A〜Mまで完了。github直下の重複リポジトリ・散らばったMarkdo
 - **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
   次チャットで別モデルが実装）
 - **Antigravityでの個別実装作業**（HOWTO正本化のみ完了、実際の委任作業は次回以降）
-- **`site/api-projects/`のpush・本番反映確認**（実装・ローカル検証完了、push待ち）
-- **`C:\Users\info\OneDrive\デスクトップ\GitHub\`（大文字G）の古いフォルダ18項目の
-  実削除**（重複判定は完了済み、削除候補8件＋要確認多数。PAT失効等の理由で保留中）
+- **`C:\Users\info\OneDrive\デスクトップ\GitHub\`（大文字G）の古いフォルダの
+  実削除**（重複判定は完了済み。第10弾で`reverse-re-birth-hack.com`はバックアップ
+  確保済みのため削除候補に追加できる。残り17項目は削除候補8件＋要確認多数。
+  PAT失効等の理由で保留中）
 - **GitHub PATの棚卸し継続**（`doin-challenge.com`・`dns-osint-pro-ver2.0`トークンの
   削除可否、本人確認待ち）
 - **`kimitotalk.link/line-root/`の404**（別のAIツール(Codex)が対応中、本セッションでは
@@ -465,3 +466,48 @@ Cloudflareダッシュボードで確認したところ、`kimito-skill-deploy`�
 場合、環境変数にどれが入っているかは値を見ないと分からない——今回はAPIの
 生呼び出し（curl）でWrangler経由と同じエラーを再現させることで、Wrangler側の
 不具合ではなくトークン権限の問題だと切り分けられた。
+
+## N. 第10弾: best-trust系4プロジェクトの重複調査＋台帳是正＋バックアップ確保 ★2026-09-08完了
+
+**状態: 完了・push済み。** 「まとめたほうがよいものはまとめる」という依頼で
+`best-trust`・`best-trust.biz`・`partnership_program_website`・
+`GitHub\reverse-re-birth-hack.com`（大文字G）の4件をExploreエージェントで調査した。
+
+### 結論: 4件は重複していなかった
+
+`best-trust`＝経営管理台帳、`best-trust.biz`＝コーポレートサイト本体、
+`partnership_program_website`＝リバースハックのパートナープログラムLP
+（`partner.reverse-re-birth-hack.com`）、`GitHub\reverse-re-birth-hack.com`＝
+リバースハック本体サイト（`reverse-re-birth-hack.com`）——すべて別役割と確認、
+統合作業は不要と判定。
+
+### 是正1: 台帳の`partnership_program_website`をconfirmed化
+
+`classification: inferred`・「実体かは未検証」というnoteのまま放置されていたが、
+`app.config.json`の`productionDomain`・`package.json`のE2Eスクリプト・
+`best-trust.biz/data/registry.json`の製品定義の3点で実体が既に裏付けられていたと
+判明。`confirmed`に修正し、`npm run render`で`REPOSITORY-MAP.md`も再生成
+（best-trustコミット`6b09dcc`）。
+
+### 是正2: `reverse-re-birth-hack.com`本体のバックアップ確保（実損リスクの発見）
+
+ブランドの顔となる本体LP（「非表示実績600件+・成功率95%」を訴求する重要ページ、
+`registry.json`の`reverse-hack-main`に対応）について、**GitHub上にリポジトリが
+存在せず、台帳にも登録が無い**ことが判明。`gh search repos`・`gh repo list`の
+両方でヒットなしを確認済み。`GitHub\reverse-re-birth-hack.com`（大文字G、旧デスクトップ
+配下の古いフォルダ、gitなしの静的HTML）が唯一の実体だった＝**PCが壊れたら
+このLPのソースが消えるリスク**があった。
+
+`removal`（第7弾）と同じ手順で対応: 中身確認（`.env`等の機密ファイルなし）→
+GitHubに新規private リポジトリ作成（`kimito-link/reverse-re-birth-hack.com`）→
+git init→初回コミット→push（コミット`00903ed`）。台帳にも`localPath: null`
+（`Resilio\github`直下の規約に合わない旧パスのため）で新規登録し、
+`npm run verify`・`npm run render`で整合性確認、`ai-hub doctor`の`ok: true`も
+確認済み（best-trustコミット`2bce386`）。
+
+★教訓: 「まとめる」という依頼を受けても、実際に調べるまでは重複と決めつけない
+（`ai-shain.link`/`web-health-check-app`、`reply-copilot-openrouter-v2`に続き
+本セッション3件目の「ドキュメント・台帳と実態のズレ」パターン）。今回は
+「重複の疑い」の調査が「バックアップ欠如という別の実害」の発見につながった——
+調査目的と異なる種類の問題が見つかることがあるため、調査結果を鵜呑みにせず
+一次情報（`gh search`・`gh repo list`のような実測）まで確認する価値がある。
