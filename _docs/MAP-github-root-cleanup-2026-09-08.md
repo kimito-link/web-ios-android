@@ -101,3 +101,43 @@ GitHub上に対応リポ自体が存在せずローカルクローンのみだ�
   統合・整理するかどうかは本人確認待ち（勝手に判断しない）
 
 A〜Fは完了。github直下の当面の整理整頓はここで一区切り。
+
+## G. 第3弾（2026-09-08、Plan mode経由） ★一部完了
+
+★**教訓（今回の最重要発見）**: 前回Plan mode（Step 5）で`.claude_backup_tsuioku/`は
+「削除してよい」とユーザー確定済みだったが、**このセッションで実行し忘れたまま
+別の調査を続けていた**。複数セッション・複数の確認ラウンドにまたがるタスクでは、
+確定済みの判断が後続の作業で見落とされるリスクがあると判明。対策として、Plan modeの
+計画ファイル冒頭に「確定済みで動かさない事実」の一覧表を置き、以後の質問をスキップする
+運用に変更した（`C:\Users\info\.claude\plans\cached-stirring-umbrella.md`参照）。
+
+### 完了
+
+- `.claude_backup_tsuioku/`（4.2GB）: 前回確定済みの削除を実行（実行し忘れの解消）
+- `codex/`（234MB）: `package.json`に`@openai/codex`依存が1つあるだけの空プロジェクト、
+  234MBは全てnode_modules。削除
+- `henshin-hisho-lp-deploy/`（3.5MB）: 中身は`.gitignore`と`.vercel`キャッシュのみ。
+  実体のソース（`privacy.html`含む）は`henshin-hisho/ios-app/www/`側にあり、現役プロジェクト
+  `gmail-secretary-extension`（Chrome Web Store申請済み）はそちらを参照していると確認済み。削除
+
+削除前後で`ai-hub doctor`の`ok: true`を確認済み。
+
+### 判定保留（依存確認が先に要る）
+
+- `nicolive-dl-master/`（3.2GB）: ツール本体は完成品だが容量の大半（3.4GB超）は録画済みmp4
+  動画2本。動画データとツールを分離できるか要確認
+- `gmail-secretary-extension/`（278MB）: Chrome Web Store申請済みの現役プロジェクト。
+  安易に削除・アーカイブしない
+- `tegiwai-video/`（372MB）: `ouenmovie`との重複有無が未確認
+
+### 未判定（小粒13件）
+
+`appium/`・`hacking-tool/`・`manus/`・`splash/`・`telegram-todo-ai/`・`_enforcement-test/`・
+`surechigai-romi.link-deploy-886aeff/`・`kimi-no-oto/`・`kimito-link-yukkuri-douga/`・
+`resend-kimito-link-review/`・`surechigai-nico/`・`yukkuri/`・`デルタもん/`
+
+### `_pending-deletion-review/`（2.9GB、ユーザー同席が必須・今回未着手）
+
+直下7件: `kimito-link-clone`(506MB)・`kimito-link-fresh`(701MB)・`kimito-link-github-download`(345MB)・
+`hosino-romi`(1.2GB)・`compass-temp-clone`(40MB)・`gpthisho-admin-api-backup-20260713-052940`(35KB)・
+`web-health-check-lp`(182MB)。中身を1つずつ画面共有しながら判断する（推測で重複と決めない）。
