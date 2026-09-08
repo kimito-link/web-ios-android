@@ -1,7 +1,13 @@
 # 実装ハンドオフ: henshin-hisho / gmail-secretary-extension 共通ロジック抽出
 
+**状態: 設計完了・実装未着手。** 本ファイルは着手手順の1枚まとめ。設計の背景・
+実測根拠は`DESIGN-ai-triage-shared-module-2026-09-08.md`（同じ`_docs/`配下）を参照。
+
 - 設計: 司令塔。日付: 2026-09-08
 - この1枚だけで着手できる粒度。実装は行っていない（次チャット/別モデルの仕事）
+- 保存先の相互参照: 本ファイル（着手手順）← `DESIGN-ai-triage-shared-module-2026-09-08.md`
+  （設計・用語説明はここに集約） ← `MAP-github-root-cleanup-2026-09-08.md`のカテゴリJ
+  （そもそもの経緯）
 
 ## A. 読む順
 

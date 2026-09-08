@@ -1,10 +1,29 @@
 # 設計: henshin-hisho / gmail-secretary-extension の共通ロジック抽出
 
+**状態: 設計完了・実装未着手。** 次のセッションがこのファイルを読み、
+`IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md`（同じ`_docs/`配下、
+着手手順を1枚にまとめた引き継ぎ書）を見ながら実装する。
+
 - 設計: 司令塔（実ファイル全文を読んで裏取り済み。Fable委譲は規模に対して過剰と判断し直接設計）
 - 日付: 2026-09-08
 - きっかけ: ユーザーの「実態は、コピペで連携されなかったりしたんですよね」という指摘。
   実際に`henshin-hisho/backend/src/`と`gmail-secretary-extension/sw/features/gmail-inbox/`の
   `triage.js`・`draft-gen.js`を読み比べ、コピペ由来の重複を確認した
+- 保存先の相互参照: 本ファイル（設計）→
+  `IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md`（着手手順）→
+  `MAP-github-root-cleanup-2026-09-08.md`のカテゴリJ（この作業がどの経緯で
+  始まったかの全体地図）、の順に読むと文脈がつながる
+
+## 用語（この文書だけで通じる略称の説明）
+
+- **PAIRS**: このキットの`check-drift.mjs`が持つ「正本ファイルとそのコピー先」の
+  対応表。1箇所を直したらもう1箇所も直す必要がある、という関係を機械が覚えておく仕組み
+- **fail-closed**: 「分からない・確認できない」ときに「大丈夫」側へ倒さず、
+  「要確認」「未実行」側へ倒す設計方針。今回で言えば「共通化してよいか判断できない
+  コードは共通化しない」という判断がこれにあたる
+- **rollout-workflow.mjs**: 1つのファイルを、複数のGitHubリポジトリへ
+  「ブランチを切ってPRを作る」形で配布する既存のNode.jsスクリプト
+  （`ai-hub/bin/`配下）。今回はこれを使い回す
 
 ## 事実（実測済み）
 
