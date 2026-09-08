@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理体制・API導線 | web-ios-android</title>
+  <meta name="description" content="どんな体制で開発・運用しているか、どのプロジェクトがどんな外部サービスと連携しているかを公開しています。">
+  <link rel="canonical" href="https://kimito-skill.link/api-projects/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="管理体制・API導線 | web-ios-android">
+  <meta property="og:description" content="開発体制・品質保証の考え方と、公開プロジェクトが使っている外部API連携先の一覧です。">
+  <meta property="og:url" content="https://kimito-skill.link/api-projects/">
+  <meta property="og:image" content="https://kimito-skill.link/images/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="../assets/css/common.css?v=1">
+<link rel="stylesheet" href="../scripts/site-chrome.css">
+<link rel="stylesheet" href="../scripts/site-chrome.theme.css">
+<link rel="stylesheet" href="../scripts/site-chrome.layout.css">
+<link rel="stylesheet" href="../scripts/site-chrome.local.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "name": "管理体制・API導線",
+        "description": "開発体制・品質保証の考え方と、公開プロジェクトが使っている外部API連携先の一覧。"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://kimito-skill.link/" },
+          { "@type": "ListItem", "position": 2, "name": "管理体制・API導線" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    body { background: #f5f5f7; }
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 40px 24px 48px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+    .hero p { opacity: 0.85; font-size: 0.92rem; }
+
+    .ap-wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px 48px; }
+    .ap-section { margin-bottom: 40px; }
+    .ap-section h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; }
+    .ap-section-desc { font-size: 0.85rem; color: #666; margin-bottom: 18px; line-height: 1.7; }
+
+    .ap-principles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .ap-principles { grid-template-columns: 1fr; } }
+    .ap-principle {
+      background: white;
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .ap-principle h3 { font-size: 0.9rem; font-weight: 800; margin-bottom: 6px; }
+    .ap-principle p { font-size: 0.8rem; color: #666; line-height: 1.6; }
+
+    .ap-projects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .ap-projects-grid { grid-template-columns: 1fr; } }
+    .ap-card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .ap-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; }
+    .ap-card p { font-size: 0.82rem; color: #666; margin-bottom: 9px; line-height: 1.6; }
+    .ap-apis { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .ap-api-chip {
+      font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+      background: #f0f0ff; color: #4c4cc7;
+    }
+    .ap-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ap-link {
+      font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+      text-decoration: none;
+    }
+    .ap-link-web { background: #667eea; color: white; }
+    .ap-link-gh { background: #24292f; color: white; }
+    .ap-error { text-align: center; color: #666; grid-column: 1 / -1; }
+
+    .ap-integrations-list { list-style: none; }
+    .ap-integrations-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      background: white; border-radius: 10px; padding: 10px 16px; margin-bottom: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+      font-size: 0.85rem;
+    }
+    .ap-integration-name { font-weight: 700; }
+    .ap-integration-count { color: #888; font-size: 0.78rem; }
+    .ap-integrations-empty { color: #666; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="hero">
+  <h1>🏢 管理体制・API導線</h1>
+  <p>どんな体制で開発・運用しているか、どのプロジェクトがどんな外部サービスと連携しているかを公開しています</p>
+</div>
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <a href="../">ホーム</a> ＞ 管理体制・API導線
+</nav>
+
+<div class="ap-wrap">
+
+  <section class="ap-section">
+    <h2>開発プロセス・品質保証の考え方</h2>
+    <p class="ap-section-desc">
+      新しい機能を作るときも直すときも、次の考え方を優先しています。
+    </p>
+    <div class="ap-principles">
+      <div class="ap-principle">
+        <h3>1. 既にあるものを先に探す</h3>
+        <p>新しく作る前に、社内の他のプロジェクトに同じ仕組みが無いかを必ず確認します。同じ機能をあちこちに複製すると、片方だけ直して片方が古いままになる事故につながるためです。</p>
+      </div>
+      <div class="ap-principle">
+        <h3>2. 実際に動かしてから完了と言う</h3>
+        <p>コードを読んで「動くはず」で終わらせず、実際に動かして結果を確認してから完了と報告します。テストが緑でも、実機・実データでの確認は別に行います。</p>
+      </div>
+      <div class="ap-principle">
+        <h3>3. 出荷前の自動チェックを必ず通す</h3>
+        <p>アプリをストアに出す前や、コードを本番に反映する前には、機械的なチェック（出荷ゲート）を必ず通します。人の目視だけに頼りません。</p>
+      </div>
+      <div class="ap-principle">
+        <h3>4. 数字や実績は根拠とセットで書く</h3>
+        <p>「実績があります」と書くときは、必ずその数字を出したコマンド・ファイル・日付を確認してから書きます。裏付けのない数字は載せません。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ap-section">
+    <h2>使用している外部サービス・API</h2>
+    <p class="ap-section-desc">
+      公開プロジェクトが実際に利用している外部サービスです（コードの依存関係から確認したものだけを掲載しています）。
+    </p>
+    <div class="api-integrations-slot"></div>
+  </section>
+
+  <section class="ap-section">
+    <h2>公開プロジェクト一覧</h2>
+    <p class="ap-section-desc">
+      実際に稼働しているプロジェクトです。GitHubリポジトリも公開しています。
+    </p>
+    <div class="ap-projects-grid api-projects-slot" data-api-projects-data-path="../assets/data/api-projects.json"></div>
+  </section>
+
+</div>
+
+<div id="site-footer"></div>
+
+<script src="../scripts/site-chrome.config.js"></script>
+<script src="../scripts/site-chrome.js"></script>
+<script src="../scripts/site-chrome.local.js"></script>
+<script src="../scripts/api-projects.js"></script>
+</body>
+</html>

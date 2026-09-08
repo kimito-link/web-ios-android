@@ -1,0 +1,94 @@
+{
+  "_readme": "「管理体制・API導線」ページの正本データ。site/scripts/api-projects.js がこれを読んで site/api-projects/index.html に描画する。best-trust/data/repositories.json（社内管理台帳）を自動転記しない——社内向け役割分類と対外公開の可否は別軸のため。載せてよいと判断したプロジェクトだけを人が選んで1件ずつ追記する。apiIntegrationsは実際にpackage.json依存・.env.exampleキー・ソースコード内API呼び出しで裏取りできたものだけを書く（推測で書かない、確認できなければ空配列のままにする）。裏取り日: 2026-09-08。",
+  "projects": [
+    {
+      "id": "surechigai-romi-link",
+      "name": "すれちがひ通信",
+      "description": "近くにいる人とすれちがった記録を残せるアプリ。",
+      "githubUrl": "https://github.com/kimito-link/surechigai-romi.link",
+      "webUrl": "https://surechigai-romi-link.vercel.app",
+      "role": "product",
+      "apiIntegrations": ["Clerk"]
+    },
+    {
+      "id": "surechigai-nico",
+      "name": "すれちがいライト",
+      "description": "すれちがひ通信の軽量版。",
+      "githubUrl": "https://github.com/kimito-link/surechigai-nico",
+      "webUrl": "https://surechigai-nico.vercel.app",
+      "role": "product",
+      "apiIntegrations": ["Clerk", "Firebase", "OpenRouter", "Upstash Redis"]
+    },
+    {
+      "id": "reviewcheck-jp",
+      "name": "口コミチェック.jp",
+      "description": "Googleの口コミを分析できるツール。",
+      "githubUrl": "https://github.com/kimito-link/reviewcheck.jp",
+      "webUrl": "https://reviewcheck-jp.vercel.app",
+      "role": "product",
+      "apiIntegrations": ["Google Places API", "Stripe", "Upstash Redis"]
+    },
+    {
+      "id": "henshin-hisho",
+      "name": "AI返信秘書",
+      "description": "Chatwork・LINE等のメッセージにAIが返信案を作る秘書アプリ。Chrome拡張・Web・iOS・Android展開。",
+      "githubUrl": "https://github.com/kimito-link/henshin-hisho",
+      "role": "product",
+      "apiIntegrations": ["OpenRouter", "LINE Messaging API", "Chatwork API"]
+    },
+    {
+      "id": "web-health-check-app",
+      "name": "君斗りんくのWEBサイト健康診断",
+      "description": "自分のWebサイトの状態を、けんこう診断と同じ仕組みで確認できるアプリ。Web・iOS・Android・Chrome拡張。",
+      "githubUrl": "https://github.com/kimito-link/web-health-check-app",
+      "webUrl": "https://web-health-check-app.vercel.app",
+      "role": "product",
+      "apiIntegrations": ["Google Custom Search API"]
+    },
+    {
+      "id": "doin-challenge",
+      "name": "動員チャレンジ",
+      "description": "商標登録・特許出願中のイベント動員支援サービス。",
+      "githubUrl": "https://github.com/kimito-link/doin-challenge.com",
+      "webUrl": "https://doin-challenge-com.vercel.app",
+      "role": "product",
+      "apiIntegrations": ["Clerk", "Sentry", "TiDB Cloud"]
+    },
+    {
+      "id": "yukkuri-exosome",
+      "name": "ゆっくりエクソソーム",
+      "description": "毎日のセルフケアを習慣化するアプリ。Web・iPhone・Androidを同時展開。",
+      "githubUrl": "https://github.com/kimito-link/yukkuri-exosome.link",
+      "webUrl": "https://yukkuri-exosome.link/",
+      "role": "product",
+      "apiIntegrations": []
+    },
+    {
+      "id": "fujisan-compass",
+      "name": "富士山コンパス",
+      "description": "現在地から富士山の方角をリアルタイムで表示するコンパスアプリ。",
+      "githubUrl": "https://github.com/kimito-link/compass",
+      "webUrl": "https://compass-indol-beta.vercel.app",
+      "role": "product",
+      "apiIntegrations": []
+    },
+    {
+      "id": "tsuioku-no-kirameki",
+      "name": "追憶のきらめき",
+      "description": "ニコニコ生放送のコメントをローカルに記録するChrome拡張機能。",
+      "githubUrl": "https://github.com/kimito-link/tsuioku-no-kirameki.com",
+      "webUrl": "https://tsuioku-no-kirameki-com.vercel.app",
+      "role": "product",
+      "apiIntegrations": []
+    },
+    {
+      "id": "bestprice",
+      "name": "ベストプライス",
+      "description": "送るだけの買取代行サービス。",
+      "githubUrl": "https://github.com/kimito-link/bestprice",
+      "webUrl": "https://bestprice-ten.vercel.app",
+      "role": "product",
+      "apiIntegrations": []
+    }
+  ]
+}

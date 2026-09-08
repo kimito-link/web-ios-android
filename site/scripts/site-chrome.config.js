@@ -14,6 +14,10 @@ window.SITE_CHROME_CONFIG = {
       "label": "📱 公開・導入事例"
     },
     {
+      "href": "/api-projects/",
+      "label": "🏢 管理体制・API導線"
+    },
+    {
       "href": "/troubleshooting/",
       "label": "🩹 つまずいたら"
     },

@@ -363,11 +363,65 @@ Google製・VSCodeベースのagentic IDE「Antigravity」（このPCに`.antigr
 橋渡し1行を追加済み。今回は方針とHOWTOの正本化まで、個別プロジェクトでの実装作業
 そのものは次回以降。
 
+## M. 第9弾: LP新規ページ「管理体制・API導線」の新設 ★2026-09-08完了
+
+**状態: 完了・実装済み。** 「これを機に管理体制もLPに入れておきたい」という要望を受け、
+`site/api-projects/`を新設した。
+
+### きっかけ
+
+一連の整理作業中、`reply-copilot-openrouter-v2`という消えたように見えたローカル
+フォルダの調査（実際は`C:\Users\info\OneDrive\デスクトップ\GitHub\`という別の古い
+フォルダに実在し、`kimito-link-reply-suggest`の化石クローンと判明・データ実害ゼロ）や、
+GitHub Personal Access Tokenの棚卸し（ユーザー自身が「Never used」の不要トークンを
+複数削除）を経て、「取引先・顧客向けに開発体制の信頼性を示したい」という要望が出た。
+
+### 設計方針（既存資産の再利用）
+
+Exploreエージェント調査により、`site/assets/data/showcase.json` +
+`site/scripts/showcase.js`という**データ駆動・JSON正本方式**の強い前例を発見。
+「複数ページにHTML直書きすると増えたアプリが漏れる」という過去の実障害を踏まえた
+設計（`status: rejected`は掲載しない＝掲載可否をJSON自体で判断する仕組み）を踏襲した。
+
+`best-trust/data/repositories.json`（社内管理台帳、53件）を直接LPの描画元にはせず、
+**LP専用の新規JSON（`site/assets/data/api-projects.json`）を作り、公開に適した
+プロジェクトだけを人手で選定して記入**する方式にした（社内向け役割分類と対外公開の
+可否を混在させないため）。
+
+### 実装したもの
+
+- `site/assets/data/api-projects.json`（新設）: 台帳から`classification: confirmed`
+  かつ`role: product`の中から10件を選定。各プロジェクトのAPI連携先はExploreエージェントが
+  package.json依存・`.env.example`キー・ソースコード内API呼び出しを実測して裏取り
+  （推測で埋めない方針。「不明」は空配列のまま）
+- `site/scripts/api-projects.js`（新設）: `showcase.js`と同じfetch→render方式。
+  プロジェクト一覧カードとAPI連携先集計（件数付き）の2種類のスロットを描画
+- `site/api-projects/index.html`（新設）: 3セクション構成（①開発プロセス・品質保証の
+  考え方＝CLAUDE.mdの非交渉ルールを平易に翻訳、②使用している外部サービス・API、
+  ③公開プロジェクト一覧）。`showcase/index.html`と同型（common.css + site-chrome
+  4点セット、canonical/OGP/構造化データ）
+- `site/scripts/site-chrome.config.json`にナビ項目`🏢 管理体制・API導線`を追加し、
+  `generate-site-chrome-consumer.mjs`で`site-chrome.config.js`等を再生成（手編集せず
+  正本→生成コマンド経由、既存の運用ルール通り）
+- `site/sitemap.xml`にURL追加
+
+### 検証
+
+ローカルdevサーバー（`npm run`相当の`.claude/launch.json`の`site`設定、
+`http-server site -p 8767`）でBrowser paneプレビューを実施。デスクトップ・モバイル
+（375x812）両方でレイアウト崩れなし、コンソールエラーなし、API連携先の集計
+（Clerk 3件・Chatwork API 1件等）が正しく描画されることを確認。ナビゲーションの
+新規リンクがヘッダー・フッター両方に反映されていることも`find`で確認済み。
+
+**未実施（次回以降）**: `git push`後の`npm run deploy:site`実行と、本番URL
+（`https://kimito-skill.link/api-projects/`）での反映確認。これは本人のpush承認後に
+実施する。
+
 ## 現時点のまとめ
 
-A〜Lまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
-ドリフト・空リポジトリ放置・軽量残骸・ドキュメント実態ズレの整理整頓は一区切り。
-残っているのは以下のみ:
+A〜Mまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
+ドリフト・空リポジトリ放置・軽量残骸・ドキュメント実態ズレの整理整頓、およびLPへの
+管理体制ページ新設は一区切り。残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
 - `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
@@ -375,6 +429,16 @@ A〜Lまで完了。github直下の重複リポジトリ・散らばったMarkdo
 - **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
   次チャットで別モデルが実装）
 - **Antigravityでの個別実装作業**（HOWTO正本化のみ完了、実際の委任作業は次回以降）
+- **`site/api-projects/`のpush・本番反映確認**（実装・ローカル検証完了、push待ち）
+- **`C:\Users\info\OneDrive\デスクトップ\GitHub\`（大文字G）の古いフォルダ18項目の
+  実削除**（重複判定は完了済み、削除候補8件＋要確認多数。PAT失効等の理由で保留中）
+- **GitHub PATの棚卸し継続**（`doin-challenge.com`・`dns-osint-pro-ver2.0`トークンの
+  削除可否、本人確認待ち）
+- **`kimitotalk.link/line-root/`の404**（別のAIツール(Codex)が対応中、本セッションでは
+  意図的に触っていない）
 - 本セッション終盤にユーザーからノートPC（BESTTRUST、Panasonic CFFV5-1）・iPad Air (M3)・
-  もう1台のデスクトップPCの情報提供があった。マルチデバイス構成の全体整理は次回以降
-  （今回のスコープには含めていない）
+  もう1台のデスクトップPC（Dell OptiPlex 5090 SFF、GPU無しの可能性が高い省スペース機）の
+  情報提供があった。複数PCでOllamaを分散する方針は`docs/ai-workflows/COUNCIL-HOWTO.md`
+  に「複数PCでOllamaを分散する」節として追記済み（コード変更不要、`OLLAMA_HOST`環境変数で
+  対応可能と確認済み）。OneDriveは複数PC間の共有手段として使わない方針もメモリに記録済み。
+  マルチデバイス構成の実機セットアップ自体は次回以降（モニター確保待ち）
