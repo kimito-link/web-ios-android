@@ -275,13 +275,13 @@ remoteが`kimito-link`オーナーを指す独立現役プロジェクトで重�
 `tsuioku-no-kiroku`（AI外部記憶MCP）は`tsuioku-no-kirameki.com`（ニコ生配信コメント
 拡張）とREADME内に「姉妹作」と明記されており別プロダクト、重複ではない。
 
-### 削除候補（本人確認待ち・未実行）
+### 削除完了（本人確認済み・実行済み）
 
-以下5件は使い捨て・実験残骸と判定（依存ゼロ、合計約130KB）:
+以下5件は使い捨て・実験残骸と判定（依存ゼロ、合計約130KB）し、本人確認を得て削除した:
 `Qwen3.6-35B-A3B`（ローカルLLMセットアップ残骸）・`_handoff_line_webhook.txt`
 （2026-08-27付の使い捨て引き継ぎメモ）・`check_projects.sh`（調査用シェルスクリプト）・
 `claude-token-saving-council.json`（会議ログ）・`grok-build`（未コミットの実験用
-サンドボックス）。
+サンドボックス）。削除前後で`ai-hub doctor`の`ok: true`・`problems: []`を確認済み。
 
 `_backups/`（3.6MB、`kimitolink-line-line-fix-20260817.bundle`）は
 `_handoff_line_webhook.txt`と関連する**本番修復用バックアップ**のため保持推奨
@@ -290,8 +290,8 @@ remoteが`kimito-link`オーナーを指す独立現役プロジェクトで重�
 
 ## 現時点のまとめ
 
-A〜Kまで一部完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
-ドリフトの整理整頓は一区切り。残っているのは以下のみ:
+A〜Kまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
+ドリフト・空リポジトリ放置・軽量残骸の整理整頓は一区切り。残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
 - `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
@@ -299,5 +299,3 @@ A〜Kまで一部完了。github直下の重複リポジトリ・散らばった
 - `sakkino.link`の実装内容の要再検証
 - **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
   次チャットで別モデルが実装）
-- **第7弾: 軽量5件の削除**（`Qwen3.6-35B-A3B`・`_handoff_line_webhook.txt`・
-  `check_projects.sh`・`claude-token-saving-council.json`・`grok-build`、本人確認待ち）
