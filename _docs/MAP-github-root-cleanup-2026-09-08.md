@@ -288,14 +288,93 @@ remoteが`kimito-link`オーナーを指す独立現役プロジェクトで重�
 （削除候補には含めない）。`knowledge/`（4KB、`context/working-rules.md`）は
 現役の参照用ドキュメント置き場のため削除候補ではない。
 
+## L. 第8弾: ドキュメント/実態のズレ是正3件 + Antigravity実装担い手化 ★2026-09-08完了
+
+**状態: 完了・各リポジトリへpush済み。** 「まだ散らかっている」「抜け漏れが多すぎる」という
+繰り返しの指摘を受け、`ai-shain.link`/`ai-shain-worker`、`web-health-check.link`/
+`web-health-check-app`の2ペアをExploreエージェントで再調査した。
+
+**結論: フォルダ分割そのものは適切**（LP/アプリ本体という技術的分離に合理性あり）。
+「散らかって見える」の正体は、ドキュメントと実態のズレ・旧リポの残骸放置だった。
+
+### Step 1: web-health-check-app/extension の旧リポ残骸削除（完了、コミット`7ca3827`）
+
+`extension/`のgit remoteに`ext-kimito → ../dns-osint-pro-ver2.0`という、**第7弾までに
+削除済みの旧リポジトリへのローカルパス参照が残っていた**。`package.json`の`name`も
+`"dns-osint-pro-ver2.0"`のまま、`docs/00_INDEX.md`も「dns-osint-pro-ver2.0プロジェクトの
+詳細ドキュメント」を名乗っていた。`SESSION_START.md`は「作業日: 2025年1月27日」
+「作業場所: `\\wsl$\Ubuntu\home\info\projects\dns-osint-pro-ver2.0`」という、
+1年半以上前の旧WSL環境向け引き継ぎメモで、直近コミット（v8.6.158）と全く整合しなかった。
+
+削除した26件: `HANDOVER_2026-05-13_*.md`(3件)・`SESSION_START.md`・
+`DOCUMENT_STRUCTURE.md`・`WSL_WORKFLOW.md`・`OPEN_WSL_PROJECT.md`・
+`CONTRIBUTING.md`・`CONTRIBUTORS.md`・`create-zip-v8.0.0〜v8.6.30.ps1`(13件、
+現行は`build-zip.ps1`)・`STORE_DESCRIPTION_v8.0.4.md`・`RELEASE_NOTES_v8.0.3.md`・
+`docs/00_INDEX.md`・`copy-files.ps1`（存在しない旧パスへコピーする無効スクリプト）。
+`package.json`の`name`/`repository`/`bugs`/`homepage`も実リポジトリに修正、
+git remote `ext-kimito`も削除。CI（`.github/workflows/`）からの参照ゼロを確認済み。
+
+### Step 2: web-health-check-app/README.md の現状更新（完了、Step 1と同時push）
+
+「Phase 0完了、診断機能はPhase 2以降」という記述のまま放置されていたのを、実態
+（v8.6.158稼働中、2ブランド×4プラットフォームのSSOT、CLAUDE.mdの「100年設計」節に
+準拠した構成説明）に全面更新。既存の`docs/handoff/`（P0〜P5まで実在確認済み）への
+案内も追加。
+
+### Step 3: ai-shain.link/chatwork と ai-shain-worker の関係を再調査（完了）
+
+★**当初の前提が調査で覆った**: Explore調査時点では「同じ機能（Chatwork自動化）の
+別実装」と判定していたが、実際に`ai-shain-worker/tests/chatwork-*.spec.js`と
+`HANDOFF-chatwork-video.md`を読んだところ、これは**LP用デモ録画作成のための実験
+コード**であり、しかも「本番LPに第三者の個人情報を公開する事故」（動画11秒地点で
+氏名・所属・顔写真・招待リンクのトークンが判読できる状態）を起こして**方針自体が
+撤回済み**（代替の`ouenmovie/chatwork-intro/`自作図解方式へ移行済み）と判明した。
+
+一本化ではなく、撤回済み実験コードの削除が正しい対応と判断（本人確認済み）。
+`ai-shain-worker`から10件のspec.js＋関連生成物8件（`.auth/chatwork-state.json`・
+`dist/chatwork-*.mp4`等）を削除（コミット`1b98dab`）。`ai-shain.link/chatwork/`
+（CDP接続・5関門・承認カード付き、2026-08-17実装）は本番運用中と確認し触っていない。
+
+`ai-shain.link`ルート直下に散らばっていた`CODEX-HANDOFF-*.md`(10件)・
+`FABLE-DESIGN-*.md`(9件)、計19ファイルは`docs/`配下へ移動（`git mv`、内容変更なし、
+コミット`2977d12`）。
+
+★教訓: Explore調査結果（サブエージェントの要約）を鵜呑みにせず、実装の中身
+（`HANDOFF-chatwork-video.md`のような経緯文書）まで司令塔が読み直したことで、
+「重複だから一本化」という誤った対応を避けられた。**「同じ名前・同じ対象システムを
+触っている」だけでは重複と断定しない**——実際に何をしているか・現在も有効な方針かを
+確認してから対応方針を決める。
+
+### Step 4: Antigravityを実装担い手として正式化（完了、新規ファイル）
+
+Google製・VSCodeベースのagentic IDE「Antigravity」（このPCに`.antigravity-ide`として
+インストール済み、2026-09-05まで使用実績あり）を、council-fableの「手順3: 実装は
+別モデル」の選択肢として正式化した。
+
+既存2実例から書式を抽出:
+- 依頼プロンプトの書式（`sakkino.link/ANTIGRAVITY-CI-PROMPT.md`）: 作業ディレクトリ
+  明示→正本を読ませる→案件固有の差分→やること→絶対にやらないこと（実行系の禁止）→
+  人間にしかできない関門→検証基準
+- 知見レポートの書式（`kimitolink-linktree/docs/AI_ANTIGRAVITY_REPORT.md`）:
+  ❌アンチパターン（過去）→✅解決策（現在）→AIへの指示、次の保守担当AI向け
+
+新設: [`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](../docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
+[`FABLE-3STEP-HOWTO.md`](../docs/ai-workflows/FABLE-3STEP-HOWTO.md)の「手順3」から
+橋渡し1行を追加済み。今回は方針とHOWTOの正本化まで、個別プロジェクトでの実装作業
+そのものは次回以降。
+
 ## 現時点のまとめ
 
-A〜Kまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
-ドリフト・空リポジトリ放置・軽量残骸の整理整頓は一区切り。残っているのは以下のみ:
+A〜Lまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
+ドリフト・空リポジトリ放置・軽量残骸・ドキュメント実態ズレの整理整頓は一区切り。
+残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
 - `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
-- `ai-shain.link`/`ai-shain-worker`のLP↔実装の導線食い違い（プロダクト課題、要別対応）
 - `sakkino.link`の実装内容の要再検証
 - **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
   次チャットで別モデルが実装）
+- **Antigravityでの個別実装作業**（HOWTO正本化のみ完了、実際の委任作業は次回以降）
+- 本セッション終盤にユーザーからノートPC（BESTTRUST、Panasonic CFFV5-1）・iPad Air (M3)・
+  もう1台のデスクトップPCの情報提供があった。マルチデバイス構成の全体整理は次回以降
+  （今回のスコープには含めていない）
