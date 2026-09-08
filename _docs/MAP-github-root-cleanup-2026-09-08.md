@@ -442,3 +442,26 @@ A〜Mまで完了。github直下の重複リポジトリ・散らばったMarkdo
   に「複数PCでOllamaを分散する」節として追記済み（コード変更不要、`OLLAMA_HOST`環境変数で
   対応可能と確認済み）。OneDriveは複数PC間の共有手段として使わない方針もメモリに記録済み。
   マルチデバイス構成の実機セットアップ自体は次回以降（モニター確保待ち）
+
+### 副産物: CLOUDFLARE_API_TOKENのPages権限不備を発見・修正（2026-09-08）
+
+`npm run deploy:site`が`Authentication error [code: 10000]`で失敗する事象が発生。
+Cloudflare公式MCP接続（`mcp__cadd7b28-...`）経由では`pages/projects`への読み取り・
+upload-token取得に成功する一方、Wranglerが読む`CLOUDFLARE_API_TOKEN`環境変数（User
+スコープ）は同じAPIで同じエラーを再現し、**トークン自体は有効・アクティブだが
+Pages権限を持たない**ことを実測で切り分けた。
+
+Cloudflareダッシュボードで確認したところ、`kimito-skill-deploy`という名前の
+「アカウント.Cloudflare Pages」権限を持つトークンが別途既に存在していた
+（環境変数には別の値が入っていたと推測される）。ユーザーがこのトークンをRoll
+（再発行）し、新しい値をクリップボード経由で受け渡し（グローバルルール
+「トークン・鍵の受け渡しはクリップボード経由」実践）、User環境変数
+`CLOUDFLARE_API_TOKEN`を更新して解決。`deploy:site`が正常完了し、本番URL
+（`https://kimito-skill.link/api-projects/`）での反映を確認済み。
+
+★教訓: Cloudflareのトークンは「機能ごとに権限が独立している」という既存の
+知見（CLAUDE.md「★★Cloudflareのトークンは『用途ごとに権限が独立している』」節）
+が今回も再現した。複数のCloudflareトークンが同名アカウント内に用途別に存在する
+場合、環境変数にどれが入っているかは値を見ないと分からない——今回はAPIの
+生呼び出し（curl）でWrangler経由と同じエラーを再現させることで、Wrangler側の
+不具合ではなくトークン権限の問題だと切り分けられた。
