@@ -174,10 +174,53 @@ push不要のまま削除で確定した。
 削除前後で`ai-hub doctor`の`ok: true`を確認済み。`_pending-deletion-review/`ディレクトリ
 自体も空になったため削除した。
 
+## I. 第4弾: 台帳ドリフト修正＋孤立ファイル整理＋ai-shain導線の食い違い記録 ★2026-09-08完了
+
+「フォルダを探すのに時間がかかる」という指摘の核心を再調査した結果、問題の一部は
+**台帳（`best-trust/data/repositories.json`）が実態を反映していないこと**だったと判明。
+
+### Step 1: 孤立ファイル削除（完了）
+
+- github直下の`qa-results`: `surechigai-romi.link`・`doin-challenge.com`の
+  `save-auth-state.mjs`等が本来出力すべき場所（各リポジトリ内、現在も稼働中）とは別に
+  取り残された孤立コピーと確認し削除
+- `Kali`: Kali Linuxとは無関係、AutoHotkeyの単発診断スクリプト1本のみと確認し削除
+
+### Step 2: 台帳ドリフト修正（完了、best-trust commit `ce67c71`）
+
+- `dns-osint-pro-ver2.0`: 削除・Archive化済みの実態に合わせ`isArchived: true`・
+  `localPath: null`へ修正
+- `gmail-secretary-extension`: `henshin-hisho`と同一製品と確認済みなのに未登録だったため
+  `product: "henshin-hisho-gmail"`で新規登録
+- `ouenmovie`: 稼働中プロダクトなのに未登録だったため新規登録
+- `yukkuri`・`kimito-link-yukkuri-douga`・`kimi-no-oto`・`デルタもん`・`tegiwai-video`:
+  `unclassified`で新規登録（総エントリ数44→53件）
+
+### Step 3: ai-shain.link/ai-shain-worker導線の食い違い（記録のみ・要注意）
+
+フォルダ統合の技術的必然性は無いと再確認したが、以下の**プロダクト課題**を発見:
+- LPのCTAが「ChatGPT起点の4ステップ」を謳っているが、実装済みなのは
+  LINE/GitHub Issue起点のフローのみ（ARCHITECTURE-personal-ai-employee-first.mdに
+  「ChatGPT入口は未着手」と明記）
+- GitHub PATが2026-08-14失効予定と明記されており、現在（9/8）既に失効している可能性
+- 直近15コミットが`ai-shain.link`側で全て動画デモ制作関連に向いており、AI社員本体・
+  導線改善への言及が無い
+- これはフォルダ整理の対象ではなくプロダクト改修が必要な課題。対応するなら別途
+  ai-shain.link/ai-shain-worker担当セッションで検討する
+
+### Step 4: `sakkino.link`（要再検証・記録のみ）
+
+以前「Cliborモバイル化の実装先（Flutter本体＋iOS/Androidネイティブキーボード）」と
+判定していたが、READMEは"A new Flutter project."というデフォルトのまま放置されており、
+この判定の根拠がREADME上では裏付けられないと判明。`lib/`等の実装コード自体を見た
+再検証が必要（今回のスコープ外、次回持ち越し）。
+
 ## 現時点のまとめ
 
-A〜Hまで全て完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸の整理整頓は
-一区切り。残っているのは以下のみ:
+A〜Iまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳ドリフトの
+整理整頓は一区切り。残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
-- `manus`・`デルタもん`等の小粒項目の最終削除判断（本人確認が望ましい）
+- `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
+- `ai-shain.link`/`ai-shain-worker`のLP↔実装の導線食い違い（プロダクト課題、要別対応）
+- `sakkino.link`の実装内容の要再検証
