@@ -215,12 +215,47 @@ push不要のまま削除で確定した。
 この判定の根拠がREADME上では裏付けられないと判明。`lib/`等の実装コード自体を見た
 再検証が必要（今回のスコープ外、次回持ち越し）。
 
+## J. 第5弾: 残存Markdown4件削除＋henshin-hisho/gmail-secretary-extension共通化設計 ★2026-09-08完了
+
+「実態は、コピペで連携されなかったりしたんですよね」というユーザー指摘をきっかけに、
+`ai-business-secretary`と`henshin-hisho`を調べたところ、両者自体は別物だったが、
+**`henshin-hisho`と`gmail-secretary-extension`の間に`triage.js`・`draft-gen.js`の
+コピペ由来の重複コードがあり、コピー後に別々に進化して乖離していた**という実害を発見。
+
+### Step 1: Markdown4件削除（完了）
+
+- `ai-reply-draft-tool-DESIGN.md`・`-IMPLEMENTATION-HANDOFF.md`: 実装先
+  `ai-business-secretary/scripts/`に該当ファイル実在確認、削除
+- `best-trust-brand-strategy-DESIGN.md`・`-IMPLEMENTATION-HANDOFF.md`: 正本は
+  `best-trust.biz/docs/`に存在、git履歴で実装完了確認済み、削除
+
+削除前に`ai-hub doctor`で参照ゼロを確認済み。`ANTI-SLOP-ADOPTION-ASSESSMENT.md`・
+`KIMITO-CLERK-UNIFICATION-PLAN.md`は現役と再確認し保持。`HANDOFF-*`3件は
+index.json登録済みのため今回は据え置き。
+
+### Step 2: 共通ロジック抽出の設計（設計完了、実装は次チャット）
+
+`triage.js`のJSON修復関数群（`scanJsonFragment`等7関数）と`draft-gen.js`の
+トーン定義（`DRAFT_TONE_INSTRUCTIONS`）が両リポジトリで一字一句近い形でコピーされ、
+片方だけバグ修正（Gemma系モデル空白ループ対策）・機能追加（日次利用制限）が入り、
+もう片方だけ別の機能（accountPolicy会社ポリシー）が入るという乖離を実測確認。
+`risk-gate.js`は送信ゲートとDOM挿入ゲートという別責務と判明し共通化対象外。
+
+設計方針（案A採用）: `web-ios-android/templates/shared/ai-triage/`に純粋関数のみの
+共有モジュールを新設し、既存の`rollout-workflow.mjs`で両リポジトリへPR配布。
+`check-drift.mjs`のPAIRSにも登録し今後の乖離を機械検知できるようにする。
+
+- 設計書: `_docs/DESIGN-ai-triage-shared-module-2026-09-08.md`
+- 実装ハンドオフ: `_docs/IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md`
+
 ## 現時点のまとめ
 
-A〜Iまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳ドリフトの
+A〜Jまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳ドリフトの
 整理整頓は一区切り。残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
 - `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
 - `ai-shain.link`/`ai-shain-worker`のLP↔実装の導線食い違い（プロダクト課題、要別対応）
 - `sakkino.link`の実装内容の要再検証
+- **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
+  次チャットで別モデルが実装）
