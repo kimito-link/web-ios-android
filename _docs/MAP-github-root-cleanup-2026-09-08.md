@@ -770,3 +770,45 @@ AGENTS.mdにだけ「AIトークン節約の探索除外ルール」が残って
 - `discordai/`の削除要否判断（`.env`の中身確認・退避が前提）
 - D項目（`ouenmovie`のHANDOFF氾濫）の整理（第13弾から継続保留）
 - `sakkino.link`・`tsuioku-no-kiroku`の正式なブランド・製品への帰属付け（第13弾から継続保留）
+
+## R. 第15弾: github直下の未確認リポジトリ群の整理（2026-09-09）
+
+### 到達点
+
+完了済み。前回持ち越しだった台帳未登録6件（`knowledge`・`manus`・`telegram-todo-ai`・
+`_backups`・`patents`・`docs`）を実地確認し、判定した。ユーザーがエクスプローラーで
+`manus`を選択していたことがきっかけ。「深く調査してから」という指示を受け、浅い調査→
+深掘り調査の2段階で進めた。
+
+### 判定結果
+
+| 対象 | 判定 | 根拠 |
+|---|---|---|
+| `patents` | **対応不要** | `patents-e7`セッションが「特許・商標」として現役管理中と確認済み |
+| `docs`（github直下） | **対応不要** | 複数プロジェクト横断の設計文書置き場。`KIMITO-CLERK-UNIFICATION-PLAN.md`が前日更新と現役。コードリポジトリではないため台帳の対象外 |
+| `manus/` | **記録のみ、削除・整理はしない** | 楽天カードとの紛争は実質決着（743,165円チャージバック成立）だが、**Manus社（Butterfly Effect Pte. Ltd.）への損害賠償請求は未決着**。最終催告書v5がシンガポールで「保留」となり郵便番号誤記の補足資料提出まで進んだ段階（2026-08-07 11:18:13時点）で記述が止まっている。★本文が参照する`scratchpad_manus`（証拠一式の格納場所）がこのOneDrive環境に実在しないことも確認した（探索済み、見つからず）。現在進行中の法的紛争対応文書のため、AIが勝手に整理・削除しない |
+| `telegram-todo-ai/` | **台帳登録済み** | Telegramグループの`/todo`コマンドでAIがやることリストを生成するBot。README「常駐監視・自動発火なし。打った時だけ動く」と明記された手動起動ツール（cron/PM2/systemd等の常駐化なし）。GitHub未接続・ローカルのみ、最終npm install 2026-05-22（以降約3.5ヶ月更新なし）。`best-trust/data/repositories.json`へunclassifiedで登録（`best-trust`コミット`b9be7ea`） |
+| `knowledge/context/working-rules.md` | **現状維持** | 「AI作業ルール（全プロジェクト共通）」という6項目のメタドキュメント。web-ios-android/CLAUDE.md・line-bot/AGENTS.md・kimito-link/AGENTS.mdのいずれからも明示的参照が見つからず、他プロジェクトから実際に使われている痕跡は確認できなかった。ただし削除の根拠もないため現状維持とした |
+| `_backups/kimitolink-line-line-fix-20260817.bundle` | **line-botセッションへ確認依頼を送付、削除は保留** | `git ls-remote`で2ブランチ（`fix/line-follow-greeting`＝`c5e0fc6f`、`codex/line-monetization-first-step`＝`bb86344b`）を含むと確認。元プロジェクト`line-bot`は現存し極めて活発（3,675コミット）だが、**bundle内の2コミットは本体の履歴に見当たらない**（`git cat-file -t`で照会不能）＝単純にマージ済みだから不要、とは断定できない。未マージのまま眠っている変更の可能性が残るため、削除判断はline-botセッションに委譲した |
+
+### ★教訓: 「総合窓口」セッションは実装せず振り分けに徹する
+
+このセッション中、ユーザーから複数回「セッションでできることはそのセッションでやらないと
+コンフリクトが起こる」「ここは心臓部・総合窓口なので」という明確な指摘があった。実際に
+`ai-shain.link`のLINE導線修正で、担当セッション不在のまま本セッションが直接ファイルを
+読みに行きかけた場面があり、`mcp__ccd_session_mgmt__send_message`で各担当セッション
+（kimitolink-linktree・doin-challenge.com・best-price・line-bot等）へタスクを振り分ける
+運用に修正した。★`_backups`の判断も同じ原則で「このセッションでは削除せず、line-bot
+セッションへ確認依頼を送るだけ」に留めた。
+
+**総合窓口セッションの役割**: 調査・振り分け・台帳更新（複数プロジェクト横断の正本）
+のみ。個別プロダクトのコード変更は担当セッションに委ねる。
+
+### 今回やらなかったこと（次回持ち越し）
+
+- `manus/`の内容整理・削除・案件対応そのもの（法的紛争の実務対応はAIの範疇外）
+- `knowledge/working-rules.md`を他プロジェクトへ実際に配線する作業
+- `_backups/`のbundle削除（line-botセッションの判断待ち）
+- `discordai/`の削除要否判断（第13弾から継続保留）
+- D項目（`ouenmovie`のHANDOFF氾濫）の整理（第13弾から継続保留）
+- `sakkino.link`・`tsuioku-no-kiroku`の正式なブランド・製品への帰属付け（第13弾から継続保留）
