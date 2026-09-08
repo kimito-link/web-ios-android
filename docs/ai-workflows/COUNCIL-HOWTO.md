@@ -217,6 +217,53 @@ $env:COUNCIL_QUALITY=1; node scripts/meeting.mjs --q "ここに問いを書く"
 
 ---
 
+## 複数PCでOllamaを分散する（2026-09-08追記）
+
+**状態: 方針確定・コード変更不要と確認済み。実機側の設定はPC個別に必要（未実施）。**
+
+`tsuioku-no-kirameki.com/scripts/meeting.mjs`は既に`OLLAMA_HOST`環境変数に対応済み
+（`let OLLAMA = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434'`の行、実測確認済み）。
+スキームなし（`192.168.x.x:11434`）でも自動で`http://`を補うため、
+**追加のコード変更なしに別PCのOllamaを呼べる**。
+
+### 前提: OneDriveは使わない
+
+複数PC間のファイル共有・連携は**OneDrive同期に頼らない**（PCが重くなるため。ユーザー方針）。
+ここで説明する方式は、OneDriveを一切使わずネットワーク経由の直接通信だけで完結する。
+
+### やり方
+
+1. **LLMを動かす側のPC**（例: GPU搭載機、または常時稼働させたい専用機）で、Ollamaを
+   外部から到達可能にする:
+   ```powershell
+   # そのPCのUser環境変数としてOLLAMA_HOSTを0.0.0.0にする（既定は127.0.0.1限定=外部から見えない）
+   [Environment]::SetEnvironmentVariable('OLLAMA_HOST', '0.0.0.0:11434', 'User')
+   # 設定後はOllamaを再起動（タスクトレイから終了→再度起動）
+   ```
+   Windowsファイアウォールで`11434`番ポートの受信を許可する必要がある場合がある。
+2. **呼び出す側のPC**（司令塔Claudeが動いている側）で、会議実行時だけ環境変数を
+   一時的に上書きする（Userスコープの既定値は変更しない——他の用途に影響するため）:
+   ```powershell
+   $env:OLLAMA_HOST = "http://<LLM側PCのIPアドレス>:11434"
+   node scripts/meeting.mjs "<council-question.txtのフルパス>" --out "<出力先>"
+   ```
+3. **疎通確認**（会議を回す前に必ず先にこれで到達性を見る）:
+   ```powershell
+   curl -m5 http://<LLM側PCのIPアドレス>:11434/api/tags
+   ```
+   到達できなければ、同じネットワーク（Wi-Fi/LAN）に両方が繋がっているか、
+   ファイアウォールで塞がれていないかを疑う。
+
+### 使いどころの判断
+
+- **GPU無し・非力なPC**: 会議参加は諦め、`ollama pull`済みの7B以下小型モデルの
+  CPU推論専用機として、gmail-watch的な軽量常駐タスクの実行環境に回す方が現実的
+  （大きいモデルのCPU推論は遅すぎて会議のタイムアウトに引っかかりやすい）。
+- **GPU搭載PC**: そのPCのOllamaを`0.0.0.0`公開し、他のPC（非力なノートPC等）から
+  会議のローカルメンバーとして呼ぶ構成が有効。
+
+---
+
 ## つまずき対策
 
 | 症状 | 対処 |
