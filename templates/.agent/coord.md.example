@@ -1,0 +1,36 @@
+<!--
+  並列セッション協調プロトコル（Main-Write Pause）のテンプレート。
+  正本: web-ios-android/CLAUDE.md「並列セッション協調プロトコル」節。
+
+  使い方: 対象リポジトリ直下に `.agent/coord.md` として配置する
+  （このファイル自体はコピー元テンプレート。配置先の `.agent/coord.md` は
+  頻繁に書き換わるため .gitignore に加え、コミット対象にしない）。
+-->
+
+# Agent Coord
+updated:
+canonical_head:
+canonical_branch: main
+remote_synced: yes|no|unknown
+
+## write_lock
+state: FREE | PAUSED
+holder: none |
+reason: -
+paused_at: -
+resume_after: -
+do_not_touch: -
+
+## sessions
+- id:
+  owner_task: <一言>
+  branch:
+  files: <触ってよいパス>
+  status: running | waiting | done
+  last_seen:
+
+## messages
+- from:
+  to: |ALL
+  type: PAUSE_REQUEST | PAUSED | RESUME_OK | RESUME_REJECT | STATUS
+  body: <本文>

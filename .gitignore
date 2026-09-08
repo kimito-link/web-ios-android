@@ -44,3 +44,8 @@ kimitolink-line/
 # 正当な配布物PDFは対象外）。
 /*.pdf
 /*.txt
+
+# 並列セッション協調プロトコル（CLAUDE.md「並列セッション協調プロトコル」節）の
+# 実行時状態ファイル。write_lock・sessions一覧が頻繁に書き換わるため、
+# コミット対象にすると差分ノイズになる。テンプレートは templates/.agent/coord.md.example。
+.agent/coord.md
