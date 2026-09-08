@@ -24,6 +24,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
 | 事故と教訓（実証知見） | [`site/learnings/`](site/learnings/index.html) | 公開 |
+| ★同じ画面を別の面にも出すときの掟（鏡写し） | [`_docs/DESIGN-ui-mirror-to-another-surface.md`](_docs/DESIGN-ui-mirror-to-another-surface.md) | 公開 |
 | 横断資産カタログ・個別プロジェクトの固有知見 | `../ai-hub/`（URL窓口は非公開ダッシュボード `/hub/`） | 非公開 |
 | 会議ログ・改修履歴 | `../ai-hub/history/` | 非公開 |
 
