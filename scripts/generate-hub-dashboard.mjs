@@ -27,6 +27,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { scanKitMatrix, scanProjectGates, detectProfile, loadOverrides } from './lib/hub-kit-matrix.mjs';
 import { TREE_VIEW_CSS } from './lib/tree-view-component.mjs';
+import { MATRIX_TABLE_CSS } from './lib/matrix-table-component.mjs';
 import { findRepoRoot } from './lib/repo-root.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -395,34 +396,7 @@ ${TREE_VIEW_CSS}
   .chip-unknown { color: #8a6d00; border-color: #8a6d00; background: #fff8e1; }
   .matrix-table-toggle { margin-top: 0.4rem; }
   .matrix-table-toggle summary { cursor: pointer; font-size: 0.85rem; color: #1a73e8; margin-bottom: 0.6rem; }
-  .matrix-section { margin-bottom: 1.5rem; }
-  .matrix-meta { color: #666; font-size: 0.85rem; }
-  .matrix-legend .cell { display: inline-block; padding: 0.1rem 0.5rem; margin-right: 0.4rem;
-    border-radius: 3px; font-size: 0.82rem; }
-  .matrix-scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto;
-    border: 1px solid #ddd; border-radius: 6px; }
-  .kit-matrix { border-collapse: separate; border-spacing: 0; font-size: 0.82rem;
-    width: max-content; min-width: 100%; }
-  .kit-matrix th, .kit-matrix td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee;
-    text-align: center; white-space: nowrap; }
-  .kit-matrix thead th { position: sticky; top: 0; background: #fff; z-index: 2;
-    border-bottom: 2px solid #ddd; font-weight: 600; }
-  .kit-matrix .proj-col { position: sticky; left: 0; background: #fff; z-index: 1;
-    text-align: left; }
-  .kit-matrix thead .proj-col { z-index: 3; }
-  .kit-matrix td[data-state="ok"]      { background: #e8f5e9; color: #1b5e20; }
-  .kit-matrix td[data-state="missing"] { background: #ffebee; color: #b00; }
-  .kit-matrix td[data-state="na"]      { background: #f4f4f4; color: #888; }
-  .kit-matrix td[data-state="unknown"] { background: #fff8e1; color: #8a6d00; }
-  .kit-matrix td[data-overridden="true"] { outline: 1px dashed #999; outline-offset: -2px; }
-  .kit-matrix tfoot td, .kit-matrix tfoot th { border-top: 2px solid #ddd; color: #555;
-    position: sticky; bottom: 0; background: #fff; }
-  .kit-matrix .score-col { font-weight: 600; text-align: right; }
-  .score-bar { width: 48px; height: 5px; background: #eee; border-radius: 3px; margin: 0.2rem 0 0 auto; overflow: hidden; }
-  .score-bar-fill { height: 100%; background: #43a047; }
-  .row-note-inline { font-style: italic; color: #888; font-size: 0.75rem; font-weight: normal; }
-  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  ${MATRIX_TABLE_CSS}
 </style>
 </head>
 <body>
@@ -448,6 +422,8 @@ ${TREE_VIEW_CSS}
 <p class="intro">
   🗺 <a href="/hub/architecture-map/">Architecture Map（今あるコードの現在地・フォルダツリーで見る）</a>
   も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
+  💰 <a href="/hub/revenue/">売上・DLボトルネック</a>
+  も参照。複数プロダクトを横に並べ、DL→課金のどこで詰まっているかを見る非公開ページです。
 </p>
 <section class="todo-section">
   <h2>🎯 次にやることリスト（優先順の高い順に、機械が毎回洗い出した分だけ）</h2>
@@ -458,6 +434,8 @@ ${renderMatrixHtml(data.matrix)}
 <p class="intro">
   🗺 <a href="/hub/architecture-map/">Architecture Map（今あるコードの現在地・フォルダツリーで見る）</a>
   も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
+  💰 <a href="/hub/revenue/">売上・DLボトルネック</a>
+  も参照。複数プロダクトを横に並べ、DL→課金のどこで詰まっているかを見る非公開ページです。
 </p>
 ${emptyNote}
 <section class="shelf-intro">

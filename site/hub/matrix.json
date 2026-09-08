@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T06:28:51.107Z",
+  "generatedAt": "2026-09-08T15:04:37.527Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -861,9 +861,9 @@
       ".codex",
       ".git",
       ".pnpm-store",
+      "ai-audit",
       "ai-business-secretary",
       "ai-generic-rules",
-      "ai-health-check.link",
       "ai-shain-worker",
       "ai-shain.link",
       "appium",
@@ -871,8 +871,8 @@
       "best-trust",
       "best-trust.biz",
       "characterlive",
-      "council",
       "discordai",
+      "docs",
       "gmail-secretary-extension",
       "hacking-tool",
       "henshin-hisho",
@@ -899,11 +899,10 @@
       "traffic-seo",
       "tsuioku-no-kiroku",
       "VeniceUncensored",
-      "web-health-check.link",
+      "web-health-check-lp",
       "works",
       "yukkuri",
       "_backups",
-      "_enforcement-test",
       "デルタもん"
     ],
     "errors": []

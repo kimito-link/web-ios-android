@@ -312,6 +312,54 @@ export const PAIRS = [
        *     から入れ替えること（登録は外さない＝割れたままだと分かる方が安全）。
        */
     copies: [resolve(GH_ROOT, 'soushin-suggest.link/scripts/generate-shindan-version.mjs')]
+  },
+  {
+    /*
+     * ★2026-09-08 追加（売上ダッシュボード実装で発覚した登録漏れ）。
+     *   templates/scripts/lib/asc-api.mjs は partnership_program_website 発の
+     *   ASC(App Store Connect) API ヘルパで、9プロジェクトへ既に配布されていたが
+     *   PAIRS未登録だった。今回 fetchSalesReportRaw() を正本に追加したので、
+     *   登録しないと「配る側が新機能を追加したのに、9本のコピーは古いまま」の
+     *   時限爆弾になる（instrument-core.mjs と同じ構図）。
+     */
+    label: 'App Store Connect API ヘルパ',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/asc-api.mjs'),
+    copies: [
+      resolve(GH_ROOT, 'compass/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'doin-challenge.com/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'malwarecheck.site/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'partnership_program_website/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'sakkino.link/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'web-health-check-app/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'yukkuri-exosome.link/scripts/lib/asc-api.mjs'),
+      // ★2026-09-09 追加。check-drift-coverage.mjs(深さ5階層走査)が検出した、
+      //   トップレベルのfindでは見つからなかった深い配置場所3件。
+      resolve(GH_ROOT, 'henshin-hisho/ios-app/scripts/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/app/lib/asc-api.mjs'),
+      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/asc-api.mjs')
+    ]
+  },
+  {
+    // ★2026-09-08 追加。同上の経緯。play-api.mjs も同じ9プロジェクトに配布済みだった。
+    label: 'Google Play Developer API ヘルパ',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/play-api.mjs'),
+    copies: [
+      resolve(GH_ROOT, 'compass/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'doin-challenge.com/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'malwarecheck.site/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'partnership_program_website/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'sakkino.link/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'web-health-check-app/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'yukkuri-exosome.link/scripts/lib/play-api.mjs'),
+      // ★2026-09-09 追加。asc-api.mjsと同じ経緯で発覚した3件。
+      resolve(GH_ROOT, 'henshin-hisho/ios-app/scripts/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'kimitolink-linktree/scripts/app/lib/play-api.mjs'),
+      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/play-api.mjs')
+    ]
   }
 ];
 

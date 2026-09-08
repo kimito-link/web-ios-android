@@ -1,9 +1,15 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-08T06:28:51.107Z",
+  "generatedAt": "2026-09-08T15:04:37.527Z",
   "entryCount": 77,
-  "doctorOk": true,
-  "doctorProblems": [],
+  "doctorOk": false,
+  "doctorProblems": [
+    "handoff-kioku-mcp: path が存在しない → HANDOFF-kioku-mcp.md",
+    "handoff-hatsunote-mcp: path が存在しない → HANDOFF-hatsunote-mcp.md",
+    "handoff-cloudflare-workers-ai: path が存在しない → HANDOFF-cloudflare-workers-ai.md",
+    "kb-nextjs-openrouter-pitfalls: path が存在しない → ai-health-check.link/docs/KB-nextjs-openrouter-pitfalls.md",
+    "kb-anti-slop-adoption: path が存在しない → ANTI-SLOP-ADOPTION-ASSESSMENT.md"
+  ],
   "doctorWarnings": [
     "kb-copywriting-persuasion-principles: summary が80字超（1行厳守）",
     "kb-timid-marketer-principles: summary が80字超（1行厳守）",
@@ -105,6 +111,7 @@
     "未インデックスの検証資産: kimitolink-linktree/scripts/check-workflow-timeouts.mjs（index化を検討）",
     "未インデックスの検証資産: kimitolink-linktree/scripts/verify-x-bearer-token.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-bot-silence.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot/scripts/check-line-ledger.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-lp-links.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-lp-svg.mjs（index化を検討）",
     "未インデックスの検証資産: malwarecheck.site/scripts/check-header.mjs（index化を検討）",
@@ -143,6 +150,7 @@
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-tab-refill.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-tab-value-guarded.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/check-watch-foreground.mjs（index化を検討）",
+    "未インデックスの検証資産: soushin-suggest.link/scripts/check-xbutton1-swallows.mjs（index化を検討）",
     "未インデックスの検証資産: soushin-suggest.link/scripts/verify-responsive-runtime.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-actions-usage.mjs（index化を検討）",
     "未インデックスの検証資産: surechigai-romi.link/scripts/check-decision-receipt.mjs（index化を検討）",
@@ -187,7 +195,7 @@
     "未インデックスの検証資産: web-health-check-app/scripts/verify-keyword-dom.mjs（index化を検討）",
     "未インデックスの検証資産: web-health-check-app/scripts/verify-reputation-parity.mjs（index化を検討）",
     "未インデックスの検証資産: web-health-check-app/scripts/verify-retire-routes-015.mjs（index化を検討）",
-    "未インデックスの検証資産: web-health-check.link/scripts/check-dist-leaks.mjs（index化を検討）",
+    "未インデックスの検証資産: web-health-check-lp/scripts/check-dist-leaks.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/check-improvement.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/check-instrument-ran.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/scripts/verify-all.mjs（index化を検討）",
@@ -222,8 +230,8 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-signing-material-path.mjs（index化を検討）",
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
-  "doctorProblemCount": 0,
-  "doctorWarningCount": 216,
+  "doctorProblemCount": 5,
+  "doctorWarningCount": 218,
   "shelves": [
     {
       "id": "shipping",
@@ -2283,7 +2291,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-08T06:28:51.107Z",
+    "generatedAt": "2026-09-08T15:04:37.527Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3145,9 +3153,9 @@
         ".codex",
         ".git",
         ".pnpm-store",
+        "ai-audit",
         "ai-business-secretary",
         "ai-generic-rules",
-        "ai-health-check.link",
         "ai-shain-worker",
         "ai-shain.link",
         "appium",
@@ -3155,8 +3163,8 @@
         "best-trust",
         "best-trust.biz",
         "characterlive",
-        "council",
         "discordai",
+        "docs",
         "gmail-secretary-extension",
         "hacking-tool",
         "henshin-hisho",
@@ -3183,17 +3191,22 @@
         "traffic-seo",
         "tsuioku-no-kiroku",
         "VeniceUncensored",
-        "web-health-check.link",
+        "web-health-check-lp",
         "works",
         "yukkuri",
         "_backups",
-        "_enforcement-test",
         "デルタもん"
       ],
       "errors": []
     }
   },
   "todos": [
+    {
+      "priority": 0,
+      "title": "この一覧表そのものにエラーが5件ある。まずこれを直す",
+      "reason": "handoff-kioku-mcp: path が存在しない → HANDOFF-kioku-mcp.md / handoff-hatsunote-mcp: path が存在しない → HANDOFF-hatsunote-mcp.md / handoff-cloudflare-workers-ai: path が存在しない → HANDOFF-cloudflare-workers-ai.md",
+      "evidence": "node ai-hub/bin/hub.mjs doctor"
+    },
     {
       "priority": 1,
       "title": "sakkino.link（課金機能はもう作ってある）を、次はどう前に進めるか決める",
@@ -3214,7 +3227,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが216件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが218件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }

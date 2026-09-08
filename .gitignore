@@ -49,3 +49,11 @@ kimitolink-line/
 # 実行時状態ファイル。write_lock・sessions一覧が頻繁に書き換わるため、
 # コミット対象にすると差分ノイズになる。テンプレートは templates/.agent/coord.md.example。
 .agent/coord.md
+
+# 売上・DLボトルネック可視化ダッシュボード（_docs/DESIGN-revenue-bottleneck-dashboard-
+# 2026-09-08.md）の収集成果物。Stripe売上・ストアDL数の実数値を含むため
+# publicリポにコミットできない（設計F3）。生成先site/hub/revenue/も同様。
+.revenue-snapshot.json
+.social-snapshot.json
+.revenue-cache/
+site/hub/revenue/
