@@ -154,8 +154,30 @@ A〜Fは完了。github直下の当面の整理整頓はここで一区切り。
 
 削除前後で`ai-hub doctor`の`ok: true`を確認済み。
 
-### `_pending-deletion-review/`（2.9GB、ユーザー同席が必須・今回未着手）
+## H. `_pending-deletion-review/`（2.9GB、7件） ★2026-09-08完了・ディレクトリごと削除
 
-直下7件: `kimito-link-clone`(506MB)・`kimito-link-fresh`(701MB)・`kimito-link-github-download`(345MB)・
-`hosino-romi`(1.2GB)・`compass-temp-clone`(40MB)・`gpthisho-admin-api-backup-20260713-052940`(35KB)・
-`web-health-check-lp`(182MB)。中身を1つずつ画面共有しながら判断する（推測で重複と決めない）。
+`git merge-base --is-ancestor`による実測比較で、7件中6件は本体リポジトリの祖先コミットに
+**完全一致**（失われる情報なし）と確認。1件（`hosino-romi`）だけ、別プロジェクトへの
+未pushな差分を含んでいたが、そのプロジェクト自体が現在使われていないと確認され、
+push不要のまま削除で確定した。
+
+| 対象 | サイズ | 判定根拠 |
+|---|---|---|
+| `kimito-link-clone` | 506MB | HEAD(`376c200`)は本体`kimito-link`(`a52e128`)の祖先。ローカル専用ブランチの内容も本体に既に反映済み |
+| `kimito-link-fresh` | 701MB | `kimito-link-clone`と同一コミット。未コミット差分は軽微かつ本体で既に先行 |
+| `kimito-link-github-download` | 345MB | git実体なしのZIPスナップショット。同系統の古いスナップショット |
+| `compass-temp-clone` | 40MB | HEAD(`6f6323b`)は本体`compass`(`0d0aa04`)の祖先と`merge-base`で確認、未コミット変更なし |
+| `gpthisho-admin-api-backup-20260713-052940` | 35KB | 本体`ai-business-secretary`が同日中にこのバックアップを内包しさらに先行 |
+| `web-health-check-lp` | 182MB | HEAD(`000f57b`)は本体`web-health-check.link`の祖先と確認。**台帳`repositories.json`の同名エントリの実体だったと判明**、noteを更新済み（best-trust側commit `51c9773`） |
+| `hosino-romi` | 1.2GB | 大半はnode_modules等の再生成可能物。`surechigai-lite-handoff/`サブフォルダは本体ではなく別プロジェクト`surechigai-nico`（現在不使用の前身プロジェクト）のワーキングコピーで、未コミット差分6ファイルがあったが、push不要と確認しそのまま削除 |
+
+削除前後で`ai-hub doctor`の`ok: true`を確認済み。`_pending-deletion-review/`ディレクトリ
+自体も空になったため削除した。
+
+## 現時点のまとめ
+
+A〜Hまで全て完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸の整理整頓は
+一区切り。残っているのは以下のみ:
+- `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
+- `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
+- `manus`・`デルタもん`等の小粒項目の最終削除判断（本人確認が望ましい）
