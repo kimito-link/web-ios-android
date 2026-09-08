@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T10:28:20.958Z",
+  "generatedAt": "2026-09-08T06:21:38.586Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -468,73 +468,6 @@
       "rowNote": null
     },
     {
-      "name": "resend-kimito-link-review",
-      "profile": {
-        "hasCapacitor": true,
-        "hasExpo": false,
-        "hasTwa": false,
-        "hasIosDir": true,
-        "hasAndroidDir": true,
-        "hasAppConfig": false,
-        "isKitTarget": true
-      },
-      "cells": {
-        "ios-splash": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "android-splash": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "android-signing": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "webdir": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "signing-path": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "tracked-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "app-config-schema": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "assetlinks": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "instrument-core": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "no-secrets-in-dist": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "hermes-unsafe-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "root-cause-claim": {
-          "state": "missing",
-          "provenance": "scan"
-        }
-      },
-      "score": {
-        "ok": 0,
-        "applicable": 12
-      },
-      "rowNote": null
-    },
-    {
       "name": "resend.kimito-link.com-",
       "profile": {
         "hasCapacitor": true,
@@ -736,73 +669,6 @@
       "rowNote": null
     },
     {
-      "name": "surechigai-romi.link-deploy-886aeff",
-      "profile": {
-        "hasCapacitor": false,
-        "hasExpo": true,
-        "hasTwa": false,
-        "hasIosDir": false,
-        "hasAndroidDir": false,
-        "hasAppConfig": true,
-        "isKitTarget": true
-      },
-      "cells": {
-        "ios-splash": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "android-splash": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "android-signing": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "webdir": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "signing-path": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "tracked-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "app-config-schema": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "assetlinks": {
-          "state": "na",
-          "provenance": "scan"
-        },
-        "instrument-core": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "no-secrets-in-dist": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "hermes-unsafe-imports": {
-          "state": "missing",
-          "provenance": "scan"
-        },
-        "root-cause-claim": {
-          "state": "missing",
-          "provenance": "scan"
-        }
-      },
-      "score": {
-        "ok": 0,
-        "applicable": 6
-      },
-      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
-    },
-    {
       "name": "web-health-check-app",
       "profile": {
         "hasCapacitor": true,
@@ -940,51 +806,51 @@
   "totals": {
     "ios-splash": {
       "ok": 3,
-      "applicable": 10
+      "applicable": 9
     },
     "android-splash": {
       "ok": 2,
-      "applicable": 10
+      "applicable": 9
     },
     "android-signing": {
       "ok": 5,
-      "applicable": 7
+      "applicable": 6
     },
     "webdir": {
       "ok": 1,
-      "applicable": 10
+      "applicable": 9
     },
     "signing-path": {
       "ok": 1,
-      "applicable": 7
+      "applicable": 6
     },
     "tracked-imports": {
       "ok": 5,
-      "applicable": 13
+      "applicable": 11
     },
     "app-config-schema": {
       "ok": 1,
-      "applicable": 13
+      "applicable": 11
     },
     "assetlinks": {
       "ok": 1,
-      "applicable": 7
+      "applicable": 6
     },
     "instrument-core": {
       "ok": 4,
-      "applicable": 13
+      "applicable": 11
     },
     "no-secrets-in-dist": {
       "ok": 2,
-      "applicable": 13
+      "applicable": 11
     },
     "hermes-unsafe-imports": {
       "ok": 2,
-      "applicable": 11
+      "applicable": 9
     },
     "root-cause-claim": {
       "ok": 2,
-      "applicable": 13
+      "applicable": 11
     }
   },
   "scan": {
@@ -992,7 +858,6 @@
       ".agents",
       ".auth",
       ".claude",
-      ".claude_backup_tsuioku",
       ".codex",
       ".git",
       ".pnpm-store",
@@ -1003,18 +868,14 @@
       "ai-shain.link",
       "appium",
       "best-price",
+      "best-trust",
       "best-trust.biz",
       "characterlive",
-      "codex",
       "council",
       "discordai",
-      "dns-osint-pro-ver2.0",
       "gmail-secretary-extension",
-      "grok-build",
       "hacking-tool",
       "henshin-hisho",
-      "henshin-hisho-lp-deploy",
-      "Kali",
       "kimi-no-oto",
       "kimito-link-reply-suggest",
       "kimito-link-yukkuri-douga",
@@ -1023,19 +884,14 @@
       "localclaudcode",
       "manus",
       "nagano_giin_complete_guide",
-      "Negative-suggestion-checker",
       "nicolive-dl-master",
       "ouenmovie",
       "patents",
       "pincers",
-      "qa-results",
-      "Qwen3.6-35B-A3B",
       "removal",
       "reviewcheck.jp",
-      "reviewcheck.jp-kenshin",
       "rolex",
       "soushin-suggest.link",
-      "splash",
       "surechigai-nico",
       "Target-List-maker",
       "tegiwai-video",
@@ -1048,7 +904,6 @@
       "yukkuri",
       "_backups",
       "_enforcement-test",
-      "_pending-deletion-review",
       "デルタもん"
     ],
     "errors": []
