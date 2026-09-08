@@ -424,6 +424,8 @@ ${TREE_VIEW_CSS}
   も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
   💰 <a href="/hub/revenue/">売上・DLボトルネック</a>
   も参照。複数プロダクトを横に並べ、DL→課金のどこで詰まっているかを見る非公開ページです。
+  🩺 <a href="/hub/status/">サービス稼働状態</a>
+  も参照。GitHub Actions・Vercel・Cloudflare・Stripe・SNSの一元監視ページです。
 </p>
 <section class="todo-section">
   <h2>🎯 次にやることリスト（優先順の高い順に、機械が毎回洗い出した分だけ）</h2>
@@ -436,6 +438,8 @@ ${renderMatrixHtml(data.matrix)}
   も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
   💰 <a href="/hub/revenue/">売上・DLボトルネック</a>
   も参照。複数プロダクトを横に並べ、DL→課金のどこで詰まっているかを見る非公開ページです。
+  🩺 <a href="/hub/status/">サービス稼働状態</a>
+  も参照。GitHub Actions・Vercel・Cloudflare・Stripe・SNSの一元監視ページです。
 </p>
 ${emptyNote}
 <section class="shelf-intro">

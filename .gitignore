@@ -57,3 +57,8 @@ kimitolink-line/
 .social-snapshot.json
 .revenue-cache/
 site/hub/revenue/
+
+# 複数サービス(GitHub Actions/Vercel/Cloudflare/Stripe/X/YouTube)の稼働状態監視
+# （LINEハーネスの複数アカウント生死監視と同じ発想、scripts/status/配下）の収集成果物。
+.service-status-snapshot.json
+site/hub/status/
