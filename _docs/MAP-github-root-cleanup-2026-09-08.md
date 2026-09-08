@@ -248,10 +248,50 @@ index.json登録済みのため今回は据え置き。
 - 設計書: `_docs/DESIGN-ai-triage-shared-module-2026-09-08.md`
 - 実装ハンドオフ: `_docs/IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md`
 
+## K. 第7弾: 新顔16件の調査＋removalバックアップ確保 ★2026-09-08一部完了
+
+**状態: removalのバックアップ確保は完了。軽量5件の削除は本人確認待ち（未実行）。**
+
+github直下がスクリーンショットで82項目確認され、A〜Jで扱っていない「新顔」16件が
+見つかった。Exploreエージェントで全件調査済み（司令塔が実測裏取り）。
+
+### 完了: removalのバックアップ確保（実行済み）
+
+`removal/`（Google評判総合コンサルパックLP＋提案書PDF/PPTX）は、GitHub上に
+`kimito-link/removal`リポジトリの箱だけ存在し**一度もpushされず空（`isEmpty: true`）**、
+ローカルにも`.git`が無い状態だった＝PCが壊れたら本体が消えるリスクがあった。
+`.gitignore`に`node_modules/`を追加（既存の`.env*.local`・`.vercel`除外は妥当と確認）した
+上でgit init→初回コミット→push。GitHub側`isEmpty: false`・`defaultBranchRef: main`を
+実測確認済み（コミット`0db2893`）。
+
+### 判定済み・現役なので触らない（7件＋姉妹プロジェクト1件）
+
+`compass`（富士山コンパスPWA）・`kimito-Link-Voice`（声優マッチング、直近コミット
+2026-09-07）・`kimito-link-reply-suggest`（AI返信サジェストv7.5.0、直近2026-09-07）・
+`kimitolink-linktree`（リンクまとめ、直近2026-09-08＝本日）・`patents`（特許出願管理
+ハブ）・`pincers`（Google口コミ成果報酬LP、直近2026-05-26で停滞気味）・`rolex`
+（ロレックス応募補助アプリ、自動応募ではなく入力補助のみと確認）は、いずれもgit
+remoteが`kimito-link`オーナーを指す独立現役プロジェクトで重複なしと確認済み。
+`tsuioku-no-kiroku`（AI外部記憶MCP）は`tsuioku-no-kirameki.com`（ニコ生配信コメント
+拡張）とREADME内に「姉妹作」と明記されており別プロダクト、重複ではない。
+
+### 削除候補（本人確認待ち・未実行）
+
+以下5件は使い捨て・実験残骸と判定（依存ゼロ、合計約130KB）:
+`Qwen3.6-35B-A3B`（ローカルLLMセットアップ残骸）・`_handoff_line_webhook.txt`
+（2026-08-27付の使い捨て引き継ぎメモ）・`check_projects.sh`（調査用シェルスクリプト）・
+`claude-token-saving-council.json`（会議ログ）・`grok-build`（未コミットの実験用
+サンドボックス）。
+
+`_backups/`（3.6MB、`kimitolink-line-line-fix-20260817.bundle`）は
+`_handoff_line_webhook.txt`と関連する**本番修復用バックアップ**のため保持推奨
+（削除候補には含めない）。`knowledge/`（4KB、`context/working-rules.md`）は
+現役の参照用ドキュメント置き場のため削除候補ではない。
+
 ## 現時点のまとめ
 
-A〜Jまで完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳ドリフトの
-整理整頓は一区切り。残っているのは以下のみ:
+A〜Kまで一部完了。github直下の重複リポジトリ・散らばったMarkdown・調査残骸・台帳
+ドリフトの整理整頓は一区切り。残っているのは以下のみ:
 - `linebot`とline-harness-ossの統合要否（本人確認待ち、台帳に記録済み）
 - `nicolive-dl-master`・`tegiwai-video`内の重いバイナリ（動画・素材データ）の要否確認
 - `manus`等の小粒項目の最終削除判断（本人確認が望ましい）
@@ -259,3 +299,5 @@ A〜Jまで完了。github直下の重複リポジトリ・散らばったMarkdo
 - `sakkino.link`の実装内容の要再検証
 - **henshin-hisho/gmail-secretary-extension共通モジュール化の実装**（設計・ハンドオフ完了、
   次チャットで別モデルが実装）
+- **第7弾: 軽量5件の削除**（`Qwen3.6-35B-A3B`・`_handoff_line_webhook.txt`・
+  `check_projects.sh`・`claude-token-saving-council.json`・`grok-build`、本人確認待ち）
