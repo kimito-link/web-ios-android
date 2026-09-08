@@ -70,18 +70,33 @@ function stripLineNumbers(content) {
 
 // 会話ログを走査し、指定パスをReadした最新のtool_resultの内容ハッシュを返す。
 // 複数回Readされていれば最後の1回を採用する(直近の内容が最新の認識とみなす)。
-function findLatestReadHash(transcriptPathRaw, targetPath) {
+// Extract the absolute line number from the first line of a Read tool
+// output chunk ("123\t..." style, cat -n format). Even with offset-based
+// partial reads, the line numbers stay absolute, so this tells us which
+// original line the chunk starts at.
+function rawFirstLineNumber(content) {
+  const firstLine = content.split('\n', 1)[0] || '';
+  const m = /^\s*(\d+)\t/.exec(firstLine);
+  return m ? Number(m[1]) : null;
+}
+
+// Walk the transcript and collect every Read chunk (with its starting line
+// number) that targeted targetPath. A file too large for a single Read
+// (25000 token cap) gets split into multiple offset/limit reads within the
+// same session; we gather all of them here so a later step can check
+// whether they tile the file without gaps.
+function collectReadChunks(transcriptPathRaw, targetPath) {
   const transcriptPath = normalizeWindowsPath(transcriptPathRaw);
-  if (!transcriptPath || !existsSync(transcriptPath)) return null;
+  if (!transcriptPath || !existsSync(transcriptPath)) return [];
   let raw;
   try {
     raw = readFileSync(transcriptPath, 'utf8');
   } catch {
-    return null;
+    return [];
   }
 
   const toolUseIdToPath = new Map();
-  let latestHash = null;
+  let chunks = [];
 
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
@@ -92,25 +107,71 @@ function findLatestReadHash(transcriptPathRaw, targetPath) {
     } catch {
       continue;
     }
-    const content = entry?.message?.content;
+    const content = entry && entry.message ? entry.message.content : null;
     if (!Array.isArray(content)) continue;
 
     for (const block of content) {
-      if (block?.type === 'tool_use' && block?.name === 'Read') {
-        const fp = block?.input?.file_path;
+      if (block && block.type === 'tool_use' && block.name === 'Read') {
+        const fp = block.input ? block.input.file_path : null;
         if (typeof fp === 'string' && resolve(normalizeWindowsPath(fp)) === targetPath) {
           toolUseIdToPath.set(block.id, true);
         }
       }
-      if (block?.type === 'tool_result' && toolUseIdToPath.has(block.tool_use_id)) {
-        const raw = typeof block.content === 'string' ? block.content : null;
-        if (raw) {
-          latestHash = sha256(stripLineNumbers(raw));
+      if (block && block.type === 'tool_result' && toolUseIdToPath.has(block.tool_use_id)) {
+        const rawContent = typeof block.content === 'string' ? block.content : null;
+        if (!rawContent) continue;
+        const startLine = rawFirstLineNumber(rawContent);
+        if (startLine === 1) {
+          // Re-read from the top: earlier accumulated chunks are stale.
+          chunks = [];
         }
+        chunks.push({ startLine: startLine, stripped: stripLineNumbers(rawContent) });
       }
     }
   }
-  return latestHash;
+  return chunks;
+}
+
+// Sort chunks by starting line and try to tile them into one contiguous
+// full-text candidate. Returns null if they cannot be tiled without gaps
+// or overlaps left uncovered (fail-closed: "probably read it all" is not
+// good enough for an already-once-broken freshness guard).
+function assembleFullText(chunks) {
+  if (chunks.length === 0) return null;
+  if (chunks.length === 1 && chunks[0].startLine === 1) {
+    return chunks[0].stripped;
+  }
+
+  const sorted = chunks.slice().sort(function (a, b) {
+    return (a.startLine || 0) - (b.startLine || 0);
+  });
+  if (sorted[0].startLine !== 1) return null;
+
+  const linesByNumber = new Map();
+  for (const chunk of sorted) {
+    if (chunk.startLine === null) return null;
+    const lines = chunk.stripped.split('\n');
+    lines.forEach(function (lineText, idx) {
+      linesByNumber.set(chunk.startLine + idx, lineText);
+    });
+  }
+
+  const maxLine = Math.max.apply(null, Array.from(linesByNumber.keys()));
+  const assembledLines = [];
+  for (let i = 1; i <= maxLine; i++) {
+    if (!linesByNumber.has(i)) return null;
+    assembledLines.push(linesByNumber.get(i));
+  }
+  return assembledLines.join('\n');
+}
+
+// Returns the SHA256 of the fully-assembled text if the session read the
+// whole file (possibly via multiple Reads), or null if it did not.
+function findFullReadHash(transcriptPathRaw, targetPath) {
+  const chunks = collectReadChunks(transcriptPathRaw, targetPath);
+  const fullText = assembleFullText(chunks);
+  if (fullText === null) return null;
+  return sha256(fullText);
 }
 
 function main() {
@@ -144,7 +205,7 @@ function main() {
   const currentHash = sha256(currentContent);
 
   const target = resolve(join(repoRoot, 'CLAUDE.md'));
-  const lastReadHash = findLatestReadHash(input.transcript_path, target);
+  const lastReadHash = findFullReadHash(input.transcript_path, target);
 
   if (lastReadHash === currentHash) {
     process.exit(0);
