@@ -122,19 +122,37 @@ A〜Fは完了。github直下の当面の整理整頓はここで一区切り。
 
 削除前後で`ai-hub doctor`の`ok: true`を確認済み。
 
-### 判定保留（依存確認が先に要る）
+### 判定保留（依存確認が先に要る）★2026-09-08 Step Bで判定完了
 
-- `nicolive-dl-master/`（3.2GB）: ツール本体は完成品だが容量の大半（3.4GB超）は録画済みmp4
-  動画2本。動画データとツールを分離できるか要確認
-- `gmail-secretary-extension/`（278MB）: Chrome Web Store申請済みの現役プロジェクト。
-  安易に削除・アーカイブしない
-- `tegiwai-video/`（372MB）: `ouenmovie`との重複有無が未確認
+- `nicolive-dl-master/`（3.2GB）: ツール本体（`nicolive_dl/`パッケージ、pyproject.toml等）と
+  mp4動画2本（702MB＋2.48GB）は同一ディレクトリに混在しているが、**分離は技術的に可能**と
+  確認（動画を除去してもツールの動作に影響しない）。実削除はまだ実行していない
+  （動画データの要否は本人確認が要る）
+- `gmail-secretary-extension/`（278MB）: **保持確定**。`henshin-hisho`（アプリ本体）と
+  同じ製品の別レイヤー（Gmail連携用Chrome拡張）と確認。両方生きている現役プロジェクト
+- `tegiwai-video/`（372MB）: キャラクター素材（konta/link/tanunee）は`ouenmovie`と共通だが、
+  成果物は「手技（調理段取り支援）」という別ジャンルの単発企画。完成品`final_output.mp4`
+  以降の追加開発の形跡なし＝**企画として完了済み**。素材（raw_*.rgb等）の破棄は本人確認要
 
-### 未判定（小粒13件）
+### 小粒13件の判定結果 ★2026-09-08完了
 
-`appium/`・`hacking-tool/`・`manus/`・`splash/`・`telegram-todo-ai/`・`_enforcement-test/`・
-`surechigai-romi.link-deploy-886aeff/`・`kimi-no-oto/`・`kimito-link-yukkuri-douga/`・
-`resend-kimito-link-review/`・`surechigai-nico/`・`yukkuri/`・`デルタもん/`
+| 対象 | 判定 |
+|---|---|
+| `appium/`(42MB) | Android実機スモークテスト。独立、重複なし |
+| `hacking-tool/`(3.8MB) | 外部OSS(`hackingtool`)のクローン。自作物ではない |
+| `manus/`(91KB) | 個人の法務案件記録（楽天カード紛争）。プロジェクトではない。削除するなら本人確認要 |
+| `splash/`(53KB) | **削除完了**。README「2026-08-24統合済み・もう更新しない」と明記、統合先`web-ios-android/templates/scripts/`に主要ファイル実在確認済み |
+| `telegram-todo-ai/`(20MB) | Telegramボット。独立、重複なし |
+| `_enforcement-test/`(12MB) | stylelint検証用の使い捨てリポ |
+| `surechigai-romi.link-deploy-886aeff/`(61MB) | **削除完了**。独立リポではなく`surechigai-romi.link`のgit worktree残骸と確認（`git worktree remove`で正しく除去） |
+| `kimi-no-oto/`(34MB) | 「君の音」音声→オルゴール変換ツール。独立、重複なし |
+| `kimito-link-yukkuri-douga/`(3.4KB) | キミトリンク3マスコットのゆっくり動画企画（`ouenmovie`とは別企画） |
+| `resend-kimito-link-review/`(39MB) | **削除完了**。独立リポではなく`resend.kimito-link.com-`のgit worktree残骸（参照先`.git`が壊れていたため`Remove-Item`＋`git worktree prune`で除去。副次的に別のprunable worktree`review-clone`も一緒に整理された） |
+| `surechigai-nico/`(16MB) | **保持確定**。台帳に`classification: confirmed`・`product: surechigai-nico`（すれちがいライト）として正式登録済みの独立現行プロダクト |
+| `yukkuri/`(7.4MB) | 「ゆっくりメーカー」台本生成Webツール。`yukkuri-exosome.link`とは別物 |
+| `デルタもん/`(19KB) | 単発コラボ企画ページ（HTML1枚）。役目を終えていれば削除候補 |
+
+削除前後で`ai-hub doctor`の`ok: true`を確認済み。
 
 ### `_pending-deletion-review/`（2.9GB、ユーザー同席が必須・今回未着手）
 
