@@ -360,6 +360,53 @@ export const PAIRS = [
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/app/lib/play-api.mjs'),
       resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/play-api.mjs')
     ]
+  },
+  {
+    /*
+     * ★2026-09-09 追加。CLAUDE.md基準⑤の実例として書かれているsite-chrome
+     *   （共通ヘッダー・フッター金型）自体が、check-drift.mjsのPAIRSに
+     *   未登録だった＝配っているのに台帳に無い、他エントリと同じ時限爆弾。
+     *   line-botセッションから「同じ部品を使うルールも守られない」という
+     *   指摘を受けて調査したところ、site-chrome.js/.cssのCore本体は
+     *   実際にはline-bot・soushin-suggest.link・キット自身で完全一致
+     *   （diffゼロ）だった。ルール自体は守られていたが、機械検査が
+     *   無かったため「次に正本が動いた瞬間に無言で割れる」構造は同じ
+     *   だったので登録する（soushin-suggest.linkの登録漏れと同じ理由）。
+     *   ★theme.css/layout.cssはsite-chrome.config.jsonから決定論的に
+     *   生成される各サイト固有ファイルなのでdrift対象外（Coreの.js/.css
+     *   だけが「無改変でコピー」される契約）。
+     */
+    label: 'site-chrome（共通ヘッダー・フッター, JS）',
+    canonical: resolve(KIT_ROOT, 'templates/web/site-chrome/core/site-chrome.js'),
+    copies: [
+      resolve(KIT_ROOT, 'site/scripts/site-chrome.js'),
+      resolve(GH_ROOT, 'line-bot/apps/lp/site-chrome.js'),
+      resolve(GH_ROOT, 'soushin-suggest.link/public/site-chrome.js')
+    ]
+  },
+  {
+    label: 'site-chrome（共通ヘッダー・フッター, CSS）',
+    canonical: resolve(KIT_ROOT, 'templates/web/site-chrome/core/site-chrome.css'),
+    copies: [
+      resolve(KIT_ROOT, 'site/scripts/site-chrome.css'),
+      resolve(GH_ROOT, 'line-bot/apps/lp/site-chrome.css'),
+      resolve(GH_ROOT, 'soushin-suggest.link/public/site-chrome.css')
+    ]
+  },
+  {
+    /*
+     * ★2026-09-10 追加。line-botセッションからの指摘で判明した登録漏れ。
+     *   deploy-cloudflare-pages.mjsは配布先1件(kimito-Link-Voice)を
+     *   持つが、check-drift.mjsのPAIRSに未登録だった。--branch明示化
+     *   (2026-09-09)・デプロイ後反映確認機構(2026-09-10)という重要な
+     *   fail-closed機構が入ったスクリプトなので、配布先が追随しないと
+     *   同じ実害（成功ログが出ているのに本番未反映）を再発しうる。
+     */
+    label: 'Cloudflare Pages デプロイスクリプト',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/deploy-cloudflare-pages.mjs'),
+    copies: [
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/deploy-cloudflare-pages.mjs')
+    ]
   }
 ];
 
