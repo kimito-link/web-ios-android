@@ -840,3 +840,39 @@ AGENTS.mdにだけ「AIトークン節約の探索除外ルール」が残って
 APIキーの失効）は、ディレクトリ削除だけでは行われない。ローカルファイルは消えたが、
 トークン自体がまだ有効な可能性がある点はユーザー側で認識しておくべき事項として記録する
 （AIはトークンの値を見ていないため、失効操作自体は代行できない）。
+
+## T. 第17弾: sakkino.link・tsuioku-no-kirokuのブランド帰属付け（着手・best-trust.biz側の登録待ち）
+
+### 到達点
+
+**要本人確認は解消・best-trust.bizセッションへ依頼送信済み・応答待ち**。
+第13弾から持ち越していたブランド帰属付けに着手した。
+
+### 判明した事実
+
+- **tsuioku-no-kiroku**（追憶の記録／コードネーム`kioku`）: `app.config.json`を持たない、
+  Chrome拡張＋ローカルMCPサーバー（`reply-copilot-openrouter-v2`のしおり拡張を再利用し、
+  全チャット会話をローカルSQLiteに保存してAIの外部記憶にするツール）。Web/iOS/Android
+  アプリ提出キットの対象外。README冒頭に「君斗りんく『追憶のきらめき』シリーズ姉妹作」
+  と明記されている一方、姉妹作`tsuioku-no-kirameki`は`best-trust.biz/data/registry.json`
+  上で`brand: "corporate"`登録済みという矛盾があった
+- **sakkino.link**（さっきの）: `app.config.json`確認済み。日本語クリップボード履歴＋
+  定型文キーボード、完全オフライン動作。`ownership.organization: "Best-Trust"`。他ブランド
+  との関連を示す記述は皆無
+
+### ユーザー確認結果
+
+「tsuioku-no-kirameki（姉妹作）と揃えてbrand: "corporate"にする」を選択（README記載の
+`kimito-link`示唆より、既存台帳の一貫性を優先）。sakkino.linkは他ブランドとの接続が
+無いため、司令塔判断でcorporate直轄と結論（ユーザー確認不要な事実ベースの判断）。
+
+### 実行内容・残作業
+
+- `best-trust.biz`セッション（`local_1f8594f9-ac6a-434f-9e89-a6171fe0af65`、担当領域
+  `registry.json`）へ両product（tsuioku-no-kiroku・sakkino.link）の新規登録を依頼送信済み
+  （brand: corporate指定、category/urlの判断材料つき）。応答待ち
+- registry.json側のproduct id確定後、`best-trust/data/repositories.json`側の
+  `classification: "unclassified"` → `"confirmed"`、`brand`/`product`フィールドを
+  こちら（web-ios-android＝best-trust担当）で更新する（best-trustは本セッションの
+  担当領域のため、registry.jsonのように他セッションへ委譲する必要はない）
+- 完了後 `cd best-trust && npm run verify && npm run render` で整合性確認してからpush
