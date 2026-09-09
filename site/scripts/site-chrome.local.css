@@ -45,3 +45,25 @@ footer a { color: #f6c90e; text-decoration: none; margin: 0 8px; font-size: 0.82
 @media (max-width: 480px) {
   .share-to-ai-btn { padding: 7px 10px; font-size: 0.72rem; }
 }
+
+/* ── /hub/（本人専用の作業台）だけ視覚的に強調する ──
+ * ★出典（2026-09-09実損）: 他のnav項目と同じ無地テキストで並んでいたため、
+ *   本人が「ぱっと見どこにあるか分からない」「ただの説明ページに見える」と
+ *   指摘した。/hub/には売上・稼働状態・Architecture Mapという実働ダッシュボード
+ *   3件が既にあったが、発見性が低いため使われていなかった＝実装はあるが
+ *   伝わっていない状態（CLAUDE.md基準⑤「売り方の品質」の実例）。
+ *   Canonicalの nav a は全項目同一スタイルなので、ここ（Local Extension）で
+ *   href属性セレクタを使い、このリンクだけバッジ化する。
+ */
+#site-nav a[href="/hub/"] {
+  background: #f6c90e;
+  color: #1a1a2e !important;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 800;
+}
+#site-nav a[href="/hub/"]:hover,
+#site-nav a[href="/hub/"].active {
+  background: #ffe066;
+  color: #1a1a2e !important;
+}
