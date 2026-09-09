@@ -30,6 +30,7 @@ const { values } = parseArgs({
   options: {
     dir: { type: 'string' },
     project: { type: 'string' },
+    branch: { type: 'string' },
     'dry-run': { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
@@ -43,7 +44,10 @@ if (values.help) {
       '',
       '  認証はしない（先に cloudflare-auth.mjs を実行しておくこと）。',
       '',
-      'オプション: --dir <path> / --project <name> / --dry-run',
+      'オプション: --dir <path> / --project <name> / --branch <name> / --dry-run',
+      '',
+      '  --branch は既定 main。Pages の本番ブランチと一致させること。',
+      '  一致しないと preview 扱いになり、成功ログが出るのに本番が更新されない。',
     ].join('\n'),
   );
   process.exit(0);
@@ -73,7 +77,26 @@ async function main() {
     process.exit(1);
   }
 
-  const args = ['wrangler', 'pages', 'deploy', dir, '--project-name', projectName];
+  // ★--branch は必ず明示する（2026-09-09 追加）。
+  //
+  //   付けないと wrangler がローカルの git からブランチ名を推測する。
+  //   CI では 'master' が送られることがあり、Cloudflare Pages の本番ブランチ
+  //   （通常 main）と一致しないと **プレビュー扱い** になる。
+  //
+  //   このとき wrangler は成功終了するため、
+  //   「デプロイは success なのに本番URLが更新されない」という、
+  //   原因の分かりにくい形で現れる。
+  //   実例: line-bot の管理画面が数時間これに費やした（本番は古いチャンクを
+  //   配信し続け、新しいビルドは 404 だった）。
+  //
+  //   既定は 'main'。本番ブランチが違うプロジェクトは --branch で上書きする。
+  const branch = values.branch || 'main';
+  const args = [
+    'wrangler', 'pages', 'deploy', dir,
+    '--project-name', projectName,
+    '--branch', branch,
+  ];
+  console.log(`  ブランチ: ${branch}`);
   console.log(`  実行コマンド: npx ${args.join(' ')}`);
 
   if (dryRun) {
