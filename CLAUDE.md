@@ -23,6 +23,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 | 進め方HOWTO（council-fable / wayfinder-to-spec） | [`docs/ai-workflows/`](docs/ai-workflows/) | 公開 |
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
+| 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
 | 事故と教訓（実証知見） | [`site/learnings/`](site/learnings/index.html) | 公開 |
 | ★同じ画面を別の面にも出すときの掟（鏡写し） | [`_docs/DESIGN-ui-mirror-to-another-surface.md`](_docs/DESIGN-ui-mirror-to-another-surface.md) | 公開 |
 | 横断資産カタログ・個別プロジェクトの固有知見 | `../ai-hub/`（URL窓口は非公開ダッシュボード `/hub/`） | 非公開 |
