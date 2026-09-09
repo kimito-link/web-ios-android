@@ -913,3 +913,9 @@ follow-greeting.tsの`MENU_PROMPT_TEXT`と全く同じ文言
 **follow-greeting.tsが解決しようとした問題は、既存のシナリオ機能で完全に解決済み。
 復活させると質問が重複する。bundleは削除して問題ない**と判断し、line-botセッションへ
 結論を共有済み。
+
+### 実行
+
+ユーザー本人に最終確認を取り（AskUserQuestion）、削除の明示的承認を取得。
+`_backups/`ディレクトリごとPowerShellの`Remove-Item -Recurse -Force`で削除し、
+`Test-Path`で削除完了を確認した。line-botセッションへクローズ報告済み。
