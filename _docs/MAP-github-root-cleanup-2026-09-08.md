@@ -841,12 +841,15 @@ APIキーの失効）は、ディレクトリ削除だけでは行われない�
 トークン自体がまだ有効な可能性がある点はユーザー側で認識しておくべき事項として記録する
 （AIはトークンの値を見ていないため、失効操作自体は代行できない）。
 
-## T. 第17弾: sakkino.link・tsuioku-no-kirokuのブランド帰属付け（着手・best-trust.biz側の登録待ち）
+## T. 第17弾: sakkino.link・tsuioku-no-kirokuのブランド帰属付け（★完了 2026-09-09）
 
 ### 到達点
 
-**要本人確認は解消・best-trust.bizセッションへ依頼送信済み・応答待ち**。
-第13弾から持ち越していたブランド帰属付けに着手した。
+**完了**。第13弾から持ち越していたブランド帰属付けが完了した。
+best-trust.bizセッションが別作業（インシデント対応と思われる大量の未コミット変更）で
+手が空かなかったため、このセッションが`data/registry.json`だけをピンポイントで
+編集する形で代行した（Main-Write Pauseプロトコルに従い`.agent/coord.md`で
+作業範囲を宣言→完了後削除。他の未コミット変更には一切触れていない）。
 
 ### 判明した事実
 
@@ -866,13 +869,12 @@ APIキーの失効）は、ディレクトリ削除だけでは行われない�
 `kimito-link`示唆より、既存台帳の一貫性を優先）。sakkino.linkは他ブランドとの接続が
 無いため、司令塔判断でcorporate直轄と結論（ユーザー確認不要な事実ベースの判断）。
 
-### 実行内容・残作業
+### 実行内容
 
-- `best-trust.biz`セッション（`local_1f8594f9-ac6a-434f-9e89-a6171fe0af65`、担当領域
-  `registry.json`）へ両product（tsuioku-no-kiroku・sakkino.link）の新規登録を依頼送信済み
-  （brand: corporate指定、category/urlの判断材料つき）。応答待ち
-- registry.json側のproduct id確定後、`best-trust/data/repositories.json`側の
-  `classification: "unclassified"` → `"confirmed"`、`brand`/`product`フィールドを
-  こちら（web-ios-android＝best-trust担当）で更新する（best-trustは本セッションの
-  担当領域のため、registry.jsonのように他セッションへ委譲する必要はない）
-- 完了後 `cd best-trust && npm run verify && npm run render` で整合性確認してからpush
+- `best-trust.biz/data/registry.json`へproduct 2件を追加（両方`brand: "corporate"`、
+  id: `sakkino-link`/`tsuioku-no-kiroku`）。`verify:registry`・`verify:seo`・
+  `verify:claims`すべて合格確認済み。commit `418beb5`でpush済み
+- `best-trust/data/repositories.json`側を`classification: "confirmed"`、
+  `role: "product"`、`brand: "corporate"`、`product`フィールドへ更新。
+  `npm run verify`・`render`合格確認済み。commit `5d891fa`でpush済み
+- best-trust.bizセッションへ完了報告・引き継ぎ確認のメッセージ送信済み
