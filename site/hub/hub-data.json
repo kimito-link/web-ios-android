@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-08T19:30:38.358Z",
+  "generatedAt": "2026-09-09T11:09:48.922Z",
   "entryCount": 77,
   "doctorOk": false,
   "doctorProblems": [
@@ -2291,7 +2291,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-08T19:30:38.358Z",
+    "generatedAt": "2026-09-09T11:09:48.922Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3163,7 +3163,6 @@
         "best-trust",
         "best-trust.biz",
         "characterlive",
-        "discordai",
         "docs",
         "gmail-secretary-extension",
         "hacking-tool",
@@ -3194,7 +3193,6 @@
         "web-health-check-lp",
         "works",
         "yukkuri",
-        "_backups",
         "デルタもん"
       ],
       "errors": []
