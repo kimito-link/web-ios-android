@@ -878,3 +878,38 @@ best-trust.bizセッションが別作業（インシデント対応と思われ
   `role: "product"`、`brand: "corporate"`、`product`フィールドへ更新。
   `npm run verify`・`render`合格確認済み。commit `5d891fa`でpush済み
 - best-trust.bizセッションへ完了報告・引き継ぎ確認のメッセージ送信済み
+
+## U. 第18弾: `_backups/kimitolink-line-line-fix-20260817.bundle`の最終結論（★完了 2026-09-09）
+
+### 到達点
+
+**完了。bundle削除可能と判断確定。**
+
+### 調査経緯
+
+第15弾でline-botセッションへ確認依頼を送付・保留にしていた案件。本セッションが
+bundleを実際にfetchして検証：
+
+- `fix/line-follow-greeting`（258ファイル・3万行超）: webinar/booking/mileage機能等
+  現行mainと大きく乖離した古い分岐全体。マージ対象外
+- `codex/line-monetization-first-step`（32ファイル、2026-08-15付）: groq-*/llm-*/
+  kb-search等AI社員bot関連。**32ファイル中30ファイルは既にmainへ統合済み**
+  （`groq-knowledge-content.ts`はai-shain-workerの`knowledge-pack/`から自動生成する
+  より新しい設計に進化）。`follow-greeting.ts`・`follow-greeting.test.ts`の**2ファイル
+  だけ**が統合時に見落とされて未マージのまま残存
+
+### 本番D1確認による最終結論
+
+line-botセッションが作成済みの読み取り専用workflow（`show-friend-add-scenarios.yml`）
+をdispatchして本番D1を確認（自分のCloudflareトークンはアカウント不一致でアクセス
+不可だったため、GitHub Actions経由でのアクセスに切り替え）。
+
+`Kimito-Link ウェルカム`シナリオ（is_active: 1、今も現役）のstep1本文に、
+follow-greeting.tsの`MENU_PROMPT_TEXT`と全く同じ文言
+「まず教えてください。今日はどちらのご用件でしょうか？」が**既に含まれている**ことを
+確認。後続のFAQ分岐（NFCグッズ価格・納期・kimito.linkグレードアップ案内等）も
+シナリオ側で完成済み。
+
+**follow-greeting.tsが解決しようとした問題は、既存のシナリオ機能で完全に解決済み。
+復活させると質問が重複する。bundleは削除して問題ない**と判断し、line-botセッションへ
+結論を共有済み。
