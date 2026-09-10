@@ -483,6 +483,11 @@
     }
     .measure-panel.panel-security { background: #1a1a2e; }
     .measure-panel.panel-responsive { background: #16324f; }
+    /* ★2026-09-11実損: panel-qaだけ背景色の定義が漏れており、
+       .measure-leadの明るい文字色(#cfd6ea)が透明な白背景に乗って
+       ほぼ読めなくなっていた（ユーザー指摘で発覚）。
+       panel-security/panel-responsiveと同系統・別トーンで統一する。 */
+    .measure-panel.panel-qa { background: #1e3a2f; }
     .measure-panel h3 { font-size: 1.05rem; margin: 10px 0 4px; color: #fff; }
     .measure-panel .measure-lead { color: #cfd6ea; font-size: 0.88rem; line-height: 1.8; }
     .measure-flow { display: grid; gap: 8px; margin-top: 16px; list-style: none; counter-reset: measure; }
