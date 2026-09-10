@@ -89,18 +89,44 @@ function extractPaths(text) {
  *   よって前後とも「英数字・ハイフン・ドットでないこと」を否定先読み/後読みで見る。
  *   実際 CLAUDE.md:67 の2件がこれで検出漏れした（2026-09-03）。selftest に固定済み。
  */
+/**
+ * その行が「他リポを指す相対パス」（`../foo/bar/`）を含んでいるか。
+ *
+ * ★理由（2026-09-10追加、run.mjs配線直後の初回実行で発見）:
+ *   `実装: ../best-price/tools/uragawa/（shell.html＝入力画面, build.mjs＝暗号化）。`
+ *   のように、他リポの相対パスを示したあと、同じ行の括弧内でそのリポ内の
+ *   ファイル名だけを列挙する書き方がある。extractMentions の「直前にパス区切り」
+ *   除外は `../foo/bar/build.mjs` のような直接連結にしか効かず、この間接参照は
+ *   すり抜けて「このリポに無いファイル」として誤検出された（CLAUDE.md:648）。
+ *   ★行単位の粗い判定にする（文全体の係り受けは解析しない）。誤検知を防ぐ側に
+ *   倒すほうが安全（isAbsenceLineと同じ思想: 誤検知する計器は無視される）。
+ */
+function hasOtherRepoPathOnLine(text, line) {
+  const lines = text.split("\n");
+  const target = lines[line - 1] ?? "";
+  return /\.\.\/[A-Za-z0-9_.-]+\//.test(target);
+}
+
 function extractMentions(text) {
   const found = new Map();
   // ★直前にパス区切りが付くもの（`../ai-hub/bin/hub.mjs`）はパス扱い＝ここでは拾わない。
   //   他リポを指す相対パスを「名前だけ」で探すと必ず誤検知する（2026-09-03 linktree で実測）。
-  const re = /(?<![A-Za-z0-9_.\/-])([A-Za-z0-9_-]+\.(?:py|mjs|cjs|sh|ps1|bat))(?![A-Za-z0-9_-])/g;
+  // ★直前が `*`（ワイルドカード表記 `*-node.mjs`）も同様に除外する（2026-09-10追加）。
+  //   実損: CLAUDE.md「Node版 `*-node.mjs`」が `-node.mjs` という実在しないファイル名として
+  //   誤検出された（run.mjsへの配線直後、初回実行で発見）。`*-foo.ext`は「このパターンに
+  //   一致するファイル群」を示す一般的な書き方で、単一ファイルの実在を主張していない。
+  const re = /(?<![A-Za-z0-9_.\/*-])([A-Za-z0-9_-]+\.(?:py|mjs|cjs|sh|ps1|bat))(?![A-Za-z0-9_-])/g;
   let m;
   while ((m = re.exec(text)) !== null) {
     const name = m[1];
     if (IGNORE_MENTION.some((r) => r.test(name))) continue;
+    const line = indexToLine(text, m.index);
+    // ★同じ行に他リポの相対パスがあれば、その行の単独ファイル名言及は
+    //   「そのリポ内のファイル」を指している可能性が高いので拾わない。
+    if (hasOtherRepoPathOnLine(text, line)) continue;
     // ★同じ名前が複数行に出るなら全行を持つ。1行だけ報告すると直し漏れる
     if (!found.has(name)) found.set(name, []);
-    found.get(name).push(indexToLine(text, m.index));
+    found.get(name).push(line);
   }
   return [...found].map(([value, lines]) => ({ kind: "mention", value, line: lines[0], lines }));
 }
@@ -286,6 +312,28 @@ if (selftest) {
       // ★2026-09-03 linktree で誤検知した形。他リポの正本を指すのは正しい書き方
       name: "他リポを指す相対パスは赤にしない",
       text: "`node ../ai-hub/bin/absent_9x7.mjs find --tag x` を実行する",
+      expectDead: 0,
+    },
+    {
+      // ★2026-09-10、run.mjs配線直後の初回実行でCLAUDE.md:648が誤検知した形。
+      //   他リポの相対パスと、その中のファイル名列挙が同じ行の別の箇所にある
+      //   （直接連結ではなく間接参照）。行単位で他リポ言及の有無を見て除外する。
+      name: "同じ行に他リポの相対パスがあれば、そのファイル名列挙も赤にしない",
+      text: "実装: ../best-price/tools/absent_9x7/（absent_shell_9x7.html＝入力画面、absent_build_9x7.mjs＝暗号化）。",
+      expectDead: 0,
+    },
+    {
+      // ★上の緩和が効きすぎないことの対（同じ行に他リポパスが無ければ、通常どおり赤にする）
+      name: "他リポの相対パスが同じ行に無ければ、通常どおり赤にする",
+      text: "実装は absent_no_context_9x7.mjs を見ること。",
+      expectDead: 1,
+    },
+    {
+      // ★2026-09-10、run.mjs配線直後の初回実行でCLAUDE.md:291が誤検知した形。
+      //   `*-node.mjs` のようなワイルドカード表記は「このパターンに一致するファイル群」
+      //   を示す一般的な書き方で、`-node.mjs` という単一ファイルの実在は主張していない。
+      name: "ワイルドカード表記（*-foo.ext）は赤にしない",
+      text: "Node版 `*-absent9x7.mjs` を使う",
       expectDead: 0,
     },
     {

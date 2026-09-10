@@ -144,6 +144,16 @@ const CHECKS = [
   //   ★scripts/直下（templates/scripts/、証明3点台帳と同じ置き場所）にあるため
   //   check-tracked-importsと同じ相対パスで参照する。
   { name: 'check-decision-receipt', path: join(__dirname, '..', 'scripts', 'check-decision-receipt.mjs') },
+  // ★AI向け指示書(CLAUDE.md)が「使え」と書いている実体が既に消えていないかを見る
+  //   (2026-09-04作成、2026-09-10配線)。作成時のきっかけは、2026-09-03に手作業で
+  //   気づいたCLAUDE.mdの腐り3件（fal_upload_helper.py等がリポに実在しない）。
+  //   ★作成はされていたが run.mjs の CHECKS に足す作業が漏れており、
+  //   Grok経由のIssue自動実装フロー(idea-to-pr.yml)を初めて通した2026-09-09の
+  //   PR検証で check-runner-registers-all がこの登録漏れを検出して発覚した。
+  //   ★check-runner-registers-all自身が「実在するのに呼ばれていない検査」を
+  //   見つける役割だが、その発見を機械的に赤で出すだけで自動修正はしない
+  //   （直すかどうかは人の判断）契約どおりの動き。
+  { name: 'check-doc-rot', path: join(__dirname, 'check-doc-rot.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
