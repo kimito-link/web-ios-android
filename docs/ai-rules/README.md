@@ -27,6 +27,9 @@ project-root/
 2. 新規コンポーネント追加時は `COMPONENT_REGISTRY.md` を更新  
 3. 発生したミスは `COMMON_MISTAKES.md` に即時追記  
 4. PR 前に `03_REVIEW_CHECKLIST.md` を全項目確認
+5. ★**自動化を途中で人に渡すとき**（画像認証・ログイン・決済・本人確認）は
+   `05_HANDING_SCREEN_TO_HUMAN.md` のチェックリストを通す。
+   「開きました」と言う前に、ウィンドウが**実際に見えているか座標で確認する**
 
 ## 固定のWebルール
 
