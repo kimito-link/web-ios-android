@@ -27,7 +27,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ROOT = resolve(HERE, '..');
 const DEFAULT_LEDGER = 'scripts/context-evolution.json';
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
-const VALID_STATUS = new Set(['confirmed', 'rejected', 'pending']);
+const VALID_STATUS = new Set(['confirmed', 'rejected', 'pending', 'approved']);
+const VALID_ACTION_KINDS = new Set(['delete', 'move', 'edit', 'command']);
 const argv = process.argv.slice(2);
 
 function has(flag) { return argv.includes(flag); }
@@ -42,7 +43,8 @@ function value(name, fallback = null) { return values(name).at(-1) ?? fallback; 
 function positionalRoot() {
   const takesValue = new Set([
     '--write', '--ledger', '--status', '--scope', '--problem', '--decision',
-    '--evidence', '--outcome', '--supersedes'
+    '--evidence', '--outcome', '--supersedes',
+    '--action', '--target', '--to', '--source', '--approved-at', '--plans-dir'
   ]);
   for (let i = 0; i < argv.length; i += 1) {
     if (takesValue.has(argv[i])) { i += 1; continue; }
@@ -211,7 +213,9 @@ function validateLedger(root, ledger) {
       if (!row[key] || !String(row[key]).trim()) errors.push(`${at} に ${key} がありません`);
     }
     const evidence = Array.isArray(row.evidence) ? row.evidence : [];
-    if (row.status !== 'pending' && evidence.length === 0) errors.push(`${at} は ${row.status} なのに evidence がありません`);
+    if (row.status !== 'pending' && row.status !== 'approved' && evidence.length === 0) {
+      errors.push(`${at} は ${row.status} なのに evidence がありません`);
+    }
     for (const ev of evidence) {
       if (typeof ev !== 'string' || !ev.trim()) { errors.push(`${at} に空の evidence があります`); continue; }
       if (ev.startsWith('file:')) {
@@ -220,8 +224,31 @@ function validateLedger(root, ledger) {
       } else if (ev.startsWith('commit:')) {
         const sha = ev.slice(7);
         if (!git(root, ['cat-file', '-e', sha + '^{commit}']).ok) errors.push(`${at} の証拠コミットがありません: ${sha}`);
+      } else if (ev.startsWith('absent:')) {
+        const ref = ev.slice(7);
+        if (existsSync(resolve(root, ref))) errors.push(`${at} の absent 証拠なのに対象が実在します: ${ref}`);
       } else if (!/^(command|measurement|url):/.test(ev)) {
         warnings.push(`${at} の evidence は種類を明示してください: ${ev}`);
+      }
+    }
+    if (row.status === 'approved') {
+      const action = row.action;
+      if (!action || typeof action !== 'object' || Array.isArray(action)) {
+        errors.push(`${at} は approved なのに action がありません`);
+      } else {
+        if (!VALID_ACTION_KINDS.has(action.kind)) errors.push(`${at} の action.kind が不正です: ${action.kind}`);
+        if (!action.target || typeof action.target !== 'string') errors.push(`${at} に action.target がありません`);
+        if (action.kind === 'move' && (!action.to || typeof action.to !== 'string')) {
+          errors.push(`${at} は move なのに action.to がありません`);
+        }
+      }
+      if (!row.source || typeof row.source !== 'string') errors.push(`${at} は approved なのに source がありません`);
+      if (!row.approvedAt || Number.isNaN(Date.parse(row.approvedAt))) errors.push(`${at} の approvedAt が不正です`);
+    }
+    if (row.status === 'confirmed' && Array.isArray(row.closesAction) && row.closesAction.length) {
+      const closingKinds = new Set(evidence.map((ev) => (ev.split(':')[0])));
+      if (!closingKinds.has('file') && !closingKinds.has('commit') && !closingKinds.has('absent')) {
+        errors.push(`${at} は approved行を閉じるのに command だけでは閉じられません（file:/commit:/absent: が必要）`);
       }
     }
     const supersedes = Array.isArray(row.supersedes) ? row.supersedes : [];
@@ -274,6 +301,17 @@ function collectContext(root, ledgerRel = DEFAULT_LEDGER) {
   if (!ledger.exists) inconclusive.push(`${ledger.path} が無く、検証済みの学びを次回へ渡せません`);
   if (files.some((f) => f.kind === 'unreadable')) inconclusive.push('読めない追跡ファイルがあります');
   problems.push(...ledgerValidation.errors);
+
+  const openActions = collectOpenActions(root, ledger.rows);
+  problems.push(...openActions.errors);
+  const inconclusiveExtra = [];
+  if (openActions.plansDirReadable === false) {
+    inconclusiveExtra.push('計画ファイル置き場を読めず、確定アクションの転記漏れを検査できませんでした');
+  }
+  for (const item of openActions.open) inconclusiveExtra.push(`未実行の確定アクション: [${item.action?.kind || '?'}] ${item.action?.target || item.problem}`);
+  for (const item of openActions.unclosedAfterExecution) inconclusiveExtra.push(`実行済みの疑い・台帳未閉: [${item.action?.kind || '?'}] ${item.action?.target}`);
+  for (const item of openActions.transcriptionGaps) inconclusiveExtra.push(`転記漏れ: ${item.file}:${item.line} の確定アクション表がまだ台帳にありません（${item.recordHint}）`);
+
   return {
     generatedAt: new Date().toISOString(), root: slash(root), head: headResult.ok ? headResult.out : null,
     branch: branchResult.ok ? branchResult.out : null, status: statusResult.ok ? statusResult.out.split(/\r?\n/).filter(Boolean) : [],
@@ -281,8 +319,121 @@ function collectContext(root, ledgerRel = DEFAULT_LEDGER) {
     files, trackedCount: tracked.length, untrackedCount: untracked.length,
     ignoredSensitiveCount: ignoredSensitive.length, kinds, categories,
     commits: parseCommits(commitsResult.out), packageScripts, ledger, ledgerValidation,
-    problems, inconclusive
+    openActions,
+    problems, inconclusive: [...inconclusive, ...inconclusiveExtra]
   };
+}
+
+function normalizePathForCompare(p) {
+  return slash(String(p || '')).toLowerCase().replace(/\/+$/, '');
+}
+
+function findPlanFiles(plansDir) {
+  if (!existsSync(plansDir)) return { readable: false, files: [] };
+  try {
+    const now = Date.now();
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    const files = readdirSync(plansDir)
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => join(plansDir, f))
+      .filter((abs) => {
+        try { return (now - statSync(abs).mtimeMs) <= thirtyDaysMs; } catch { return false; }
+      });
+    return { readable: true, files };
+  } catch {
+    return { readable: false, files: [] };
+  }
+}
+
+function stripCodeFences(text) {
+  const lines = text.split(/\r?\n/);
+  let inFence = false;
+  const out = lines.map((line) => {
+    if (/^\s*```/.test(line)) { inFence = !inFence; return ''; }
+    return inFence ? '' : line;
+  });
+  return out.join('\n');
+}
+
+function parsePlanActionTable(rawText) {
+  const rows = [];
+  const text = stripCodeFences(rawText);
+  const headingIndex = text.indexOf('確定アクション');
+  if (headingIndex === -1) {
+    const destructive = /(削除|rm\s|Remove-Item|移動|force\s+push)/i.test(text);
+    return { rows, hasHeading: false, destructiveWithoutTable: destructive };
+  }
+  const after = text.slice(headingIndex);
+  const lines = after.split(/\r?\n/);
+  let inTable = false;
+  let lineOffset = text.slice(0, headingIndex).split(/\r?\n/).length - 1;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const lineNo = lineOffset + i + 1;
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      if (/^\s*\|\s*-+\s*\|/.test(line)) { inTable = true; continue; }
+      const cells = line.split('|').map((c) => c.trim()).filter((c, idx, arr) => !(idx === 0 && c === '') && !(idx === arr.length - 1 && c === ''));
+      if (cells.length >= 2 && !/^操作$/.test(cells[0]) && VALID_ACTION_KINDS.has(cells[0])) {
+        rows.push({ kind: cells[0], target: cells[1], line: lineNo });
+      }
+    } else if (inTable && line.trim() === '') {
+      break;
+    }
+  }
+  return { rows, hasHeading: true, destructiveWithoutTable: false };
+}
+
+function collectOpenActions(root, ledgerRows, plansDirOverride) {
+  const errors = [];
+  const open = [];
+  const unclosedAfterExecution = [];
+  const transcriptionGaps = [];
+  const warnings = [];
+  const superseded = new Set(ledgerRows.flatMap((r) => Array.isArray(r.supersedes) ? r.supersedes : []));
+  const activeApproved = ledgerRows.filter((r) => r.status === 'approved' && !superseded.has(r.id));
+
+  for (const row of activeApproved) {
+    const action = row.action || {};
+    if (action.kind === 'delete' && action.target) {
+      const exists = existsSync(resolve(root, action.target));
+      if (exists) open.push(row); else unclosedAfterExecution.push(row);
+    } else if (action.kind === 'move' && action.target && action.to) {
+      const fromExists = existsSync(resolve(root, action.target));
+      const toExists = existsSync(resolve(root, action.to));
+      if (fromExists && !toExists) open.push(row);
+      else if (!fromExists && toExists) unclosedAfterExecution.push(row);
+      else errors.push(`確定アクション ${row.id} の move が不整合です（from存在=${fromExists}, to存在=${toExists}）`);
+    } else {
+      open.push(row);
+    }
+  }
+
+  const plansDir = plansDirOverride || value('--plans-dir', join(process.env.USERPROFILE || process.env.HOME || '.', '.claude', 'plans'));
+  const { readable, files } = findPlanFiles(plansDir);
+  if (readable) {
+    const closedTargets = new Set(
+      ledgerRows.filter((r) => r.status === 'approved' || r.status === 'confirmed' || r.status === 'rejected')
+        .map((r) => r.action?.target).filter(Boolean).map(normalizePathForCompare)
+    );
+    for (const file of files) {
+      let text = '';
+      try { text = readFileSync(file, 'utf8'); } catch { continue; }
+      const parsed = parsePlanActionTable(text);
+      if (parsed.destructiveWithoutTable) {
+        warnings.push(`計画ファイルに破壊的操作らしき語がありますが確定アクション表がありません: ${file}`);
+        continue;
+      }
+      for (const tableRow of parsed.rows) {
+        const normalizedTarget = normalizePathForCompare(tableRow.target);
+        if (!closedTargets.has(normalizedTarget)) {
+          const recordHint = `node templates/scripts/context-engine.mjs --record --status approved --action ${tableRow.kind} --target "${tableRow.target}" --source "file:${file}:${tableRow.line}"`;
+          transcriptionGaps.push({ file: slash(file), line: tableRow.line, kind: tableRow.kind, target: tableRow.target, recordHint });
+        }
+      }
+    }
+  }
+
+  return { open, unclosedAfterExecution, transcriptionGaps, warnings, errors, plansDirReadable: readable, plansDir: slash(plansDir) };
 }
 
 function activeRows(rows) {
@@ -300,6 +451,28 @@ function renderRows(rows) {
   ].join('\n')).join('\n');
 }
 
+function renderOpenActionsSection(ctx) {
+  const oa = ctx.openActions;
+  const lines = ['## 0. 最優先・未実行の確定アクション', ''];
+  const totalOpen = oa.open.length + oa.unclosedAfterExecution.length + oa.transcriptionGaps.length;
+  if (totalOpen === 0) {
+    lines.push(`開いている確定アクションはありません（台帳${ctx.ledger.rows.length}行・計画ファイル置き場と突き合わせ済み）。`);
+  } else {
+    for (const row of oa.open) {
+      lines.push(`- 🟡 未実行: [${row.action?.kind}] \`${row.action?.target}\`${row.action?.to ? ` → \`${row.action.to}\`` : ''}（${row.id}）`);
+    }
+    for (const row of oa.unclosedAfterExecution) {
+      lines.push(`- 🟡 実行済みの疑い・台帳未閉: [${row.action?.kind}] \`${row.action?.target}\`（${row.id}。閉じるには --status confirmed --evidence absent:<path> 等を追記）`);
+    }
+    for (const gap of oa.transcriptionGaps) {
+      lines.push(`- 🟡 転記漏れ: ${gap.file}:${gap.line} の確定アクション表がまだ台帳にありません。`, `  \`${gap.recordHint}\``);
+    }
+  }
+  for (const w of oa.warnings) lines.push(`- ⚪ ${w}`);
+  lines.push('');
+  return lines;
+}
+
 function renderReport(ctx) {
   const active = activeRows(ctx.ledger.rows);
   const priority = ctx.files.filter((f) => ['instructions', 'evolution'].includes(f.category)
@@ -309,6 +482,7 @@ function renderReport(ctx) {
     '# 計器・全文脈パケット', '',
     `> 生成: ${ctx.generatedAt}  /  HEAD: ${ctx.head ? ctx.head.slice(0, 12) : '測定不能'}  /  branch: ${ctx.branch || '—'}`,
     '> これは「AIが全部知った」という宣言ではありません。リポジトリ内で取得可能な文脈を全件数え、出典へ戻れる索引にしたものです。', '',
+    ...renderOpenActionsSection(ctx),
     '## 1. 文脈の網羅性', '',
     `- Git追跡ファイル: **${ctx.trackedCount}件を全件計上**`,
     `- Gitが表示する未追跡ファイル（ignore対象外）: **${ctx.untrackedCount}件も計上**`,
@@ -372,6 +546,16 @@ function verdict(ctx) {
 function printCheck(ctx) {
   const code = verdict(ctx);
   const mark = code === EXIT.PASS ? '✅' : code === EXIT.FAIL ? '🔴' : '🟡';
+  const oa = ctx.openActions;
+  const totalOpen = oa ? (oa.open.length + oa.unclosedAfterExecution.length + oa.transcriptionGaps.length) : 0;
+  if (totalOpen === 0) {
+    console.log(`[context-engine] ✅ 確定アクション: 開いている行はありません（台帳${ctx.ledger.rows.length}行と突き合わせ済み）`);
+  } else {
+    console.log(`[context-engine] 🟡 確定アクション: 未処理が${totalOpen}件あります`);
+    for (const row of oa.open) console.log(`  🟡 未実行: [${row.action?.kind}] ${row.action?.target} (${row.id})`);
+    for (const row of oa.unclosedAfterExecution) console.log(`  🟡 実行済みの疑い・台帳未閉: [${row.action?.kind}] ${row.action?.target} (${row.id})`);
+    for (const gap of oa.transcriptionGaps) console.log(`  🟡 転記漏れ: ${gap.file}:${gap.line}`);
+  }
   console.log(`[context-engine] ${mark} 文脈 ${ctx.files.length}件を計上（追跡 ${ctx.trackedCount} / 未追跡 ${ctx.untrackedCount} / ignore内秘密候補 ${ctx.ignoredSensitiveCount}）`);
   console.log(`  根拠: text=${ctx.kinds.text}, binary=${ctx.kinds.binary}, sensitive=${ctx.kinds.sensitive}, commits=${ctx.commits.length}, ledger=${ctx.ledger.rows.length}`);
   console.log(`  現在地: ${ctx.head ? ctx.head.slice(0, 12) : '測定不能'} / 変更 ${ctx.status.length}件`);
@@ -388,12 +572,24 @@ function recordEvolution(root, ledgerRel) {
   const now = new Date();
   let version = null;
   try { version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version || null; } catch { /* optional */ }
+  const actionKind = value('--action');
+  const actionTarget = value('--target');
+  const actionTo = value('--to');
   const row = {
     id: now.toISOString().replace(/[-:.TZ]/g, '').slice(0, 14) + '-' + createHash('sha1').update(value('--problem', '') + value('--decision', '')).digest('hex').slice(0, 8),
     recordedAt: now.toISOString(), version, scope: value('--scope', 'repository'), status,
-    problem: value('--problem', ''), decision: value('--decision', ''), evidence,
-    outcome: value('--outcome', ''), supersedes
+    problem: value('--problem', status === 'approved' ? `確定アクション: ${actionKind} ${actionTarget}` : ''),
+    decision: value('--decision', status === 'approved' ? '人間が承認済み・未実行' : ''),
+    evidence,
+    outcome: value('--outcome', status === 'approved' ? '未実行' : ''), supersedes
   };
+  if (actionKind || actionTarget || actionTo) {
+    row.action = { kind: actionKind, target: actionTarget, ...(actionTo ? { to: actionTo } : {}) };
+  }
+  const source = value('--source');
+  if (source) row.source = source;
+  const approvedAt = value('--approved-at', status === 'approved' ? now.toISOString() : null);
+  if (approvedAt) row.approvedAt = approvedAt;
   const ledger = readLedger(root, ledgerRel);
   if (!ledger.exists) { ledger.exists = true; ledger.rows = []; ledger.error = null; }
   ledger.rows.push(row);
@@ -444,6 +640,65 @@ function runSelfTest() {
       id: 'bad2', status: 'rejected', problem: 'p', decision: 'd', outcome: 'o', evidence: ['file:nope.md'], supersedes: []
     }] };
     if (!validateLedger(root, missingEvidence).errors.some((e) => e.includes('証拠ファイル'))) fails.push('存在しない証拠を拒否できない');
+
+    // --- Approved-Action Ledger 毒（7件） ---
+    const noAction = { exists: true, rows: [{
+      id: 'aa1', status: 'approved', problem: 'p', decision: 'd', outcome: 'o', evidence: [], supersedes: []
+    }] };
+    if (validateLedger(root, noAction).errors.length === 0) fails.push('毒1: approvedにaction無しを拒否できない');
+
+    writeFileSync(join(root, 'deleteme.txt'), 'x');
+    const deleteExisting = [{
+      id: 'aa2', status: 'approved', problem: 'p', decision: 'd', outcome: 'o', evidence: [], supersedes: [],
+      action: { kind: 'delete', target: 'deleteme.txt' }, source: 'transcript:t1', approvedAt: '2026-01-01T00:00:00.000Z'
+    }];
+    const oa2 = collectOpenActions(root, deleteExisting);
+    if (oa2.open.length !== 1) fails.push('毒2: delete対象が実在するのにopenと判定できない');
+
+    const deleteGone = [{
+      id: 'aa3', status: 'approved', problem: 'p', decision: 'd', outcome: 'o', evidence: [], supersedes: [],
+      action: { kind: 'delete', target: 'gone-forever.txt' }, source: 'transcript:t1', approvedAt: '2026-01-01T00:00:00.000Z'
+    }];
+    const oa3 = collectOpenActions(root, deleteGone);
+    if (oa3.unclosedAfterExecution.length !== 1) fails.push('毒3: delete対象が不在なのに未閉と判定できない');
+
+    const plansDir = mkdtempSync(join(tmpdir(), 'context-engine-plans-'));
+    try {
+      writeFileSync(join(plansDir, 'test-plan.md'), [
+        '# テスト計画',
+        '',
+        '## 確定アクション（人間が承認済み・未実行。最初に読む。再質問しない）',
+        '| 操作 | 対象 | 承認日 | 状態 |',
+        '|---|---|---|---|',
+        '| delete | untracked-target.txt | 2026-01-01 | 未実行 |',
+        ''
+      ].join('\n'));
+      const oa4 = collectOpenActions(root, [], plansDir);
+      if (oa4.transcriptionGaps.length !== 1) fails.push('毒4: 表行あり台帳無しで転記漏れを検出できない');
+    } finally {
+      try { rmSync(plansDir, { recursive: true, force: true }); } catch { /* best effort */ }
+    }
+
+    const commandOnlyClose = { exists: true, rows: [
+      { id: 'aa5a', status: 'approved', problem: 'p', decision: 'd', outcome: 'o', evidence: [], supersedes: [],
+        action: { kind: 'command', target: 'noop' }, source: 'transcript:t1', approvedAt: '2026-01-01T00:00:00.000Z' },
+      { id: 'aa5b', status: 'confirmed', problem: 'p', decision: 'd', outcome: 'o', evidence: ['command:did-it'], supersedes: ['aa5a'], closesAction: ['aa5a'] }
+    ] };
+    if (validateLedger(root, commandOnlyClose).errors.length === 0) fails.push('毒5: command:だけでapprovedを閉じるのを拒否できない');
+
+    const absentButExists = { exists: true, rows: [{
+      id: 'aa6', status: 'confirmed', problem: 'p', decision: 'd', outcome: 'o', evidence: ['absent:AGENTS.md'], supersedes: []
+    }] };
+    if (validateLedger(root, absentButExists).errors.length === 0) fails.push('毒6: absent証拠なのに対象が実在するのを拒否できない');
+
+    const emptyPlansDir = mkdtempSync(join(tmpdir(), 'context-engine-plans-empty-'));
+    try {
+      const oa7 = collectOpenActions(root, [], emptyPlansDir);
+      const totalOpen7 = oa7.open.length + oa7.unclosedAfterExecution.length + oa7.transcriptionGaps.length;
+      if (totalOpen7 !== 0 || !oa7.plansDirReadable) fails.push('毒7: 表ゼロ・台帳ゼロ・plans dir読めたのに緑にならない');
+    } finally {
+      try { rmSync(emptyPlansDir, { recursive: true, force: true }); } catch { /* best effort */ }
+    }
   } catch (error) {
     fails.push('selftest 自体が例外: ' + oneLine(error.message));
   } finally {
@@ -454,7 +709,7 @@ function runSelfTest() {
     for (const fail of fails) console.error('  - ' + fail);
     return EXIT.FAIL;
   }
-  console.log('[context-engine] selftest OK（全件計上 / 秘密隔離 / 全履歴 / 証拠なし知識を拒否 / 却下案を継承）');
+  console.log('[context-engine] selftest OK（全件計上 / 秘密隔離 / 全履歴 / 証拠なし知識を拒否 / 却下案を継承 / 確定アクション台帳の7毒）');
   return EXIT.PASS;
 }
 
@@ -463,6 +718,20 @@ if (has('--selftest')) process.exit(runSelfTest());
 const root = positionalRoot();
 const ledgerRel = slash(value('--ledger', DEFAULT_LEDGER));
 if (has('--record')) process.exit(recordEvolution(root, ledgerRel));
+
+if (has('--open-actions')) {
+  const ledger = readLedger(root, ledgerRel);
+  const openActions = collectOpenActions(root, ledger.rows);
+  const totalOpen = openActions.open.length + openActions.unclosedAfterExecution.length + openActions.transcriptionGaps.length;
+  if (has('--json')) {
+    console.log(JSON.stringify(openActions, null, 2));
+  } else if (totalOpen === 0) {
+    console.log(`[context-engine] ✅ 開いている確定アクションはありません（台帳${ledger.rows.length}行と突き合わせ済み）`);
+  } else {
+    console.log(`[context-engine] 🟡 未処理の確定アクションが${totalOpen}件あります`);
+  }
+  process.exit(totalOpen === 0 && !ledger.error ? EXIT.PASS : EXIT.INCONCLUSIVE);
+}
 
 const ctx = collectContext(root, ledgerRel);
 const report = renderReport(ctx);
