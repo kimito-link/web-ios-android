@@ -115,6 +115,11 @@ const CHECKS = [
     path: join(__dirname, 'check-shared-parts-used.mjs'),
     declares: { sharedDir: '--shared-dir' },
   },
+  // ★git worktreeが「片方向だけ切れた」孤児になっていないかを数える(2026-09-14追加)。
+  //   実損: _archive/へのディレクトリ移動作業で、traffic-seoのworktree3件が実際に
+  //   孤児化し`git status`が失敗した。gitのどのコマンド（worktree remove/prune/list）
+  //   でも自動修復されず、しかも異常に見えない。★対象リポ自身（kitRoot）を見る。
+  { name: 'check-orphan-worktrees', path: join(__dirname, 'check-orphan-worktrees.mjs'), kitRoot: true },
   // ★「少しずつ違う実装」が複数箇所に増える状態を数える(2026-09-07追加、基準⑦の機械検出)。
   //   check-shared-parts-usedは【同名】関数しか拾えないため、名前も違う「似た塊」は
   //   別の検査として分離した(事実と推測を混ぜない。KEEP_SEPARATE)。

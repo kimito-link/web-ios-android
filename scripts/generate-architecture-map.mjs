@@ -45,7 +45,7 @@ import { classifyGate } from './lib/architecture-map-core.mjs';
 import { fetchVisibilityFromGitHub, readVisibilityCache, writeVisibilityCache, isPublishable } from './lib/architecture-map-visibility.mjs';
 import { TREE_VIEW_CSS, buildTree } from './lib/tree-view-component.mjs';
 import { findRepoRoot } from './lib/repo-root.mjs';
-import { buildArchitectureMap, annotateNodes } from './lib/architecture-map-aggregate.mjs';
+import { buildArchitectureMap, annotateNodes, summarizeSharedParts } from './lib/architecture-map-aggregate.mjs';
 import { buildPublicView } from './lib/architecture-map-public-view.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -195,7 +195,44 @@ if (isMain && argv.includes('--selftest')) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(1);
   }
-  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・HEAD一覧不明のリポを公開しない / dirtyでもHEADコミット時点なら公開する / untrackedファイルを漏らさない / 中間ディレクトリを欠落させない / 事実推測の集計を混同しない / buildTreeの自己完結性）');
+  // summarizeSharedParts: identical/differentを正しく集計し、pairs宣言済み複製も数える
+  {
+    const internal = {
+      repos: [{
+        name: 'shared-parts-demo',
+        nodes: [
+          { path: 'scripts/lib/render.mjs', sharedRole: 'shared', sharedDuplicates: [], pairs: null },
+          {
+            path: 'popup/a.mjs', sharedRole: 'consumer', pairs: null,
+            sharedDuplicates: [{ name: 'escapeHtml', sharedAt: 'scripts/lib/render.mjs', bodyMatch: 'identical' }]
+          },
+          {
+            path: 'popup/b.mjs', sharedRole: 'consumer', pairs: null,
+            sharedDuplicates: [{ name: 'fmtTime', sharedAt: 'scripts/lib/render.mjs', bodyMatch: 'different' }]
+          },
+          {
+            path: 'templates/scripts/lib/render.mjs', sharedRole: null,
+            sharedDuplicates: [], pairs: { role: 'copy', label: 'render' }
+          }
+        ]
+      }]
+    };
+    const summary = summarizeSharedParts(internal);
+    const r = summary.repos[0];
+    if (!r) fails.push('★共有部品サマリーが1リポも返らない');
+    if (r?.identicalCount !== 1) fails.push('★identical件数を正しく数えられない');
+    if (r?.differentCount !== 1) fails.push('★different件数を正しく数えられない（ラチェット対象外のはずが混ざっている）');
+    if (r?.pairsDeclaredCount !== 1) fails.push('★PAIRS宣言済み複製を正しく数えられない');
+    if (r?.measured !== true) fails.push('★sharedRoleがあるのにmeasuredがfalseになっている');
+  }
+  // summarizeSharedParts: sharedRoleが1件も無いリポは「測っていない」(measured:false)
+  {
+    const internal = { repos: [{ name: 'no-shared-declared', nodes: [{ path: 'a.mjs', sharedRole: null, sharedDuplicates: [] }] }] };
+    const summary = summarizeSharedParts(internal);
+    if (summary.repos[0]?.measured !== false) fails.push('★sharedDir宣言が無いリポをmeasured:trueにしている（宣言なし=測っていないと区別できない）');
+  }
+
+  console.log('[generate-architecture-map] selftest OK（未知リポ・PRIVATE・HEAD一覧不明のリポを公開しない / dirtyでもHEADコミット時点なら公開する / untrackedファイルを漏らさない / 中間ディレクトリを欠落させない / 事実推測の集計を混同しない / buildTreeの自己完結性 / 共有部品サマリーのidentical・different・PAIRS集計）');
   process.exit(0);
 }
 
@@ -223,6 +260,17 @@ if (isMain && !argv.includes('--selftest')) {
   if (internalData.skippedReparsePoints.length) {
     console.log(`[generate-architecture-map] 🟡 シンボリックリンク/ジャンクションのため未解析: ${internalData.skippedReparsePoints.join(', ')}`);
   }
+
+  // ★共有部品サマリー（軽量・件数のみ）を別ファイルへ書く。88MB級のinternalData全体を
+  //   generate-hub-dashboard.mjsに読ませないため（`_docs/DESIGN-shared-parts-baseline-2026-09-02.md`手順4）。
+  const sharedPartsSummaryPath = join(webIosAndroidRoot, '.architecture-map-shared-parts-summary.json');
+  const sharedPartsSummary = summarizeSharedParts(internalData);
+  writeFileSync(sharedPartsSummaryPath, JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    ...sharedPartsSummary
+  }, null, 2) + '\n');
+  console.log(`[generate-architecture-map] 共有部品サマリー(全${sharedPartsSummary.repos.length}リポ): ${sharedPartsSummaryPath}`);
 
   // ★visibility取得: --skip-visibility-fetchなら既存キャッシュのみ使う(gh未認証環境向け)。
   const visibilityCachePath = join(webIosAndroidRoot, '.architecture-map-visibility-cache.json');

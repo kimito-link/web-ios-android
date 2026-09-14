@@ -187,3 +187,44 @@ export async function buildArchitectureMap(githubRoot, opts = {}) {
     aiHubAvailable: aiHubPaths !== null
   };
 }
+
+/**
+ * ★リポごとの共有部品サマリーを軽量に集計する（`/hub/`ダッシュボード公開用）。
+ * `_docs/DESIGN-shared-parts-baseline-2026-09-02.md`手順4。内部データ全体
+ * （nodes配列を含む、数十MB級）をそのままダッシュボードへ渡すと重すぎるため、
+ * ここで件数だけの軽量オブジェクトへ落とす。
+ *
+ * ★「基準値」という語は使わない（設計書G-8）。ゼロが正解ではない
+ * （配布境界がある限りPAIRS宣言済み複製は残る）ため、呼び出し側の表示文言でも
+ * 「見本（このキット自身）」と書くこと。
+ *
+ * @param {{repos: object[]}} internalData buildArchitectureMapの戻り値
+ * @returns {{repos: {name:string, sharedDirCount:number, identicalCount:number, differentCount:number, pairsDeclaredCount:number, measured:boolean}[]}}
+ */
+export function summarizeSharedParts(internalData) {
+  const repos = (internalData?.repos || []).map((repo) => {
+    const nodesWithShared = repo.nodes.filter((n) => n.sharedRole);
+    const sharedDirCount = new Set(
+      repo.nodes.filter((n) => n.sharedRole === 'shared').map((n) => n.path.split('/').slice(0, -1).join('/'))
+    ).size;
+    let identicalCount = 0;
+    let differentCount = 0;
+    let pairsDeclaredCount = 0;
+    for (const n of repo.nodes) {
+      for (const d of n.sharedDuplicates || []) {
+        if (d.bodyMatch === 'identical') identicalCount += 1;
+        else if (d.bodyMatch === 'different') differentCount += 1;
+      }
+      if (n.pairs && n.pairs.role === 'copy') pairsDeclaredCount += 1;
+    }
+    return {
+      name: repo.name,
+      sharedDirCount,
+      identicalCount,
+      differentCount,
+      pairsDeclaredCount,
+      measured: nodesWithShared.length > 0 || sharedDirCount > 0
+    };
+  });
+  return { repos };
+}

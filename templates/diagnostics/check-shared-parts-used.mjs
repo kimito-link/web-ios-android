@@ -65,6 +65,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const EXIT = Object.freeze({ PASS: 0, FAIL: 1, INCONCLUSIVE: 2 });
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -99,12 +100,82 @@ export function extractDefinedFunctions(src) {
 }
 
 /**
+ * ★関数本体を文字列で切り出す（AST不使用）。
+ *
+ * `function name(` または `const name = ... {` から始まり、中括弧の深さが
+ * 0に戻るまでを切り出す。文字列・テンプレートリテラル内の `{` で深さがズレる
+ * ことがあるため、失敗したら null を返す（呼び出し側は unmeasured に倒す。
+ * 過去に同種の中括弧カウントで誤判定した実績があるため、fail-close にする）。
+ *
+ * @param {string} src
+ * @param {string} name
+ * @returns {string|null}
+ */
+export function extractFunctionBody(src, name) {
+  const text = typeof src === 'string' ? src : '';
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(
+    `(?:function\\s+${escaped}\\s*\\(|(?:const|let|var)\\s+${escaped}\\s*=\\s*(?:async\\s*)?(?:function\\b[^(]*\\(|\\([^)]*\\)\\s*=>|[A-Za-z_$][\\w$]*\\s*=>))`,
+  );
+  const m = re.exec(text);
+  if (!m) return null;
+  const braceStart = text.indexOf('{', m.index);
+  if (braceStart === -1) return null;
+  let depth = 0;
+  for (let i = braceStart; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return text.slice(m.index, i + 1);
+    }
+  }
+  return null; // 深さが0に戻らなかった＝切り出し失敗
+}
+
+/**
+ * ★コメント・文字列内は触らず、行コメント/ブロックコメント/空行だけ落とす。
+ * `templates/scripts/lib/instrument-proof.mjs` と `_docs/instruments/check-drift.mjs` の
+ * 同名関数と同一ロジック。★依存ゼロ・コピー1枚で動く原則のため独立コピーとして持つ
+ * （import しない。どちらかを変えたらもう片方も見て揃える）。
+ * ★2026-09-14: 行末インラインコメントも除去するよう3箇所同期で拡張。
+ * @param {string} text
+ * @returns {string}
+ */
+function codeOnly(text) {
+  const noBlock = String(text || '').replace(/\/\*[\s\S]*?\*\//g, '');
+  return noBlock
+    .split('\n')
+    .map((l) => l.replace(/^\s*\/\/.*$/, ''))
+    .map((l) => l.replace(/\s+\/\/(?!\/).*$/, ''))
+    .filter((l) => l.trim() !== '')
+    .map((l) => l.trimEnd())
+    .join('\n');
+}
+
+/** @param {string} normalizedSourceText @returns {string} */
+function hashSource(normalizedSourceText) {
+  return createHash('sha256').update(String(normalizedSourceText || ''), 'utf8').digest('hex');
+}
+
+/**
+ * ★同名関数どうしの本体一致を判定する。
+ * @param {string|undefined} bodyA
+ * @param {string|undefined} bodyB
+ * @returns {'identical'|'different'|'unmeasured'}
+ */
+function judgeBodyMatch(bodyA, bodyB) {
+  if (typeof bodyA !== 'string' || typeof bodyB !== 'string') return 'unmeasured';
+  return hashSource(codeOnly(bodyA)) === hashSource(codeOnly(bodyB)) ? 'identical' : 'different';
+}
+
+/**
  * ★判定の本体（fs にも git にも触らない＝テストできる）。
  *
- * @param {{path:string, defined:string[]}[]} sharedFiles 共有ディレクトリのファイル
- * @param {{path:string, defined:string[]}[]} otherFiles  それ以外のファイル
- * @param {number} baseline 既知の重複数（ラチェットの上限）
- * @returns {{verdict:'pass'|'fail'|'inconclusive', duplicates:{name:string, at:string}[], reason?:string}}
+ * @param {{path:string, defined:string[], bodies?:Record<string,string|null>}[]} sharedFiles 共有ディレクトリのファイル
+ * @param {{path:string, defined:string[], bodies?:Record<string,string|null>}[]} otherFiles  それ以外のファイル
+ * @param {number} baseline 既知の重複数（ラチェットの上限。identicalのみ数える）
+ * @returns {{verdict:'pass'|'fail'|'inconclusive', duplicates:{name:string, at:string, sharedAt:string, bodyMatch:'identical'|'different'|'unmeasured'}[], reason?:string}}
  */
 export function judgeSharedPartsUsed(sharedFiles, otherFiles, baseline) {
   const shared = Array.isArray(sharedFiles) ? sharedFiles : [];
@@ -129,43 +200,78 @@ export function judgeSharedPartsUsed(sharedFiles, otherFiles, baseline) {
   }
 
   const sharedNames = new Map();
+  const sharedBodies = new Map();
   for (const f of shared) {
-    for (const n of f.defined || []) if (!sharedNames.has(n)) sharedNames.set(n, f.path);
+    for (const n of f.defined || []) {
+      if (!sharedNames.has(n)) {
+        sharedNames.set(n, f.path);
+        sharedBodies.set(n, f.bodies ? f.bodies[n] : undefined);
+      }
+    }
   }
 
   const duplicates = [];
   for (const f of others) {
     for (const n of f.defined || []) {
-      if (sharedNames.has(n)) duplicates.push({ name: n, at: f.path, sharedAt: sharedNames.get(n) });
+      if (sharedNames.has(n)) {
+        const otherBody = f.bodies ? f.bodies[n] : undefined;
+        duplicates.push({
+          name: n,
+          at: f.path,
+          sharedAt: sharedNames.get(n),
+          bodyMatch: judgeBodyMatch(sharedBodies.get(n), otherBody),
+        });
+      }
     }
   }
 
-  const limit = Number.isFinite(baseline) ? baseline : duplicates.length;
+  // ★ラチェット対象は identical のみ。different は「同名だが契約が違う可能性がある」
+  //   ので件数に含めない（統合すべきかは機械で決めない、この検査の既存方針と同じ）。
+  const identicalCount = duplicates.filter((d) => d.bodyMatch === 'identical').length;
+  const limit = Number.isFinite(baseline) ? baseline : identicalCount;
   return {
-    verdict: duplicates.length > limit ? 'fail' : 'pass',
+    verdict: identicalCount > limit ? 'fail' : 'pass',
     duplicates,
     limit,
+    counts: {
+      identical: identicalCount,
+      different: duplicates.filter((d) => d.bodyMatch === 'different').length,
+      unmeasured: duplicates.filter((d) => d.bodyMatch === 'unmeasured').length,
+    },
   };
 }
 
 // ── selftest（★毒→赤） ──────────────────────────────────────────────────
 function runSelftest() {
   const fails = [];
-  const S = [{ path: 'shared/render.js', defined: ['escapeHtml', 'fmtTime'] }];
+  const ESCAPE_BODY = 'function escapeHtml(s) { return String(s).replace(/</g, "&lt;"); }';
+  const ESCAPE_BODY_DIFFERENT = 'function escapeHtml(s) { return s; }';
+  const S = [{
+    path: 'shared/render.js', defined: ['escapeHtml', 'fmtTime'],
+    bodies: { escapeHtml: ESCAPE_BODY, fmtTime: 'function fmtTime(t) { return String(t); }' },
+  }];
 
-  // ① 共有と同名を自前で持っていたら数える
-  const a = judgeSharedPartsUsed(S, [{ path: 'popup/a.js', defined: ['escapeHtml'] }], 0);
+  // ① 共有と同名・本体まで一致で数える（identical）
+  const a = judgeSharedPartsUsed(
+    S, [{ path: 'popup/a.js', defined: ['escapeHtml'], bodies: { escapeHtml: ESCAPE_BODY } }], 0,
+  );
   if (a.verdict !== 'fail') fails.push('★重複を見逃す');
   if (a.duplicates[0]?.name !== 'escapeHtml') fails.push('★重複の名前が違う');
+  if (a.duplicates[0]?.bodyMatch !== 'identical') fails.push('★本体一致をidenticalと判定できない');
 
   // ② ラチェット: 既知の件数までは緑（減らすのは自由）
-  const b = judgeSharedPartsUsed(S, [{ path: 'popup/a.js', defined: ['escapeHtml'] }], 1);
+  const b = judgeSharedPartsUsed(
+    S, [{ path: 'popup/a.js', defined: ['escapeHtml'], bodies: { escapeHtml: ESCAPE_BODY } }], 1,
+  );
   if (b.verdict !== 'pass') fails.push('★ベースライン内なのに赤くする');
 
   // ③ ★増えたときだけ赤
   const c = judgeSharedPartsUsed(
     S,
-    [{ path: 'a.js', defined: ['escapeHtml'] }, { path: 'b.js', defined: ['fmtTime'] }],
+    [
+      { path: 'a.js', defined: ['escapeHtml'], bodies: { escapeHtml: ESCAPE_BODY } },
+      { path: 'b.js', defined: ['fmtTime'], bodies: { fmtTime: 'function fmtTime(t) { return String(t); }' } },
+    ],
     1,
   );
   if (c.verdict !== 'fail') fails.push('★増えたのに赤くならない');
@@ -185,6 +291,39 @@ function runSelftest() {
     }
   } catch { fails.push('★壊れた入力で throw する'); }
 
+  // ⑧ 本体不一致（different）はラチェット対象外＝赤にならない
+  const d = judgeSharedPartsUsed(
+    S,
+    [{ path: 'c.js', defined: ['escapeHtml'], bodies: { escapeHtml: ESCAPE_BODY_DIFFERENT } }],
+    0,
+  );
+  if (d.verdict !== 'pass') fails.push('★本体不一致(different)をラチェット対象にしている');
+  if (d.duplicates[0]?.bodyMatch !== 'different') fails.push('★本体不一致をdifferentと判定できない');
+
+  // ⑨ 切り出し失敗（本体を渡さない）は unmeasured としてラチェット対象外
+  const e = judgeSharedPartsUsed(
+    S,
+    [{ path: 'd.js', defined: ['escapeHtml'], bodies: {} }],
+    0,
+  );
+  if (e.verdict !== 'pass') fails.push('★切り出し失敗(unmeasured)をラチェット対象にしている');
+  if (e.duplicates[0]?.bodyMatch !== 'unmeasured') fails.push('★本体なしをunmeasuredと判定できない');
+
+  // ⑩ extractFunctionBody: 通常の関数宣言を切り出せる
+  if (extractFunctionBody('function foo(a,b) { return a+b; }', 'foo') === null) {
+    fails.push('★通常の関数本体を切り出せない');
+  }
+  // ⑪ extractFunctionBody: デフォルト引数の{}で深さカウントが狂っても例外を投げず、
+  //   実際に文字列の {} を含む場合は最短で閉じてしまい誤った本体を返すことがあるが、
+  //   ★重要なのは throw しないこと（誤判定は上位でidentical/differentの比較結果として現れる）
+  try {
+    extractFunctionBody('function f(opts = {}) { return opts; }', 'f');
+  } catch { fails.push('★デフォルト引数を含む関数でthrowする'); }
+  // ⑫ 存在しない関数名は null
+  if (extractFunctionBody('function foo(){}', 'bar') !== null) {
+    fails.push('★存在しない関数名でnull以外を返す');
+  }
+
   // ⑦ 関数定義の抽出（3形）
   const defs = extractDefinedFunctions(
     'function a(){}\nconst b = () => {}\nexport const c = function(){}\n',
@@ -202,7 +341,8 @@ function runSelftest() {
   }
   console.log(
     '[check-shared-parts-used] ✅ selftest 合格'
-    + '（7件: 重複は赤 / ラチェット / ★0件を緑にしない / 呼び出しを定義と読まない）',
+    + '（12件: identical重複は赤 / ラチェット / ★0件を緑にしない / 呼び出しを定義と読まない'
+    + ' / different・unmeasuredはラチェット対象外 / 本体切り出しがthrowしない）',
   );
   process.exit(EXIT.PASS);
 }
@@ -242,8 +382,13 @@ if (isMain) {
   const EXCLUDED = /(^|\/)(node_modules|vendor|third_party|dist|build|out|_backup|\.min\.)/;
   const isShared = (p) => sharedDirs.some((d) => p === d || p.startsWith(`${d}/`));
   const load = (p) => {
-    try { return { path: p, defined: extractDefinedFunctions(readFileSync(join(root, p), 'utf8')) }; }
-    catch { return null; }
+    try {
+      const src = readFileSync(join(root, p), 'utf8');
+      const defined = extractDefinedFunctions(src);
+      const bodies = {};
+      for (const n of defined) bodies[n] = extractFunctionBody(src, n);
+      return { path: p, defined, bodies };
+    } catch { return null; }
   };
 
   const scannable = tracked.filter((p) => !EXCLUDED.test(p));
@@ -269,13 +414,14 @@ if (isMain) {
   const byName = new Map();
   for (const d of r.duplicates) {
     if (!byName.has(d.name)) byName.set(d.name, []);
-    byName.get(d.name).push(d.at);
+    byName.get(d.name).push(`${d.at}[${d.bodyMatch}]`);
   }
 
   console.log(
     `[check-shared-parts-used] 共有 ${sharedFiles.length} ファイル / 走査 ${otherFiles.length} ファイル`
     + ` / ★共有と同名を自前で持つ ${r.duplicates.length} 件`
-    + (baseline === null ? '（ベースライン未設定）' : `（上限 ${r.limit}）`),
+    + ` (identical=${r.counts.identical} / different=${r.counts.different} / unmeasured=${r.counts.unmeasured})`
+    + (baseline === null ? '（ベースライン未設定）' : `（上限 ${r.limit}、identicalのみラチェット対象）`),
   );
   for (const [name, at] of [...byName].slice(0, 10)) {
     console.log(`  ⚪ ${name} … ${at.length}箇所: ${at.slice(0, 3).join(', ')}${at.length > 3 ? ' 他' : ''}`);
@@ -283,16 +429,17 @@ if (isMain) {
   if (byName.size > 10) console.log(`  （他 ${byName.size - 10} 種類）`);
 
   if (r.verdict === 'fail') {
-    console.error('[check-shared-parts-used] 🔴 共有部品と同名の自前実装が増えました。');
+    console.error('[check-shared-parts-used] 🔴 共有部品と本体まで一致する自前実装が増えました。');
     console.error('  → 直し方: 共有部品を読み込んで使うか、★統合すべきでない理由があるなら');
     console.error('    ベースラインを上げて理由をコミットメッセージに書いてください。');
     console.error('  → ★この検査が判定しないこと: 統合すべきかは判定しません。');
     console.error('    違いに正当な理由があるもの（描画戦略の違い等）が混ざります。');
     console.error('    ★名前が違う同目的の関数（escapeHtml ←→ esc）は拾えません。');
+    console.error('    ★同名でも本体が違う（different）ものはラチェット対象外です。');
     process.exit(EXIT.FAIL);
   }
 
-  console.log('[check-shared-parts-used] ✅ 合格（増えていません）。');
+  console.log('[check-shared-parts-used] ✅ 合格（本体まで一致する重複は増えていません）。');
   console.log('  → ★この検査が判定しないこと: 統合すべきか・名前が違う同目的関数は見ません。');
   process.exit(EXIT.PASS);
 }

@@ -36,6 +36,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-hotkey-scope.mjs` | ★AutoHotkey製常駐アプリで**前面判定(WinActive)の無いホットキー**（他アプリのキーボードを奪う） | `.ahk`。無ければskip |
 | `check-build-fresh.mjs` | ★配る実体（exe/app/apk）が**ソースより古い**（ビルドが無言で失敗している） | 成果物。無ければskip |
 | `check-shared-parts-used.mjs` | ★共有部品が**あるのに使われず**同名の関数を自前で持つ数 | ラチェット。`--shared-dir` で場所指定 |
+| `check-orphan-worktrees.mjs` | ★git worktreeが**片方向だけ切れた**孤児になっていないか（双方向: 登録→フォルダ／フォルダ→親リポ） | キット自身（対象リポ）を見る。無ければpass |
 | `check-near-duplicates.mjs` | ★**同名ではない**「少しずつ違う実装」が複数箇所に増える数（基準⑦の機械検出）。行を正規化し連続一致の塊を検出 | ラチェット。`--baseline` で下限。`.js/.mjs/.cjs/.jsx/.ts/.tsx/.html` |
 | `check-gates-are-wired.mjs` | ★検査を**作った/格上げしたのに誰も呼んでいない**数 | ラチェット。`--dirs` で置き場所指定 |
 | `check-docs-match-code.mjs` | 説明した置き場所と、コードが実際に探す場所のズレ | キット自身を見る |
@@ -126,6 +127,32 @@ Space::IvShowHovered()
 | 同じファイルに在るだけ | `SetTimer` と `FileAppend` が別々の用途で同居していた |
 | ★1回きりの実行 | `SetTimer(f, -5000)` は**負の周期＝1回だけ**。繰り返さない |
 | 関数の外の記録 | 固定長で切ったせいで、別の関数の `FileAppend` を拾っていた |
+
+### ★`check-orphan-worktrees` がなぜ要るか（2026-09-14・実損）
+
+`github/`直下のディレクトリ整理作業（低頻度プロジェクトを`_archive/`へ移動）で、
+`traffic-seo`が3つのgit worktree（`.cursor/worktrees/traffic-seo/{rbu,tap,veo}`）を
+持っていることに気づかず移動した。移動後、それらのworktreeで`git status`を実行すると
+`fatal: not a git repository`で失敗した。
+
+★**壊れ方の正体はgitのどのコマンドでも掃除できない**:
+
+```
+登録側: <親リポ>/.git/worktrees/<name>/gitdir → <worktreeフォルダ>/.git   ✓存在する
+フォルダ側: <worktreeフォルダ>/.git → <親リポ>/.git/worktrees/<name>     ✗消滅
+```
+
+片方向だけ切れているため、`git worktree remove`は`error code 7: '.git' is not a .git file`
+で失敗し、`git worktree prune`はフォルダが存在するので拾わず、`git worktree list`は
+正常なworktreeとして表示し続ける。★**gitのどのコマンドでも掃除できず、しかも異常に
+見えない。** だから何ヶ月も溜まる（実際に他プロジェクトで同型の孤児が二桁件数、
+数GB〜十数GB規模で放置されていた）。
+
+修復自体は「worktree側の`.git`ファイルを新しいパスへ書き換える」だけで済んだが、
+**気づかなければ何もエラーが出ないまま孤児が積み上がり続ける**。これが検査を作った理由。
+
+★この検査が判定しないこと: 孤児を消してよいかは判定しない。データ消失リスクがあるため、
+検出だけに留める（削除の判断は`git cat-file -e`でオブジェクトの実在を確認してから）。
 
 ## 設計方針
 

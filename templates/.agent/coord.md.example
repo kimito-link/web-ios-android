@@ -8,7 +8,10 @@
 -->
 
 # Agent Coord
-updated:
+updated: <ISO8601、このファイルを最後に更新した時刻。★write_lock.stateを見るときは
+  この値も一緒に見る。明らかに古いのにFREEのままなら、更新が止まっているだけの
+  可能性があるためFREEをそのまま信用しない（fail-closed。web-ios-android/CLAUDE.md
+  「並列セッション協調プロトコル」節参照）>
 canonical_head:
 canonical_branch: main
 remote_synced: yes|no|unknown

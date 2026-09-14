@@ -87,6 +87,10 @@ import { createHash } from 'node:crypto';
 /**
  * ★コメント・文字列内は触らず、行コメント/ブロックコメント/空行だけ落とす。
  * `_docs/instruments/check-drift.mjs` の同名関数と同一ロジック（上記コメント参照）。
+ * ★2026-09-14: 行末インラインコメント（`break; // 説明`のように、コードの後ろに
+ * ` //`で続く注釈）も除去する。URL等の`://`を壊さないよう、直前が空白の` //`だけを
+ * 対象にする（文字列内の`//`まで正確に見分けるにはASTが要るが、この検査はAST不使用の
+ * 方針のため、この保守的な近似に留める）。
  * @param {string} text
  * @returns {string}
  */
@@ -95,6 +99,7 @@ export function codeOnly(text) {
   return noBlock
     .split('\n')
     .map((l) => l.replace(/^\s*\/\/.*$/, ''))
+    .map((l) => l.replace(/\s+\/\/(?!\/).*$/, ''))
     .filter((l) => l.trim() !== '')
     .map((l) => l.trimEnd())
     .join('\n');

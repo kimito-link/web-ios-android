@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T11:11:47.081Z",
+  "generatedAt": "2026-09-13T22:06:42.624Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -880,6 +880,7 @@
       "kimito-link-yukkuri-douga",
       "knowledge",
       "line-bot",
+      "line-bot-wt-frima",
       "localclaudcode",
       "manus",
       "nagano_giin_complete_guide",
@@ -901,6 +902,7 @@
       "web-health-check-lp",
       "works",
       "yukkuri",
+      "_handoff",
       "デルタもん"
     ],
     "errors": []

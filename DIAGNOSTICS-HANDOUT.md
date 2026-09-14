@@ -46,6 +46,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-build-fresh` | ★**配る実体がソースより古い**（ビルドが無言で失敗し、直したはずなのに古いものが起動する）。成果物が無い対象はskip |
 | `check-shared-parts-used` | **共有部品があるのに使わず自前で書いている**もの（車輪の再発明） |
 | `check-near-duplicates` | **同名ではない「少しずつ違う実装」が複数箇所に増えている**もの（似た画面・カードのコピペ検出） |
+| `check-orphan-worktrees` | **git worktreeが片方向だけ切れた孤児**になっているもの（ディレクトリ移動・改名の取り残し。gitのどのコマンドでも自動修復されない） |
 | `check-gates-are-wired` | **検査を作ったのに誰も呼んでいない**もの（呼ばれない検査＝存在しない検査） |
 | `check-docs-match-code` | 説明とコードのズレ（**この案内文と実体のズレも含む**） |
 | `check-decision-receipt` | **新規ファイルを作ったのにCANONICAL CHECKの記録が無い**もの（既存を再発明していないかの記録） |

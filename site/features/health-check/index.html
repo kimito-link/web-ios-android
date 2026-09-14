@@ -312,6 +312,11 @@
           <td><code>check-near-duplicates</code></td>
           <td>★<b>同名ではない「少しずつ違う実装」が複数箇所に増えている数</b>。<code>check-shared-parts-used</code>は同じ名前の関数しか拾えませんが、実際に増えるのは<b>コピー&amp;ペーストで名前や変数だけ変えた画面・カード</b>です。行を正規化して連続する一致の塊を検出し、<b>3ファイル以上に同じ塊があれば</b>共通化のサインとして数えます。<b>統合すべきかは判定しません</b>（構造が違う同目的コードは拾えず、意図的な複製が混ざることもあります）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-orphan-worktrees.mjs（2026-09-14追加・_archive移動作業の実損より） -->
+        <tr>
+          <td><code>check-orphan-worktrees</code></td>
+          <td>★<b>git worktreeが片方向だけ切れた「孤児」になっている数</b>。ディレクトリの移動やリポジトリの改名のたびに、登録側とフォルダ側のどちらかだけが古いパスを指したまま残ります。<b>gitのどのコマンド（worktree remove／prune／list）でも自動修復されず、しかも異常には見えません</b>。実際にディレクトリ整理作業で3つのworktreeが気づかないまま壊れました。双方向（登録→フォルダ／フォルダ→親リポ）を確認します。<b>孤児を消してよいかは判定しません</b>（データ消失リスクがあるため、検出のみに留めます）。</td>
+        </tr>
         <!-- 出典: templates/scripts/check-decision-receipt.mjs（2026-09-02追加・_docs/DESIGN-canonical-boundary-rules.md v1.0の実装） -->
         <tr>
           <td><code>check-decision-receipt</code></td>

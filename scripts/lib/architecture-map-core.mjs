@@ -29,6 +29,9 @@ import { basename, dirname, join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { walkFiles, EXCLUDED_DIRS } from './hub-kit-matrix.mjs';
 import { GATE_RE as CANONICAL_GATE_RE } from '../../templates/diagnostics/check-gates-are-wired.mjs';
+import {
+  extractDefinedFunctions, extractFunctionBody, judgeSharedPartsUsed
+} from '../../templates/diagnostics/check-shared-parts-used.mjs';
 
 const MAX_FILE_BYTES = 512 * 1024;
 /** ★正規表現ベースのimport抽出。動的import/requireは拾えない（check-gates-are-wired.mjsと同じ限界）。 */
@@ -210,6 +213,65 @@ export function classifyGate(fileName) {
 }
 
 /**
+ * ★リポジトリの `diagnostics.json` から `sharedDir` 宣言を読む（無ければ既定値）。
+ * `templates/diagnostics/check-shared-parts-used.mjs` の DEFAULT_SHARED_DIRS と同じ既定値。
+ * @param {string} repoDir
+ * @returns {string[]}
+ */
+function loadSharedDirs(repoDir) {
+  const p = join(repoDir, 'diagnostics.json');
+  if (!existsSync(p)) return ['shared', 'common', 'lib/shared'];
+  try {
+    const parsed = JSON.parse(readFileSync(p, 'utf8'));
+    const d = parsed.sharedDir;
+    if (Array.isArray(d) && d.length) return d;
+    if (typeof d === 'string' && d.trim()) return [d];
+  } catch { /* 壊れた宣言は既定値へfallback（宣言なしと同じ扱い） */ }
+  return ['shared', 'common', 'lib/shared'];
+}
+
+/**
+ * ★共有部品レイヤーの事実を計算する。
+ * `check-shared-parts-used.mjs`の判定関数をそのまま使う（コピーしない）。
+ * ★依存の向き: architecture-map-core.mjs（集計系）→ check-shared-parts-used.mjs（検査系）。
+ *   検査系から集計系への逆import は無い。
+ * @param {{path:string}[]} codeFiles walkFilesが返したコード系ファイルの絶対パス一覧
+ * @param {string} repoDir
+ * @returns {{sharedDirs: string[], byPath: Map<string, {sharedRole:'consumer'|'shared'|null, sharedDuplicates: object[]}>}}
+ */
+function computeSharedParts(codeFiles, repoDir) {
+  const sharedDirs = loadSharedDirs(repoDir);
+  const isShared = (relPath) => sharedDirs.some((d) => relPath === d || relPath.startsWith(`${d}/`));
+  const load = (absPath) => {
+    const relPath = relative(repoDir, absPath).split('\\').join('/');
+    try {
+      const src = readFileSync(absPath, 'utf8');
+      const defined = extractDefinedFunctions(src);
+      const bodies = {};
+      for (const n of defined) bodies[n] = extractFunctionBody(src, n);
+      return { path: relPath, defined, bodies };
+    } catch { return null; }
+  };
+
+  const loaded = codeFiles.map(load).filter(Boolean);
+  const sharedFiles = loaded.filter((f) => isShared(f.path));
+  const otherFiles = loaded.filter((f) => !isShared(f.path));
+
+  const byPath = new Map();
+  for (const f of sharedFiles) byPath.set(f.path, { sharedRole: 'shared', sharedDuplicates: [] });
+
+  if (sharedFiles.length > 0 && otherFiles.length > 0) {
+    const result = judgeSharedPartsUsed(sharedFiles, otherFiles, Infinity);
+    for (const d of result.duplicates) {
+      if (!byPath.has(d.at)) byPath.set(d.at, { sharedRole: 'consumer', sharedDuplicates: [] });
+      byPath.get(d.at).sharedDuplicates.push({ name: d.name, sharedAt: d.sharedAt, bodyMatch: d.bodyMatch });
+    }
+  }
+
+  return { sharedDirs, byPath };
+}
+
+/**
  * ★1リポジトリを解析し、ファイルノード・import辺・Gate候補を集める。
  *
  * ★nodesは拡張子を問わずwalkFilesの全ファイルを対象にする（2026-09-02修正）。
@@ -218,6 +280,9 @@ export function classifyGate(fileName) {
  *   「今あるコードの現在地」を謳う以上、一部のファイルだけを黙って間引いてはならない。
  *   import解析(edges)・Gate判定はコード系ファイルのみ意味を持つため、そちらは
  *   従来通りcodeFilesに限定する。
+ * ★sharedRole/sharedDuplicatesも同様にコード系ファイルのみ意味を持つ（2026-09-14追加）。
+ *   `_docs/DESIGN-shared-parts-baseline-2026-09-02.md`手順3。gateClassificationと同じ
+ *   「事実として出すだけで、統合すべきという推奨は書かない」流儀を踏襲する。
  * @param {string} repoDir リポジトリの絶対パス
  * @param {string} repoName
  * @returns {{nodes: object[], edges: object[], errors: string[]}}
@@ -225,17 +290,21 @@ export function classifyGate(fileName) {
 export function scanRepoStructure(repoDir, repoName) {
   const { files, errors } = walkFiles(repoDir);
   const codeFiles = files.filter((f) => /\.(mjs|js|cjs|ts|tsx)$/.test(f));
+  const shared = computeSharedParts(codeFiles, repoDir);
   const nodes = files.map((f) => {
     const relPath = relative(repoDir, f).split('\\').join('/');
     const name = basename(f);
     const gate = classifyGate(name);
+    const sharedInfo = shared.byPath.get(relPath) || { sharedRole: null, sharedDuplicates: [] };
     return {
       path: relPath,
       name,
       isGate: gate.isGate,
       gateCandidate: gate.gateCandidate,
       gateClassification: gate.classification,
-      platformHint: guessPlatform(name)
+      platformHint: guessPlatform(name),
+      sharedRole: sharedInfo.sharedRole,
+      sharedDuplicates: sharedInfo.sharedDuplicates
     };
   });
 

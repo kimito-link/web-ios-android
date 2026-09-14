@@ -1,6 +1,6 @@
 {
   "generatedFrom": "ai-hub/index.json",
-  "generatedAt": "2026-09-09T11:11:47.081Z",
+  "generatedAt": "2026-09-13T22:06:42.624Z",
   "entryCount": 77,
   "doctorOk": false,
   "doctorProblems": [
@@ -114,6 +114,12 @@
     "未インデックスの検証資産: line-bot/scripts/check-line-ledger.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-lp-links.mjs（index化を検討）",
     "未インデックスの検証資産: line-bot/scripts/check-lp-svg.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot/scripts/verify-emergency-alert.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot-wt-frima/scripts/check-bot-silence.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot-wt-frima/scripts/check-line-ledger.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot-wt-frima/scripts/check-lp-links.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot-wt-frima/scripts/check-lp-svg.mjs（index化を検討）",
+    "未インデックスの検証資産: line-bot-wt-frima/scripts/verify-emergency-alert.mjs（index化を検討）",
     "未インデックスの検証資産: malwarecheck.site/scripts/check-header.mjs（index化を検討）",
     "未インデックスの検証資産: malwarecheck.site/scripts/check-native-visible.mjs（index化を検討）",
     "未インデックスの検証資産: malwarecheck.site/scripts/check-responsive.mjs（index化を検討）",
@@ -231,7 +237,7 @@
     "未インデックスの検証資産: web-ios-android/templates/scripts/verify-webdir-consistency.mjs（index化を検討）"
   ],
   "doctorProblemCount": 5,
-  "doctorWarningCount": 218,
+  "doctorWarningCount": 224,
   "shelves": [
     {
       "id": "shipping",
@@ -2291,7 +2297,7 @@
     "ローカルLLM"
   ],
   "matrix": {
-    "generatedAt": "2026-09-09T11:11:47.081Z",
+    "generatedAt": "2026-09-13T22:06:42.624Z",
     "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
     "available": true,
     "gates": [
@@ -3172,6 +3178,7 @@
         "kimito-link-yukkuri-douga",
         "knowledge",
         "line-bot",
+        "line-bot-wt-frima",
         "localclaudcode",
         "manus",
         "nagano_giin_complete_guide",
@@ -3193,10 +3200,481 @@
         "web-health-check-lp",
         "works",
         "yukkuri",
+        "_handoff",
         "デルタもん"
       ],
       "errors": []
     }
+  },
+  "sharedPartsSummary": {
+    "available": true,
+    "repos": [
+      {
+        "name": "_handoff",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-audit",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-business-secretary",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-generic-rules",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-hub",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-shain-worker",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ai-shain.link",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "appium",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "best-price",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "best-trust",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "best-trust.biz",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 1,
+        "measured": false
+      },
+      {
+        "name": "characterlive",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "compass",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "docs",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "doin-challenge.com",
+        "sharedDirCount": 2,
+        "identicalCount": 0,
+        "differentCount": 1,
+        "pairsDeclaredCount": 2,
+        "measured": true
+      },
+      {
+        "name": "gmail-secretary-extension",
+        "sharedDirCount": 1,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": true
+      },
+      {
+        "name": "hacking-tool",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "henshin-hisho",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "kimi-no-oto",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "kimito-link",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "kimito-link-reply-suggest",
+        "sharedDirCount": 1,
+        "identicalCount": 83,
+        "differentCount": 82,
+        "pairsDeclaredCount": 0,
+        "measured": true
+      },
+      {
+        "name": "kimito-Link-Voice",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 3,
+        "measured": false
+      },
+      {
+        "name": "kimito-link-yukkuri-douga",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "kimitolink-linktree",
+        "sharedDirCount": 8,
+        "identicalCount": 1,
+        "differentCount": 21,
+        "pairsDeclaredCount": 9,
+        "measured": true
+      },
+      {
+        "name": "knowledge",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "line-bot",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "line-bot-wt-frima",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "localclaudcode",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "malwarecheck.site",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "manus",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "nagano_giin_complete_guide",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "nicolive-dl-master",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "ouenmovie",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "partnership_program_website",
+        "sharedDirCount": 2,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": true
+      },
+      {
+        "name": "patents",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "pincers",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "removal",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "resend.kimito-link.com-",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "reviewcheck.jp",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "rolex",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "sakkino.link",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 3,
+        "measured": false
+      },
+      {
+        "name": "soushin-suggest.link",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 5,
+        "measured": false
+      },
+      {
+        "name": "surechigai-nico",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "surechigai-romi.link",
+        "sharedDirCount": 2,
+        "identicalCount": 0,
+        "differentCount": 1,
+        "pairsDeclaredCount": 12,
+        "measured": true
+      },
+      {
+        "name": "Target-List-maker",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "tegiwai-video",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "telegram-todo-ai",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "traffic-seo",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "tsuioku-no-kirameki.com",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 3,
+        "measured": false
+      },
+      {
+        "name": "tsuioku-no-kiroku",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "VeniceUncensored",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "web-health-check-app",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "web-health-check-lp",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "web-ios-android",
+        "sharedDirCount": 2,
+        "identicalCount": 9,
+        "differentCount": 50,
+        "pairsDeclaredCount": 8,
+        "measured": true
+      },
+      {
+        "name": "works",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "yukkuri",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      },
+      {
+        "name": "yukkuri-exosome.link",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 2,
+        "measured": false
+      },
+      {
+        "name": "デルタもん",
+        "sharedDirCount": 0,
+        "identicalCount": 0,
+        "differentCount": 0,
+        "pairsDeclaredCount": 0,
+        "measured": false
+      }
+    ],
+    "generatedAt": "2026-09-13T22:04:08.926Z"
   },
   "todos": [
     {
@@ -3225,7 +3703,7 @@
     },
     {
       "priority": 5,
-      "title": "一覧表にまだ載せていないファイルが218件ある。急がなくてよい",
+      "title": "一覧表にまだ載せていないファイルが224件ある。急がなくてよい",
       "reason": "緊急ではないが、増えるほど後で探しにくくなる",
       "evidence": "node ai-hub/bin/hub.mjs doctor"
     }

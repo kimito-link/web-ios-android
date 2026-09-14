@@ -96,6 +96,16 @@
       "scopePaths": [
         "templates/scripts/move-doc.mjs"
       ]
+    },
+    {
+      "at": "2026-09-14T01:06:29.084Z",
+      "responsibility": "git-worktree-orphan-detection",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-orphan-worktrees.mjs",
+        "templates/diagnostics/run.mjs"
+      ]
     }
   ]
 }

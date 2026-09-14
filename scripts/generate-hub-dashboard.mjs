@@ -38,6 +38,27 @@ function option(name, fallback = null) {
   return at >= 0 && at + 1 < argv.length ? argv[at + 1] : fallback;
 }
 function has(name) { return argv.includes(name); }
+
+/**
+ * ★共有部品サマリー（`.architecture-map-shared-parts-summary.json`）を読む。
+ * `npm run hub:architecture-map` が先に生成する軽量ファイル。無ければ
+ * `available: false`（fail-closed。無いことを「重複0」の緑と混同しない）。
+ * @param {string} root
+ * @returns {{available: boolean, repos?: object[], error?: string}}
+ */
+function loadSharedPartsSummary(root) {
+  const p = join(root, '.architecture-map-shared-parts-summary.json');
+  if (!existsSync(p)) {
+    return { available: false, error: '.architecture-map-shared-parts-summary.json が見つかりません（先に npm run hub:architecture-map を実行してください）' };
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(p, 'utf8'));
+    if (!Array.isArray(parsed.repos)) return { available: false, error: 'repos配列がありません' };
+    return { available: true, repos: parsed.repos, generatedAt: parsed.generatedAt };
+  } catch (e) {
+    return { available: false, error: `JSONとして読めません: ${e.message}` };
+  }
+}
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -299,6 +320,71 @@ ${JSON.stringify(matrix).replaceAll('</', '<\\/')}
 }
 
 /**
+ * ★「共有部品」表（`_docs/DESIGN-shared-parts-baseline-2026-09-02.md`手順4）。
+ * 1行目は web-ios-android 固定、2行目以降はArchitecture Mapの解析対象リポ。
+ * ★「基準値」という語は使わない（ゼロが正解ではない。配布境界がある限り
+ * PAIRS宣言済み複製は残る）。「見本（このキット自身）」と書く（設計書G-8）。
+ */
+function renderSharedPartsHtml(summary) {
+  if (!summary.available) {
+    return `<section class="matrix-section" id="shared-parts">
+  <h2>🧩 共有部品が「あるのに使われていない」か</h2>
+  <p class="section-lead">🟡 測れませんでした: ${escapeHtml(summary.error || '不明なエラー')}</p>
+</section>`;
+  }
+
+  const kitName = 'web-ios-android';
+  const kitRow = summary.repos.find((r) => r.name === kitName);
+  const otherRows = summary.repos.filter((r) => r.name !== kitName)
+    .slice().sort((a, b) => a.name.localeCompare(b.name));
+  const orderedRows = kitRow ? [kitRow, ...otherRows] : otherRows;
+
+  const renderRow = (r, isKit) => {
+    const measuredCell = r.measured
+      ? `<td>✓ 測定済み</td>`
+      : `<td>? 未宣言（diagnostics.jsonにsharedDirが無い）</td>`;
+    return `        <tr class="${isKit ? 'shared-parts-kit-row' : ''}">
+          <th scope="row">${escapeHtml(r.name)}${isKit ? ' <span class="count">(見本・このキット自身)</span>' : ''}</th>
+          <td>${r.sharedDirCount}</td>
+          <td>${r.identicalCount}</td>
+          <td>${r.differentCount}</td>
+          <td>${r.pairsDeclaredCount}</td>
+          ${measuredCell}
+        </tr>`;
+  };
+
+  const rows = orderedRows.map((r) => renderRow(r, r.name === kitName)).join('\n');
+
+  return `<section class="matrix-section" id="shared-parts">
+  <h2>🧩 共有部品が「あるのに使われていない」か</h2>
+  <p class="section-lead">
+    同じ関数を2箇所目に書いていないか（本体まで一致する重複だけを数える。
+    名前が違う同目的の関数や、内容が違う同名関数は拾いません）。
+    見本行（このキット自身）と見比べると、自分のプロジェクトで何が未宣言・未測定かが分かります。
+    <!-- 出典: templates/diagnostics/check-shared-parts-used.mjs の実測（Architecture Map生成時に集計） -->
+  </p>
+  <div class="matrix-scroll" tabindex="0" role="region" aria-label="共有部品の宣言・重複状況（横スクロール可）">
+    <table class="kit-matrix">
+      <caption class="sr-only">プロジェクトごとの共有部品の宣言・重複状況</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="proj-col">プロジェクト</th>
+          <th scope="col">宣言置き場数</th>
+          <th scope="col">未宣言の同一実装重複(identical)</th>
+          <th scope="col">同名別実装(different)</th>
+          <th scope="col">PAIRS宣言済み複製</th>
+          <th scope="col">測定状態</th>
+        </tr>
+      </thead>
+      <tbody>
+${rows}
+      </tbody>
+    </table>
+  </div>
+</section>`;
+}
+
+/**
  * ★アプリ→ゲートのツリーサマリー（フォルダアイコン＋接続線）。
  * 2026-09-02、Architecture Mapと同じ視覚言語に統一する作業で追加。
  * 120マス(12アプリ×12ゲート)のテーブルは全体比較に有用なので残すが、
@@ -396,6 +482,7 @@ ${TREE_VIEW_CSS}
   .chip-unknown { color: #8a6d00; border-color: #8a6d00; background: #fff8e1; }
   .matrix-table-toggle { margin-top: 0.4rem; }
   .matrix-table-toggle summary { cursor: pointer; font-size: 0.85rem; color: #1a73e8; margin-bottom: 0.6rem; }
+  .shared-parts-kit-row { background: #fff8e1; }
   ${MATRIX_TABLE_CSS}
 </style>
 </head>
@@ -433,6 +520,7 @@ ${TREE_VIEW_CSS}
 ${renderTodos(data.todos)}
 </section>
 ${renderMatrixHtml(data.matrix)}
+${renderSharedPartsHtml(data.sharedPartsSummary)}
 <p class="intro">
   🗺 <a href="/hub/architecture-map/">Architecture Map（今あるコードの現在地・フォルダツリーで見る）</a>
   も参照。github/配下の公開リポジトリを実ファイルから機械生成したツリー表示です。
@@ -491,6 +579,7 @@ function main() {
     console.error(`[generate-hub-dashboard] 🟡 マトリクスは計測できませんでした: ${e.message}`);
   }
   data.matrix = matrix;
+  data.sharedPartsSummary = loadSharedPartsSummary(root);
   data.todos = deriveTodos(data);
 
   mkdirSync(outDir, { recursive: true });
@@ -630,6 +719,34 @@ function runSelfTest() {
       }
     } finally {
       try { rmSyncFs(tmpRoot, { recursive: true, force: true }); } catch { /* 復帰失敗は致命ではない(OS temp) */ }
+    }
+  }
+
+  // 毒6: 共有部品サマリーが無いディレクトリを読んだら available:false（fail-closed）になるか
+  {
+    const noSummary = loadSharedPartsSummary(join(HERE, '__no-summary-here__'));
+    if (noSummary.available !== false) {
+      fails.push('poison(共有部品サマリー不在): available:falseにならない(fail-closedが効いていない)');
+    }
+  }
+  // 毒7: renderSharedPartsHtmlが未測定時に「基準値」という語を出さないこと（G-8）
+  {
+    const html = renderSharedPartsHtml({ available: false, error: 'test' });
+    if (html.includes('基準値')) fails.push('poison(表示文言): 「基準値」という語を使ってしまっている（G-8違反、見本と書くべき）');
+  }
+  // 毒8: renderSharedPartsHtmlはweb-ios-androidを先頭行に固定する
+  {
+    const html = renderSharedPartsHtml({
+      available: true,
+      repos: [
+        { name: 'zzz-later-alphabetically', sharedDirCount: 1, identicalCount: 0, differentCount: 0, pairsDeclaredCount: 0, measured: true },
+        { name: 'web-ios-android', sharedDirCount: 2, identicalCount: 1, differentCount: 0, pairsDeclaredCount: 0, measured: true },
+      ],
+    });
+    const kitIndex = html.indexOf('web-ios-android');
+    const otherIndex = html.indexOf('zzz-later-alphabetically');
+    if (kitIndex === -1 || otherIndex === -1 || kitIndex > otherIndex) {
+      fails.push('poison(表示順): web-ios-androidが先頭行に固定されていない');
     }
   }
 

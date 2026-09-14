@@ -418,12 +418,16 @@ const CANONICAL = PAIRS[0].canonical;
  * ★`templates/scripts/lib/instrument-proof.mjs` に同一ロジックの独立コピーがある。
  *   このファイルは配布物ではない（templates/配下ではない）ため import では
  *   共有できず、意図的に2箇所へ複製している。どちらかを変えたらもう片方も揃える。
+ * ★2026-09-14: 行末インラインコメント（`break; // 説明`）も除去するよう拡張
+ * （`templates/scripts/lib/instrument-proof.mjs`・`templates/diagnostics/check-shared-parts-used.mjs`
+ * と3箇所同期）。
  */
 export function codeOnly(text) {
   const noBlock = text.replace(/\/\*[\s\S]*?\*\//g, '');
   return noBlock
     .split('\n')
     .map((l) => l.replace(/^\s*\/\/.*$/, ''))
+    .map((l) => l.replace(/\s+\/\/(?!\/).*$/, ''))
     .filter((l) => l.trim() !== '')
     .map((l) => l.trimEnd())
     .join('\n');
