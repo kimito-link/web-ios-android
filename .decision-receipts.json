@@ -106,6 +106,16 @@
         "templates/diagnostics/check-orphan-worktrees.mjs",
         "templates/diagnostics/run.mjs"
       ]
+    },
+    {
+      "at": "2026-09-14T03:25:25.394Z",
+      "responsibility": "henshin-hisho/gmail-secretary-extensionのtriage.js・draft-gen.jsに別々にコピーされ乖離していたAI応答JSON修復ロジック(json-repair)と返信トーン定義(draft-tone)の共通化。ai-triage共有モジュール新設",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/shared/ai-triage/json-repair.mjs",
+      "scopePaths": [
+        "templates/shared/ai-triage/json-repair.mjs",
+        "templates/shared/ai-triage/draft-tone.mjs"
+      ]
     }
   ]
 }
