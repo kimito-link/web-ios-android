@@ -106,6 +106,24 @@
         "templates/diagnostics/check-orphan-worktrees.mjs",
         "templates/diagnostics/run.mjs"
       ]
+    },
+    {
+      "at": "2026-09-14T04:08:35.562Z",
+      "responsibility": "ios-app-privacy-answer-generation",
+      "decision": "LOCAL",
+      "canonicalSource": "templates/scripts/play-generate-data-safety-csv.mjs",
+      "scopePaths": [
+        "templates/scripts/asc-generate-privacy-answers.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-14T05:02:21.485Z",
+      "responsibility": "appstore-description-keywords-lint-checks",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lint-pre-submission.mjs"
+      ]
     }
   ]
 }

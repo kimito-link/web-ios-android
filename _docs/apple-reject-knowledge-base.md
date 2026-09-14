@@ -172,6 +172,34 @@ Resolution Center notes でこのパターンを先に説明すれば reviewer �
 | **2.3.10** | "Android" "Google Play" "Material Design" 等 | iOS限定の表現に find/replace |
 | **2.3.1(a)** | reviewer notes に無い隠し機能 | 全機能を notes に列挙 |
 
+### 概要欄の機械的な保存拒否(doin-challenge.com 2026-09-14実損)＋keywords上限の先取りチェック
+
+Apple審査(店頭)以前に、ASC UIの**保存/提出段階**で機械的に弾かれるパターンと、
+実損は無いが将来のための先取りチェック。`templates/scripts/lint-pre-submission.mjs`
+CHECK 22・23で提出前に検出する。
+
+- **★実損(CHECK 22)**: 概要欄がU+2500-257F(Box Drawing罫線)を含むと保存不可。
+  `──────────`のような罫線で見出しを飾ると「このフィールドには1つ以上の無効な文字が
+  含まれています」で弾かれる。**どの文字が原因かAppleは示さない**。■(U+25A0)や
+  「」(U+300C/300D)は同じ用途でも通る(実測確認済み)ため、装飾を諦める必要はなく
+  罫線だけを避ければよい。
+- **先取りチェック(CHECK 23、実損ではない)**: keywordsのApple上限は100字(コードポイント
+  単位)。doinの提出を実際に止めていたのはCHECK22の罫線のみで、keywords自体は
+  変更前から52コードポイント(=UTF-8で134バイト)であり上限内だった。★doin側が当初
+  「134字で超過」と報告したのは、`wc -m`がこの環境(LANG未設定・LC_CTYPE=C.UTF-8)で
+  マルチバイト文字を**バイト単位**でカウントしていたことに気づかず、バイト数(134)を
+  文字数として上限(100)と比較した誤りだったと後日訂正された(コードポイントでの
+  実測は52→変更後43)。**このKB自体、他セッションの申告した数字を鵜呑みにせず
+  実測(`git show`でのdiff検証)で確認したことで、この誤りを発見できた**
+  (`DESTRUCTIVE_ACTION_VERIFICATION.md`の実践例)。
+  CHECK 23の実装はコードポイント単位([...text].length)で数えており(`text.length`や
+  `wc -m`のようなバイト/UTF-16単位の数え方は使っていない)、同じ罠を踏まない。
+  ★シェルで`wc -m`を疑うときの1行判定法(doin-challenge-com-c7提供): 日本語を含む
+  ファイルで`wc -m`と`wc -c`が**同値**なら、`-m`は文字ではなくバイトを数えている
+  （正しく文字を数えていれば全角文字1字=UTF-8で3バイトなのでc>mになるはず）。
+  実損として発生していなくても、上限自体は実在しApple仕様が変わらない限り将来
+  超過しうるため、CHECK自体は維持する。
+
 ### 診断/測定系プロダクトの「表示と実態の乖離」— §2.3と同根の却下ベクタ(ai-health-check.link 2026-07-07)
 
 AI健康診断系プロダクト(ai-health-check.link・PR #1・commit `059f216`)で `store-guard` が
@@ -867,6 +895,18 @@ fastlane が App Privacy を扱えるのは Apple ID ログイン（web セッ�
 
 **次のアプリでやること**: 提出前に ASC で App Privacy を手動公開しておく。これを知らないと
 「API で公開しようとして 10 回ハマる」。CI 側は何もしなくてよい（fail-soft で素通りする）。
+
+**★2026-09-14 doin-challenge.com実損を受けた追記**: 上記の「fail-soft」は`appstore-submit.mjs`
+の`ensurePrivacy()`（submit経路）の設計として妥当だが、`lint-pre-submission.mjs`のCHECK
+10〜13（`asc-readonly-checks.mjs`の`checkAppPrivacyPublished()`）は**別の話**——以前は
+「全ベースで読めない」をwarnにしており、これが緑のまま素通りしていたため、App Privacyを
+一度も回答していないアプリでも提出寸前まで気づけず、実際に409で連続失敗した。
+現在はfail-closedに変更済み: `app.config.json`の`stores.iosPrivacyPublishedAt`
+（YYYY-MM-DD）に人間が公開日を宣言しなければlintが赤で止まる。公開したら忘れずに宣言すること。
+Play用のdata-safety.csvが既にあれば、`templates/scripts/asc-generate-privacy-answers.mjs`で
+ASC UIへの入力案（用途・ユーザー紐づけ・トラッキングの3問×データタイプ）を根拠つきで
+生成できる（自動入力ではなく、人間の入力を1回で終わらせるための下書き）。
+詳細手順は`_docs/FIRST-SUBMISSION-blockers.md` B8を参照。
 
 ### 署名証明書の MAC 検証フレーク（一過性）
 

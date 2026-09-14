@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "id": "20260914031405-3700a803",
+    "recordedAt": "2026-09-14T03:14:05.161Z",
+    "version": null,
+    "scope": "repository",
+    "status": "confirmed",
+    "problem": "worktree遺児7件がC:/tmp配下に残置(line-bot-e8引き継ぎ、内容差0確認済み)",
+    "decision": "reply-openrouter-secret-fix,reply-copilot-fixture-audit,reply-copilot-fixture-followup,reply-copilot-fixture-followup-round2,reply-copilot-main-regression,reply-copilot-postmerge-health,reply-copilot-pr11-head-test の7件を削除実行",
+    "evidence": [
+      "absent:C:/tmp/reply-openrouter-secret-fix",
+      "absent:C:/tmp/reply-copilot-fixture-audit",
+      "absent:C:/tmp/reply-copilot-fixture-followup",
+      "absent:C:/tmp/reply-copilot-fixture-followup-round2",
+      "absent:C:/tmp/reply-copilot-main-regression",
+      "absent:C:/tmp/reply-copilot-postmerge-health",
+      "absent:C:/tmp/reply-copilot-pr11-head-test"
+    ],
+    "outcome": "PowerShell Remove-Itemで削除完了。合計2.7GB解放。phase7-truth-stage2(未コミット差分あり)とline-bot-best-price-harness(line-bot本体と内容差あり)の2件は保留",
+    "supersedes": []
+  },
+  {
+    "id": "20260914031736-d4e7f564",
+    "recordedAt": "2026-09-14T03:17:36.854Z",
+    "version": null,
+    "scope": "repository",
+    "status": "confirmed",
+    "problem": "phase7-truth-stage2に未コミットの表現書き換え(3ファイル)があり、どのブランチにも保存されていなかった",
+    "decision": "3ファイルをC:/Users/info/claude-ops/rescued-2026-09-14/phase7-truth-stage2-uncommitted/へ退避してから、worktree自体を削除",
+    "evidence": [
+      "absent:C:/tmp/phase7-truth-stage2"
+    ],
+    "outcome": "退避完了・削除完了。C:/tmp分は残り1件(line-bot-best-price-harness、独自差分ありのため保留)",
+    "supersedes": []
+  },
+  {
+    "id": "20260914033100-242f1360",
+    "recordedAt": "2026-09-14T03:31:00.831Z",
+    "version": null,
+    "scope": "repository",
+    "status": "confirmed",
+    "problem": "line-bot-best-price-harness(559MB)がC:/tmpに残置。独自11件がビルド成果物か未確認だった",
+    "decision": "line-bot-e8の実測(独自11件は全てpackages/*/dist/*のビルド成果物、内容差0)に基づき削除実行",
+    "evidence": [
+      "absent:C:/tmp/line-bot-best-price-harness"
+    ],
+    "outcome": "削除完了。559MB解放",
+    "supersedes": []
+  },
+  {
+    "id": "20260914033458-bb13e321",
+    "recordedAt": "2026-09-14T03:34:58.230Z",
+    "version": null,
+    "scope": "repository",
+    "status": "confirmed",
+    "problem": "oaq(368MB)に秘密ファイル(sw/constants.local.js)含む独自変更80件、xdh/yfg(各368MB)にoaqと3重複するPDF(42MB)が残置",
+    "decision": "oaqの秘密ファイル・未追跡24件・変更49件をC:/Users/info/claude-ops/rescued-2026-09-14/oaq-worktree/へ退避、PDFは1部だけclaude-opsへ退避してから、oaq/xdh/yfgの3worktreeを削除",
+    "evidence": [
+      "absent:C:/Users/info/.cursor/worktrees/reply-copilot-openrouter-v2/oaq",
+      "absent:C:/Users/info/.cursor/worktrees/reply-copilot-openrouter-v2/xdh",
+      "absent:C:/Users/info/.cursor/worktrees/reply-copilot-openrouter-v2/yfg"
+    ],
+    "outcome": "退避80ファイル(895KB)+PDF1部(42MB)完了、worktree3件(計1104MB)削除完了。退避先: C:/Users/info/claude-ops/rescued-2026-09-14/",
+    "supersedes": []
+  }
+]

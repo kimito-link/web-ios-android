@@ -39,7 +39,8 @@
         "ageRating": { "type": "string", "enum": ["FOUR_PLUS", "NINE_PLUS", "TWELVE_PLUS", "SEVENTEEN_PLUS"] },
         "contentRights": { "type": "string", "enum": ["DOES_NOT_USE_THIRD_PARTY_CONTENT", "USES_THIRD_PARTY_CONTENT"] },
         "marketingVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-        "buildNumberOffset": { "type": "integer", "description": "Offset added to commit-derived build number" }
+        "buildNumberOffset": { "type": "integer", "description": "Offset added to commit-derived build number" },
+        "iosPrivacyPublishedAt": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Date (YYYY-MM-DD) a human confirmed pressing '公開' on ASC 'App Privacy'. The dataUsagePublishState API cannot be read with JWT auth (iris is web-session-only), so lint-pre-submission.mjs treats an absent value as unverified and fails (B8)." }
       }
     },
 

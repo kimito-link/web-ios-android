@@ -15,6 +15,7 @@
 //     エンドポイントが 404/想定外形状を返したら false fail を出さず 'warn'（手動確認を促す）に倒す。
 //     = 「分からなければ止める」ではなく「分からなければ人間に確認させる」。blocking を誤爆させない。
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { makeAscClient, findApp, listVersions, getReviewDetail } from './asc-api.mjs';
 
 // asc-set-content-rights.mjs と同一の解決順（.p8 直値 / パス / base64）。
@@ -43,9 +44,11 @@ const R = (status, detail) => ({ status, detail });
  * GET のみで検証する。呼び出し側は返った results 配列を fail/warn/ok に振り分ける。
  *
  * @param {string} bundleId app.config.json identity.bundleId
+ * @param {{stores?:{iosPrivacyPublishedAt?:string|null}}} [appConfig] app.config.json 全体
+ *   （checkAppPrivacyPublished が stores.iosPrivacyPublishedAt の人間宣言を読むために使う）
  * @returns {Promise<{name:string, guideline:string, result:{status:string,detail:string}}[]>}
  */
-export async function runAscReadonlyChecks(bundleId) {
+export async function runAscReadonlyChecks(bundleId, appConfig = null) {
   const keyId = (process.env.APPSTORE_CONNECT_KEY_ID || '').trim();
   const issuerId = (process.env.APPSTORE_CONNECT_ISSUER_ID || '').trim();
   const privateKey = resolveAscPrivateKey();
@@ -71,7 +74,7 @@ export async function runAscReadonlyChecks(bundleId) {
   const appId = app.id;
 
   out.push({ name: 'asc-content-rights-declared', guideline: 'meta/B7', result: await checkContentRightsDeclared(api, appId) });
-  out.push({ name: 'asc-app-privacy-published', guideline: 'privacy/B8', result: await checkAppPrivacyPublished(api, appId) });
+  out.push({ name: 'asc-app-privacy-published', guideline: 'privacy/B8', result: await checkAppPrivacyPublished(api, appId, appConfig) });
   out.push({ name: 'asc-territories-configured', guideline: 'process', result: await checkTerritoriesConfigured(api, appId) });
   out.push({ name: 'asc-review-demo-stale', guideline: 'process', result: await checkReviewDemoStale(api, appId) });
   return out;
@@ -135,12 +138,20 @@ async function checkContentRightsDeclared(api, appId) {
 // ⚠️ 重要(appstore-submit.mjs ensurePrivacy で実証済み): App Privacy の dataUsage 系は
 //    標準 JWT API(api.appstoreconnect.apple.com/v1)には無く、iris API + web セッション
 //    cookie でしか認証できない。このスクリプトの API キー(JWT)では **どのベースでも
-//    401/404 になり、公開状態を API から読めないのが正常**。よって:
-//      - 読めない = 「未公開」ではない → fail にしない(false fail を出さない)。
-//      - 読めて published=false のときだけ fail(実際に未公開)。
-//    そもそも submit 時に ensurePrivacy が公開を試みる二段構え。ここは「早期に気づく」補助。
+//    401/404 になり、公開状態を API から読めないのが正常**。
+//
+// ★2026-09-14 doin-challenge.com 実損を受けて fail-closed に変更:
+//    以前は「全ベースで読めない」を warn にしていた。これは「読めない」と「確認済みで
+//    問題なし」が同じ緑になり、App Privacy を一度も回答していないアプリでも lint が
+//    素通りしてしまう（実際に submit 時 409 APP_DATA_USAGES_REQUIRED で失敗した）。
+//    JWT で読めないのは実装上の制約であり、人間が ASC UI で「公開」を押したという
+//    事実そのものは変わらない。API で確認できない代わりに、その事実を
+//    app.config.json の stores.iosPrivacyPublishedAt（YYYY-MM-DD）へ人間が明示的に
+//    宣言したかどうかで判定する: 宣言が無い = 未検証のまま提出しようとしている → fail。
+//    宣言があれば warn（日付を明記した上で「API では検証していない」ことは残す）。
 // 経路/ベースは submit の ensurePrivacy と同一にして挙動を揃える(dataUsagePublishState は単数)。
-async function checkAppPrivacyPublished(api, appId) {
+// export: --selftest でこの関数単体を fail-closed 判定込みでテストするため。
+export async function checkAppPrivacyPublished(api, appId, appConfig) {
   const BASES = [
     'https://api.appstoreconnect.apple.com/v1',
     'https://appstoreconnect.apple.com/iris/v1',
@@ -160,8 +171,22 @@ async function checkAppPrivacyPublished(api, appId) {
       // このベースは 401/404。次のベースを試す。
     }
   }
-  // 全ベースで読めない = JWT では確認不可(想定どおり)。fail にせず、手動/submit 任せである旨を warn。
-  return R('warn', 'App プライバシーの公開状態は JWT API では確認できません(iris は web セッション専用＝想定どおり)。ASC UI で「公開」済みか確認。未公開なら submit が APP_DATA_USAGES_REQUIRED で弾く(B8)');
+  // 全ベースで読めない = JWT では確認不可(想定どおり)。ここで warn にすると
+  // 「検査していない」が「合格」と同じ緑になる。人間の宣言(iosPrivacyPublishedAt)が
+  // あるかどうかで fail/warn を分岐する(fail-closed)。
+  const declaredAt = appConfig?.stores?.iosPrivacyPublishedAt;
+  if (!declaredAt) {
+    return R('fail',
+      'App プライバシーの公開状態は JWT API では確認できません(iris は web セッション専用＝想定どおり)。' +
+      'かつ app.config.json の stores.iosPrivacyPublishedAt が未設定＝「ASC UI で公開ボタンを押した」という' +
+      '人間の確認が記録されていない。ASC UI「アプリのプライバシー」で8データタイプを回答し右上「公開」を' +
+      '押してから、stores.iosPrivacyPublishedAt に日付(YYYY-MM-DD)を設定する(B8)。' +
+      '未公開のまま submit すると APP_DATA_USAGES_REQUIRED で 409 になる(2026-09-14 doin-challenge.com実損)。');
+  }
+  return R('warn',
+    `App プライバシーは stores.iosPrivacyPublishedAt=${declaredAt} により「人間が公開ボタンを押した」と` +
+    '宣言済み(API では検証していない＝iris は web セッション専用のため原理的に不可)。宣言日以降に' +
+    'データタイプ・SDK構成を変更した場合は、ASC UI で再確認してから宣言日を更新すること(B8)');
 }
 
 // --- 配信地域 -----------------------------------------------------------------
@@ -187,3 +212,52 @@ async function checkTerritoriesConfigured(api, appId) {
     return R('warn', `配信地域を確認できなかった(手動確認を): ${e.message}`);
   }
 }
+
+// --- selftest -----------------------------------------------------------------
+// checkAppPrivacyPublished の fail-closed 判定だけを、実 API を叩かずに検証する。
+// 2026-09-14 doin-challenge.com 実損（読めない=warn=緑のまま409）の再発防止が目的なので、
+// 「宣言が無ければ fail」を機械的に保証する。api() をモックして 401 のみを再現する
+// （実際の3ベース失敗を模擬。published=true/false の分岐は元から正しかったので対象外）。
+async function runSelftest() {
+  const failing = [];
+  const check = (label, cond) => { if (!cond) failing.push(label); };
+
+  const apiAlwaysUnreachable = async () => { throw new Error('401 (mock)'); };
+
+  // 毒1: 宣言(iosPrivacyPublishedAt)が無い → fail でなければならない(緑で素通りさせない)。
+  const r1 = await checkAppPrivacyPublished(apiAlwaysUnreachable, 'app-id', { stores: {} });
+  check('宣言なし→fail', r1.status === 'fail');
+
+  // 毒2: 宣言が空文字 → 未宣言と同じ扱いで fail(falsy チェック漏れ対策)。
+  const r2 = await checkAppPrivacyPublished(apiAlwaysUnreachable, 'app-id', { stores: { iosPrivacyPublishedAt: '' } });
+  check('宣言が空文字→fail', r2.status === 'fail');
+
+  // 毒3: appConfig 自体が渡されない(null) → 例外にならず fail(呼び出し側の後方互換)。
+  const r3 = await checkAppPrivacyPublished(apiAlwaysUnreachable, 'app-id', null);
+  check('appConfig=null→例外にならずfail', r3.status === 'fail');
+
+  // 毒4: 宣言がある → fail にしてはいけない(誤って全件 fail にする逆方向のバグ検出)。
+  const r4 = await checkAppPrivacyPublished(apiAlwaysUnreachable, 'app-id', { stores: { iosPrivacyPublishedAt: '2026-09-14' } });
+  check('宣言あり→failにしない', r4.status !== 'fail');
+  check('宣言あり→日付が detail に出る', r4.detail.includes('2026-09-14'));
+
+  // 毒5: published=false が実際に読めた場合は、宣言の有無に関わらず fail のまま(既存挙動の回帰防止)。
+  const apiPublishedFalse = async () => ({ data: { attributes: { published: false } } });
+  const r5 = await checkAppPrivacyPublished(apiPublishedFalse, 'app-id', { stores: { iosPrivacyPublishedAt: '2026-09-14' } });
+  check('published=false→宣言があってもfail', r5.status === 'fail');
+
+  // 毒6: published=true が読めた場合は ok(既存挙動の回帰防止)。
+  const apiPublishedTrue = async () => ({ data: { attributes: { published: true } } });
+  const r6 = await checkAppPrivacyPublished(apiPublishedTrue, 'app-id', {});
+  check('published=true→ok', r6.status === 'ok');
+
+  if (failing.length) {
+    console.error(`[asc-readonly-checks --selftest] FAIL: ${failing.join(', ')}`);
+    process.exit(1);
+  }
+  console.log('[asc-readonly-checks --selftest] PASS (6 checks)');
+  process.exit(0);
+}
+
+const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (isMain && process.argv.includes('--selftest')) await runSelftest();

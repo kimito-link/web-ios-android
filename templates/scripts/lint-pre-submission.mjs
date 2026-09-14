@@ -390,7 +390,7 @@ if (!playCapture) {
   } else if (!hasAscCreds()) {
     skip('asc-readonly-manual-items', 'APPSTORE_CONNECT_* creds が無い(ローカル実行)');
   } else {
-    const results = await runAscReadonlyChecks(ascBundleId);
+    const results = await runAscReadonlyChecks(ascBundleId, appConfig);
     for (const { name, guideline, result } of results) {
       if (result.status === 'fail') fail(name, guideline, result.detail);
       else if (result.status === 'warn') warn(name, guideline, result.detail);
@@ -860,6 +860,108 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
         );
       } else {
         ok('store-asset-dimensions', `${present.length}件の生成済み画像の実寸を確認、想定どおり`);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 22 — App Store概要欄がU+2500系罫線文字を含んでいないか
+//   2026-09-14追加。
+//
+// 【なぜ要るか】doin-challenge.com 2026-09-14実損
+//   ASC UIで概要(description)欄に `──────────`(U+2500 BOX DRAWINGS LIGHT
+//   HORIZONTAL、罫線を連ねた見出し飾り)を入れて保存すると、Appleは
+//   「このフィールドには1つ以上の無効な文字が含まれています」とだけ返し、
+//   **どの文字が原因かを一切示さない**。目視でも罫線と通常の記号は区別しづらく、
+//   原因特定だけで時間を浪費した。■(U+25A0)や「」(U+300C/U+300D)は同じ見出し
+//   飾りに使っても通ることを実測済みなので、「装飾文字全般がダメ」ではなく
+//   **U+2500-257F(Box Drawing)範囲だけがダメ**という狭い事実として検出する。
+//
+// 【誤検知に注意】
+//   ■(U+25A0)・「」(U+300C/300D)はU+2500-257F範囲外なので対象にしない
+//   (doinの実測で「通る」と確認済みの文字を誤って弾かない)。
+// ----------------------------------------------------------------------------
+{
+  const BOX_DRAWING_RE = /[─-╿]/;
+  const descDir = path.join(ROOT, 'store-assets', 'appstore');
+  if (!fs.existsSync(descDir)) {
+    skip('appstore-description-box-drawing', 'store-assets/appstore が無い(iOS未対応なら可)');
+  } else {
+    const descFiles = fs.readdirSync(descDir).filter((f) => /^description-.*\.txt$/i.test(f));
+    if (descFiles.length === 0) {
+      skip('appstore-description-box-drawing', 'description-*.txt が無い');
+    } else {
+      const hits = [];
+      for (const f of descFiles) {
+        const abs = path.join(descDir, f);
+        const lines = fs.readFileSync(abs, 'utf8').split('\n');
+        lines.forEach((line, i) => {
+          const m = line.match(BOX_DRAWING_RE);
+          if (m) {
+            const cp = m[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+            hits.push(`${f}:${i + 1} 文字 U+${cp}("${m[0]}")`);
+          }
+        });
+      }
+      if (hits.length > 0) {
+        fail(
+          'appstore-description-box-drawing',
+          'ASC save rejection',
+          `App Store概要にU+2500-257F(罫線)文字が含まれる: ${hits.join(' / ')}。` +
+            'ASC UIでの保存が「1つ以上の無効な文字」で弾かれる(原因文字は示されない)。' +
+            '装飾には■(U+25A0)や「」(U+300C/300D)など罫線以外の記号を使うこと',
+        );
+      } else {
+        ok('appstore-description-box-drawing', `${descFiles.length}件のdescription-*.txtに罫線文字なし`);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 23 — keywords-*.txt がApple Storeの100字上限を超えていないか
+//   2026-09-14追加。
+//
+// 【なぜ要るか】doin-challenge.com 2026-09-14実損
+//   Apple StoreのKeywordsフィールドは(カンマ区切り含め)合計100文字が上限。
+//   keywords-*.txtがリポジトリにコミットされる段階では何も警告が出ず、
+//   ASC提出の段になって初めて弾かれた。build/upload等の手前の工程は
+//   文字数を一切見ないため、発見が最終段に遅れる。
+//
+// 【数え方】
+//   コードポイント単位([...text].length)でカウントする。サロゲートペア絵文字等の
+//   誤カウントを避けるため文字列.lengthではなくスプレッド展開を使う。
+//   末尾の改行は数えない(trimしてから数える)。
+// ----------------------------------------------------------------------------
+{
+  // Apple公式Keywordsフィールドの上限。将来Appleが変更した場合はここだけ直す。
+  const APPLE_KEYWORDS_LIMIT = 100;
+  const kwDir = path.join(ROOT, 'store-assets', 'appstore');
+  if (!fs.existsSync(kwDir)) {
+    skip('appstore-keywords-length', 'store-assets/appstore が無い(iOS未対応なら可)');
+  } else {
+    const kwFiles = fs.readdirSync(kwDir).filter((f) => /^keywords-.*\.txt$/i.test(f));
+    if (kwFiles.length === 0) {
+      skip('appstore-keywords-length', 'keywords-*.txt が無い');
+    } else {
+      const overLimit = [];
+      for (const f of kwFiles) {
+        const text = fs.readFileSync(path.join(kwDir, f), 'utf8').trim();
+        const len = [...text].length;
+        if (len > APPLE_KEYWORDS_LIMIT) {
+          overLimit.push(`${f}: ${len}字(上限${APPLE_KEYWORDS_LIMIT}字を${len - APPLE_KEYWORDS_LIMIT}字超過)`);
+        }
+      }
+      if (overLimit.length > 0) {
+        fail(
+          'appstore-keywords-length',
+          'ASC submission rejection',
+          `keywordsが上限を超過: ${overLimit.join(' / ')}。` +
+            'ASC提出段階で弾かれる前に、コンマ区切りの語を削って上限内に収めること',
+        );
+      } else {
+        ok('appstore-keywords-length', `${kwFiles.length}件のkeywords-*.txtが上限(${APPLE_KEYWORDS_LIMIT}字)以内`);
       }
     }
   }

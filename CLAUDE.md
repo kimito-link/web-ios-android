@@ -56,7 +56,7 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
    REUSE / ESTABLISH_REHOME / CONTRACT / SYNC / KEEP_SEPARATE / LOCAL の6種類のいずれかで、
    詳細な定義・判定基準は正本 [`_docs/DESIGN-canonical-boundary-rules.md`](_docs/DESIGN-canonical-boundary-rules.md)
    を参照する（本文をここへコピーしない）。新規source fileを含む変更は、判定結果を
-   `record-decision-receipt.mjs` で記録すること（`templates/diagnostics/check-decision-receipt.mjs`
+   `record-decision-receipt.mjs` で記録すること（`templates/scripts/check-decision-receipt.mjs`
    が記録の有無を機械検査する）
 3. **同等機能があれば新規実装しない** — 見つかったら再利用・薄い拡張に倒す。「速いから」で複製しない
 4. **PAIRS / drift対象を確認する** — 正本とコピーの関係にあるファイルを変更するとき、
