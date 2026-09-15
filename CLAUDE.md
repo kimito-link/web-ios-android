@@ -40,6 +40,12 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 4. 非自明な地雷を踏んで解決したら、終わる前に`ai-hub`のharvestの掟に従って書き戻す
    （`ai-hub/CLAUDE.md`「harvestの掟」節）。**「良い場所に書いてある」だけでは次のAIは読みに来ない**。
    書き戻すところまでが作業の完了。
+5. **本物のClaudeは「考える・判断する・検品する」だけ。手を動かす仕事は他の頭脳へ投げる**（2026-09-15
+   本人指示で確定）。ファイル作成・定型修正・調査・文章量産・テスト追加は、自分でやらずに
+   `python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
+   で投げ、返ってきたログの要点だけ読んで検品する。頭脳の使い分けと財布（Claude週間上限／SuperGrok／
+   Alibaba無料枠／Cloudflare無料枠／ローカル）は正本 [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。
+   スクリーンショットは文章の何倍も上限を消費するので、画面の内容は本人に文字で貼ってもらう。
 
 ## 実装着手前の非交渉ルール（NON-NEGOTIABLE、2026-09-02追記）
 
