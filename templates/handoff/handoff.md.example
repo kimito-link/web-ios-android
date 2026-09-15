@@ -1,0 +1,27 @@
+<!--
+  PC・AIをまたいだ作業継続ルールのテンプレート。
+  正本: web-ios-android/CLAUDE.md「デスクトップ／ノートPC・複数AI共通の開発継続ルール」節。
+
+  使い方: 作業中のプロジェクト直下に `handoff.md` として配置する
+  （例: line-bot/handoff.md、kimito-link/handoff.md）。
+  共有フォルダ（github/、OneDrive同期）配下に置くだけで、
+  別PC・別AIから同じ内容が見える。新しい同期の仕組みは不要。
+
+  .agent/coord.md（誰が今このリポを触っているか＝ロック調整）とは役割が違う。
+  handoff.md は「作業の中身そのもの」（原因・変更点・テスト結果・次の一手）を持つ。
+  混同しないこと。
+-->
+
+# Handoff
+
+STATUS: <未着手 | 調査中 | 実装中 | テスト中 | 完了 | ブロック中 のいずれか>
+ROOT_CAUSE: <根本原因。分かっていなければ「未特定」>
+FILES_CHANGED: <変更したファイルの相対パス一覧>
+CHANGES: <何をどう変えたか、一言で>
+TESTS_RUN: <実行したテスト・検証コマンド>
+TEST_RESULT: <結果。緑/赤や実測値。「未実行」も可>
+REMAINING_RISKS: <残っているリスク・未検証事項>
+NEXT_ACTION: <次にやる一手。具体的に>
+LAST_WORKED_ON: <ISO8601、最後にこのファイルを更新した時刻>
+WORKED_BY: <担当AI・セッションID（例: claude-desktop、grok-laptop）>
+MACHINE_NOTES: <そのPC固有の事情がある時だけ書く。無ければ「-」>
