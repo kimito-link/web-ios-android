@@ -71,7 +71,8 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 | `oc` | OpenCode + Qwen3.8-27B（Alibaba 直） | Alibaba 無料枠（27B 分） | 身軽なコード作業 |
 | `cf` | OpenCode + Cloudflare Qwen3.8-27B | Cloudflare の1日無料枠 | Alibaba の枠を温存したいとき |
 | `local` | Claude Code + Ollama（Qwen3.6-35B-A3B） | 無料・無制限 | 急がない量産・退路 |
-| `gemini` | Gemini CLI（`gemini -p --yolo`） | Google ログインで **1日1000リクエスト無料**（2026-09-16 調査、出典は research/ の総ざらい） | 2026-09-16 追加。auto では grok の次。初回だけ `gemini` を手で起動して Google ログインが要る（未ログインなら自動で飛ばす） |
+| `gemini` | Gemini API 直叩き（**文章専用**、`GEMINI_API_KEY`、モデル鎖 3.8-flash → 3.5-flash-lite → 3.1-flash-lite → 2.5-flash-lite を1回の探りで選ぶ） | 無料枠は**モデルごと**。★調査にあった「Google ログインで1000/日」は 2026-09-16 実機で **`IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals`**（Antigravity へ移行済み）。Gemini CLI のエージェントは `-m` を指定しても内部で gemini-3.5-flash（無料 **20回/日**）を呼んで `TerminalQuotaError` になるため採用しない | 2026-09-16 追加。auto では grok の次 |
+| `groq` | Groq 無料枠（OpenAI 互換、`GROQ_API_KEY`） | カード不要。ただし **1リクエストの入力トークン上限が小さく、OpenCode の指示文が入らない**（`Request too large for model qwen/qwen3.8-27b ... on input tokens per ...`） | 2026-09-16 追加。**文章専用**（ファイル操作なし・会話1往復）。会議ハーネスと同じ使い方 |
 
 **調査の正本**: [`research/free-llm-survey-2026-09-16.md`](research/free-llm-survey-2026-09-16.md)（Grok Bot「無料LLM調査係」が公式ページを一次情報として作成。A 評価: Gemini CLI / Google AI Studio Flash / Groq Free / Kilo・OpenCode Zen 無料モデル）。
 毎朝 06:30 に同 Bot のルーティンが `research/daily/<日付>.md` に変化だけを書き、Claude 側の予約タスク `daily-free-llm-watch` がそれを読んで報告する（Claude は調査しない）。

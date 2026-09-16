@@ -25,12 +25,14 @@ ALIBABA_OPENAI = "https://ws-udyvfona8qqwei1q.ap-southeast-1.maas.aliyuncs.com/c
 CLAUDE_COMMON = {"ANTHROPIC_API_KEY": "", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"}
 # Alibaba models with independent free quotas, best first. Exhausted ones are skipped by a cheap probe.
 QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3.8-max", "qwen3.8-flash"]
-# gemini = Gemini CLI (Google login, 1000 requests/day free as of 2026-09; survey: research/free-llm-survey-2026-09-16.md)
-AUTO_CHAIN = ["grok", "gemini", "qwen", "oc", "cf", "local"]
+# Agent brains (can read/write files, run commands): auto tries them in this order.
+AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "local"]
+# Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
+TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
               "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
               "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded"]
-TIMEOUTS = {"grok": 900, "gemini": 900, "qwen": 900, "oc": 900, "cf": 600, "local": 1800}
+TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "local": 1800}
 
 
 def say(msg):
@@ -69,6 +71,31 @@ def alibaba_model_ok(model):
         return False
 
 
+GEMINI_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
+
+
+def gemini_model_ok(model):
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if not key:
+        return False
+    body = {"contents": [{"parts": [{"text": "OK"}]}], "generationConfig": {"maxOutputTokens": 1}}
+    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                                 data=json.dumps(body).encode(), headers={"content-type": "application/json"})
+    try:
+        urllib.request.urlopen(req, timeout=30).read()
+        return True
+    except Exception:
+        return False
+
+
+def pick_gemini_model(preferred=None):
+    chain = ([preferred] if preferred and preferred != "default" else []) + [m for m in GEMINI_CHAIN if m != preferred]
+    for m in chain:
+        if gemini_model_ok(m):
+            return m
+    return None
+
+
 def pick_alibaba_model(preferred=None):
     chain = ([preferred] if preferred else []) + [m for m in QWEN_CHAIN if m != preferred]
     for m in chain:
@@ -92,15 +119,20 @@ def build(brain, task, allowed, model=None):
     elif brain == "cf":
         model = model or "cloudflare/@cf/qwen/qwen3.8-27b"
         cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "groq":
+        # Groq free tier caps tokens per minute (8000 on gpt-oss-120b, similar on qwen3.8-27b), so an agent's
+        # system prompt does not fit. Use it as a text-only brain: one chat completion, answer goes to the log.
+        model = model or "qwen/qwen3.8-27b"
+        cmd = [sys.executable, os.path.abspath(__file__), "--groq-chat", model, task]
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
     elif brain == "gemini":
-        # Gemini CLI: Google-login free tier. Needs one interactive `gemini` login first (browser OAuth).
-        model = model or "default"
-        # Headless runs refuse untrusted folders; the task cwd is always one of our own project folders.
-        env["GEMINI_CLI_TRUST_WORKSPACE"] = "true"
-        cmd = ["gemini", "-p", task, "--yolo"] + (["-m", model] if model != "default" else [])
+        # Text-only via the Gemini API (free tier is per model; flash-lite models have the larger daily quotas).
+        # The Gemini CLI agent is NOT used: on 2026-09-16 it kept calling gemini-3.5-flash (20 requests/day free)
+        # regardless of -m, and the Google-login tier answered IneligibleTierError (moved to Antigravity).
+        model = model or GEMINI_CHAIN[0]
+        cmd = [sys.executable, os.path.abspath(__file__), "--gemini-chat", model, task]
     else:
         sys.exit("unknown brain: " + brain)
     return cmd, env, model
@@ -114,20 +146,16 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_alibaba_model(model)
         if not model:
             return None, "all Alibaba quotas exhausted", "", None
+    if brain == "groq" and not os.environ.get("GROQ_API_KEY"):
+        return None, "GROQ_API_KEY not set", "", None
     if brain == "gemini":
-        gem = os.path.expanduser("~/.gemini")
-        # Two valid auth states: Google login (oauth_creds.json, 1000 req/day) or settings.json selecting
-        # "gemini-api-key" with GEMINI_API_KEY set (free API tier, Flash 250/day). Anything else would open a
-        # browser login and hang headless, so skip immediately.
-        selected = ""
-        try:
-            selected = json.load(open(os.path.join(gem, "settings.json"), encoding="utf-8")).get("security", {}).get("auth", {}).get("selectedType", "")
-        except Exception:
-            pass
-        has_oauth = os.path.exists(os.path.join(gem, "oauth_creds.json"))
-        has_key = selected == "gemini-api-key" and bool(os.environ.get("GEMINI_API_KEY"))
-        if not (has_oauth or has_key):
-            return None, "gemini not logged in (run `gemini` once and sign in with Google)", "", None
+        if not os.environ.get("GEMINI_API_KEY"):
+            return None, "GEMINI_API_KEY not set", "", None
+        # Free-tier quota is per model and small for some (gemini-3.5-flash: 20 requests/day on 2026-09-16).
+        # Probe the chain with one tiny call and use the first model that still answers.
+        model = pick_gemini_model(model)
+        if not model:
+            return None, "all Gemini free quotas exhausted for today", "", None
     cmd, env, model = build(brain, task, allowed, model)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     log = os.path.join(RUNS, f"{stamp}-{brain}.log")
@@ -147,16 +175,52 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
 
+def groq_chat(model, task):
+    """Text-only brain: one chat completion on Groq's OpenAI-compatible API. Prints the answer; exit 1 on API error."""
+    key = os.environ.get("GROQ_API_KEY", "")
+    body = {"model": model, "messages": [{"role": "user", "content": task}], "max_tokens": 4096, "temperature": 0.3}
+    # Groq sits behind Cloudflare; the default "Python-urllib" User-Agent gets "403 error code: 1010", so send a plain UA.
+    req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(body).encode(),
+                                 headers={"content-type": "application/json", "authorization": "Bearer " + key, "user-agent": "dispatch/1.0"})
+    try:
+        r = json.load(urllib.request.urlopen(req, timeout=300))
+        print(r["choices"][0]["message"]["content"])
+        return 0
+    except urllib.error.HTTPError as e:
+        print("API Error: %s %s" % (e.code, e.read().decode("utf-8", "replace")[:400]))
+        return 1
+
+
+def gemini_chat(model, task):
+    """Text-only brain: one generateContent call on the Gemini API free tier. Prints the answer; exit 1 on API error."""
+    key = os.environ.get("GEMINI_API_KEY", "")
+    body = {"contents": [{"parts": [{"text": task}]}], "generationConfig": {"maxOutputTokens": 4096, "temperature": 0.3}}
+    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                                 data=json.dumps(body).encode(), headers={"content-type": "application/json", "user-agent": "dispatch/1.0"})
+    try:
+        r = json.load(urllib.request.urlopen(req, timeout=300))
+        print("".join(p.get("text", "") for p in r["candidates"][0]["content"]["parts"]))
+        return 0
+    except urllib.error.HTTPError as e:
+        print("API Error: %s %s" % (e.code, e.read().decode("utf-8", "replace")[:400]))
+        return 1
+
+
 def main():
+    if len(sys.argv) >= 4 and sys.argv[1] == "--groq-chat":
+        sys.exit(groq_chat(sys.argv[2], " ".join(sys.argv[3:])))
+    if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
+        sys.exit(gemini_chat(sys.argv[2], " ".join(sys.argv[3:])))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "qwen", "oc", "cf", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
     ap.add_argument("--timeout", type=int, default=0, help="seconds per brain (0 = per-brain default)")
+    ap.add_argument("--text", action="store_true", help="text-only task (translation, summary, drafting): gemini -> groq -> qwen")
     ap.add_argument("task")
     a = ap.parse_args()
-    chain = AUTO_CHAIN if a.brain == "auto" else [a.brain]
+    chain = (TEXT_CHAIN if a.text else AUTO_CHAIN) if a.brain == "auto" else [a.brain]
     for brain in chain:
         ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)
         if ok is None:
