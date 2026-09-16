@@ -71,6 +71,10 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 | `oc` | OpenCode + Qwen3.8-27B（Alibaba 直） | Alibaba 無料枠（27B 分） | 身軽なコード作業 |
 | `cf` | OpenCode + Cloudflare Qwen3.8-27B | Cloudflare の1日無料枠 | Alibaba の枠を温存したいとき |
 | `local` | Claude Code + Ollama（Qwen3.6-35B-A3B） | 無料・無制限 | 急がない量産・退路 |
+| `gemini` | Gemini CLI（`gemini -p --yolo`） | Google ログインで **1日1000リクエスト無料**（2026-09-16 調査、出典は research/ の総ざらい） | 2026-09-16 追加。auto では grok の次。初回だけ `gemini` を手で起動して Google ログインが要る（未ログインなら自動で飛ばす） |
+
+**調査の正本**: [`research/free-llm-survey-2026-09-16.md`](research/free-llm-survey-2026-09-16.md)（Grok Bot「無料LLM調査係」が公式ページを一次情報として作成。A 評価: Gemini CLI / Google AI Studio Flash / Groq Free / Kilo・OpenCode Zen 無料モデル）。
+毎朝 06:30 に同 Bot のルーティンが `research/daily/<日付>.md` に変化だけを書き、Claude 側の予約タスク `daily-free-llm-watch` がそれを読んで報告する（Claude は調査しない）。
 
 結果は `%LOCALAPPDATA%\llm-proxy\runs\<日時>-<brain>.log` に全文、画面には末尾だけ。司令塔はログの要点だけ読む（自分の文脈を太らせない）。
 実測（2026-09-15、同じ「ファイルを1つ作る」）: grok 8秒 / qwen 11秒 / oc 11秒。

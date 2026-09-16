@@ -25,10 +25,12 @@ ALIBABA_OPENAI = "https://ws-udyvfona8qqwei1q.ap-southeast-1.maas.aliyuncs.com/c
 CLAUDE_COMMON = {"ANTHROPIC_API_KEY": "", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"}
 # Alibaba models with independent free quotas, best first. Exhausted ones are skipped by a cheap probe.
 QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3.8-max", "qwen3.8-flash"]
-AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "local"]
+# gemini = Gemini CLI (Google login, 1000 requests/day free as of 2026-09; survey: research/free-llm-survey-2026-09-16.md)
+AUTO_CHAIN = ["grok", "gemini", "qwen", "oc", "cf", "local"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
-              "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit"]
-TIMEOUTS = {"grok": 900, "qwen": 900, "oc": 900, "cf": 600, "local": 1800}
+              "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
+              "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded"]
+TIMEOUTS = {"grok": 900, "gemini": 900, "qwen": 900, "oc": 900, "cf": 600, "local": 1800}
 
 
 def say(msg):
@@ -93,6 +95,10 @@ def build(brain, task, allowed, model=None):
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
+    elif brain == "gemini":
+        # Gemini CLI: Google-login free tier. Needs one interactive `gemini` login first (browser OAuth).
+        model = model or "default"
+        cmd = ["gemini", "-p", task, "--yolo"] + (["-m", model] if model != "default" else [])
     else:
         sys.exit("unknown brain: " + brain)
     return cmd, env, model
@@ -106,6 +112,10 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_alibaba_model(model)
         if not model:
             return None, "all Alibaba quotas exhausted", "", None
+    if brain == "gemini":
+        gem = os.path.expanduser("~/.gemini")
+        if not any(os.path.exists(os.path.join(gem, f)) for f in ("oauth_creds.json", "google_accounts.json")) and not os.environ.get("GEMINI_API_KEY"):
+            return None, "gemini not logged in (run `gemini` once and sign in with Google)", "", None
     cmd, env, model = build(brain, task, allowed, model)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     log = os.path.join(RUNS, f"{stamp}-{brain}.log")
@@ -127,7 +137,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "qwen", "oc", "cf", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "qwen", "oc", "cf", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
