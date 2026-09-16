@@ -53,8 +53,16 @@
 司令塔が仕事を投げる道具（正本 [`tools/dispatch.py`](tools/dispatch.py)。PC 側はデスクトップの `dispatch.cmd` がこれを呼ぶだけ。コピーを作らない）:
 
 ```
-python docs/ai-workflows/tools/dispatch.py --brain <qwen|oc|cf|local|grok> --cwd <作業フォルダ> "<やること>"
+python docs/ai-workflows/tools/dispatch.py --cwd <作業フォルダ> "<やること>"            # 既定 --brain auto
+python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|local> --cwd <作業フォルダ> "<やること>"
 ```
+
+**`--brain auto`（既定）は grok → qwen → oc → cf → local の順に試し、失敗したら次へ自動で移る**（2026-09-16 追加）。
+失敗の判定は「終了コード≠0／タイムアウト／出力に `insufficient_quota`・`data_inspection_failed`・`API Error` 等」。
+`qwen` は Alibaba のモデルを kimi-k3 → glm-5.2 → deepseek-v4.1-flash → qwen3.8-27b → max → flash の順に**1トークンの探りを打って枠が残っているものだけ**使う。
+背景: 2026-09-16 に別セッションが `--brain grok`（権限待ちでタイムアウト）と `--brain qwen`（max の枠切れで403）に連続で失敗し、
+「無料枠を活かせていない」と本人に見えた。**1つの頭脳の失敗で作業を止めない**のがこの道具の責務。
+Grok Build の headless はファイル編集で権限プロンプトが出て止まるので `--always-approve` を付けている。
 
 | `--brain` | 中身 | 財布 | 向き |
 |---|---|---|---|
@@ -154,7 +162,7 @@ python docs/ai-workflows/tools/dispatch.py --brain <qwen|oc|cf|local|grok> --cwd
 |---|---|---|
 | 起動ファイルを実行すると `'8-Flash' は、内部コマンドまたは外部コマンド…として認識されていません` と出て `model=` が空 | `.cmd` に日本語コメントを書いた → cp932 誤読で `set` 行が消える | **`.cmd` のコメントは ASCII のみ**（グローバルルール既知の地雷。今回自分で踏んだ） |
 | `400 data_inspection_failed: Input text data may contain inappropriate content` | Alibaba の内容審査。Claude Code 組込みの安全段落（"Assist with authorized security testing… DoS attacks…"）と CLAUDE.md の組合せで弾かれる。公式に無効化不可（「入力を直せ」のみ） | ローカル中継 `%LOCALAPPDATA%\llm-proxy\qwen-proxy.py`（127.0.0.1:18081、Startup の `QwenProxy.vbs` で自動起動）がその段落だけ穏当な一文に置換して転送。`claude-qwen.cmd` は中継経由。**`qwen3.8-max` は OpenCode の指示文も弾く**ので OpenCode は `qwen3.8-27b` を使う |
-| `403 insufficient_quota: Free quota exhausted` | **`qwen3.8-flash` の無料枠100万トークンが1日半で枯渇**。Claude Code は毎ターン全文脈（数千〜2万tok）を送り、Alibaba 側にプロンプトキャッシュが無く、既定で thinking も出力に乗る | モデルごとに枠が独立なので `qwen3.8-max`（claude-qwen）／`qwen3.8-27b`（OpenCode・夜間バッチ）へ切替。**「100万トークン＝数十ターン」が実態**（§1 の「20〜40セッション」は誤りだった）。以後は従量でも flash 入力 $0.15/100万tok＝月数百円 |
+| `403 insufficient_quota: Free quota exhausted` | **`qwen3.8-flash` の無料枠100万トークンが1日半で枯渇**（翌 09-16 には `qwen3.8-max` も枯渇。kimi-k3 / glm-5.2 / glm-5.1 / deepseek-v4.1-flash / qwen3.8-27b は残存）。Claude Code は毎ターン全文脈（数千〜2万tok）を送り、Alibaba 側にプロンプトキャッシュが無く、既定で thinking も出力に乗る | モデルごとに枠が独立なので `qwen3.8-max`（claude-qwen）／`qwen3.8-27b`（OpenCode・夜間バッチ）へ切替。**「100万トークン＝数十ターン」が実態**（§1 の「20〜40セッション」は誤りだった）。以後は従量でも flash 入力 $0.15/100万tok＝月数百円 |
 
 PowerShell から起動ファイルを動かすときは `& "パス"`（`&` 必須）。新しいターミナルを開かないと後から入れた環境変数（`DASHSCOPE_API_KEY`）が見えない。
 
