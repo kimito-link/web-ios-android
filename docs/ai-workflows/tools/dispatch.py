@@ -114,7 +114,10 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
             return None, "all Alibaba quotas exhausted", "", None
     if brain == "gemini":
         gem = os.path.expanduser("~/.gemini")
-        if not any(os.path.exists(os.path.join(gem, f)) for f in ("oauth_creds.json", "google_accounts.json")) and not os.environ.get("GEMINI_API_KEY"):
+        # The real login marker is oauth_creds.json (google_accounts.json exists even before login).
+        # A GEMINI_API_KEY env var does not help while settings.json selects "oauth-personal": the CLI still
+        # opens the browser login and hangs headless. So: no oauth_creds.json -> skip immediately.
+        if not os.path.exists(os.path.join(gem, "oauth_creds.json")):
             return None, "gemini not logged in (run `gemini` once and sign in with Google)", "", None
     cmd, env, model = build(brain, task, allowed, model)
     stamp = time.strftime("%Y%m%d-%H%M%S")
