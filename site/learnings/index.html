@@ -91,7 +91,7 @@
     #recent-updates, #north-star, #ios-appstore, #android-play, #chrome-webstore,
     #cant-submit-3times, #multi-session, #parallel-work, #ai-maze, #didnt-change,
     #shared-identity, #header-footer, #secrets-list, #three-agents,
-    #human-work-reduced, #no-need-to-check, #walkthrough-guide { scroll-margin-top: 72px; }
+    #human-work-reduced, #no-need-to-check, #multi-pc-shared-folder, #walkthrough-guide { scroll-margin-top: 72px; }
     @media (max-width: 640px) {
       .page-map ul { grid-template-columns: 1fr; }
     }
@@ -116,6 +116,7 @@
     <section class="recent-updates" id="recent-updates" aria-label="最近の更新">
       <div class="page-map-title">📅 最近の更新</div>
       <ul>
+        <li><time datetime="2026-09-16">2026-09-16</time> <a href="#multi-pc-shared-folder">「フォルダ名にOneDriveと付いている」だけで同期方式を決めつけた話</a> を追加</li>
         <li><time datetime="2026-09-07">2026-09-07</time> <a href="#near-duplicates">「これ、前にも同じような画面を作った気がする」を機械で見つける話</a> を追加</li>
         <li><time datetime="2026-09-02">2026-09-02</time> <a href="#preflight-proof">証拠が無ければ完了扱いにできない仕組みにした話</a> を追加</li>
         <li><time datetime="2026-09-01">2026-09-01</time> <a href="#ai-maze">「AIと一緒に迷路を歩いている感」の話</a> を追加</li>
@@ -145,6 +146,7 @@
         <li><a href="#three-agents">AIの中に、係の人を3人おきました</a><span>役割エージェント（reality-checker等）の設計</span></li>
         <li><a href="#human-work-reduced">人がやることが、かなり減った話</a><span>自動化前後で人間の作業がどう変わったか</span></li>
         <li><a href="#no-need-to-check">「見てきて」と頼まなくて済むようにした話</a><span>製品自身が状態を申告する診断計器の実例</span></li>
+        <li><a href="#multi-pc-shared-folder">「フォルダ名にOneDriveと付いている」だけで同期方式を決めつけた話</a><span>複数PC共有の実体を実機確認せず2回決めつけた失敗の記録</span></li>
         <li><a href="#walkthrough-guide">追体験ガイド</a><span>ストアごとの実画面を追体験できるページへの導線</span></li>
       </ul>
     </nav>
@@ -680,6 +682,58 @@
         考え方の全体はキットの説明書（AIが読む用）に入っています。
         新しいアプリを作るときは、<b>作り始める前</b>に読ませてください。
         後から計器を足すのは、作りながら足すより何倍も高くつきます。
+      </p>
+    </div>
+
+    <h2 id="multi-pc-shared-folder">🖥️ 「フォルダ名にOneDriveと付いている」だけで同期方式を決めつけた話</h2>
+    <div class="card">
+      <p>
+        デスクトップPCとノートPCの間で開発を引き継ぐ仕組み（<code>handoff.md</code>と、
+        正本 <code>CLAUDE.md</code> への自動到達経路）を設計した際、その土台となる
+        「共有フォルダの実体は何か」を、<b>2回続けて検証せずに決めつけました。</b>
+      </p>
+      <ul>
+        <li><b>1回目の決めつけ</b>: 作業フォルダのパスに <code>OneDrive</code> という
+          文字列が含まれていたため、「OneDrive同期でデスクトップPC・ノートPC間に
+          自動で伝わる」と実機確認せずに設計・記述した</li>
+        <li><b>実測での否定</b>: 別プロジェクトを担当していた別セッションから
+          「このPCではOneDriveはアンインストール済み」と指摘され、実際に
+          <code>Get-Process</code>・実行ファイルの有無・レジストリのアカウント登録・
+          フォルダの属性（クラウド同期を示す reparse point の有無）を確認したところ、
+          <b>OneDrive同期エンジンはこのPC上に一切存在しなかった</b></li>
+        <li><b>2回目の決めつけ</b>: 同じフォルダパスに含まれていた別の文字列
+          <code>Resilio</code> を見て、今度は「Resilio Sync（P2P同期ソフト）が実体では」
+          と、これも実機確認せずに決めつけかけた</li>
+        <li><b>実際の答え</b>: どちらでもなかった。フォルダの持ち主から
+          「大きな会社が使うような共有の仕組み」というヒントと、ノートPC側の
+          実際のエクスプローラ画面（<code>github (¥¥BESTTRUST) (Z:)</code>）の
+          スクリーンショットで、<b>Windows標準のSMBネットワーク共有</b>
+          （デスクトップPCのホスト名 <code>BESTTRUST</code> が <code>github</code>
+          フォルダを共有し、ノートPCがそれを <code>Z:</code> ドライブとしてマウントしている）
+          だったと判明した</li>
+      </ul>
+      <p>
+        パス名に残っていた <code>OneDrive</code> と <code>Resilio</code> は、どちらも
+        <b>過去の経緯で残った命名に過ぎず、現在使われている共有方式とは無関係</b>でした。
+        2回とも、名前から推測しただけで「たぶんこれだろう」を確認済みの事実として扱って
+        しまっていました。
+      </p>
+      <ul>
+        <li>教訓①: <b>パス名・フォルダ名の文字列から、動いている仕組みを推測しない。</b>
+          「〜という名前が付いている」は「〜が実際に動いている」の証拠にならない</li>
+        <li>教訓②: 複数PC・複数の共有方式が候補に挙がる場面ほど、
+          <code>Get-Process</code>・<code>Get-SmbShare</code> のような実機コマンド、
+          または相手が実際に見ている画面のスクリーンショットで裏取りしてから設計する
+          （基準③「完膚なきまでの裏取り」は、コードだけでなくインフラの前提にも同じ強度で効く）</li>
+        <li>教訓③: 1度目の誤りを指摘されて確認した直後でも、2度目の思い込み
+          （今度はResilio）が起きた。<b>「1回外れたから次は慎重に」だけでは足りず、
+          毎回同じ手順（実機確認）を踏む必要がある</b></li>
+      </ul>
+      <p>
+        設計の結論自体（<code>github/CLAUDE.md</code> への1行インポートで、配下の
+        全プロジェクトに正本が自動で伝わる）は、共有方式がSMBであっても変わらず有効でした
+        ——ノートPC側もZドライブ経由で同じファイルシステムの実体を見ているためです。
+        変わったのは「なぜ両PCに伝わるのか」という前提の理解だけでした。
       </p>
     </div>
 
