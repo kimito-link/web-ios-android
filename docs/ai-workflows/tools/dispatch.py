@@ -104,8 +104,22 @@ def pick_alibaba_model(preferred=None):
     return None
 
 
+def spool_task(task, brain):
+    """Windows cmd.exe truncates command lines at ~8191 chars (shell=True). Long tasks go through a file:
+    text brains read it directly (@path); agent brains are told to read the file first."""
+    if len(task) <= 6000:
+        return task
+    path = os.path.join(RUNS, "task-%s-%s.txt" % (time.strftime("%Y%m%d-%H%M%S"), brain))
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(task)
+    if brain in ("gemini", "groq"):
+        return "@" + path
+    return "Read the file %s (UTF-8) and carry out the task written in it exactly." % path
+
+
 def build(brain, task, allowed, model=None):
     env = dict(os.environ)
+    task = spool_task(task, brain)
     if brain == "qwen":
         env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL=RELAY, ANTHROPIC_AUTH_TOKEN=env.get("DASHSCOPE_API_KEY", ""), ANTHROPIC_MODEL=model)
         cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
@@ -206,11 +220,15 @@ def gemini_chat(model, task):
         return 1
 
 
+def unspool(task):
+    return open(task[1:], encoding="utf-8").read() if task.startswith("@") and os.path.exists(task[1:]) else task
+
+
 def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--groq-chat":
-        sys.exit(groq_chat(sys.argv[2], " ".join(sys.argv[3:])))
+        sys.exit(groq_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
-        sys.exit(gemini_chat(sys.argv[2], " ".join(sys.argv[3:])))
+        sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
     ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
