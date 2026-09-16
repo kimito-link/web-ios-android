@@ -83,6 +83,12 @@
 
 ## 使い方(連動型アプリを新規に作る)
 
+> ★**新リポにweb-ios-android参照用のCLAUDE.mdを個別に作る必要はない**（2026-09-16確立）。
+> `github/CLAUDE.md`の`@web-ios-android/CLAUDE.md`インポートが、`github/`配下の新規
+> プロジェクトへも自動で伝播する（Claude Codeの祖先ディレクトリ自動遡り仕様。詳細は
+> [`../CLAUDE.md`](../CLAUDE.md)「正本への自動到達経路」節）。手順0〜7にCLAUDE.md作成が
+> 含まれていないのは漏れではなく、この設計による。
+
 0. **Web 本体を作る**(まだ無ければ): `next-app/` を新リポの `apps/web/`(等)にコピーし、
    `{{...}}` を app.config.json の値で置換。Clerk を使うなら `next-app/README-clerk.md` に従い
    `@clerk/nextjs` を入れて `.template` を配置。Capacitor はこの Web を `server.url` で読む。
