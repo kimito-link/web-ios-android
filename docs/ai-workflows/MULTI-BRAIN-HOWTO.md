@@ -11,6 +11,39 @@
 
 ---
 
+## 0. 全体像（2026-09-16 常駐運用の実像）
+
+「本物のClaudeは考える・判断する・検品するだけ。手は無料の頭脳が動かす」を、**人が張り付かずに回す**ための3層。
+
+```
+（人が話すのは Claude か Grok Bot のどちらか1つだけ）
+
+本物の Claude（この会話・上限を食う）  … 計画・判断・検品。手は動かさない
+        │  設計を md に書く／ジョブを inbox に置く
+        ▼
+Grok Bot（常駐アプリ・SpaceXAI製）      … 進行役。ファイル読み書きはするが自分でコマンドは打てない
+        │  _jobs/inbox/<n>.md を書く（cwd/brain/timeout＋本文）
+        ▼
+実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し done に結果を返す
+        ▼
+dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は grok→qwen→oc→cf→local を自動フォールバック
+        ▼
+grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を動かす。文章は gemini/groq(--text)
+```
+
+**なぜ Grok Bot を挟むか**: Grok Bot はPCに常駐して「ずっと動いてくれる」（本人の要望 2026-09-16）。ただし
+そのローカルシェルは `Can't find Bash` で自分ではコマンドを打てない。そこで **Grok Bot は指示書とジョブファイルを
+書くだけ**にし、実際の実行は Task Scheduler の実行係（`job-runner.py`）が `dispatch.py` 経由で行う。
+
+**ジョブ方式の要点**:
+- ジョブ置き場は各リポ直下の `_jobs/inbox|running|done/`（git 管理外）。1ファイル＝1タスク。先頭に `cwd:` `brain:` `timeout:`、空行、本文
+- 実行係のタスクは `%LOCALAPPDATA%\llm-proxy\run-*-jobs.py`（パス直書きの Python ラッパー）を短い `.cmd` から呼ぶ。schtasks の /TR は261字上限・日本語パスと8.3変換は壊れるのでこの形が正解
+- 実運用中の係: `OuenJobRunner`（ouenmovie）/ `LinebotJobRunner`（line-bot）。10分毎に1ジョブ
+- 実例の常駐 Bot: 「動画制作係」（教科書動画を週1本→限定公開）「マルウェア導線係」（診断導線の実装進行）「無料LLM調査係」（毎朝6:30に無料枠の変化を調べる）
+- Claude 側の受け口: scheduled task `daily-free-llm-watch` 等がファイルを読んで本人に数行で報告する（Claude は調査しない）
+
+---
+
 ## 漫画で読む（りんく版・まずこれだけ見れば要点が分かる）
 
 | 1. 頭脳を4つに増やした話 | 2. Qwen本家の無料枠を手に入れるまでの話 |

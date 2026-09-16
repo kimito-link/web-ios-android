@@ -25,6 +25,8 @@ ALIBABA_OPENAI = "https://ws-udyvfona8qqwei1q.ap-southeast-1.maas.aliyuncs.com/c
 CLAUDE_COMMON = {"ANTHROPIC_API_KEY": "", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"}
 # Alibaba models with independent free quotas, best first. Exhausted ones are skipped by a cheap probe.
 QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3.8-max", "qwen3.8-flash"]
+# Full picture: MULTI-BRAIN-HOWTO.md §0. Grok Bot writes jobs into <repo>/_jobs/inbox; job-runner.py (Task
+# Scheduler, every 10 min) runs them through this dispatch. "The real Claude only plans/judges; hands are free brains."
 # Agent brains (can read/write files, run commands): auto tries them in this order.
 AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.

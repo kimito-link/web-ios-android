@@ -1,0 +1,6 @@
+import runpy, sys, os
+os.environ["PYTHONIOENCODING"] = "utf-8"
+ROOT = r"C:\Users\info\OneDrive\デスクトップ\Resilio\github\ouenmovie"
+RUNNER = r"C:\Users\info\OneDrive\デスクトップ\Resilio\github\web-ios-android\docs\ai-workflows\tools\job-runner.py"
+sys.argv = [RUNNER, "--root", ROOT]
+runpy.run_path(RUNNER, run_name="__main__")
