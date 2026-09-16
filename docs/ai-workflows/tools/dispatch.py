@@ -98,6 +98,8 @@ def build(brain, task, allowed, model=None):
     elif brain == "gemini":
         # Gemini CLI: Google-login free tier. Needs one interactive `gemini` login first (browser OAuth).
         model = model or "default"
+        # Headless runs refuse untrusted folders; the task cwd is always one of our own project folders.
+        env["GEMINI_CLI_TRUST_WORKSPACE"] = "true"
         cmd = ["gemini", "-p", task, "--yolo"] + (["-m", model] if model != "default" else [])
     else:
         sys.exit("unknown brain: " + brain)
@@ -114,10 +116,17 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
             return None, "all Alibaba quotas exhausted", "", None
     if brain == "gemini":
         gem = os.path.expanduser("~/.gemini")
-        # The real login marker is oauth_creds.json (google_accounts.json exists even before login).
-        # A GEMINI_API_KEY env var does not help while settings.json selects "oauth-personal": the CLI still
-        # opens the browser login and hangs headless. So: no oauth_creds.json -> skip immediately.
-        if not os.path.exists(os.path.join(gem, "oauth_creds.json")):
+        # Two valid auth states: Google login (oauth_creds.json, 1000 req/day) or settings.json selecting
+        # "gemini-api-key" with GEMINI_API_KEY set (free API tier, Flash 250/day). Anything else would open a
+        # browser login and hang headless, so skip immediately.
+        selected = ""
+        try:
+            selected = json.load(open(os.path.join(gem, "settings.json"), encoding="utf-8")).get("security", {}).get("auth", {}).get("selectedType", "")
+        except Exception:
+            pass
+        has_oauth = os.path.exists(os.path.join(gem, "oauth_creds.json"))
+        has_key = selected == "gemini-api-key" and bool(os.environ.get("GEMINI_API_KEY"))
+        if not (has_oauth or has_key):
             return None, "gemini not logged in (run `gemini` once and sign in with Google)", "", None
     cmd, env, model = build(brain, task, allowed, model)
     stamp = time.strftime("%Y%m%d-%H%M%S")
