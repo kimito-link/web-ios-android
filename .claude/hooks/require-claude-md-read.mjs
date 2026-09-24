@@ -51,7 +51,8 @@ function findRepoRoot(startDir) {
 // これが無いと、正しく最新版をReadした直後でもハッシュ不一致で「未読」と誤判定される
 // (実際にこのフック自身が本セッションで複数回誤検知した)。
 function normalizeNewlines(text) {
-  return typeof text === 'string' ? text.replace(/\r\n/g, '\n') : text;
+  if (typeof text !== 'string') return text;
+  return text.replace(/\r\n/g, '\n').replace(/\n+$/, '');
 }
 
 function sha256(text) {
@@ -194,6 +195,22 @@ function main() {
   if (!existsSync(claudeMdPath)) {
     // このリポにCLAUDE.mdが無いなら検査対象外。
     process.exit(0);
+  }
+
+  // 編集対象のファイル自体がrepoRoot配下に無いなら検査対象外。
+  // findRepoRootはcwdから祖先の.gitを探すため、リポジトリ内でセッションを
+  // 開いたまま ~/.claude/plans/*.md のようなリポジトリ外のファイルを編集すると、
+  // 無関係なそのリポのCLAUDE.md読了チェックが誤爆する(このセッション自身が実際に踏んだ)。
+  const editTargetRaw =
+    input.tool_input && typeof input.tool_input.file_path === 'string'
+      ? input.tool_input.file_path
+      : null;
+  if (editTargetRaw) {
+    const editTarget = resolve(normalizeWindowsPath(editTargetRaw));
+    const repoRootResolved = resolve(repoRoot) + '\\';
+    if (!(editTarget + '\\').startsWith(repoRootResolved) && editTarget !== resolve(repoRoot)) {
+      process.exit(0);
+    }
   }
 
   let currentContent;
