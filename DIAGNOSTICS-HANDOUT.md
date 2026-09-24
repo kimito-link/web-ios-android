@@ -50,6 +50,8 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-gates-are-wired` | **検査を作ったのに誰も呼んでいない**もの（呼ばれない検査＝存在しない検査） |
 | `check-docs-match-code` | 説明とコードのズレ（**この案内文と実体のズレも含む**） |
 | `check-decision-receipt` | **新規ファイルを作ったのにCANONICAL CHECKの記録が無い**もの（既存を再発明していないかの記録） |
+| `check-gate-bypass` | **Gateを無効化・迂回して成功扱いにしている**もの（`continue-on-error: true`、コメントアウトされた検証ステップ） |
+| `check-hooks-wired` | **Claude Codeのフックが孤児（settings.jsonから未参照）**、またはプロジェクト内では配線済みだがグローバル設定には未反映のもの |
 
 ## いちばん大事な設計：3値で答えます
 

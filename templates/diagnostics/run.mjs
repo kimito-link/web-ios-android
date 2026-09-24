@@ -159,6 +159,15 @@ const CHECKS = [
   //   見つける役割だが、その発見を機械的に赤で出すだけで自動修正はしない
   //   （直すかどうかは人の判断）契約どおりの動き。
   { name: 'check-doc-rot', path: join(__dirname, 'check-doc-rot.mjs') },
+  // ★CLAUDE.md「実装着手前の非交渉ルール」8番「Gateを無効化・迂回して成功扱いにしない」は
+  //   客観的事実として検出可能なのに機械検査が無かった(2026-09-25発見)。
+  //   .github/workflows/内のcontinue-on-error: true・コメントアウトされた検証ステップを検出する。
+  { name: 'check-gate-bypass', path: join(__dirname, 'check-gate-bypass.mjs') },
+  // ★check-gates-are-wired.mjsの対象外(scripts/templates/diagnostics限定)である
+  //   .claude/hooks/配下の「作ったのに誰も呼ばない」フックと、プロジェクト内では
+  //   配線済みだがグローバル~/.claude/settings.jsonには未反映という2026-09-25の
+  //   実損と同型のズレを検出する。
+  { name: 'check-hooks-wired', path: join(__dirname, 'check-hooks-wired.mjs'), kitRoot: true },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);

@@ -124,6 +124,24 @@
       "scopePaths": [
         "templates/scripts/lint-pre-submission.mjs"
       ]
+    },
+    {
+      "at": "2026-09-24T18:12:20.667Z",
+      "responsibility": "gate-bypass-detection-in-ci-workflows",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-gate-bypass.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-24T18:12:28.443Z",
+      "responsibility": "claude-hooks-wiring-detection",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-hooks-wired.mjs"
+      ]
     }
   ]
 }

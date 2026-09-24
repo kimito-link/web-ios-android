@@ -322,6 +322,16 @@
           <td><code>check-decision-receipt</code></td>
           <td>★<b>新規ファイルを作ったのに、既存を探して比べた記録（Decision Receipt）が無い</b>状態を数えます。「共有部品があるのに使わない」を検知する<code>check-shared-parts-used</code>とは別の問題——こちらは<b>そもそも既存を探したかどうか</b>を見ます。記録するのは REUSE / ESTABLISH_REHOME / CONTRACT / SYNC / KEEP_SEPARATE / LOCAL の6種類の判断のいずれかを選んだという<b>客観的な事実</b>だけで、<b>その判断が正しかったかは判定しません</b>（責務が本当に同じか等の判断は人・AIが行うものです）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-gate-bypass.mjs（2026-09-25追加・CLAUDE.md NON-NEGOTIABLE 8番の機械検出） -->
+        <tr>
+          <td><code>check-gate-bypass</code></td>
+          <td>★<b>Gateを無効化・迂回して成功扱いにしている状態</b>を数えます。<code>.github/workflows/</code>内の<code>continue-on-error: true</code>や、コメントアウトされた検証ステップ（<code>#- run: npm run verify</code>のような形）を検出します。<b>正当な理由（実験的ステップ等）による使用か、Gate迂回の意図によるものかは判定しません</b>——検出はあくまで客観的な事実（そのパターンが存在するか）に限ります。</td>
+        </tr>
+        <!-- 出典: templates/diagnostics/check-hooks-wired.mjs（2026-09-25追加・CLAUDE.md形骸化対策で新設したフックが自らグローバル未反映になった実損より） -->
+        <tr>
+          <td><code>check-hooks-wired</code></td>
+          <td>★<b>Claude Codeのフック（<code>.claude/hooks/</code>）が「作ったのに設定から呼ばれていない」孤児</b>になっている数を数えます。<code>check-gates-are-wired</code>は<code>package.json</code>・CI・診断ランナーだけを見ており、<code>.claude/hooks/</code>は対象外でした。さらに、<b>プロジェクト内では配線したのに、このPC全体に効くグローバル設定には反映し忘れる</b>というズレも警告します（このキット自身が実際にこの取りこぼしを起こしました）。<b>グローバル未反映が意図的かどうかは判定しません</b>（プロジェクト固有のフックである可能性もあるため、警告に留めます）。</td>
+        </tr>
       </table>
 
       <div class="code-block">
