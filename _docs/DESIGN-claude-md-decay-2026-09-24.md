@@ -1,8 +1,11 @@
 # 設計書: CLAUDE.mdの構造的形骸化への対処
 
-> **到達点**: 設計完了、最小改善は本ファイルと同時に実装済み。大規模リライトは未着手（別タスク）。
-> 調査・設計・裏取り=司令塔（web-ios-androidセッション、Explore/Planサブエージェント併用）／日付=2026-09-24〜25。
-> Plan mode経由でユーザー承認済み。
+> **到達点**: 最小改善（A/D）とcall-before-ask heuristic（C）を実装済み・プロジェクト内は
+> コミット済み。グローバル`~/.claude/settings.json`への配線はSelf-Modificationガードで
+> 自動拒否されたため、本人の手動反映待ち（手順は本文末尾）。大規模リライト（B案の全面統合）は
+> 未着手（別タスク）。
+> 調査・設計・裏取り=司令塔（web-ios-androidセッション、Explore/Planサブエージェント併用）／
+> 日付=2026-09-24〜25。Plan mode経由でユーザー承認済み。
 
 ## 用語（初出の言い換え）
 
@@ -79,12 +82,25 @@ CLAUDE.mdは祖先ディレクトリを自動で全文コンテキストに読�
 通読して重複箇所を実際に一本化する作業は、誤って実損記録を削るリスクがあるため
 **別タスクに切り出す**（今回は追記のみ、既存文の削除はしない）。
 
-### C. call-before-ask heuristic — 設計のみ、実装は見送り
+### C. call-before-ask heuristic — 実装済み（2026-09-25）
 
-技術的に実現可能（`require-claude-md-read.mjs`と同じtranscript_path走査パターンを流用）。
-`AskUserQuestion`のPreToolUseで、直近N回に調査系ツール(`Grep|Glob|WebFetch|WebSearch|Task`)が
-無ければ警告を出す非ブロッキング型が候補。ただし「調査ツールを呼んだ回数」しか検出できず
-「調査の質」は判定不可（偽陽性・偽陰性あり）。**プロトタイプ検証なしに本採用しない**。
+`.claude/hooks/check-ask-preceded-by-research.mjs`として実装した。`require-claude-md-read.mjs`と
+同じtranscript_path走査パターンを流用し、`AskUserQuestion`のPreToolUseで直近20回のツール呼び出しに
+調査系ツール(`Grep|Glob|WebFetch|WebSearch|Agent|Task`)が無ければ`systemMessage`で警告する
+非ブロッキング型（`permissionDecision: "allow"`固定、fail-open）。
+
+実装前に`claude-code-guide`サブエージェントで公式hooks仕様を裏取りし、`statusMessage`は
+スピナー表示専用でモデルのコンテキストに渡らないこと、正しいフィールドは`systemMessage`
+であることを確認してから実装した（当初`statusMessage`で誤実装しかけた）。
+
+PowerShellで2ケース（調査ツールありのtranscript／なしのtranscript）を実地テストし、
+意図通りの分岐（警告あり／なし）を確認済み。Git Bash経由の同テストは改行コード・パス変換の
+問題で偽陰性を出したため、Windows環境での検証はPowerShellを使うこと（`~/.claude/CLAUDE.md`
+「Windowsシェル」正本の既知の地雷と同型）。
+
+「調査ツールを呼んだ回数」しか検出できず「調査の質」は判定不可（偽陽性・偽陰性あり）という
+限界は、hook本体のコメントとして明記済み。プロトタイプとして実運用に投入し、偽陽性の
+体感頻度は今後観察する。
 
 ### D. 機械化検討プロセス自体の強化 — 一文追記のみ実施
 
@@ -93,7 +109,9 @@ CLAUDE.mdは祖先ディレクトリを自動で全文コンテキストに読�
 実装は別タスクとし、今回は当該節に「2026-09-24追加の3ルールは機械化していない」旨の
 一文を追記するに留める。
 
-## 今回実施した最小改善（追記のみ、既存文の削除なし）
+## 実施した改善
+
+### 2026-09-24（最小改善、追記のみ・既存文の削除なし）
 
 1. **核ブロックの新設**: CLAUDE.md冒頭（「このキットは何か」の直後）に、
    最重要4ルール（選択肢を出さず止まらない／あらゆる調査を尽くす／裏取り徹底／
@@ -105,17 +123,68 @@ CLAUDE.mdは祖先ディレクトリを自動で全文コンテキストに読�
 4. **`require-claude-md-read.mjs`の誤爆修正**: 対象パスがリポジトリ配下かどうかを
    チェックしてから発動するよう修正した。
 
+### 2026-09-25（call-before-ask heuristicの実装、C案）
+
+5. **`.claude/hooks/check-ask-preceded-by-research.mjs`を新規実装**（上記C参照）。
+6. **`.claude/settings.json`に配線**: `AskUserQuestion`のPreToolUseとして追加。
+7. **`~/.claude/hooks/web-ios-android-relay.mjs`を新規実装**: 既存の
+   `require-claude-md-read.mjs`用グローバル中継ブートストラップが対象ファイル名を
+   ハードコードしており、2本目のhookを追加する際に同じ中継ロジックの複製が
+   必要になった。基準⑦（同じ画面が複数箇所に増えるのは共通化のサイン）に従い、
+   対象ファイル名を引数で受け取る汎用版に統合した（旧・単一目的版は置き換え）。
+8. **グローバル`~/.claude/settings.json`への配線は未反映**: auto modeの権限分類器が
+   「Self-Modification」としてEdit操作を自動拒否した。これは正当なガードレールと
+   判断し、回避策は探索していない。反映手順は本人へ提示済み（下記「本人への申し送り」）。
+
 ## 未確認事項・別タスクへ切り出したもの
 
 - 1017行全体を精査し、重複記述を実際に一本化する作業（通読必須、単独セッションでの
   断行は避ける）
-- call-before-ask heuristic（C案）の実装とプロトタイプ検証（偽陽性率を実測してから
-  本採用を判断する）
+- call-before-ask heuristic（C案）の偽陽性率の実運用での観察（実装は完了、体感頻度は未計測）
 - 新規ルール追記のpre-commit gate（D案）の実装
+
+## 本人への申し送り（グローバル設定の手動反映）
+
+`C:\Users\info\.claude\settings.json`の`hooks.PreToolUse`に以下を反映すると、
+このPC上の全プロジェクトでcall-before-ask heuristicが有効になる
+（`~/.claude/hooks/web-ios-android-relay.mjs`は作成済み）:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    {
+      "matcher": "Edit|Write|NotebookEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"C:\\Users\\info\\.claude\\hooks\\web-ios-android-relay.mjs\" require-claude-md-read.mjs",
+          "timeout": 10,
+          "statusMessage": "CLAUDE.md既読チェック中..."
+        }
+      ]
+    },
+    {
+      "matcher": "AskUserQuestion",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"C:\\Users\\info\\.claude\\hooks\\web-ios-android-relay.mjs\" check-ask-preceded-by-research.mjs",
+          "timeout": 10,
+          "statusMessage": "調査履歴チェック中..."
+        }
+      ]
+    }
+  ]
+},
+```
 
 ## 関連ファイル
 
 - `CLAUDE.md`（核ブロック・機械化検討節を編集）
 - `.claude/hooks/require-claude-md-read.mjs`（誤爆修正）
+- `.claude/hooks/check-ask-preceded-by-research.mjs`（新規、call-before-ask heuristic本体）
+- `.claude/settings.json`（`AskUserQuestion`のPreToolUse配線を追加）
+- `~/.claude/hooks/web-ios-android-relay.mjs`（新規、グローバル汎用中継。プロジェクト外・
+  git管理外）
 - `templates/scripts/check-decision-receipt.mjs`（ハイブリッド型検査の既存実例、参照のみ）
 - `_docs/DESIGN-harvest-coverage-2026-09-14.md`（DESIGN文書フォーマットの型）

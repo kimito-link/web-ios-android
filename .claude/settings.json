@@ -11,6 +11,17 @@
             "statusMessage": "CLAUDE.md既読チェック中..."
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-ask-preceded-by-research.mjs\"",
+            "timeout": 10,
+            "statusMessage": "調査履歴チェック中..."
+          }
+        ]
       }
     ]
   }
