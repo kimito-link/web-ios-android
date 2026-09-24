@@ -9,6 +9,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/require-claude-md-read.mjs\"",
             "timeout": 10,
             "statusMessage": "CLAUDE.md既読チェック中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-new-rule-has-machine-check.mjs\"",
+            "timeout": 10,
+            "statusMessage": "新規ルールの機械検査チェック中..."
           }
         ]
       },
