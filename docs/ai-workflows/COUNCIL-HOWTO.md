@@ -282,6 +282,8 @@ $env:COUNCIL_QUALITY=1; node scripts/meeting.mjs --q "ここに問いを書く"
 | **`COUNCIL_FAST=1` でも重いローカルが起きて律速** | 2026-06-27 実機で `COUNCIL_FULL=1`+`COUNCIL_FAST=1` でも **deepseek-r1 が critic 以外の枠で起動し360秒**かかり全体を律速。FULL は重いローカルも全員起こすため FAST の差し替えが効ききらない。重要お題で速度も要るなら **FULL を使わず動的ルーティング既定＋`COUNCIL_CRITICS=2`** で別頭脳のクラウド批判を増やす方が安定 |
 | **Geminiの回答が100〜130字程度で唐突に途切れる** | `design-council.mjs`（kimitolink-linktree版）の `maxOutputTokens=1800` が原因（2026-08-18実測）。お題を「実測事実を渡す」方針にすると前置きだけで枠を使い切り結論前に切れる。Groq側の`max_tokens`も同じ値だったため両方を4000に変更（コミット56677d4）。他リポの会議ハーネスでも同症状が出たらまずこの定数を疑う |
 | **Groqが `does not exist or you do not have access to it` で404** | 会議ハーネスの既定モデル `llama-3.3-70b-versatile` がGroq側で提供終了（2026-08-18確認。§22の「-instant版が実在しない」幻覚問題とは別件＝今回は versatile 版自体が廃止された）。`GROQ_MODEL=openai/gpt-oss-120b` 等、実在するモデルIDを明示指定して回避。**エラーを無視するとメンバーが1体欠けたまま会議が成立してしまう**ので、Groq関連の応答が落ちたら`/models`で実在確認してから使うこと |
+| 統合役が「後から追加された設定・オプトアウト機能」を見て「デフォルトで安全」と誤診する | 会議メンバー（groq/gpt-oss-120b等）は、公式CHANGELOGの「〜を無効化する設定を追加した」という行を見ると、**その設定の存在自体を「デフォルトで安全」の証拠として好意的に解釈しがち**。実際は逆で、後から止める設定を追加したのは「デフォルト動作が問題を起こしていたから」であることが多い。実例（2026-09-25, web-ios-android）: Claude Code公式CHANGELOGの `Added a "Workflow keyword trigger" setting in /config to stop the word "workflow" in a prompt from triggering a dynamic workflow` という行を、統合役が「Workflow keyword triggerが既にデフォルトで安全に実装されている」と真逆に解釈し、この誤った前提の上で標準採用を推奨する結論を組み立てた | 会議が引用する公式ドキュメント・設定名は、司令塔が原文を`WebFetch`等で実際に読み、「なぜその設定が後から追加される必要があったか」まで逆方向に裏取りしてから採否を決める。「オプトアウト設定が存在する」＝「デフォルトで安全」ではない |
+| CHANGELOGの英語の設定名（例:「keyword trigger」）から設定の実装粒度を推測すると外れる | 設定名の字面だけで「単語トリガーだけを個別に無効化する細かい設定」だろうと推測したが、実際に対象UI（`/config`の日本語表示）を開くと「ダイナミックワークフロー」という機能全体のON/OFFトグル1つで、`~/.claude/settings.json`には`"enableWorkflows": false`という単純なキーが書き込まれるだけだった（単語トリガーだけを止める中間的な設定はUI上には存在しなかった） | 一次情報（公式ドキュメント原文）を読んだだけで設計を確定させない。実際のUI・実際の設定ファイルのキーを見るまでは「たぶんこういう粒度の設定だろう」を確定情報として扱わない |
 
 ```powershell
 # 会議後にPCが重い／固まるとき（モデル解放＋ゾンビ run.exe 掃除）：
@@ -295,6 +297,7 @@ node scripts/council-cleanup.mjs --dry-run   # 何が掃除されるか見るだ
 ## 大事な前提（司令塔Claudeへ）
 
 - ローカル小型モデルは**事実を間違えることがある**（個体の知識限界）。会議の出力は素材であって結論ではない。**必ず統合役が裏取りして1案に収束**させる。
+- ★会議メンバーは「事実を知らない」だけでなく「事実の解釈方向を誤る」こともある（2026-09-25確認。詳細は下の「つまずき対策」表）。特に公式ドキュメントの「〜を止める設定を追加した」という記述を「デフォルトで安全」と読み違える誤診パターンに注意。会議が引用する一次情報は司令塔が原文を読み、実際のUI・実際の設定ファイルまで確認してから採否を決める。
 - 役割定義・出力フォーマット・批判強制を変えるときは、各スクリプトでなく `council-roles.mjs` を直す。**2リポに実体コピーがあるので両方同期**すること。
   - `kimitolink-linktree/scripts/council-roles.mjs`（UI/UX版・実装役がReact/Tailwind前提）
   - `tsuioku-no-kirameki.com/scripts/council-roles.mjs`（汎用版）
