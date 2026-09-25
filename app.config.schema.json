@@ -181,7 +181,10 @@
           "name": { "type": "string", "description": "姉妹サービスの表示名" },
           "tagline": { "type": "string", "description": "1行の説明文" },
           "url": { "type": "string", "format": "uri", "description": "姉妹サービスのURL" },
-          "sharedAccount": { "type": "boolean", "description": "true: 同一ブランドでアカウント(Clerkインスタンス)共有=導線で『登録不要』を訴求" }
+          "sharedAccount": { "type": "boolean", "description": "true: 同一ブランドでアカウント(Clerkインスタンス)共有=導線で『登録不要』を訴求" },
+          "appUrl": { "type": "string", "format": "uri", "description": "アプリ本体のURL。url が紹介ページのとき、ログイン済みユーザーをこちらへ直接送る" },
+          "iconUrl": { "type": "string", "format": "uri", "description": "カードに出すアイコン画像のURL。★配信されていないパスを書かないこと（壊れた画像になる）。省略時は絵文字にフォールバックする" },
+          "hubKey": { "type": "string", "description": "共通プロフィール層(hub)の名前空間キー。POST /api/hub/summary の appKey 白リストと一致させる。★これが無いと受け口が unknown app で拒否する" }
         }
       }
     }
