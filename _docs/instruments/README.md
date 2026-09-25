@@ -425,6 +425,25 @@ node _docs/instruments/check-drift.mjs
 
 ★**コメントまで一致を要求しない**。要求すると、各リポが自分の事故を書けなくなる。
 
+### 4.1 ★指示書の「一部分だけ」を別ツール向けに転記した場合
+
+`check-drift.mjs`はファイル**全体**の実コード一致を見る設計（JS/TS専用）。だが
+Codex等`@import`を持たないツール向けに、CLAUDE.mdの**一部セクションだけ**をAGENTS.mdへ
+直接転記する場合（2026-09-25、line-botで実施）はファイル全体比較が使えない
+（コピー側は転記に加えて独自の実損エピソードを書き足してよい設計のため、
+完全一致判定は誤検知になる）。
+
+この用途には[`check-cross-tool-instruction-sync.mjs`](check-cross-tool-instruction-sync.mjs)
+を使う。見出し文字列でセクションを切り出し、そのSHA256ハッシュとコピー側の
+`<!-- sync:<label> hash:<12桁> -->`マーカーを突き合わせる鮮度チェック。
+
+```bash
+node _docs/instruments/check-cross-tool-instruction-sync.mjs
+```
+
+★新しい転記ペアを増やすときは、このファイル内の`PAIRS`に1件足す。詳細な設計理由は
+ファイル冒頭のコメント参照。
+
 ---
 
 ## 5. やりとりの作法

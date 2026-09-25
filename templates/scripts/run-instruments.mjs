@@ -83,6 +83,7 @@ const diagnostics = firstExisting(['diagnostics/run.mjs', 'templates/diagnostics
 const improvement = firstExisting(['scripts/check-improvement.mjs']);
 const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
+const crossToolSync = firstExisting(['_docs/instruments/check-cross-tool-instruction-sync.mjs']);
 const security = firstExisting(['scripts/verify-security-score.mjs', 'templates/scripts/verify-security-score.mjs']);
 const responsive = firstExisting(['scripts/verify-responsive-design.mjs', 'templates/scripts/verify-responsive-design.mjs']);
 const claimsProvenance = firstExisting(['scripts/verify-numeric-claims-provenance.mjs']);
@@ -108,6 +109,7 @@ results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
 results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
 if (drift) results.push(run('配布コードのドリフト', drift));
+if (crossToolSync) results.push(run('クロスツール指示書の同期（CLAUDE.md核ブロック→AGENTS.md転記）', crossToolSync));
 if (rootCauseClaim) results.push(run('直近コミットの根治宣言の根拠', rootCauseClaim));
 results.push(run(
   '公開サイトのセキュリティ満点チェック',
@@ -128,6 +130,7 @@ if (DEEP) {
   results.push(run('実行記録 selftest', ran, ['--selftest']));
   results.push(run('統合入口 selftest', fileURLToPath(import.meta.url), ['--selftest']));
   if (drift) results.push(run('ドリフト検知 selftest', drift, ['--selftest']));
+  if (crossToolSync) results.push(run('クロスツール指示書同期 selftest', crossToolSync, ['--selftest']));
   if (rootCauseClaim) results.push(run('根治宣言の根拠 selftest', rootCauseClaim, ['--selftest']));
   if (instrumentProofCheck) results.push(run('証明3点台帳 selftest', instrumentProofCheck, ['--selftest']));
   if (security) results.push(run('セキュリティ計器 selftest', security, ['--selftest']));
