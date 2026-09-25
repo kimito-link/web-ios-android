@@ -658,6 +658,36 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     **習慣として起きやすい**ことが分かっている——MCP接続の存在を確認した時点で
     満足せず、「このMCPでこの書き込み操作まで通るか」を1回実行して確かめる工程を
     必ず挟む。
+    ★★★★**「MCPが未接続」より一歩手前、「そもそも接続してもそのMCPに目的の
+    ツールが存在しない」を確認せず口にした実損**（2026-09-25、malwarecheck.site）。
+    Vercel環境変数(`ADMIN_SECRET`)の設定作業で、人間がターミナルへ`Read-Host`で
+    トークンを手打ちする案を提示した後、ユーザーから「MCPでやってほしい」と
+    言われた際、「Vercel公式MCPが使えれば、APIトークンをAIが一切見ずに済む」と
+    **`search_mcp_registry`等のツールで実際に確認せず**発言した。実際に確認した
+    ところ: (1) Vercel公式MCP自体はこのアカウントに**未接続**。(2)
+    仮に接続しても、公式ツールリファレンス（vercel.com/docs/agent-resources/
+    vercel-mcp/tools、2026-09-15版で全カテゴリ確認済み——Documentation /
+    Project Management / Deployment / Web Analytics / Agent Runs / Domain
+    Management / Purchase / Access / Design import / Toolbar / CLI の
+    全11カテゴリ）を確認しても、**環境変数(Environment Variables)を
+    作成・更新・一覧するツールが1つも存在しない**（`deploy_to_vercel`は
+    ファイルツリーのデプロイであり環境変数操作ではない）。つまり
+    「MCPを使えば解決する」という前提自体が、確認していれば1分で崩れる誤りだった。
+    ★もう1段深い裏取り: 仮にMCPが使えず、Vercel REST API
+    （`POST /v10/projects/{id}/env`）を直接叩く場合でも、`value`
+    （シークレット文字列そのもの）は**リクエストボディに平文でそのまま乗る**
+    （`type: encrypted`は「保存後の暗号化」であってAPIリクエスト自体の
+    秘匿ではない、と公式ドキュメントに明記）。これは「★★『認証トークン』と
+    『投入する秘密値』は別物」節（line-bot実例）と全く同型の構図——
+    **認証さえMCP/OAuthで済めば秘密は守られる、と早合点しない**。
+    ★教訓: 「MCPで解決できるはず」と口にする前に、必ず`search_mcp_registry`
+    （またはToolSearch、または公式ツールリファレンス）でそのMCPの
+    **ツール一覧**を実際に取得し、目的の操作（今回なら「環境変数の書き込み」）
+    に対応するツールが実在するかを見てから発言する。「公式MCPがある」という
+    記憶・印象だけで期待値を口にしない。このケースで最初から正しかった選択肢は、
+    `~/.claude/CLAUDE.md`の「クリップボード経由」節（`request_access`→
+    `read_clipboard`→Bash環境変数）であり、ターミナルへの手打ちよりも
+    人間の手間が少ない。
   - **CVR/LTV最大化**: ユーザーが目的（アプリ公開・情報を得る・迷いなく次の一手が分かる）に
     到達する率と、使い続ける理由を最大化する。内部の都合（実装のしやすさ）を優先して、
     ユーザーが見る画面・触る導線・理解のしやすさを犠牲にしない。
