@@ -658,36 +658,43 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     **習慣として起きやすい**ことが分かっている——MCP接続の存在を確認した時点で
     満足せず、「このMCPでこの書き込み操作まで通るか」を1回実行して確かめる工程を
     必ず挟む。
-    ★★★★**「MCPが未接続」より一歩手前、「そもそも接続してもそのMCPに目的の
-    ツールが存在しない」を確認せず口にした実損**（2026-09-25、malwarecheck.site）。
-    Vercel環境変数(`ADMIN_SECRET`)の設定作業で、人間がターミナルへ`Read-Host`で
-    トークンを手打ちする案を提示した後、ユーザーから「MCPでやってほしい」と
-    言われた際、「Vercel公式MCPが使えれば、APIトークンをAIが一切見ずに済む」と
-    **`search_mcp_registry`等のツールで実際に確認せず**発言した。実際に確認した
-    ところ: (1) Vercel公式MCP自体はこのアカウントに**未接続**。(2)
-    仮に接続しても、公式ツールリファレンス（vercel.com/docs/agent-resources/
-    vercel-mcp/tools、2026-09-15版で全カテゴリ確認済み——Documentation /
-    Project Management / Deployment / Web Analytics / Agent Runs / Domain
-    Management / Purchase / Access / Design import / Toolbar / CLI の
-    全11カテゴリ）を確認しても、**環境変数(Environment Variables)を
-    作成・更新・一覧するツールが1つも存在しない**（`deploy_to_vercel`は
-    ファイルツリーのデプロイであり環境変数操作ではない）。つまり
-    「MCPを使えば解決する」という前提自体が、確認していれば1分で崩れる誤りだった。
-    ★もう1段深い裏取り: 仮にMCPが使えず、Vercel REST API
-    （`POST /v10/projects/{id}/env`）を直接叩く場合でも、`value`
-    （シークレット文字列そのもの）は**リクエストボディに平文でそのまま乗る**
+    ★★★★**登録簿（`search_mcp_registry`）の簡易ツール一覧を「全ツール一覧」と
+    誤認した実損、およびその後の訂正**（2026-09-25、malwarecheck.site）。
+    Vercel環境変数(`ADMIN_SECRET`)の設定作業で、`search_mcp_registry`と
+    公式ツールリファレンス（vercel.com/docs/agent-resources/vercel-mcp/tools）
+    の両方を確認した結果、どちらも`search_vercel_documentation` /
+    `list_projects` / `get_project` / `list_deployments`等ごく一部
+    （7〜数十件）しか列挙しておらず、**環境変数の読み書きツールが無い**と
+    判断してCLAUDE.mdにその旨を記録した。
+    ★しかし実際にVercel公式MCPを接続し`ToolSearch`でこのMCPの**実際の
+    ツール一覧**を取得したところ、`create_project_env` / `edit_project_env` /
+    `get_project_env` / `filter_project_envs`等、環境変数を扱うツールが
+    **200件超のツールの中に実在した**（登録簿・公式ツールリファレンスの
+    どちらも簡略版で、フルツール一覧ではなかった）。実際に
+    `filter_project_envs`でmalwarecheck-siteプロジェクトを叩き、
+    `ADMIN_SECRET`が既に登録済み（`type: encrypted`、値は復号されず
+    `decrypted: false`のまま返る＝読み取りAPI越しでも平文は漏れない設計）
+    であることまで確認した。
+    ★★この実損の教訓は「MCPで解決できるはず、を確認せず言うな」ではなく
+    **もう一段深い**: **「登録簿(`search_mcp_registry`)や公式ドキュメントの
+    簡易ツール一覧は、実際に接続したMCPの完全なツール一覧と一致するとは
+    限らない」**。ツールの有無を判定する最終手段は、登録簿の一覧でも
+    ドキュメントの一覧でもなく、**実際にMCPを接続してToolSearchでそのMCP
+    自身のツール一覧を取得すること**。「未接続だから調べられない」という
+    壁にぶつかったら、その場で接続を提案し、接続後に確認し直す
+    （接続はユーザーの1クリックで完了する軽い操作であり、確認のために
+    先に接続してもらうことを恐れる理由はない）。
+    ★もう1点確認済みの事実（訂正後も有効）: Vercel REST APIを直接叩く
+    経路（`POST /v10/projects/{id}/env`）でも、`value`（シークレット
+    文字列そのもの）は**リクエストボディに平文でそのまま乗る**
     （`type: encrypted`は「保存後の暗号化」であってAPIリクエスト自体の
-    秘匿ではない、と公式ドキュメントに明記）。これは「★★『認証トークン』と
-    『投入する秘密値』は別物」節（line-bot実例）と全く同型の構図——
-    **認証さえMCP/OAuthで済めば秘密は守られる、と早合点しない**。
-    ★教訓: 「MCPで解決できるはず」と口にする前に、必ず`search_mcp_registry`
-    （またはToolSearch、または公式ツールリファレンス）でそのMCPの
-    **ツール一覧**を実際に取得し、目的の操作（今回なら「環境変数の書き込み」）
-    に対応するツールが実在するかを見てから発言する。「公式MCPがある」という
-    記憶・印象だけで期待値を口にしない。このケースで最初から正しかった選択肢は、
-    `~/.claude/CLAUDE.md`の「クリップボード経由」節（`request_access`→
-    `read_clipboard`→Bash環境変数）であり、ターミナルへの手打ちよりも
-    人間の手間が少ない。
+    秘匿ではない）。MCP経由の`create_project_env`ツールも同様に`value`を
+    引数として受け取る設計であり、**MCP経由であっても新しい秘密の値を
+    書き込む呼び出しでは、その値がツール呼び出しの引数としてトランスクリプトに
+    残る**（「★★『認証トークン』と『投入する秘密値』は別物」節と同型）。
+    実際に新しい値を書き込む場面では、引き続き`~/.claude/CLAUDE.md`
+    「クリップボード経由」節（`request_access`→`read_clipboard`→Bash環境変数）
+    を使うか、MCPの`value`引数へ渡す前提で使うかを都度判断する。
   - **CVR/LTV最大化**: ユーザーが目的（アプリ公開・情報を得る・迷いなく次の一手が分かる）に
     到達する率と、使い続ける理由を最大化する。内部の都合（実装のしやすさ）を優先して、
     ユーザーが見る画面・触る導線・理解のしやすさを犠牲にしない。
