@@ -29,6 +29,18 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/warn-long-running-session.mjs\"",
+            "timeout": 10,
+            "statusMessage": "セッション経過時間チェック中..."
+          }
+        ]
+      }
     ]
   }
 }
