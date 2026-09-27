@@ -63,6 +63,16 @@ const IGNORE_MENTION = [
   // 他リポの正本（このリポには無くて当然）
   /^AI_HARNESS_OPERATION\.md$/,
   /^TOKEN_SAVING_POLICY\.md$/,
+  /*
+   * ★2026-09-27追加: グローバル(~/.claude/hooks/)・別リポ(ai-shain-worker)を指す言及。
+   *   どちらも`../`形式の相対パスではなく「配下に」「グローバル設定に」という
+   *   自然文で他所を指しているため、hasOtherRepoPathOnLineの除外に掛からず
+   *   誤検知していた（実測: self-verificationスキルのtemplates検出強化で新たに
+   *   可視化された既存の穴）。実在確認済み（web-ios-android-relay.mjsは
+   *   ~/.claude/hooks/配下、open-line-form.mjsはai-shain-worker/scripts/配下）。
+   */
+  /^web-ios-android-relay\.mjs$/,
+  /^open-line-form\.mjs$/,
 ];
 
 /**
