@@ -1,8 +1,8 @@
 # 設計書: `docs/ai-rules/04_SELF_VERIFICATION.md` のSKILL.md化（Superpowers知見の最小取り込み）
 
-> **状態: 設計完了・実装未着手。** 設計=Fable（council-fable 3段構えワークフロー手順2）／
+> **状態: 完了（設計→実装→実地検証まで）。** 設計=Fable（council-fable 3段構えワークフロー手順2）／
 > 会議での素材集め=13体マルチLLM会議ハーネス（手順1）／裏取り=司令塔（本文書作成者）／
-> 日付: 2026-09-27。
+> 日付: 2026-09-27。実装・実地検証ログは実装ハンドオフ側に集約（下記リンク）。
 > 実装ハンドオフ: [`_docs/IMPLEMENTATION-HANDOFF-self-verification-skill-2026-09-27.md`](IMPLEMENTATION-HANDOFF-self-verification-skill-2026-09-27.md)（これから作成）
 
 ## きっかけ
