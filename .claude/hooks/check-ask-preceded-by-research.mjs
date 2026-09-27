@@ -15,8 +15,20 @@
 // この限界ゆえブロックしない — permissionDecisionは常にallowで、
 // statusMessageで気づきを促すだけに留める。
 //
-// 標準入力(JSON): session_id, transcript_path, tool_name, tool_input
-// require-claude-md-read.mjsと同じtranscript_path走査パターンを流用する。
+// ★2026-09-28追加: 設計方針キーワード検査(soushin-suggest.link実損)。
+//   CLAUDE.md「選択肢を出して止まらない」節は、「CVR/LTV最大化」「100年
+//   メンテナンスのいらない設計」を**自分で判断に迷ったときに使う判定基準**
+//   として定めている。ところが実損では、この基準そのもの（「100年後安心
+//   できる設計」）をAskUserQuestionの選択肢ラベルとして人間に提示していた
+//   ——判定基準を、判定基準を使って自分で決めるべき場面で、選択肢に
+//   すり替えてしまった。これは「選択肢の文言に設計方針キーワードが
+//   含まれるか」という客観的事実（文字列マッチ）で検出できる。
+//   意味判断（「本当にユーザーの決定が必要か」）は検出できないが、
+//   このキーワード自体が選択肢に出てくること自体が強いシグナルであるため、
+//   「無理に自動化しない」対象ではなく機械化する（指摘を受けて即日実装）。
+const DESIGN_PRINCIPLE_KEYWORDS = [
+  '100年', 'CVR', 'LTV', 'メンテナンスフリー', 'メンテナンスのいらない',
+];
 
 import { readFileSync, existsSync } from 'node:fs';
 
@@ -74,6 +86,33 @@ function collectRecentToolNames(transcriptPathRaw, limit) {
   return names;
 }
 
+// AskUserQuestionのtool_inputから、question・header・options[].label・
+// options[].descriptionのテキストを全て集め、設計方針キーワードを含むかを見る。
+// 大文字小文字は区別しない(CVR/LTVは英字表記されうるため)。
+function extractQuestionTexts(toolInput) {
+  const texts = [];
+  const questions = toolInput && Array.isArray(toolInput.questions) ? toolInput.questions : [];
+  for (const q of questions) {
+    if (typeof q.question === 'string') texts.push(q.question);
+    if (typeof q.header === 'string') texts.push(q.header);
+    const options = Array.isArray(q.options) ? q.options : [];
+    for (const o of options) {
+      if (typeof o.label === 'string') texts.push(o.label);
+      if (typeof o.description === 'string') texts.push(o.description);
+    }
+  }
+  return texts;
+}
+
+function findDesignPrincipleKeyword(texts) {
+  for (const text of texts) {
+    for (const keyword of DESIGN_PRINCIPLE_KEYWORDS) {
+      if (text.toUpperCase().includes(keyword.toUpperCase())) return keyword;
+    }
+  }
+  return null;
+}
+
 function main() {
   const stdin = readStdin();
   let input;
@@ -87,10 +126,32 @@ function main() {
     process.exit(0);
   }
 
+  const messages = [];
+
+  // 検査1: 設計方針キーワードが選択肢に紛れ込んでいないか（調査の有無を問わず常に見る）。
+  const questionTexts = extractQuestionTexts(input.tool_input);
+  const matchedKeyword = findDesignPrincipleKeyword(questionTexts);
+  if (matchedKeyword) {
+    messages.push(
+      '★この質問の選択肢/説明文に設計方針キーワード「' + matchedKeyword + '」が含まれています。' +
+      'CLAUDE.md「選択肢を出して止まらない」節は、CVR/LTV最大化・100年メンテナンスのいらない設計を' +
+      '「自分で判断に迷ったときに、確認を取らず自分で決める判定基準」と定めています。' +
+      '判定基準そのものを選択肢として人間に投げるのは、この基準の趣旨と逆です' +
+      '（2026-09-28、soushin-suggest.linkの実損）。'
+    );
+  }
+
+  // 検査2: 直近に調査ツールを呼んだか（call-before-ask heuristic）。
   const recentNames = collectRecentToolNames(input.transcript_path, LOOKBACK_TOOL_USES);
   const hasResearch = recentNames.some((name) => RESEARCH_TOOLS.has(name));
+  if (!hasResearch) {
+    messages.push(
+      '★直近' + LOOKBACK_TOOL_USES + '回のツール呼び出しにGrep/Glob/WebFetch/WebSearch/Agentが見当たりません。' +
+      'CLAUDE.md「あらゆる調査を尽くす」の4項目を確認しましたか（調べようがない事実だけを聞く場面なら無視してよい）。'
+    );
+  }
 
-  if (hasResearch) {
+  if (messages.length === 0) {
     process.exit(0);
   }
 
@@ -103,11 +164,7 @@ function main() {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision: 'allow',
-      systemMessage:
-        '★直近' +
-        LOOKBACK_TOOL_USES +
-        '回のツール呼び出しにGrep/Glob/WebFetch/WebSearch/Agentが見当たりません。' +
-        'CLAUDE.md「あらゆる調査を尽くす」の4項目を確認しましたか（調べようがない事実だけを聞く場面なら無視してよい）。',
+      systemMessage: messages.join(' '),
     },
   };
   process.stdout.write(JSON.stringify(output));
