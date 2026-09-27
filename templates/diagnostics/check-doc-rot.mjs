@@ -63,6 +63,16 @@ const IGNORE_MENTION = [
   // 他リポの正本（このリポには無くて当然）
   /^AI_HARNESS_OPERATION\.md$/,
   /^TOKEN_SAVING_POLICY\.md$/,
+  /*
+   * ★2026-09-27追加: グローバル(~/.claude/hooks/)・別リポ(ai-shain-worker)を指す言及。
+   *   どちらも`../`形式の相対パスではなく「配下に」「グローバル設定に」という
+   *   自然文で他所を指しているため、hasOtherRepoPathOnLineの除外に掛からず
+   *   誤検知していた（実測: self-verificationスキルのtemplates検出強化で新たに
+   *   可視化された既存の穴）。実在確認済み（web-ios-android-relay.mjsは
+   *   ~/.claude/hooks/配下、open-line-form.mjsはai-shain-worker/scripts/配下）。
+   */
+  /^web-ios-android-relay\.mjs$/,
+  /^open-line-form\.mjs$/,
 ];
 
 /**
@@ -167,6 +177,17 @@ const SKIP_DIRS = new Set([
   "playwright-report", "test-results", "qa-results", ".next", "coverage",
 ]);
 
+/*
+ * ★2026-09-28追加: 隠しディレクトリは既定で除外するが、`.claude`だけは例外にする。
+ *   CLAUDE.mdが`.claude/hooks/*.mjs`へ言及することが増えており（既に5本のhookが
+ *   存在する）、隠しディレクトリの一律除外だとその全てが「存在確認できない」まま
+ *   誤検知され続ける（実測: check-ask-preceded-by-research.mjsという実在ファイルへの
+ *   単独言及が死んだ参照として検出された）。走査対象はファイル名の存在チェックのみ
+ *   （内容は読まない）なので、`.claude/settings.local.json`等が含まれても情報漏洩には
+ *   ならない。
+ */
+const ALLOWED_HIDDEN_DIRS = new Set([".claude"]);
+
 let fileNameIndex = null;
 function buildFileNameIndex() {
   const names = new Set();
@@ -180,7 +201,9 @@ function buildFileNameIndex() {
     }
     for (const e of entries) {
       if (e.isDirectory()) {
-        if (SKIP_DIRS.has(e.name) || e.name.startsWith(".")) continue;
+        const isHidden = e.name.startsWith(".");
+        if (SKIP_DIRS.has(e.name)) continue;
+        if (isHidden && !ALLOWED_HIDDEN_DIRS.has(e.name)) continue;
         walk(join(dir, e.name), depth + 1);
       } else {
         names.add(e.name);
