@@ -177,6 +177,17 @@ const SKIP_DIRS = new Set([
   "playwright-report", "test-results", "qa-results", ".next", "coverage",
 ]);
 
+/*
+ * ★2026-09-28追加: 隠しディレクトリは既定で除外するが、`.claude`だけは例外にする。
+ *   CLAUDE.mdが`.claude/hooks/*.mjs`へ言及することが増えており（既に5本のhookが
+ *   存在する）、隠しディレクトリの一律除外だとその全てが「存在確認できない」まま
+ *   誤検知され続ける（実測: check-ask-preceded-by-research.mjsという実在ファイルへの
+ *   単独言及が死んだ参照として検出された）。走査対象はファイル名の存在チェックのみ
+ *   （内容は読まない）なので、`.claude/settings.local.json`等が含まれても情報漏洩には
+ *   ならない。
+ */
+const ALLOWED_HIDDEN_DIRS = new Set([".claude"]);
+
 let fileNameIndex = null;
 function buildFileNameIndex() {
   const names = new Set();
@@ -190,7 +201,9 @@ function buildFileNameIndex() {
     }
     for (const e of entries) {
       if (e.isDirectory()) {
-        if (SKIP_DIRS.has(e.name) || e.name.startsWith(".")) continue;
+        const isHidden = e.name.startsWith(".");
+        if (SKIP_DIRS.has(e.name)) continue;
+        if (isHidden && !ALLOWED_HIDDEN_DIRS.has(e.name)) continue;
         walk(join(dir, e.name), depth + 1);
       } else {
         names.add(e.name);

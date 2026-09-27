@@ -15,6 +15,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-new-rule-has-machine-check.mjs\"",
             "timeout": 10,
             "statusMessage": "新規ルールの機械検査チェック中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-write-preceded-by-search.mjs\"",
+            "timeout": 10,
+            "statusMessage": "既存実装の検索履歴チェック中..."
           }
         ]
       },
