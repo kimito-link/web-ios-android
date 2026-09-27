@@ -24,6 +24,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { homedir } from 'node:os';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const KIT_ROOT = resolve(HERE, '../..');
@@ -406,6 +407,21 @@ export const PAIRS = [
     canonical: resolve(KIT_ROOT, 'templates/scripts/deploy-cloudflare-pages.mjs'),
     copies: [
       resolve(GH_ROOT, 'kimito-Link-Voice/scripts/deploy-cloudflare-pages.mjs')
+    ]
+  },
+  {
+    /*
+     * ★2026-09-27追加。Superpowers知見の取り込み検討会議（会議→Fable設計）の産物。
+     *   Personal(~/.claude/skills/)がProject(.claude/skills/)より優先される
+     *   （Claude Code公式仕様、2026-09-27にWebFetchで裏取り済み）ため、
+     *   実際に動くのは~側だが、repoにも正本を置きOneDrive経由で共有する。
+     *   2箇所が割れると「片方だけ更新して呼び出し内容が古いまま」の
+     *   時限爆弾になる（instrument-core.mjs等の既存エントリと同じ構図）。
+     */
+    label: 'self-verificationスキル',
+    canonical: resolve(KIT_ROOT, '.claude/skills/self-verification/SKILL.md'),
+    copies: [
+      resolve(homedir(), '.claude/skills/self-verification/SKILL.md')
     ]
   }
 ];

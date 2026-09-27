@@ -89,3 +89,9 @@
 - 掟と往復の記録 … [`_docs/instruments/README.md`](../../_docs/instruments/README.md)
 
 ★2026-08-21 まで、この文書から実物への導線が**1本もありませんでした**（配ったのに届いていなかった）。
+
+## 実行版の入口
+`/self-verification`（[`.claude/skills/self-verification/SKILL.md`](../../.claude/skills/self-verification/SKILL.md)）。
+検査・計器を書く直前や人間への目視依頼を書きかけた瞬間にAIが自動発見する構造化版
+（2026-09-27、Superpowers知見の取り込み検討会議で設計。詳細:
+[`_docs/DESIGN-self-verification-skill-2026-09-27.md`](../../_docs/DESIGN-self-verification-skill-2026-09-27.md)）。

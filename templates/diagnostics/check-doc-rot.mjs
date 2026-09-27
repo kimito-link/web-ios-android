@@ -44,8 +44,12 @@ const fileIdx = args.indexOf("--file");
 const positional = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--file");
 const ROOT = resolve(positional[0] ?? process.cwd());
 
-/** 既定の検査対象。増やすときはここに足す */
-const DEFAULT_TARGETS = ["CLAUDE.md"];
+/**
+ * 既定の検査対象。増やすときはここに足す。
+ * ★2026-09-27追加: .claude/skills/self-verification/SKILL.md。
+ *   規範文ではなく手順書だが、中のコマンド例・参照パスも同様に腐りうるため対象にする。
+ */
+const DEFAULT_TARGETS = ["CLAUDE.md", ".claude/skills/self-verification/SKILL.md"];
 
 /**
  * 除外するパターン。
@@ -71,7 +75,15 @@ const IGNORE_MENTION = [
  */
 function extractPaths(text) {
   const found = new Map();
-  const re = /(?<![A-Za-z0-9_./-])((?:docs|scripts|lib|components|features|server|app|shared|drizzle|_docs)\/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+)/g;
+  /*
+   * ★2026-09-27追加: `templates`・`_docs/instruments`を先頭キーワードに追加。
+   *   self-verification SKILL.md の実装で発覚した穴: `templates/scripts/lib/foo.mjs`
+   *   のような複合パスは、先頭が対象キーワードリストの語と一致しないため
+   *   一件も検出されなかった（正規表現は行頭一致ではなく「キーワード/」から
+   *   始まる形にしか反応しない）。CLAUDE.md自体に`templates/`参照が35件ある
+   *   ため、この穴は今回の対象1件に留まらない既存の検出漏れだった。
+   */
+  const re = /(?<![A-Za-z0-9_./-])((?:docs|scripts|lib|components|features|server|app|shared|drizzle|_docs|templates)\/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+)/g;
   let m;
   while ((m = re.exec(text)) !== null) {
     const p = m[1].replace(/[).,:]+$/, "");
