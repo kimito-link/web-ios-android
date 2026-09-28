@@ -33,7 +33,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { loadAppConfig, getProjectRoot } from './lib/app-config.mjs';
 import { resolveBrandContext } from './lib/brand-preset.mjs';
 import { selectAdapter } from './lib/hosting-env-adapters.mjs';
 import {
@@ -44,7 +43,41 @@ import {
 } from './lib/clerk-key-distribution-core.mjs';
 import { computeExitCode, formatProbeReport, runSelfTest, withRetryOnTimeout, EXIT } from './lib/instrument-core.mjs';
 
-const ROOT = getProjectRoot();
+// ★このスクリプトは web-ios-android/templates/scripts/ に置かれるが、実行対象の
+//   app.config.json は「配布元アプリ」(例: kimitolink-linktree)側にある。
+//   templates/scripts/lib/app-config.mjs の getProjectRoot() は import.meta.url
+//   (このファイル自身の場所)から祖先を遡る設計で、process.cwd() を見ない。
+//   そのため `cd kimitolink-linktree && node ../web-ios-android/templates/scripts/
+//   distribute-clerk-keys.mjs` のような「他リポジトリから呼ぶ」使い方では
+//   常に web-ios-android 自身の app.config.json を掴んでしまい、siblingServices が
+//   常に空に見える実損があった(2026-09-29発覚)。app-config.mjs は21ファイルが依存する
+//   共有基盤で影響範囲が広いため変更せず(CLAUDE.md非交渉ルール5番)、このスクリプト
+//   専用に process.cwd() 起点の探索を用意する(意図的な複製。ロジックはapp-config.mjs
+//   のresolveRootと同型だが、起点がimport.meta.urlかprocess.cwd()かで役割が違うため
+//   関数を共有すると余計に紛らわしくなる)。
+function resolveConfigRoot() {
+  let dir = process.cwd();
+  for (let i = 0; i < 8; i++) {
+    if (fs.existsSync(path.join(dir, 'app.config.json'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return process.cwd(); // 見つからなければ従来通り(エラーメッセージがそこを指す)
+}
+
+const ROOT = resolveConfigRoot();
+const CONFIG_PATH = path.join(ROOT, 'app.config.json');
+
+function loadAppConfig() {
+  if (!fs.existsSync(CONFIG_PATH)) {
+    throw new Error(
+      `app.config.json not found (探索起点: ${process.cwd()}). ` +
+        'このコマンドは配布元アプリ(app.config.jsonのあるリポジトリ)のディレクトリから実行してください。',
+    );
+  }
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+}
 
 const { values } = parseArgs({
   options: {
@@ -201,6 +234,7 @@ async function main() {
   }
 
   const allResults = [];
+  let adapterInitFailed = false;
   for (const service of targets) {
     let adapter;
     try {
@@ -210,6 +244,14 @@ async function main() {
         vercelTeamId: process.env.VERCEL_TEAM_ID,
       });
     } catch (e) {
+      adapterInitFailed = true;
+      // ★2026-09-29修正: ドライラン(!values.apply)はこのブロックの後、無条件に
+      //   INCONCLUSIVEで早期returnしていたため、ここでpushした結果が一度も
+      //   表示されないまま握りつぶされていた(kimitolink-linktreeで実際に発生。
+      //   RENDER_API_TOKEN未設定で選定は成功したのに「[DRY]」行が一切出ず、
+      //   原因調査に手間取った)。ドライランでも「なぜこのサービスが配布できないか」
+      //   は必ず可視化する。
+      console.log(`\n[DRY] ${service.name}: アダプタ初期化に失敗 — ${e?.message}`);
       allResults.push({
         probe: `${service.name}: アダプタの初期化`,
         verdict: 'fail',
@@ -236,7 +278,9 @@ async function main() {
 
   if (!values.apply) {
     console.log('\n実際に配布するには --apply を付けて再実行してください。');
-    process.exit(EXIT.INCONCLUSIVE); // ドライランは「測っていない」ので緑を名乗らない
+    // ★アダプタ初期化に1件でも失敗していれば、原因(トークン未設定等)を隠さずFAILで終える。
+    //   全件成功なら従来通りINCONCLUSIVE(ドライランは「測っていない」ので緑を名乗らない)。
+    process.exit(adapterInitFailed ? computeExitCode(allResults) : EXIT.INCONCLUSIVE);
   }
 
   console.log(values.json ? JSON.stringify(allResults, null, 2) : formatProbeReport(allResults));
