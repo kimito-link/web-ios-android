@@ -142,6 +142,43 @@
       "scopePaths": [
         "templates/diagnostics/check-hooks-wired.mjs"
       ]
+    },
+    {
+      "at": "2026-09-28T11:11:43.141Z",
+      "responsibility": "clerk-key-distribution-cli",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/distribute-clerk-keys.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-28T11:11:43.233Z",
+      "responsibility": "brand-preset-resolution",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/scripts/lib/brand-preset.mjs",
+      "scopePaths": [
+        "templates/scripts/lib/brand-preset.mjs",
+        "templates/scripts/setup-clerk-x-oauth.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-28T11:11:43.320Z",
+      "responsibility": "clerk-key-distribution-plan-and-judgement",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/clerk-key-distribution-core.mjs"
+      ]
+    },
+    {
+      "at": "2026-09-28T11:11:43.411Z",
+      "responsibility": "clerk-key-hosting-adapters",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/hosting-env-adapters.mjs"
+      ]
     }
   ]
 }

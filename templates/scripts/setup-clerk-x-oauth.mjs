@@ -36,10 +36,9 @@
 
 import { readFileSync, existsSync, appendFileSync } from "fs";
 import { execSync } from "child_process";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { resolve } from "path";
+import { resolveBrandContext } from "./lib/brand-preset.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const WRITE_ENV = args.includes("--write-env");
 const WRITE_VERCEL = args.includes("--write-vercel");
@@ -74,36 +73,12 @@ const domain = identity.productionDomain ?? "";
 // auth.brandPreset があれば templates/auth/brands/<brand>.json を読み、
 // 個別キー(clerkCustomDomain / xCallbackUrl / requiredXScopes)が未設定なら
 // プリセット値で補完する。app.config.json 側の明示値が常に優先。
-let preset = null;
-const presetName = auth.brandPreset ?? "";
-if (presetName) {
-  // このスクリプトは templates/scripts/ に置かれるが、プロジェクトに丸ごと
-  // コピーされる場合もある。両方を探索する。
-  const presetCandidates = [
-    resolve(__dirname, "..", "auth", "brands", `${presetName}.json`),
-    resolve(process.cwd(), "templates", "auth", "brands", `${presetName}.json`),
-    resolve(process.cwd(), "auth", "brands", `${presetName}.json`),
-  ];
-  const presetPath = presetCandidates.find((p) => existsSync(p));
-  if (presetPath) {
-    preset = JSON.parse(readFileSync(presetPath, "utf8"));
-  }
-}
+// ★方式A/B判定・共有鍵env名の解決は lib/brand-preset.mjs へ切り出し済み
+//   (2026-09-28、distribute-clerk-keys.mjs と共有するため。CANONICAL CHECK:
+//   ESTABLISH_REHOME。ロジックの二重実装を残さない)。
+const brandCtx = resolveBrandContext(config);
+const { preset, presetName, mode: MODE, resolvedClerkDomain } = brandCtx;
 
-// ── 方式 A(インスタンス共有) / B(各アプリ独立) を判定 ──
-// app.config.json の auth.shareInstanceAcrossApps が最優先、無ければプリセット値。
-const shareInstance =
-  auth.shareInstanceAcrossApps ?? preset?.clerk?.shareInstanceAcrossApps ?? false;
-const MODE = shareInstance ? "A" : "B";
-
-// プリセット由来の Clerk ドメイン / scope を解決(個別指定が優先)
-// 方式A: ブランド共有インスタンスのドメイン(親=preset.clerk.customDomain)を必ず使う。
-//        各アプリ固有の clerkCustomDomain は無視する(全アプリが同じインスタンスだから)。
-// 方式B: アプリ固有の clerkCustomDomain を優先。
-const resolvedClerkDomain =
-  MODE === "A"
-    ? preset?.clerk?.customDomain || auth.clerkCustomDomain || ""
-    : auth.clerkCustomDomain || preset?.clerk?.customDomain || "";
 const callbackTemplate =
   preset?.callbackUrlTemplate || "https://{clerkDomain}/v1/oauth_callback";
 // 方式A: Callback も共有インスタンスのドメイン(resolvedClerkDomain)で統一する。
@@ -121,9 +96,8 @@ const resolvedScopes =
     : preset?.xOAuth?.requiredScopes) ?? [];
 const forbiddenScopes = preset?.xOAuth?.forbiddenScopes ?? ["tweet.write"];
 
-// 方式A で各アプリが受け取るブランド共有鍵の env 名
-const sharedPubKeyEnv = preset?.clerk?.sharedInstancePublishableKeyEnv ?? "";
-const sharedSecretKeyEnv = preset?.clerk?.sharedInstanceSecretKeyEnv ?? "";
+// 方式A で各アプリが受け取るブランド共有鍵の env 名(brand-preset.mjsが解決済み)
+const { sharedPubKeyEnv, sharedSecretKeyEnv } = brandCtx;
 
 title("━━━ Clerk + X OAuth セットアップチェッカー ━━━");
 info(`対象アプリ: ${identity.displayName ?? "(未設定)"}`);

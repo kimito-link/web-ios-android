@@ -184,7 +184,42 @@
           "sharedAccount": { "type": "boolean", "description": "true: 同一ブランドでアカウント(Clerkインスタンス)共有=導線で『登録不要』を訴求" },
           "appUrl": { "type": "string", "format": "uri", "description": "アプリ本体のURL。url が紹介ページのとき、ログイン済みユーザーをこちらへ直接送る" },
           "iconUrl": { "type": "string", "format": "uri", "description": "カードに出すアイコン画像のURL。★配信されていないパスを書かないこと（壊れた画像になる）。省略時は絵文字にフォールバックする" },
-          "hubKey": { "type": "string", "description": "共通プロフィール層(hub)の名前空間キー。POST /api/hub/summary の appKey 白リストと一致させる。★これが無いと受け口が unknown app で拒否する" }
+          "hubKey": { "type": "string", "description": "共通プロフィール層(hub)の名前空間キー。POST /api/hub/summary の appKey 白リストと一致させる。★これが無いと受け口が unknown app で拒否する" },
+          "hosting": {
+            "type": "object",
+            "description": "この姉妹サービスへClerk等の共有鍵を配布する先。省略時はdistribute-clerk-keys.mjsの配布対象外(clerk-key-distribution-SPEC.md B節)",
+            "additionalProperties": false,
+            "required": ["provider"],
+            "properties": {
+              "provider": { "type": "string", "enum": ["vercel", "render", "static"] },
+              "vercelProjectId": { "type": ["string", "null"], "description": "provider=vercelのとき必須。Vercel Project ID" },
+              "renderServiceId": { "type": ["string", "null"], "description": "provider=renderのとき必須。Render Service ID (srv-で始まる)" },
+              "environment": { "type": "string", "enum": ["production", "preview", "development"], "default": "production" }
+            }
+          },
+          "sharedKeys": {
+            "type": "array",
+            "description": "この姉妹サービスへ配布するenv名と、配布後の検証契約(clerk-key-distribution-SPEC.md B節)",
+            "items": {
+              "type": "object",
+              "required": ["envName", "sourceKeyRef"],
+              "additionalProperties": false,
+              "properties": {
+                "envName": { "type": "string", "description": "配布先での環境変数名(例: KIMITO_CLERK_SECRET_KEY)" },
+                "sourceKeyRef": { "type": "string", "description": "brand-preset.mjsが解決するキー参照名(例: sharedSecretKeyEnv)。実値はここに書かない" },
+                "verify": {
+                  "type": "object",
+                  "description": "配布できたかを確認する公開エンドポイント契約(第2層検証)",
+                  "additionalProperties": false,
+                  "properties": {
+                    "endpoint": { "type": "string", "format": "uri", "description": "例: https://voice.kimito.link/api/config" },
+                    "jsonPath": { "type": "string", "description": "例: $.clerkPublishableKeyPrefix" },
+                    "expectedPrefix": { "type": "string", "description": "例: pk_live_Y2xlcmsua2ltaXRv (先頭一致で照合。実値の下1桁まで晒さない)" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
