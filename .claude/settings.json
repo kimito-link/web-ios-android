@@ -21,6 +21,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-write-preceded-by-search.mjs\"",
             "timeout": 10,
             "statusMessage": "既存実装の検索履歴チェック中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-target-file-reachability.mjs\"",
+            "timeout": 10,
+            "statusMessage": "実装対象ファイルの到達性チェック中..."
           }
         ]
       },
