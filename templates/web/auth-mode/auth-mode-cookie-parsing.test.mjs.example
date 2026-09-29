@@ -1,0 +1,78 @@
+// kimito.link 共通アカウント: __client_uat cookie 判定ロジックの契約テストの型。
+// コピー先で node:test（Node組み込み、新規依存ゼロ）または vitest/jest に読み替えて使う。
+//
+// ★実損（2026-09-29、exosome・surechigai両方で発生）: Clerk はドメイン接尾辞付き
+// __client_uat_<suffix> を __client_uat（接尾辞無し）と併置することがある（本番実測:
+// __client_uat_ZGVu8CMk=0; __client_uat=1234567890）。String#match（グローバル
+// フラグ無し、最初の1件のみ）を使っていたため、接尾辞付きの'0'が先に出現すると
+// 実際のログイン済み値を見ずにゲスト誤判定していた。
+//
+// head-snippet.html.example / auth-mode.js 相当の判定ロジックと完全に同一の
+// 正規表現を再現し、本番で実際に観測したcookie並びを含む複数シナリオで
+// 正しく判定できることを固定する。
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+// head-snippet.html.example / 各プロジェクトのauth-mode.js相当と同一実装（exec-loop版）。
+// ロジックが変わったら、この関数もソース側の実装を見て同期させること（PAIRS対象）。
+function hasLiveClerkCookie(cookieString) {
+  const re = /(?:^|;\s*)__client_uat[^=]*=([^;]*)/g;
+  let m;
+  while ((m = re.exec(cookieString))) {
+    if (m[1] && m[1] !== '0') return true;
+  }
+  return false;
+}
+
+test('cookieが無ければゲスト扱い', () => {
+  assert.equal(hasLiveClerkCookie(''), false);
+});
+
+test('__client_uat=0 のみ（未ログイン）はゲスト扱い', () => {
+  assert.equal(hasLiveClerkCookie('__client_uat=0'), false);
+});
+
+test('__client_uat が0以外ならログイン済み扱い', () => {
+  assert.equal(hasLiveClerkCookie('__client_uat=1234567890'), true);
+});
+
+test('★実損の再現: 接尾辞付きcookieが先・値0、接尾辞無しが後・値ありでもログイン済みと判定する', () => {
+  // 本番で実際に観測した並び（surechigai-romi.link / yukkuri-exosome.link, 2026-09-29）
+  assert.equal(
+    hasLiveClerkCookie('__client_uat_ZGVu8CMk=0; __client_uat=1234567890'),
+    true
+  );
+});
+
+test('接尾辞付き・接尾辞無し、両方とも0ならゲスト扱い', () => {
+  assert.equal(
+    hasLiveClerkCookie('__client_uat_ZGVu8CMk=0; __client_uat=0'),
+    false
+  );
+});
+
+test('接尾辞付きのみが0以外でもログイン済み扱い（接尾辞無しが無い場合）', () => {
+  assert.equal(hasLiveClerkCookie('__client_uat_ZGVu8CMk=9876543210'), true);
+});
+
+test('3つ以上のClerk系cookieが混在しても、いずれか1つが0以外ならログイン済み扱い', () => {
+  assert.equal(
+    hasLiveClerkCookie(
+      '__client_uat_aaa=0; __client_uat_bbb=0; __client_uat=0; __client_uat_ccc=5555555555'
+    ),
+    true
+  );
+});
+
+test('無関係な他のcookieが混在していても正しく判定する', () => {
+  assert.equal(
+    hasLiveClerkCookie('theme=dark; __client_uat_ZGVu8CMk=0; __client_uat=1234567890; lang=ja'),
+    true
+  );
+});
+
+test('__client_uatという文字列を含むが無関係な名前のcookieには反応しない', () => {
+  // __client_uatxyz=... のような偶然の部分一致ではなく、
+  // __client_uat[^=]* という接尾辞パターンに一致するもの限定
+  assert.equal(hasLiveClerkCookie('some_other_cookie=1234567890'), false);
+});

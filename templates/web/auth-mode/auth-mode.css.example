@@ -1,0 +1,12 @@
+/* ============================================
+   kimito.link 認証モード表示契約
+   DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md の C-3。
+   <html data-auth="member|guest"> は各ページ <head> 先頭のインライン
+   スクリプト（head-snippet.html.example）がペイント前に確定させる。
+   このプロジェクトの auth-mode.js 相当は裏取り（実セッション確認）のみに徹する。
+   ★ body > * を対象にするセレクタは禁止（Clerk が body 直下に
+     モーダルを追加するため。2026-09-16 に実際に隠れた事故の再発防止）。
+   実証元: yukkuri-exosome.link/src/css/style.css
+   ============================================ */
+html[data-auth="guest"] .member-only { display: none !important; }
+html[data-auth="member"] .guest-only { display: none !important; }

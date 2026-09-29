@@ -1,0 +1,13 @@
+<!--
+  kimito.link 共通アカウント: ペイント前・同期の認証モード確定スニペット。
+
+  ★このファイル自体は使わない。中身を各ページの <head> 最初の子としてインラインで
+    埋め込む（外部ファイル化しない。ダウンロード待ちでペイント前に間に合わない
+    可能性があるため。DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md C-1）。
+  ★<link rel="stylesheet"> 等より必ず前に置く。
+
+  実証元: yukkuri-exosome.link（全21ページ, 2026-09-29 MVP確定・2026-09-29に
+  複数cookie併置バグを修正）。対応する契約テストの型:
+  auth-mode-cookie-parsing.test.mjs.example / auth-mode-source-drift.test.mjs.example
+-->
+<script>(function(){var h=false;var re=/(?:^|;\s*)__client_uat[^=]*=([^;]*)/g;var m;while((m=re.exec(document.cookie))){if(m[1]&&m[1]!=='0'){h=true;break}}document.documentElement.setAttribute('data-auth',h?'member':'guest');})();</script>
