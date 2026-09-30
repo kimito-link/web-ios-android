@@ -12,13 +12,27 @@
 // へ追記された全ルール（「直接URLを併記する」等）を一切反映していなかった。
 // ユーザーがスクリーンショットで指摘して初めて発覚した。
 //
-// このhookは「セッション開始からの経過時間」という客観的事実だけを検出する。
-// 「CLAUDE.mdが実際に古いか」「今回の応答がルール違反か」は意味判断であり
-// 検出できない（経過時間が長くても、そのセッション中に明示的にCLAUDE.mdを
-// Readしていれば最新化されている可能性がある。逆に経過時間が短くても
-// セッション開始直後にCLAUDE.mdが書き換わっていれば同じ問題が起きる）。
-// この限界ゆえブロックしない — 常にexit 0で、additionalContextで
-// 気づきを促すだけに留める。
+// ★第2の実損（2026-09-30、soushin-suggest.linkセッション）: 経過時間だけを見る
+// 旧設計の限界が実際に露呈した。そのセッションは「実機で確認した」と報告したが、
+// 報告後にプロダクトが新版へ更新され、以後は一度も実機検証していないまま
+// 「確認済み」の前提で作業を続けていた。この種の違反は`check-commit-preceded-by-
+// verification.mjs`hookが本来検出できる領域だが、そのセッションの
+// `~/.claude/settings.json`（グローバル、git非同期のPCローカルファイル）が
+// このhookの追加(2026-09-29)より前の状態のまま起動され続けていたため、
+// hook自体が発火していなかった可能性が高い。
+// ★これは「経過時間が長い」からではなく「セッション開始時点のhook配線が、
+// 正本(web-ios-android/.claude/hooks/・CLAUDE.md)の最新コミットより古い」ことが
+// 真因。経過時間としきい値だけの比較では、配線がすぐ後に更新された短命セッション
+// を見逃し、配線が変わらないまま長時間動く安全なセッションを誤検知しうる。
+// → 経過時間の判定に加えて「セッション開始時刻 < 正本の最終更新コミット時刻」を
+//   実測する判定を追加する（fail-openの非ブロッキング警告という制約は変えない）。
+//
+// このhookは「セッション開始からの経過時間」「セッション開始後に正本が
+// 更新されたか」という客観的事実だけを検出する。「CLAUDE.mdが実際に古いか」
+// 「今回の応答がルール違反か」は意味判断であり検出できない（経過時間や正本更新が
+// 検出されても、そのセッション中に明示的にCLAUDE.mdをReadしていれば最新化
+// されている可能性がある）。この限界ゆえブロックしない — 常にexit 0で、
+// additionalContextで気づきを促すだけに留める。
 //
 // ★実装上の重要な訂正（2026-09-26、事前調査エージェントの誤りを実測で修正）:
 // 当初「セッションディレクトリのファイルシステム上のbirthtime」で開始時刻を
@@ -35,6 +49,9 @@
 
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 
 // ★警告を出す閾値。実測した実損(26日間)より大幅に短い12時間に設定する。
 //   長時間セッションは異常ではなく実態として起こりうる運用（並列セッション
@@ -100,6 +117,47 @@ async function readFirstTimestamp(transcriptPathRaw) {
   });
 }
 
+// web-ios-androidリポジトリの実パスを探す。web-ios-android-relay.mjsと同じ
+// candidateRoots探索パターン（PC固有の配置ゆらぎを吸収する）。
+// ★意図的な複製: このhookはgrepでweb-ios-androidの外(他リポジトリのセッション)
+//   からも呼ばれるため、web-ios-android-relay.mjs自身をimportできない
+//   （リレー先がこのファイル自身になる循環を避けるため）。
+function findWebIosAndroidRoot() {
+  const home = homedir();
+  const relative = ['github', 'web-ios-android'];
+  const candidates = [
+    join(home, 'OneDrive', 'デスクトップ', 'Resilio', ...relative),
+    join(home, 'Desktop', 'Resilio', ...relative),
+    join(home, ...relative),
+    join(home, 'Documents', ...relative),
+    join(home, 'repos', 'web-ios-android'),
+    join(home, 'projects', 'web-ios-android'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(join(p, 'CLAUDE.md'))) return p;
+  }
+  return null;
+}
+
+// 正本(CLAUDE.md・.claude/hooks/配下)の最終コミット時刻をgit logで実測する。
+// ★機械化できる理由: 「hookファイルが最後にいつ変わったか」は客観的事実。
+//   「セッションの起動タイミングがそれより前だったか」も日時比較だけで判定できる。
+// 取得できない場合（gitが無い・浅いclone等）はnullを返しfail-openにする。
+function readCanonicalLastUpdatedMs(repoRoot) {
+  try {
+    const iso = execFileSync(
+      'git',
+      ['log', '-1', '--format=%cI', '--', '.claude/hooks/', 'CLAUDE.md'],
+      { cwd: repoRoot, encoding: 'utf8', timeout: 5000 }
+    ).trim();
+    if (!iso) return null;
+    const ms = Date.parse(iso);
+    return Number.isNaN(ms) ? null : ms;
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
   const stdin = readStdin();
   let input;
@@ -116,19 +174,48 @@ async function main() {
   if (Number.isNaN(startMs)) process.exit(0);
 
   const elapsedHours = (Date.now() - startMs) / (1000 * 60 * 60);
-  if (elapsedHours < WARN_THRESHOLD_HOURS) process.exit(0);
+
+  // ★2026-09-30追加: 経過時間のしきい値とは独立に、「セッション開始時点より後に
+  //   正本(hook本体・CLAUDE.md)が更新されたか」を実測する。これが真の危険信号
+  //   （soushin-suggest.link実損の再発防止）。経過時間が短くても、セッション
+  //   開始の直後に正本が更新されていれば配線漏れのリスクがある。
+  const repoRoot = findWebIosAndroidRoot();
+  const canonicalUpdatedMs = repoRoot ? readCanonicalLastUpdatedMs(repoRoot) : null;
+  const canonicalUpdatedAfterStart =
+    canonicalUpdatedMs !== null && canonicalUpdatedMs > startMs;
+
+  if (elapsedHours < WARN_THRESHOLD_HOURS && !canonicalUpdatedAfterStart) {
+    process.exit(0);
+  }
 
   const elapsedDays = (elapsedHours / 24).toFixed(1);
+  const messages = [];
+  if (elapsedHours >= WARN_THRESHOLD_HOURS) {
+    messages.push(
+      `★このセッションは${elapsedDays}日前(約${Math.floor(elapsedHours)}時間前)に開始されました。`
+    );
+  }
+  if (canonicalUpdatedAfterStart) {
+    const updatedDate = new Date(canonicalUpdatedMs).toISOString();
+    messages.push(
+      `★★正本(web-ios-android/CLAUDE.md・.claude/hooks/)がこのセッション開始後` +
+      `(${updatedDate}実測)に更新されています。hook配線(~/.claude/settings.json)が` +
+      '古いままの可能性があり、実地検証チェック等の機械検知が効いていない恐れがあります' +
+      '（2026-09-30 soushin-suggest.link実損の再発防止策）。'
+    );
+  }
+  messages.push(
+    'Claude Codeはセッション開始時にしか指示書(CLAUDE.md)とhook設定を読み込まないため、' +
+    'その後の更新が反映されていない可能性があります' +
+    '（web-ios-android/CLAUDE.md「★★この修正が効かない既知のケース」節参照）。' +
+    '疑わしい場合は `web-ios-android/CLAUDE.md` を今すぐReadして最新化するか、' +
+    '新しいセッションに切り替えてください。'
+  );
+
   const output = {
     hookSpecificOutput: {
       hookEventName: 'UserPromptSubmit',
-      additionalContext:
-        `★このセッションは${elapsedDays}日前(約${Math.floor(elapsedHours)}時間前)に開始されました。` +
-        'Claude Codeはセッション開始時にしか指示書(CLAUDE.md)を読み込まないため、' +
-        'その後の更新が反映されていない可能性があります' +
-        '（web-ios-android/CLAUDE.md「★★この修正が効かない既知のケース」節参照）。' +
-        '疑わしい場合は `web-ios-android/CLAUDE.md` を今すぐReadして最新化するか、' +
-        '新しいセッションに切り替えてください。',
+      additionalContext: messages.join(' '),
     },
   };
   process.stdout.write(JSON.stringify(output));

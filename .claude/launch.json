@@ -18,6 +18,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["http-server", "../soushin-suggest.link/public", "-p", "8769", "-c-1"],
       "port": 8769
+    },
+    {
+      "name": "kimito-link-voice",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["../kimito-Link-Voice/server.js"],
+      "port": 3000
     }
   ]
 }
