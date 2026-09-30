@@ -1,34 +1,55 @@
-# kimito.link 共通アカウント: ペイント前・同期の認証モード金型
+# kimito.link 共通アカウント: 認証UX金型（ちらつきゼロ＋Xワンタップログイン）
 
-> 状態: 実装済み・実証済み（exosome MVP確定 2026-09-29・cookie解析バグ修正 2026-09-29）。
+> 状態: 実装済み・実証済み（ちらつきゼロ: exosome MVP確定 2026-09-29・cookie解析バグ修正
+> 2026-09-29／Xワンタップログイン: Vanilla JS版正本実装 2026-09-30、Voiceへの適用は次段）。
 > 設計書（読む順の1番目）: `../../../_docs/DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md`
 > 実装ハンドオフ: `../../../_docs/IMPLEMENTATION-HANDOFF-kimito-family-prepaint-auth-mode-2026-09-29.md`
+> Xワンタップログインの正本: `ai-generic-rules/docs/policies/CLERK_X_LOGIN_PLAYBOOK.md`
 
 ## これは何か
 
 kimito.link 共通アカウント（Clerk、`.kimito.link` 親ドメインで `__client_uat` cookie を共有）を
-使うサービスで、「未ログインなら強制送還する」実装が引き起こす**ちらつき**（一瞬本来の画面が
-見える→隠される→別画面へ飛ぶ、という非同期判定の待ち時間）を構造的に消すための金型。
+使うサービス向けの、認証まわりの体験を統一する2つの金型を束ねている。
 
-判定は各ページ `<head>` 先頭のインラインスクリプトがペイント前・同期的に行い、
-`<html data-auth="member|guest">` を確定させる。表示の出し分けは CSS に任せ、
-JS（`auth-mode.js` 等）は「後から裏取りする係」に徹する。`location.replace` は使わない。
+**① ちらつきゼロ**: 「未ログインなら強制送還する」実装が引き起こす**ちらつき**（一瞬本来の画面が
+見える→隠される→別画面へ飛ぶ、という非同期判定の待ち時間）を構造的に消す。判定は各ページ
+`<head>` 先頭のインラインスクリプトがペイント前・同期的に行い、`<html data-auth="member|guest">`
+を確定させる。表示の出し分けは CSS に任せ、JS（`auth-mode.js` 等）は「後から裏取りする係」に
+徹する。`location.replace` は使わない。
+
+**② Xワンタップログイン**: kimito.link本体は「Xで無料ではじめる」を1回クリックするだけで、
+Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移する。この体験を他サービスにも
+揃えるための金型（`x-one-tap-signin.js.example`）。
 
 ## 実証元・適用状況
+
+### ①ちらつきゼロ
 
 | プロジェクト | 適用状況 |
 |---|---|
 | `yukkuri-exosome.link` | MVP実装済み（全21ページ）。2026-09-29に複数cookie併置バグ修正 |
 | `surechigai-romi.link` | 独自のゲストWebシェル判定に `__client_uat` を統合済み（`lib/clerk-public-routes.ts`）。2026-09-29に同じバグを修正 |
-| `kimito-Link-Voice` | 未適用（設計書B-3で横展開予定と記載されているが未着手） |
+| `kimito-Link-Voice` | `/try/`ページに適用済み（2026-09-29、PR #44） |
+
+### ②Xワンタップログイン
+
+| プロジェクト | 適用状況 |
+|---|---|
+| `kimitolink-linktree` | 実装済み（`components/AutoAdvanceToX.tsx`）。原型・フォールバックセレクタ/ネイティブシェルガードは無し（Web専業のため不要） |
+| `surechigai-romi.link` | 実装済み（`components/auth/auto-advance-to-x.tsx`）。フォールバックセレクタ・ネイティブシェル除外ガード・純判定関数分離あり（最も完成度が高い） |
+| `kimito-Link-Voice` | 未適用。`x-one-tap-signin.js.example`がVanilla JS移植版の正本実装。適用時は`js/modules/clerk-auth-client.js`の`openSignIn()`から呼ぶ |
 
 ## ファイル一覧
 
-- `head-snippet.html.example`: 各ページ `<head>` 最初の子としてインラインで埋め込むスクリプト
-- `auth-mode.css.example`: `.member-only` / `.guest-only` の表示切替CSS契約
-- `auth-mode-cookie-parsing.test.mjs.example`: cookie解析ロジックの契約テスト（実損再現ケース含む）
+- `head-snippet.html.example`: 各ページ `<head>` 最初の子としてインラインで埋め込むスクリプト（①）
+- `auth-mode.css.example`: `.member-only` / `.guest-only` の表示切替CSS契約（①）
+- `auth-mode-cookie-parsing.test.mjs.example`: cookie解析ロジックの契約テスト（実損再現ケース含む、①）
+- `x-one-tap-signin.js.example`: XボタンへDOM clickを送るワンタップログイン（②）。
+  ネイティブアプリシェル除外ガード・CSSセレクタのフォールバックを内蔵
 
 ## 使うとき
+
+### ①ちらつきゼロ
 
 1. `head-snippet.html.example` の中身を対象プロジェクトの全ページ `<head>` 最初の子に埋め込む
    （外部ファイル化しない。ダウンロード待ちでペイント前に間に合わない可能性があるため）
@@ -38,7 +59,22 @@ JS（`auth-mode.js` 等）は「後から裏取りする係」に徹する。`lo
 4. 全ページにスニペットが正しく入っているかのドリフト検知テストを追加する
    （実装例: `yukkuri-exosome.link/test/auth-mode-source-drift.test.mjs`）
 
+### ②Xワンタップログイン
+
+1. `x-one-tap-signin.js.example` を配布先プロジェクトへコピーし、`<script>` タグで読み込む
+2. Clerkのログインボタン押下ハンドラ（`openSignIn()`相当）の直後に
+   `window.KimitoXOneTapSignIn.triggerAutoXClick({onOverlayShow, onOverlayHide})` を呼ぶ
+3. `onOverlayShow`/`onOverlayHide` に全画面ローディング表示の出し入れを実装する
+   （正本§4.1「経由ページを見せたくない」。省略すると選択モーダルが一瞬見えてから自動clickされる）
+4. 配布先が既に `window.isNativePlatform()`（Capacitor判定）を持っていればそれを自動で再利用する。
+   無い場合は `x-one-tap-signin.js.example` 内蔵のフォールバック判定が使われる
+5. 実装後、正本§4.1.1のネイティブシェル除外ガードが機能しているか、ブリッジ注入
+   （`window.Capacitor={isNativePlatform:()=>true}`）した状態で実際にクリックし、
+   自動clickが発火せず通常の選択モーダルが残ることを確認する
+
 ## 地雷
+
+### ①ちらつきゼロ
 
 1. スニペットを `<body>` 末尾や外部ファイルに置くと、ちらつきが戻る
 2. `body > *` を隠すCSSはClerkモーダルごと隠す（2026-09-16に実際に踏んだ事故）
@@ -50,3 +86,21 @@ JS（`auth-mode.js` 等）は「後から裏取りする係」に徹する。`lo
    強制上書きするため、クライアントJSからの `document.cookie` 偽装によるテストは
    原理的に不可能（2026-09-29実地検証で判明）。品質保証は単体テスト（cookie解析ロジックの
    契約テスト）とドリフト検知テストで積む
+
+### ②Xワンタップログイン
+
+1. **Clerk公式のOAuth直接遷移API（`signIn.authenticateWithRedirect()`/`signIn.sso()`）を
+   使わない**。一見「車輪の再発明を避ける世界標準」に見えるが、`<SignIn/>`を捨てる設計変更を
+   要求し、kimito.linkで実際に本番ログインを破壊した実績（commit db0032a）がある
+   （正本`CLERK_X_LOGIN_PLAYBOOK.md`§1・§4.1・§6で名指しで禁止）。DOM操作でclickを
+   「送る」方式（このファイルの実装）が、公式ドキュメントより優先すべき社内実測知見
+2. **ネイティブアプリシェル内では自動clickを発火させない**。2026-08-05に実際に
+   App Store Guideline 4.8で却下された（Sign in with Appleは実装済みだったが、
+   自動clickのせいで審査員がAppleを選ぶ機会が無く「サードパーティログインしか無い」と判定）
+3. CSSセレクタ（`.cl-socialButtonsBlockButton__x`等）はClerkの非公開内部クラス名で
+   将来変わりうる。セレクタ不一致時のフォールバック（aria-label等の総当たり）を必ず残す
+4. 「永久ロックにするな」——1回発火したら二度と発火しない設計にすると、X認可画面で
+   キャンセルして戻った人が再挑戦できなくなる。短時間クールダウン（3秒）に留める
+5. モーダル型（`Clerk.openSignIn()`）でも埋め込み型（`<SignIn/>`）と同じCSSクラス体系を
+   使うことを実測済み（2026-09-30、kimito-Link-Voice）。ただし3プロバイダ表示時は
+   Clerkが自動でアイコンボタン化するため、`Block`版ではなく`Icon`版セレクタが一致することがある

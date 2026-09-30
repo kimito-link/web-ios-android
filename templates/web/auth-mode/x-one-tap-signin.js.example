@@ -1,0 +1,178 @@
+/**
+ * kimito.link共通アカウント: Xワンタップログイン（Vanilla JS移植版）。
+ *
+ * 正本: ai-generic-rules/docs/policies/CLERK_X_LOGIN_PLAYBOOK.md §4.1・4.1.1
+ * ★このファイル自体は使わない。呼び出し元（clerk-auth-client.js相当）から
+ *   window.KimitoXOneTapSignIn.triggerAutoXClick(callbacks) を呼ぶ。
+ *
+ * ★核心＝clickを「奪う」のでなく「送る」（正本§4.1）:
+ *   Clerk標準のSignInモーダル/埋め込みUIが描画したXボタンに、本物のclickを
+ *   button.click()で1回届けるだけ。Clerkの認証フロー自体（authenticateWithRedirect
+ *   直呼び等）には一切触れない。これは車輪の再発明ではなく、Clerk公式のOAuth直接遷移API
+ *   （signIn.sso()等）が「<SignIn/>を捨てる」設計変更を要求し、kimito.linkで実際に
+ *   本番ログインを破壊した実績（commit db0032a）があるため、公式ドキュメントより
+ *   優先すべき社内実測知見として確立された。
+ *
+ * 実証元:
+ *   - kimitolink-linktree/components/AutoAdvanceToX.tsx（DOM操作の原型）
+ *   - surechigai-romi.link/components/auth/auto-advance-to-x.tsx（フォールバックセレクタ）
+ *   - surechigai-romi.link/lib/native-app-shell.ts（ネイティブシェル除外ガード）
+ *   - surechigai-romi.link/lib/auto-advance-to-x-guard.ts（純判定関数の分離）
+ *   - kimito-Link-Voice/try/index.html（実際にモーダル型でセレクタ実測・2026-09-30）
+ *
+ * ★実測で確認した重要な差分（2026-09-30、Voiceの/try/で実測）:
+ *   Clerk.openSignIn()のモーダル型は、<SignIn/>埋め込み型と同じcl-プレフィックスの
+ *   CSSクラス体系を使う（cl-modalBackdrop, cl-rootBox cl-signIn-root等）。
+ *   ただし3プロバイダ表示時はClerkが自動でアイコンボタン化する（正本§4「3プロバイダ
+ *   以上だと自動でアイコンボタン化」）ため、実際に一致したのは`Block`版ではなく
+ *   `.cl-socialButtonsIconButton__x`だった。両方のセレクタを含めておくこと。
+ */
+(function () {
+    'use strict';
+
+    var X_BUTTON_SELECTOR = [
+        '.cl-socialButtonsBlockButton__x',
+        '.cl-socialButtonsIconButton__x',
+        '.cl-socialButtonsBlockButton__twitter',
+        '.cl-socialButtonsIconButton__twitter',
+    ].join(', ');
+
+    var COOLDOWN_MS = 3000; // 正本§4.1「永久ロックにするな」。直近3秒だけ抑止。
+    var TIMEOUT_MS = 9000;  // 正本§4.1「壊れ方の上限を改善ゼロに固定」。失敗時は通常UIのまま。
+    var POLL_MS = 120;
+
+    var lastFiredAt = 0;
+
+    /**
+     * ネイティブアプリシェル（Capacitor server.url型）内で動いているか。
+     * ★App Store Guideline 4.8却下の実損対応（正本§4.1.1）。ネイティブアプリ内では
+     *   自動clickを発火させず、通常の選択モーダル（Apple/Google/X併記）のまま表示する。
+     *   審査員がAppleを選ぶ機会を奪うと「サードパーティログインしか無い」と判定される。
+     * ★依存: kimito-Link-Voiceの js/modules/native-platform.js が既にこの判定を持つ。
+     *   window.isNativePlatform() が定義されていればそれを再利用し、無ければこの関数が
+     *   単体でも動くようフォールバック実装を持つ（配布先で native-platform.js が
+     *   無い場合への備え）。
+     */
+    function isNativeAppShell() {
+        if (typeof window.isNativePlatform === 'function') {
+            try { return window.isNativePlatform(); } catch (e) { return false; }
+        }
+        try {
+            var c = window.Capacitor;
+            return !!(c && typeof c.isNativePlatform === 'function' && c.isNativePlatform());
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function isWithinCooldown() {
+        return (Date.now() - lastFiredAt) < COOLDOWN_MS;
+    }
+
+    function markFiredNow() {
+        lastFiredAt = Date.now();
+    }
+
+    function resolveClickableTarget(candidate) {
+        var target = candidate.closest ? (candidate.closest('button, a, [role="button"]') || candidate) : candidate;
+        if (target.getAttribute && target.getAttribute('aria-disabled') === 'true') return null;
+        if (target.tagName === 'BUTTON' && target.disabled) return null;
+        return target;
+    }
+
+    /**
+     * Xボタンを探す。まずCSSセレクタ、次にフォールバック（正本の還流分・2026-09-30）。
+     * ★CSSセレクタはClerkの非公開内部クラス名で将来変わりうる。一致しない場合は
+     *   aria-label/data-provider/textContent等を正規表現で総当たりする。
+     */
+    function findClickableXButton() {
+        var matched = document.querySelector(X_BUTTON_SELECTOR);
+        if (matched) {
+            var direct = resolveClickableTarget(matched);
+            if (direct) return direct;
+        }
+
+        var candidates = document.querySelectorAll('button, a, [role="button"]');
+        for (var i = 0; i < candidates.length; i++) {
+            var target = resolveClickableTarget(candidates[i]);
+            if (!target) continue;
+            var hay = (
+                (target.getAttribute('data-provider') || '') + ' ' +
+                (target.getAttribute('aria-label') || '') + ' ' +
+                (target.getAttribute('data-localization-key') || '') + ' ' +
+                (target.getAttribute('class') || '') + ' ' +
+                (target.className || '') + ' ' +
+                (target.textContent || '')
+            ).toLowerCase();
+            if (/twitter|\bx\b|__x\b|\boauth_x\b/.test(hay)) return target;
+        }
+        return null;
+    }
+
+    /**
+     * ワンタップXログインを試みる。呼び出し元がClerk.openSignIn()（またはマウント）を
+     * 実行した直後に呼ぶこと。ネイティブアプリシェル内では何もしない（fail-safe、
+     * 通常の選択モーダルがそのまま残る）。
+     *
+     * @param {{onOverlayShow?: function, onOverlayHide?: function}} [callbacks]
+     *   全画面オーバーレイ（「Xの画面へ進んでいます…」等）の表示/非表示を呼び出し元の
+     *   UIに任せるためのコールバック（正本§4.1「経由ページを見せたくない」）。省略可。
+     * @returns {boolean} 監視を開始したら true。ネイティブシェル・クールダウン中は false。
+     */
+    function triggerAutoXClick(callbacks) {
+        callbacks = callbacks || {};
+
+        if (isNativeAppShell()) return false; // §4.1.1: ネイティブでは自動clickしない
+        if (isWithinCooldown()) return false;
+
+        var didClick = false;
+        var observer = null;
+        var intervalId = null;
+        var timeoutId = null;
+
+        function cleanupTimers() {
+            if (intervalId) clearInterval(intervalId);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (observer) observer.disconnect();
+            observer = null;
+        }
+
+        function giveUp() {
+            cleanupTimers();
+            if (callbacks.onOverlayHide) callbacks.onOverlayHide();
+        }
+
+        function tryClick() {
+            if (didClick) return;
+            var button = findClickableXButton();
+            if (!button) return;
+
+            didClick = true;
+            markFiredNow();
+            cleanupTimers();
+            if (callbacks.onOverlayHide) callbacks.onOverlayHide();
+            button.click();
+        }
+
+        if (callbacks.onOverlayShow) callbacks.onOverlayShow();
+
+        observer = new MutationObserver(tryClick);
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['aria-disabled', 'class', 'disabled'],
+            childList: true,
+            subtree: true,
+        });
+        intervalId = setInterval(tryClick, POLL_MS);
+        timeoutId = setTimeout(giveUp, TIMEOUT_MS);
+        tryClick();
+
+        return true;
+    }
+
+    window.KimitoXOneTapSignIn = {
+        triggerAutoXClick: triggerAutoXClick,
+        isNativeAppShell: isNativeAppShell, // テスト・デバッグ用に公開
+        _findClickableXButton: findClickableXButton, // テスト用に公開
+    };
+})();
