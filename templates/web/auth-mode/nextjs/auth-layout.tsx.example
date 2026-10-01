@@ -1,0 +1,63 @@
+/**
+ * app/(auth)/layout.tsx — 認証ルートの ClerkProvider 設定（金型）
+ *
+ * ★出典: kimitolink-linktree/app/(auth)/layout.tsx（本番稼働中）
+ * ★ブランド依存は auth-brand.config.ts に外出し済み。
+ *
+ * ★ここが「共通アカウント（1ログインで全サービス）」の心臓部。
+ *   allowedRedirectOrigins に無いサービスへは**沈黙して戻れない**（エラーも出ない）。
+ */
+import { ClerkProvider } from "@clerk/nextjs";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+// ★自プロジェクトの localization / appearance を使うならここで差し替える。
+//   省略可（Clerk の既定が使われる）。
+// import { brandJaJP } from "@/lib/clerk-localization";
+// import { brandClerkAppearance } from "@/lib/clerk-appearance";
+
+const {
+  afterAuthPath,
+  signInPath,
+  signUpPath,
+  afterSignOutPath,
+  allowedRedirectOrigins,
+  developmentRedirectOrigins,
+} = authBrandConfig;
+
+export default function AuthLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <ClerkProvider
+      // 方式A: 共通アカウント（親ドメインで __client cookie を共有）。
+      // ★サブドメイン方式なら satellite 設定は不要かつ有害
+      //   （isSatellite:true は verified でない限り /v1/client/sync が落ちる）。
+      allowedRedirectOrigins={
+        process.env.NODE_ENV === "development"
+          ? [...developmentRedirectOrigins, ...allowedRedirectOrigins]
+          : allowedRedirectOrigins
+      }
+      allowedRedirectProtocols={["http:", "https:"]}
+      signInUrl={signInPath}
+      signUpUrl={signUpPath}
+      // ★FORCE: どの入口から来ても必ず着地先へ送る（最優先）。
+      //   env(NEXT_PUBLIC_CLERK_SIGN_IN/UP_FORCE_REDIRECT_URL)にも設定するが、
+      //   コードでも明示して env 欠落時の迷子を二重に防ぐ（Clerk公式推奨）。
+      //   ★注意: FORCE は redirect_url より強い。姉妹サービスから送客されたとき
+      //   「戻れない」事故になるので、各サービスが**自分の** sign-in を持つ設計にする
+      //   （kimito.link/sign-in へ送客しない。exosome が 2026-09-16 に実測して確定）。
+      signInForceRedirectUrl={afterAuthPath}
+      signUpForceRedirectUrl={afterAuthPath}
+      // FALLBACK は FORCE が効かない経路の保険（既定の '/' 着地を防ぐ）。
+      signInFallbackRedirectUrl={afterAuthPath}
+      signUpFallbackRedirectUrl={afterAuthPath}
+      afterSignOutUrl={afterSignOutPath}
+      // localization={brandJaJP}
+      // appearance={brandClerkAppearance}
+    >
+      <div id="main-content" tabIndex={-1}>
+        {children}
+      </div>
+    </ClerkProvider>
+  );
+}

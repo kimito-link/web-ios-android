@@ -1,0 +1,42 @@
+/**
+ * 認証導線の URL を1か所に集約する（金型）
+ *
+ * ★出典: kimitolink-linktree/lib/clerk-route.ts
+ *
+ * ★なぜ定数化するか（実損に基づく）:
+ *   redirect_url を付けないと、FORCE_REDIRECT が無い環境でログイン後に
+ *   着地先へ確実に行けず「押したのにトップに戻された＝迷子」になる。
+ *   CTA ごとに href を手書きすると付け忘れる（kimito で **17箇所の不整合が実在**した）。
+ *   ここを single source にして全CTAで保証する。
+ */
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+const { signInPath, signUpPath, afterAuthPath } = authBrandConfig;
+const redirectParam = `redirect_url=${encodeURIComponent(afterAuthPath)}`;
+
+/** Clerk の SSO コールバック経路か（catch-all セグメントから判定）。 */
+export function isClerkSsoCallback(segments: string[] | undefined): boolean {
+  return segments?.includes("sso-callback") ?? false;
+}
+
+/** 通常のログイン導線（着地先つき）。 */
+export const SIGN_IN_HREF = `${signInPath}?${redirectParam}`;
+
+/**
+ * ★Xワンタップ用。`auto=x` が AutoAdvanceToX の発火条件。
+ *   LP の主CTAなど「Xで始める」導線にだけ使う。
+ */
+export const SIGN_IN_AUTO_X_HREF = `${signInPath}?${redirectParam}&auto=x`;
+
+export const SIGN_UP_HREF = `${signUpPath}?${redirectParam}`;
+
+/**
+ * 素の `/sign-in/`・`/sign-up/`（redirect_url 無し）を正規 href に格上げする。
+ * CTA 側の付け忘れを1か所で吸収する。既に query 付き・別パスはそのまま返す（壊さない）。
+ */
+export function upgradeAuthHref(href: string): string {
+  const bare = (p: string) => [p, p.replace(/\/$/, "")];
+  if (bare(signInPath).includes(href)) return SIGN_IN_HREF;
+  if (bare(signUpPath).includes(href)) return SIGN_UP_HREF;
+  return href;
+}

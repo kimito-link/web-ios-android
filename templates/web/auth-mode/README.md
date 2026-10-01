@@ -39,6 +39,16 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 | `surechigai-romi.link` | 実装済み（`components/auth/auto-advance-to-x.tsx`）。フォールバックセレクタ・ネイティブシェル除外ガード・純判定関数分離あり（最も完成度が高い） |
 | `kimito-Link-Voice` | 未適用。`x-one-tap-signin.js.example`がVanilla JS移植版の正本実装。適用時は`js/modules/clerk-auth-client.js`の`openSignIn()`から呼ぶ |
 
+## ★Next.js + Clerk を使うなら `nextjs/` を見る（2026-10-01 追加）
+
+このディレクトリ直下は **Vanilla JS 版**（静的サイト・素のJS向け）。
+**Next.js App Router + `@clerk/nextjs`** のプロジェクトは
+[`nextjs/README.md`](nextjs/README.md) に専用の金型がある
+（出典: `kimitolink-linktree` 本番。ClerkProvider 設定・URL集約・待機画面つき）。
+
+★Expo/React Native には**どちらも使えない**。`surechigai-romi.link` の
+`components/auth/auto-advance-to-x.tsx` を見ること（Platform 分岐を内蔵）。
+
 ## ファイル一覧
 
 - `head-snippet.html.example`: 各ページ `<head>` 最初の子としてインラインで埋め込むスクリプト（①）
