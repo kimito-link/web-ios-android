@@ -40,7 +40,7 @@ export default function AuthLayout({
       allowedRedirectProtocols={["http:", "https:"]}
       signInUrl={signInPath}
       signUpUrl={signUpPath}
-      // ★FORCE: どの入口から来ても必ず着地先へ送る（最優先）。
+      // ★FORCE: どの入口から来ても着地先へ送る（最優先）。
       //   env(NEXT_PUBLIC_CLERK_SIGN_IN/UP_FORCE_REDIRECT_URL)にも設定するが、
       //   コードでも明示して env 欠落時の迷子を二重に防ぐ（Clerk公式推奨）。
       //   ★注意: FORCE は redirect_url より強い。姉妹サービスから送客されたとき

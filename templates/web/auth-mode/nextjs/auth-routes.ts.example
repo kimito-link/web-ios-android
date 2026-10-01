@@ -5,9 +5,9 @@
  *
  * ★なぜ定数化するか（実損に基づく）:
  *   redirect_url を付けないと、FORCE_REDIRECT が無い環境でログイン後に
- *   着地先へ確実に行けず「押したのにトップに戻された＝迷子」になる。
+ *   着地先へ行けず「押したのにトップに戻された＝迷子」になる。
  *   CTA ごとに href を手書きすると付け忘れる（kimito で **17箇所の不整合が実在**した）。
- *   ここを single source にして全CTAで保証する。
+ *   ここを single source にして全CTAで揃える。
  */
 import { authBrandConfig } from "@/lib/auth-brand.config";
 
