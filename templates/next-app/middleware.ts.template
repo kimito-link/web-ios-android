@@ -2,6 +2,12 @@
 // Clerk 認証の middleware。auth.provider === "clerk" のとき middleware.ts として配置。
 // kimitolink-linktree の実運用版を金型化。
 //
+// ★★Next.js 16 以上では、このファイル名を `proxy.ts` に変える（2026-10-02、surechigai の
+//   apps/web が Next 16.3 で「middleware file convention is deprecated. Please use proxy」の
+//   警告を出したため改名して解消）。中身（clerkMiddleware の呼び出しと config.matcher）は
+//   そのままでよい。proxy は Node.js ランタイム固定。この金型自体は Next 15 前提なので
+//   ファイル名は middleware.ts のまま（Next 16 へ上げる時に改名）。
+//
 // ★ ストア審査の落とし穴（重要）:
 //   スクショ自動撮影スクリプト（capture-appstore/play-screenshots.mjs）は
 //   「未ログイン状態」でページを開いて撮る。認証必須ページしか無いと真っ白/リダイレクトで

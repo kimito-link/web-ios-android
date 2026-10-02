@@ -116,6 +116,8 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
      signed-in-bounce.ts           → lib/
      signed-in-bounce.test.ts      → __tests__/
 3. `pnpm add @clerk/localizations`（リポのルートで。サブディレクトリで実行するとロックファイルが重複する）
+   ★Next.js 16 以上なら middleware のファイル名は `proxy.ts`（`../../../next-app/middleware.ts.template`
+   の冒頭コメント参照。中身は同じ `clerkMiddleware()` のまま）
 4. LP の CTA を SIGN_IN_AUTO_X_HREF に差し替える（これで X ワンタップが発火する）
 ```
 
