@@ -39,8 +39,10 @@
 
 > **今の到達点: 金型として配置済み・輸入実績 1 件（surechigai。2026-10-01 に輸入、10-02 に穴5件を修正して金型へ還流）。**
 > ★還流後の金型は、surechigai の `apps/web` コピーに重ねて `tsc --noEmit` エラー 0 を確認済み。
-> ★ログイン済み状態の挙動は 2026-10-02 に本番実機で確認済み（`auto=x` は発火せず、中継ページはトップへ戻す）。
->   なおログイン済みでも `/sign-in/` は通常のログイン画面を表示し、URL の `auto=x` も残る（本家と同じ。実害なし）。
+> ★ログイン済み状態の挙動は 2026-10-02 に本番実機（ユーザー本人の Chrome）で確認済み:
+>   `auto=x` 付きで来たら `auto=x` は発火せずトップへ戻り（URL の `auto=x` も消える）、
+>   `auto=x` 無しの `/sign-in/` はログイン画面のまま（アカウント切り替え導線を維持）、
+>   中継ページ `/auth/kimito-link/` もトップへ戻る。トップ↔sign-in のループは無し。
 > 出典 `kimitolink-linktree` の本番で稼働中の実装を、設定を外出しして持ち出せる形にしたもの。
 > ★この金型自体を使ったプロジェクトはまだ無い（**初回輸入時に穴が出る前提**で見てほしい）。
 
@@ -75,7 +77,9 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
 | ファイル | 役割 | 丸写し可否 |
 |---|---|---|
 | `auth-brand.config.ts.example` | ★**ここだけ書き換える**。色・画像・パス・許可オリジン | 書き換える |
-| `AutoAdvanceToX.tsx.example` | X ワンタップの本体（待機画面つき） | ほぼそのまま |
+| `AutoAdvanceToX.tsx.example` | X ワンタップの本体（待機画面つき。ログイン済み＋`auto=x` はトップへ戻す） | **無改変**（drift 検査対象） |
+| `signed-in-bounce.ts.example` | 「ログイン済み＋`auto=x` ならトップへ戻す」の判定（純関数。**`auto=x` 無しは戻さない**＝アカウント切り替え導線を壊さない／直近10秒に戻していたら戻さない＝ループ防止） | **無改変**（drift 検査対象） |
+| `signed-in-bounce.test.ts.example` | 上の純関数のテスト | **無改変**（drift 検査対象） |
 | `auth-layout.tsx.example` | `ClerkProvider` 設定（共通アカウントの心臓部） | ほぼそのまま |
 | `auth-routes.ts.example` | 認証 URL を 1 か所に集約 | ほぼそのまま |
 | `auth-page-shell.tsx.example` | 画面の**骨組みだけ**。カードは差し込み口 | ★骨組みのみ |
@@ -109,6 +113,8 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
      KimitoLinkRedirect.tsx        → components/
      auth-guide-page.tsx           → app/(auth)/auth/kimito-link/page.tsx
      kimito-link-redirect.test.ts  → __tests__/
+     signed-in-bounce.ts           → lib/
+     signed-in-bounce.test.ts      → __tests__/
 3. `pnpm add @clerk/localizations`（リポのルートで。サブディレクトリで実行するとロックファイルが重複する）
 4. LP の CTA を SIGN_IN_AUTO_X_HREF に差し替える（これで X ワンタップが発火する）
 ```

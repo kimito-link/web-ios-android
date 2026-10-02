@@ -424,6 +424,26 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-02 追加。ログイン済み＋auto=x で来た人をトップへ戻す判定（純関数）とそのテスト、
+     *   および本体の AutoAdvanceToX（金型と surechigai が同系統で、差分ゼロを確認して登録）。
+     *   auto=x 無しのログイン済みは戻さない（アカウント切り替え導線を壊さない）が核心。
+     */
+    label: 'Next.js認証金型: signed-in-bounce（純関数）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/signed-in-bounce.ts.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/apps/web/lib/signed-in-bounce.ts')]
+  },
+  {
+    label: 'Next.js認証金型: signed-in-bounce テスト',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/signed-in-bounce.test.ts.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/__tests__/signed-in-bounce.test.ts')]
+  },
+  {
+    label: 'Next.js認証金型: AutoAdvanceToX（Xワンタップ本体）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/AutoAdvanceToX.tsx.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/apps/web/components/AutoAdvanceToX.tsx')]
+  },
+  {
+    /*
      * ★2026-09-10 追加。line-botセッションからの指摘で判明した登録漏れ。
      *   deploy-cloudflare-pages.mjsは配布先1件(kimito-Link-Voice)を
      *   持つが、check-drift.mjsのPAIRSに未登録だった。--branch明示化

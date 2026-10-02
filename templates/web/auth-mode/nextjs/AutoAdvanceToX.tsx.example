@@ -26,11 +26,15 @@ import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 // ★ブランド依存はこの1ファイルに集約してある。パスは自プロジェクトに合わせる。
 import { authBrandConfig } from "@/lib/auth-brand.config";
+import { shouldBounceSignedInToHome } from "@/lib/signed-in-bounce";
 
 const AUTO_PARAM = "auto";
 const AUTO_VALUE = "x";
 const COOLDOWN_KEY = "auth-mode:auto-x-last-fired-at";
 const COOLDOWN_MS = 3000;
+// ログイン済みをトップへ戻した直後の再訪を検知する（トップ↔sign-in のループ防止）。
+const BOUNCE_KEY = "auth-mode:signed-in-bounced-at";
+const BOUNCE_COOLDOWN_MS = 10000;
 const TIMEOUT_MS = 9000;
 const POLL_MS = 120;
 
@@ -65,6 +69,26 @@ function isWithinCooldown() {
 function markFiredNow() {
   try {
     sessionStorage.setItem(COOLDOWN_KEY, String(Date.now()));
+  } catch {
+    // no-op
+  }
+}
+
+function isRecentlyBounced() {
+  try {
+    const raw = sessionStorage.getItem(BOUNCE_KEY);
+    if (!raw) return false;
+    const last = Number(raw);
+    return Number.isFinite(last) && Date.now() - last < BOUNCE_COOLDOWN_MS;
+  } catch {
+    // 記録できない環境ではループ防止が効かないので、戻さない側に倒す。
+    return true;
+  }
+}
+
+function markBouncedNow() {
+  try {
+    sessionStorage.setItem(BOUNCE_KEY, String(Date.now()));
   } catch {
     // no-op
   }
@@ -139,6 +163,19 @@ export function AutoAdvanceToX() {
     }
     if (isLoaded && isSignedIn) {
       setShowOverlay(false);
+      // ★ログイン済みで auto=x 付きで来たら、着地先へ戻す（auto=x が URL に残り続けるのも防ぐ）。
+      //   auto=x 無しは戻さない＝アカウント切り替え導線を壊さない（判定: signed-in-bounce.ts）。
+      if (
+        shouldBounceSignedInToHome({
+          hasAutoParam: hasAutoXParam(),
+          isLoaded,
+          isSignedIn,
+          recentlyBounced: isRecentlyBounced(),
+        })
+      ) {
+        markBouncedNow();
+        window.location.replace(authBrandConfig.afterAuthPath);
+      }
       return;
     }
 
