@@ -1,0 +1,102 @@
+/**
+ * Clerk `<SignIn />` の見た目（appearance）。
+ *
+ * ★出典: kimitolink-linktree/lib/clerk-appearance.ts（surechigai-romi.link で輸入実証）。
+ *
+ * ねらい＝「X を主役に。ただし**サイズでは差をつけない**（規約遵守）」:
+ *   - Apple/Google を消すと §4.8 違反。ボタン構成は Clerk Dashboard のグローバル設定が決める。
+ *   - Apple HIG は「他のサインインボタンより小さくしない」、Google は「同等の大きさと
+ *     視覚的な重み」を求める。**サイズ・重みは3つとも同一**にし、規約が縛らない自由度
+ *     （色・順序・ボタン外の説明文）に主役化を移す。
+ *   - `<SignIn />` 本体には触らない（appearance＝スタイルの注入だけ）。
+ *   - ソーシャルボタンが3つ以上だと既定でアイコンのみになるが、Google 規約が単独アイコンを
+ *     禁じるため `socialButtonsVariant: "blockButton"` で文字つきに固定する。
+ *
+ * ★書き換えるのは下の LOGO_PATH だけ。
+ * ★LOGO_PATH は**実際に配信されているパス**にする。surechigai で、旧ビルドが削除する廃止パス
+ *   （/icon-tab.png）を指していたため、catch-all の index.html（text/html）が返り、
+ *   ロゴが display:none で消えた（2026-10-02）。`curl -I` で image/* が返ることを確認する。
+ */
+const LOGO_PATH = "/pwa-icon-192.png";
+
+const X_BLACK = "#0f1419";
+const X_BLACK_HOVER = "#000000";
+
+// 3プロバイダで完全に同一の寸法（規約の "same size / no smaller than"）。
+const sharedButtonSize = {
+  minHeight: "3rem",
+  fontSize: "0.9375rem",
+  fontWeight: 600,
+  borderRadius: "0.875rem",
+} as const;
+
+const heroButton = {
+  ...sharedButtonSize,
+  backgroundColor: X_BLACK,
+  color: "#ffffff",
+  border: "none",
+  boxShadow: "0 6px 16px rgba(15,20,25,0.22)",
+  "&:hover": { backgroundColor: X_BLACK_HOVER },
+  "&:focus": { backgroundColor: X_BLACK_HOVER },
+} as const;
+
+const secondaryButton = {
+  ...sharedButtonSize,
+  backgroundColor: "#ffffff",
+  color: "#0f172a",
+  border: "1px solid rgba(15,23,42,0.18)",
+  boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
+  "&:hover": { backgroundColor: "rgba(15,23,42,0.04)" },
+} as const;
+
+// アイコン形態（フォールバック）。落ちても規約違反にならないよう同じ方針で寸法を揃える。
+const sharedIconButtonSize = {
+  minWidth: "3.5rem",
+  height: "3rem",
+  borderRadius: "0.875rem",
+} as const;
+
+const heroIconButton = {
+  ...sharedIconButtonSize,
+  backgroundColor: X_BLACK,
+  border: "none",
+  boxShadow: "0 6px 16px rgba(15,20,25,0.22)",
+  "&:hover": { backgroundColor: X_BLACK_HOVER },
+  "&:focus": { backgroundColor: X_BLACK_HOVER },
+} as const;
+
+const secondaryIconButton = {
+  ...sharedIconButtonSize,
+  backgroundColor: "#ffffff",
+  border: "1px solid rgba(15,23,42,0.18)",
+  boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
+  "&:hover": { backgroundColor: "rgba(15,23,42,0.04)" },
+} as const;
+
+// X のアイコンだけ白く反転（黒背景で見えるように）。
+const heroIconGlyph = { filter: "brightness(0) invert(1)" } as const;
+
+export const brandClerkAppearance = {
+  variables: { colorPrimary: X_BLACK },
+  options: {
+    logoImageUrl: LOGO_PATH,
+    logoPlacement: "inside",
+    socialButtonsVariant: "blockButton",
+  },
+  elements: {
+    socialButtons: { display: "flex", flexDirection: "column", gap: "0.625rem" },
+    // X を先頭に（順序を規定する規約は存在しない＝唯一の自由度）。
+    socialButtonsBlockButton: secondaryButton,
+    socialButtonsBlockButton__x: { ...heroButton, order: -1 },
+    socialButtonsBlockButton__twitter: { ...heroButton, order: -1 },
+    socialButtonsBlockButton__apple: secondaryButton,
+    socialButtonsBlockButton__google: secondaryButton,
+    socialButtonsIconButton: secondaryIconButton,
+    socialButtonsIconButton__x: { ...heroIconButton, order: -1 },
+    socialButtonsIconButton__twitter: { ...heroIconButton, order: -1 },
+    socialButtonsIconButton__apple: secondaryIconButton,
+    socialButtonsIconButton__google: secondaryIconButton,
+    socialButtonsProviderIcon__x: heroIconGlyph,
+    socialButtonsProviderIcon__twitter: heroIconGlyph,
+  },
+} as const;

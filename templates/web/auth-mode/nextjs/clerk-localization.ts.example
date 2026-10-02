@@ -1,0 +1,45 @@
+import { jaJP } from "@clerk/localizations";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+/**
+ * Clerk 公式の日本語（jaJP）をベースに、サービス名入りの見出しだけ補足する。
+ *
+ * ★出典: kimitolink-linktree/lib/clerk-localization.ts（surechigai-romi.link で輸入実証）。
+ * ★これを入れないと見出しが Clerk 既定の英語「Sign in to ◯◯」になり、他サービス名
+ *   （共通インスタンスのアプリ名）が出ることがある。
+ * ★要 `@clerk/localizations`（`pnpm add @clerk/localizations`）。
+ * ★書き換えるのは auth-brand.config.ts の serviceName だけ。
+ */
+export const brandJaJP = {
+  ...jaJP,
+  // ★ソーシャルボタンの文言を明示する。Clerk は複数プロバイダのとき
+  //   socialButtonsBlockButtonManyInView を使い、既定はプロバイダ名のみ（"Google"）。
+  //   Google のブランド規約は "Google" 単独表記を認めないため、「◯◯で続ける」を
+  //   **両方のキーに**指定する（片方だけだと効かない）。
+  socialButtonsBlockButton: "{{provider|titleize}}で続ける",
+  socialButtonsBlockButtonManyInView: "{{provider|titleize}}で続ける",
+  signIn: {
+    ...jaJP.signIn,
+    start: {
+      ...jaJP.signIn?.start,
+      title: `${authBrandConfig.serviceName}にログイン`,
+      subtitle: "X（旧 Twitter）のアカウントで続けます。",
+    },
+  },
+  signUp: {
+    ...jaJP.signUp,
+    start: {
+      ...jaJP.signUp?.start,
+      title: "はじめての方（新規登録）",
+      subtitle: "X（旧 Twitter）で登録できます。",
+    },
+  },
+  unstable__errors: {
+    ...jaJP.unstable__errors,
+    external_account_not_found:
+      "X のアカウント連携を確認できませんでした。もう一度「X で続ける」からお試しください。",
+    captcha_invalid: "確認に失敗しました。お手数ですが、もう一度お試しください。",
+    captcha_unavailable:
+      "確認画面を表示できませんでした。ページを再読み込みして、もう一度お試しください。",
+  },
+} satisfies typeof jaJP;

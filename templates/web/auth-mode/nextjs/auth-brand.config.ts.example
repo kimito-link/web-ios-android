@@ -32,6 +32,38 @@ export type AuthBrandConfig = {
   clerkFrontendApiDomain: string;
 
   /**
+   * ★ClerkProvider に domain を明示するか。既定 false。
+   *   true にすべきなのは「別の Vercel プロジェクトへ外部 rewrite で段階移行（strangler）する
+   *   構成」で、この Next.js プロジェクトにカスタムドメインを割り当てていないとき。
+   *   Clerk JS は本番URLが *.vercel.app だと自前プロキシ経路へ自動で入り「400 Invalid host」で
+   *   ログイン画面が出ない。環境変数 CLERK_DISABLE_AUTO_PROXY はクライアント側で効かない。
+   *   詳細: ai-hub/kb/clerk-vercel-custom-domain-auto-proxy-trap.md
+   *   ★自プロジェクトにカスタムドメインを直接割り当てる通常構成では false のまま。
+   */
+  forceFrontendApiDomain: boolean;
+
+  /** サービス名。Clerk 見出し（localization）に使う。例: "すれ違ひ通信" */
+  serviceName: string;
+
+  /**
+   * サインイン画面の左カラム（サービス紹介）。AuthPageShell の intro に差し込む。
+   * ★未設定（null）だと Clerk カードだけが中央にぽつんと出て「寂しい」画面になる
+   *   （surechigai が 2026-10-02 に実際に指摘された）。出すのを既定にする。
+   */
+  intro: {
+    /** 吹き出し（マスコットの上）。 */
+    greeting: string;
+    /** マスコット画像（public/ に置いたパス）。空配列なら描画しない。 */
+    mascots: { src: string; name: string }[];
+    /** サービス名の小見出し・見出し・説明文。 */
+    eyebrow: string;
+    headline: string;
+    lead: string;
+    /** 「ログイン後にできること」の箇条書き。 */
+    features: string[];
+  } | null;
+
+  /**
    * ワンタップ遷移中のフルスクリーン表示。
    * ★画像を出さないなら image を null にする（金型は画像なしでも動く）。
    */
@@ -72,6 +104,24 @@ export const authBrandConfig: AuthBrandConfig = {
   developmentRedirectOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"],
 
   clerkFrontendApiDomain: "clerk.kimito.link",
+  forceFrontendApiDomain: false,
+
+  serviceName: "kimito.link",
+  intro: {
+    greeting: "おかえり〜！待ってたよ",
+    mascots: [
+      { src: "/chara/link.png", name: "ゆっくりリンク" },
+      { src: "/chara/konta.png", name: "こん太" },
+      { src: "/chara/tanunee.png", name: "たぬ姉" },
+    ],
+    eyebrow: "kimito.link（キミトリンク）",
+    headline: "X のプロフィールに貼る、公式のリンクまとめページ",
+    lead: "ログインは X（旧 Twitter）のアカウントだけ。新しいパスワードはいりません。",
+    features: [
+      "公開ページにリンク一覧を表示",
+      "リンクの追加・並べ替え・非表示をダッシュボードで編集",
+    ],
+  },
 
   autoAdvance: {
     image: {

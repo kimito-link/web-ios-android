@@ -5,6 +5,24 @@
 | 日付 | 輸入先 | 結果 |
 |---|---|---|
 | 2026-10-01 | `surechigai-romi.link/apps/web`（Phase 1 Step 1） | ✅ **6ファイルを無改変でビルド通過。** 書き換えたのは `auth-brand.config.ts` のみ（設計どおり） |
+| 2026-10-02 | 同上（Step 3〜5） | ✅ 本番実機で `auto=x` が X 認可画面へ 5/5 到達。**金型に無かった穴を5件発見・修正**（下の「2件目の輸入で見つかった金型の穴」） |
+
+### ★surechigai の輸入（2026-10-02）で見つかった金型の穴（修正済み）
+
+1. **`localization` / `appearance` がコメントアウトのまま**だった → 見出しが英語「Sign in to ◯◯」、
+   見た目も素。`clerk-localization.ts.example` / `clerk-appearance.ts.example` を追加し、
+   `auth-layout` で既定有効にした。
+2. **`AuthPageShell` の `intro` が null だと「寂しい」画面**になる（Clerk カードだけが中央に出る）。
+   `auth-page-intro.tsx.example`（設定駆動）を追加し、`sign-in-page` が差し込むようにした。
+3. **外部 rewrite 構成で `400 Invalid host`**（別 Vercel プロジェクトへ段階移行する場合のみ）。
+   `ClerkProvider` に `domain` を明示する必要がある → `auth-brand.config` の
+   `forceFrontendApiDomain`（既定 false）で切り替える。環境変数 `CLERK_DISABLE_AUTO_PROXY` や
+   `frontendApiProxy` は**効かない／逆効果**。正本KB: `ai-hub/kb/clerk-vercel-custom-domain-auto-proxy-trap.md`
+4. **ログイン案内の中継ページ `/auth/kimito-link` が無かった** → `kimito-link-redirect.ts` /
+   `KimitoLinkRedirect.tsx` / `auth-guide-page.tsx` / テストを追加（ループしない設計・純関数に分離）
+5. **`sign-up` ページを作る前提が誤り**だった。X OAuth だけのログインでは `<SignIn />` が初回ユーザーも
+   既存ユーザーも同じ画面で扱う。サービス側が `SIGN_UP_HREF = SIGN_IN_HREF` で統一している場合、
+   sign-up を新設しても到達できない（surechigai で一度作って撤回した）
 
 ### ★1件目の輸入で見つかった金型の穴（修正済み）
 
@@ -19,7 +37,9 @@
 以後この金型のコメントに誇張語を書かない（意味は変わらないので実害ゼロで回避できる）。
 
 
-> **今の到達点: 金型として配置済み・輸入実績 1 件（surechigai 2026-10-01）。**
+> **今の到達点: 金型として配置済み・輸入実績 1 件（surechigai。2026-10-01 に輸入、10-02 に穴5件を修正して金型へ還流）。**
+> ★還流後の金型は、surechigai の `apps/web` コピーに重ねて `tsc --noEmit` エラー 0 を確認済み。
+> ★ログイン済み状態の挙動（トップへ戻る分岐・`auto=x` 非発火）は実アカウントが要るため未確認。
 > 出典 `kimitolink-linktree` の本番で稼働中の実装を、設定を外出しして持ち出せる形にしたもの。
 > ★この金型自体を使ったプロジェクトはまだ無い（**初回輸入時に穴が出る前提**で見てほしい）。
 
@@ -59,21 +79,55 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
 | `auth-routes.ts.example` | 認証 URL を 1 か所に集約 | ほぼそのまま |
 | `auth-page-shell.tsx.example` | 画面の**骨組みだけ**。カードは差し込み口 | ★骨組みのみ |
 | `sign-in-page.tsx.example` | サインインページ | ほぼそのまま |
+| `clerk-localization.ts.example` | 日本語見出し（`serviceName` から生成）。要 `@clerk/localizations` | ほぼそのまま |
+| `clerk-appearance.ts.example` | X 主役化の見た目。★`LOGO_PATH` だけ書き換える | 1行書き換える |
+| `auth-page-intro.tsx.example` | 左カラムのサービス紹介（`intro` 設定を描画） | ほぼそのまま |
+| `kimito-link-redirect.ts.example` | 中継ページの行き先判定（純関数） | **無改変**（drift 検査対象） |
+| `KimitoLinkRedirect.tsx.example` | 中継ページの部品 | **無改変**（drift 検査対象） |
+| `auth-guide-page.tsx.example` | `/auth/kimito-link` ページ | **無改変**（drift 検査対象） |
+| `kimito-link-redirect.test.ts.example` | 純関数のテスト（相対 import を自リポの配置に合わせる） | **無改変**（drift 検査対象） |
+
+★「無改変」の4ファイルは `_docs/instruments/check-drift.mjs` の PAIRS に登録してある
+（surechigai のコピーとバイト一致を機械検査）。**書き換えたくなったら金型側を直して配り直す。**
 
 ## 使うとき
 
 ```
 1. auth-brand.config.ts.example → lib/auth-brand.config.ts にコピーして**値を書き換える**
+     （serviceName・intro・forceFrontendApiDomain も忘れずに）
 2. 残りを対応する場所へコピー（.example を外す）
-     AutoAdvanceToX.tsx    → components/
-     auth-routes.ts        → lib/
-     auth-page-shell.tsx   → components/AuthPageShell.tsx
-     auth-layout.tsx       → app/(auth)/layout.tsx
-     sign-in-page.tsx      → app/(auth)/sign-in/[[...sign-in]]/page.tsx
-3. LP の CTA を SIGN_IN_AUTO_X_HREF に差し替える（これで X ワンタップが発火する）
+     AutoAdvanceToX.tsx            → components/
+     auth-routes.ts                → lib/
+     auth-page-shell.tsx           → components/AuthPageShell.tsx
+     auth-page-intro.tsx           → components/AuthPageIntro.tsx
+     auth-layout.tsx               → app/(auth)/layout.tsx
+     sign-in-page.tsx              → app/(auth)/sign-in/[[...sign-in]]/page.tsx
+     clerk-localization.ts         → lib/
+     clerk-appearance.ts           → lib/   （LOGO_PATH を実在パスに）
+     kimito-link-redirect.ts       → lib/
+     KimitoLinkRedirect.tsx        → components/
+     auth-guide-page.tsx           → app/(auth)/auth/kimito-link/page.tsx
+     kimito-link-redirect.test.ts  → __tests__/
+3. `pnpm add @clerk/localizations`（リポのルートで。サブディレクトリで実行するとロックファイルが重複する）
+4. LP の CTA を SIGN_IN_AUTO_X_HREF に差し替える（これで X ワンタップが発火する）
 ```
 
-★`sign-up` も作るなら、`sign-in-page` をコピーして `<SignUp />`・`variant="sign-up"` にする。
+★`sign-up` ページは**作らない**のが既定。X OAuth だけなら `<SignIn />` が兼ねる。
+メール＋パスワード等で新規登録フォームが別に要るサービスだけ、`sign-in-page` をコピーして
+`<SignUp />`・`variant="sign-up"` にする（その場合 `SIGN_UP_HREF` も別パスに戻す）。
+
+## ★別 Vercel プロジェクトへ段階移行（strangler）するとき
+
+旧プロジェクトの `vercel.json` rewrites で移行済みパスだけ新プロジェクトへ外部プロキシする構成。
+実損が3件ある（surechigai 2026-10-02）:
+
+1. **`forceFrontendApiDomain: true` にする。** しないと「400 Invalid host」でログイン画面が出ない。
+2. **付け替えの順序を守る**: 移植 → 新プロジェクト単体で 200 確認 → `vercel.json` を付け替え。
+   未移植のまま付け替えると本番が 404 になる（`/auth/kimito-link` で実際に起きた）。
+3. **`trailingSlash: true` だと `next/image` が `/_next/image/?…`（末尾スラッシュ付き）を生成**し、
+   `/_next/:path*` だけでは旧プロジェクトの catch-all に流れて `text/html` が返ることがある。
+   `vercel.json` に `/_next/image/` 専用の rewrite を足す
+   （確認: `curl -D - -o /dev/null "https://<ドメイン>/_next/image/?url=…&w=128&q=75"` が `image/*`）
 
 ## ★丸写ししてはいけない場所
 

@@ -9,11 +9,10 @@
  */
 import { ClerkProvider } from "@clerk/nextjs";
 import { authBrandConfig } from "@/lib/auth-brand.config";
-
-// ★自プロジェクトの localization / appearance を使うならここで差し替える。
-//   省略可（Clerk の既定が使われる）。
-// import { brandJaJP } from "@/lib/clerk-localization";
-// import { brandClerkAppearance } from "@/lib/clerk-appearance";
+// ★localization（日本語見出し）と appearance（X 主役化）。出さないと Clerk 既定の英語見出し
+//   （"Sign in to ◯◯"）と素の見た目になる。要 `@clerk/localizations`（pnpm add）。
+import { brandJaJP } from "@/lib/clerk-localization";
+import { brandClerkAppearance } from "@/lib/clerk-appearance";
 
 const {
   afterAuthPath,
@@ -22,6 +21,8 @@ const {
   afterSignOutPath,
   allowedRedirectOrigins,
   developmentRedirectOrigins,
+  clerkFrontendApiDomain,
+  forceFrontendApiDomain,
 } = authBrandConfig;
 
 export default function AuthLayout({
@@ -32,6 +33,13 @@ export default function AuthLayout({
       // 方式A: 共通アカウント（親ドメインで __client cookie を共有）。
       // ★サブドメイン方式なら satellite 設定は不要かつ有害
       //   （isSatellite:true は verified でない限り /v1/client/sync が落ちる）。
+      //
+      // ★domain の明示は「別 Vercel プロジェクトへ外部 rewrite する構成」だけ（既定は付けない）。
+      //   本番URLが *.vercel.app だと Clerk JS が自前プロキシへ自動で入り「400 Invalid host」。
+      //   domain を渡すと自動判定がサーバー・クライアント両方で止まる。環境変数
+      //   CLERK_DISABLE_AUTO_PROXY は NEXT_PUBLIC_ 接頭辞が無くブラウザに届かず効かない。
+      //   正本KB: ai-hub/kb/clerk-vercel-custom-domain-auto-proxy-trap.md
+      {...(forceFrontendApiDomain ? { domain: clerkFrontendApiDomain } : {})}
       allowedRedirectOrigins={
         process.env.NODE_ENV === "development"
           ? [...developmentRedirectOrigins, ...allowedRedirectOrigins]
@@ -52,8 +60,8 @@ export default function AuthLayout({
       signInFallbackRedirectUrl={afterAuthPath}
       signUpFallbackRedirectUrl={afterAuthPath}
       afterSignOutUrl={afterSignOutPath}
-      // localization={brandJaJP}
-      // appearance={brandClerkAppearance}
+      localization={brandJaJP}
+      appearance={brandClerkAppearance}
     >
       <div id="main-content" tabIndex={-1}>
         {children}

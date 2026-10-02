@@ -396,6 +396,34 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-02 追加。Next.js+Clerk 認証金型のうち【無改変でコピーされる】4ファイル
+     *   （/auth/kimito-link 中継: 純関数・部品・ページ・テスト）。
+     *   surechigai-romi.link/apps/web が正本の収穫元で、金型 .example は実物のバイト一致コピー。
+     *   ★ブランド依存で各サービスが書き換える auth-brand.config / clerk-appearance /
+     *     clerk-localization / auth-page-intro 等は「無改変コピー」の契約ではないのでdrift対象外。
+     *   ★金型は .example 拡張子、配布先は実名。比較は中身のバイト一致のみ。
+     */
+    label: 'Next.js認証金型: kimito-link-redirect（純関数）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/kimito-link-redirect.ts.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/apps/web/lib/kimito-link-redirect.ts')]
+  },
+  {
+    label: 'Next.js認証金型: KimitoLinkRedirect（部品）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/KimitoLinkRedirect.tsx.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/apps/web/components/KimitoLinkRedirect.tsx')]
+  },
+  {
+    label: 'Next.js認証金型: /auth/kimito-link ページ',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/auth-guide-page.tsx.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/apps/web/app/(auth)/auth/kimito-link/page.tsx')]
+  },
+  {
+    label: 'Next.js認証金型: kimito-link-redirect テスト',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/kimito-link-redirect.test.ts.example'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/__tests__/kimito-link-redirect.test.ts')]
+  },
+  {
+    /*
      * ★2026-09-10 追加。line-botセッションからの指摘で判明した登録漏れ。
      *   deploy-cloudflare-pages.mjsは配布先1件(kimito-Link-Voice)を
      *   持つが、check-drift.mjsのPAIRSに未登録だった。--branch明示化

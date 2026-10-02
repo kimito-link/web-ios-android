@@ -1,0 +1,81 @@
+/**
+ * AuthPageIntro — サインイン画面の左カラム（サービス紹介）。設定駆動。
+ *
+ * ★出典: kimitolink-linktree/components/AuthPageIntro.tsx（795行の実物から骨組みだけ抽出）と
+ *   surechigai-romi.link/apps/web/components/AuthPageIntro.tsx。
+ *
+ * ★なぜ入れるか: AuthPageShell の intro が null のままだと、Clerk カードだけが中央にぽつんと
+ *   出る「寂しい」画面になる（surechigai が 2026-10-02 に指摘された）。
+ * ★書き換えるのは auth-brand.config.ts の intro だけ。null にすると何も出さない。
+ *
+ * ★sign-up 用の variant は持たない。X OAuth だけのログインでは Clerk の <SignIn /> が
+ *   初回ユーザーも既存ユーザーも同じ画面で扱うため、文言を分ける意味が無い。
+ */
+import Image from "next/image";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+export function AuthPageIntro() {
+  const intro = authBrandConfig.intro;
+  if (!intro) return null;
+
+  return (
+    <section
+      className="w-full max-w-xl overflow-hidden rounded-4xl border border-slate-900/10 bg-white/95 text-left shadow-xs"
+      aria-labelledby="auth-intro-heading"
+    >
+      <div className="bg-linear-to-br from-sky-50 via-white to-orange-50 px-5 pb-6 pt-6 sm:px-6">
+        <p className="mx-auto w-fit rounded-full bg-white/90 px-4 py-1.5 text-center text-sm font-bold text-slate-900 shadow-xs ring-1 ring-slate-900/10 sm:text-base">
+          {intro.greeting}
+        </p>
+        {intro.mascots.length > 0 ? (
+          <ul className="mt-4 flex items-end justify-center gap-3 sm:gap-5">
+            {intro.mascots.map((m) => (
+              <li key={m.name} className="flex flex-col items-center">
+                <Image
+                  src={m.src}
+                  alt={m.name}
+                  width={128}
+                  height={128}
+                  sizes="128px"
+                  className="h-24 w-24 object-contain drop-shadow-xs sm:h-28 sm:w-28"
+                  priority={false}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-900 sm:text-sm">
+          {intro.eyebrow}
+        </p>
+        <h1
+          id="auth-intro-heading"
+          className="mt-2 text-xl font-bold leading-snug text-slate-900 sm:text-2xl"
+        >
+          {intro.headline}
+        </h1>
+        <p className="mt-3 text-base leading-relaxed text-slate-600 sm:text-lg">{intro.lead}</p>
+
+        {intro.features.length > 0 ? (
+          <>
+            <h2 className="mt-5 text-sm font-bold text-slate-900 sm:text-base">
+              ログイン後にできること
+            </h2>
+            <ul className="mt-2 space-y-2 text-sm leading-relaxed text-slate-600 sm:text-base">
+              {intro.features.map((f) => (
+                <li key={f} className="flex gap-2">
+                  <span className="mt-0.5 shrink-0 text-slate-900" aria-hidden>
+                    ✓
+                  </span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
