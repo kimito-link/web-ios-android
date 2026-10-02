@@ -19,16 +19,22 @@
 //   （プロキシ経路を使わず直接 clerk.<primary> から読むため）ので、
 //   検証用サブドメインや*.vercel.appで初めて踏む。
 //
-// ★★★続きの地雷（2026-10-02、surechigai-romi.link の apps/web 移行で実機確認・修正済み）:
-//   matcher に /__clerk/(.*) を足しただけでは、Vercelのrewrites経由（別プロジェクトへの
-//   外部プロキシ）で `/__clerk/v1/client` が「400 Invalid host」を返し続けた。
-//   真因は clerkMiddleware() を**オプションなし**で呼んでいたこと——matcherで
-//   /__clerk/ がmiddlewareを通るようにはなっても、実際にヘッダー(Clerk-Proxy-Url等)を
-//   付けてclerk.<primary>へ転送する処理(frontendApiProxy)自体が有効化されていなかった。
-//   Clerk公式ドキュメント（clerk.com/docs/guides/dashboard/dns-domains/proxy-fapi）
-//   が明記する通り、第2引数に frontendApiProxy: { enabled: true } を渡す必要がある。
-//   自プロジェクト内で完結する通常デプロイ（プライマリドメイン直配信）では不要だが、
-//   「別Vercelプロジェクトへの外部rewiteプロキシ」構成（strangler移行等）では必須。
+// ★★★続きの地雷とその訂正（2026-10-02、surechigai-romi.link の apps/web 移行で実機確認）:
+//   一度 frontendApiProxy: { enabled: true } を追加して「解決した」としたが誤りだった。
+//   この機能は「Clerkのカスタムドメインを使わず、Clerkのデフォルトフロントエンド
+//   API(frontend-api.clerk.dev)への直接アクセスがブロックされる環境向け」の別機能——
+//   有効にすると常にfrontend-api.clerk.devへ転送し、publishableKeyが指すカスタム
+//   ドメイン(clerk.<primary>)は使われなくなる(window.Clerk.proxyUrlが勝手にセット
+//   される)。カスタムフロントエンドAPIドメインを既に持つ構成では**追加しない**。
+//
+//   ★根本原因はClerk JS自身の自動判定: 本番URLが`*.vercel.app`で終わるとき、
+//   Clerk JSはサーバー側の設定に関わらず自動でプロキシモード(/__clerk/経由)に入る
+//   （公式Issue等で報告されている既知挙動）。つまり検証用の`*.vercel.app`単体ドメインは
+//   この自動判定のせいで最初から正しく動かない構成であり、単体検証には使えない。
+//   最終的な本番ドメイン（プライマリまたはカスタムサブドメイン、`.vercel.app`で
+//   終わらないもの）経由でアクセスすれば自動判定に入らず、publishableKeyから直接
+//   clerk.<primary>を使う——これが唯一の正しい検証方法。matcherの/__clerk/(.*)は
+//   念のための保険として残すが、frontendApiProxyオプションは付けないこと。
 // ============================================================================
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
@@ -54,20 +60,11 @@ const isPublicRoute = createRouteMatcher([
   "/api/og(.*)",
 ]);
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    if (!isPublicRoute(req)) {
-      await auth.protect();
-    }
-  },
-  // ★別Vercelプロジェクトへの外部rewriteプロキシ構成でのみ必須（上のコメント参照）。
-  //   自プロジェクト内で完結する通常デプロイでは無くても動くが、害も無いので既定で入れる。
-  {
-    frontendApiProxy: {
-      enabled: true,
-    },
-  },
-);
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
