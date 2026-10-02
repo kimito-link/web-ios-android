@@ -7,6 +7,17 @@
 //   「未ログイン状態」でページを開いて撮る。認証必須ページしか無いと真っ白/リダイレクトで
 //   撮影が失敗する。だから撮影対象の紹介ページ（/ や /store-preview 等）は必ず
 //   public に入れておくこと。iOS/Play どちらの初回提出でもここで詰まりやすい。
+//
+// ★★プライマリドメイン以外（検証用デプロイ・*.vercel.app等）で動かすと404になる地雷
+//   （2026-10-02、surechigai-romi.link の apps/web 移行で実機確認・修正済み）:
+//   Clerkは本番以外のオリジンで動くとき、自前のフロントエンドAPIプロキシ経路
+//   `/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js` 等からJSを読もうとする。
+//   下のmatcherの静的アセット除外パターン`js(?!on)`は拡張子.jsのパスを全部除外するため、
+//   この`__clerk`配下のパスもmiddlewareの対象から漏れ、404→MIMEエラーでClerkが
+//   起動しない（「鍵が違う」「ドメインが未登録」と誤診しやすい）。
+//   プライマリドメイン（例: kimito.link）で動かす限りは顕在化しない
+//   （プロキシ経路を使わず直接 clerk.<primary> から読むため）ので、
+//   検証用サブドメインや*.vercel.appで初めて踏む。
 // ============================================================================
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
