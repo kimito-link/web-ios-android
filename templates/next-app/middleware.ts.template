@@ -18,6 +18,17 @@
 //   プライマリドメイン（例: kimito.link）で動かす限りは顕在化しない
 //   （プロキシ経路を使わず直接 clerk.<primary> から読むため）ので、
 //   検証用サブドメインや*.vercel.appで初めて踏む。
+//
+// ★★★続きの地雷（2026-10-02、surechigai-romi.link の apps/web 移行で実機確認・修正済み）:
+//   matcher に /__clerk/(.*) を足しただけでは、Vercelのrewrites経由（別プロジェクトへの
+//   外部プロキシ）で `/__clerk/v1/client` が「400 Invalid host」を返し続けた。
+//   真因は clerkMiddleware() を**オプションなし**で呼んでいたこと——matcherで
+//   /__clerk/ がmiddlewareを通るようにはなっても、実際にヘッダー(Clerk-Proxy-Url等)を
+//   付けてclerk.<primary>へ転送する処理(frontendApiProxy)自体が有効化されていなかった。
+//   Clerk公式ドキュメント（clerk.com/docs/guides/dashboard/dns-domains/proxy-fapi）
+//   が明記する通り、第2引数に frontendApiProxy: { enabled: true } を渡す必要がある。
+//   自プロジェクト内で完結する通常デプロイ（プライマリドメイン直配信）では不要だが、
+//   「別Vercelプロジェクトへの外部rewiteプロキシ」構成（strangler移行等）では必須。
 // ============================================================================
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
@@ -43,11 +54,20 @@ const isPublicRoute = createRouteMatcher([
   "/api/og(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (!isPublicRoute(req)) {
+      await auth.protect();
+    }
+  },
+  // ★別Vercelプロジェクトへの外部rewriteプロキシ構成でのみ必須（上のコメント参照）。
+  //   自プロジェクト内で完結する通常デプロイでは無くても動くが、害も無いので既定で入れる。
+  {
+    frontendApiProxy: {
+      enabled: true,
+    },
+  },
+);
 
 export const config = {
   matcher: [
