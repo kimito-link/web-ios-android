@@ -34,7 +34,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
-const CHUNK_RE = /[A-Za-z0-9_$-]+-[0-9a-f]{32}\.js/g;
+// Expo のチャンク名は `+not-found-<hash>.js` や `[id]-<hash>.js`（動的ルート）のように + [ ] ( ) を含む。
+const CHUNK_RE = /[A-Za-z0-9_$+()[\]-]+-[0-9a-f]{32}\.js/g;
+// Vercel がエッジで注入するスクリプト（/_vercel/speed-insights 等）はビルド出力に無いのが正常。
+const PLATFORM_PREFIXES = ["/_vercel/"];
 
 async function get(url) {
   const res = await fetch(url, { headers: { "cache-control": "no-cache" } });
@@ -53,10 +56,11 @@ export async function verifyOnce(baseUrl, localDir, paths) {
   async function compare(urlPath) {
     if (seen.has(urlPath)) return null;
     seen.add(urlPath);
+    if (PLATFORM_PREFIXES.some((p) => urlPath.startsWith(p))) return null; // 比較対象外（測らない）
     const local = join(localDir, urlPath.replace(/^\//, ""));
     if (!existsSync(local)) { errors.push(`ビルド出力に無い: ${urlPath}`); return null; }
     let served;
-    try { served = await get(base + urlPath); } catch (e) { errors.push(String(e.message)); return null; }
+    try { served = await get(base + encodeURI(urlPath)); } catch (e) { errors.push(String(e.message)); return null; }
     const same = sha(served) === sha(readFileSync(local));
     checked.push(urlPath);
     if (!same) mismatches.push(urlPath);
@@ -102,7 +106,7 @@ async function selftest() {
     writeFileSync(join(d, "_expo/static/js/web", chunk), "console.log('new')");
   }
   const server = createServer((req, res) => {
-    const p = join(served, (req.url || "/").split("?")[0].replace(/\/$/, "/index.html"));
+    const p = join(served, decodeURIComponent((req.url || "/").split("?")[0]).replace(/\/$/, "/index.html"));
     if (existsSync(p) && !p.endsWith("served")) { res.end(readFileSync(p)); } else { res.statusCode = 404; res.end("nf"); }
   });
   await new Promise((r) => server.listen(0, r));
@@ -112,6 +116,20 @@ async function selftest() {
 
   let r = await verify(base, built, ["/"], { retries: 1 });
   check("一致していれば合格（entry とそれが参照するチャンクの2件を比較）", r.ok && r.checked.length === 2);
+
+  // 実損の再現: 名前に + や [ ] を含むチャンク、プラットフォーム注入のスクリプト
+  const plus = "+not-found-" + "d".repeat(32) + ".js";
+  const dyn = "[id]-" + "e".repeat(32) + ".js";
+  for (const d of [built, served]) {
+    writeFileSync(join(d, "_expo/static/js/web", plus), "console.log('nf')");
+    writeFileSync(join(d, "_expo/static/js/web", dyn), "console.log('dyn')");
+    writeFileSync(join(d, "_expo/static/js/web", entry), `import("./${chunk}");import("./${plus}");import("./${dyn}")`);
+    writeFileSync(join(d, "index.html"), html + '<script src="/_vercel/speed-insights/script.js" defer></script>');
+  }
+  r = await verify(base, built, ["/"], { retries: 1 });
+  check("+ や [ ] を含むチャンク名も比べる（+not-found / [id]）", r.ok && r.checked.some((c) => c.includes("+not-found")) && r.checked.some((c) => c.includes("[id]")));
+  check("プラットフォーム注入の /_vercel/ は比較対象外（ビルド出力に無くても失敗にしない）", r.ok && !r.checked.some((c) => c.startsWith("/_vercel/")));
+  for (const d of [built, served]) writeFileSync(join(d, "_expo/static/js/web", entry), entryBody);
 
   // 毒1: 配信側の entry だけが古い内容（CDN が古い entry を返す事故）
   writeFileSync(join(served, "_expo/static/js/web", entry), `import("./sign-in-${"c".repeat(32)}.js")`);
