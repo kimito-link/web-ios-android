@@ -15,13 +15,27 @@
 #
 # ── このテンプレの使い方 ──────────────────────────────────────────
 # 1. このファイルをアプリリポの `.github/workflows/scheduled-quality-check.yml` にコピー。
-# 2. app.config.json の identity.productionDomain が正しく設定されていることを確認する
-#    （このワークフローはそこから対象URLを読む。追加のSecret登録は不要）。
-# 3. lighthouserc.json をリポ直下にコピーする（サイト固有の閾値に調整可）。
-# 4. 必要なら cron のスケジュールを変更する（既定: 週1回・月曜9時JST）。
+# 2. 次の3本をアプリリポの `scripts/` にコピーする（キットの templates/scripts/ から）:
+#      verify-security-score.mjs / verify-responsive-design.mjs / verify-external-links.mjs
+#    （依存: scripts/lib/instrument-core.mjs。無ければ一緒にコピーする）
+# 3. 下の <PRODUCTION_DOMAIN> と <STATIC_DIR> を置換する:
+#      <PRODUCTION_DOMAIN> = app.config.json の identity.productionDomain（例: voice.kimito.link）
+#      <STATIC_DIR>        = 公開する静的HTML/CSSがあるディレクトリ（例: lp。実在するパスにすること）
+# 4. lighthouserc.json をリポ直下にコピーする（サイト固有の閾値に調整可。無ければ Lighthouse は skip）。
+# 5. 必要なら cron のスケジュールを変更する（既定: 週1回・月曜9時JST）。
+#
+# ★★2026-10-04 に書き直した理由（kimito-link-voice で実際に4週連続の失敗を出した）:
+#   旧版は `node templates/scripts/…`（＝キット自身の中の配置）を前提にしていて、アプリリポで
+#   そのまま使うと「Cannot find module」で毎週失敗した。さらにこの3本のスクリプトは
+#   リポの根を `__dirname/../..` で解決する（キットの templates/scripts/ 配置が前提）ため、
+#   アプリの `scripts/`（1階層）に置くと根が1つ上にずれ、app.config.json も対象ディレクトリも
+#   見失う。ずれの影響を受けないよう、★URL は --url で明示し、★ディレクトリはフルパスで渡す。
+#   （根本解決はスクリプト側で根を「app.config.json が見つかるまで上へ辿る」方式にすること）
+# ★各検査は if: always() で独立させてある（先の検査が赤でも後の検査を走らせる）。
+#   continue-on-error は使わない＝1つでも赤ならジョブは赤のまま（見せかけの緑にしない）。
 #
 # ── 必要な GitHub Secrets ────────────────────────────────────────
-#   なし（app.config.json駆動・外部認証不要のチェックのみ）
+#   なし（外部認証不要のチェックのみ）
 name: scheduled-quality-check
 
 on:
@@ -46,20 +60,22 @@ jobs:
           node-version: "22"
 
       - name: Security score (内部先取り + malwarecheck.site本体実測)
-        run: node templates/scripts/verify-security-score.mjs
+        run: node scripts/verify-security-score.mjs --url https://<PRODUCTION_DOMAIN>
 
       - name: Responsive design (静的先取りチェック)
-        run: node templates/scripts/verify-responsive-design.mjs site
+        if: always()
+        run: node scripts/verify-responsive-design.mjs <STATIC_DIR>
 
       - name: Install Lighthouse CI (lighthouserc.json が無ければこのステップごとskip)
-        if: hashFiles('lighthouserc.json') != ''
+        if: always() && hashFiles('lighthouserc.json') != ''
         run: npm install --no-save @lhci/cli@^0.15.1
 
       - name: Lighthouse (performance / accessibility / SEO / best-practices)
-        if: hashFiles('lighthouserc.json') != ''
+        if: always() && hashFiles('lighthouserc.json') != ''
         run: npx lhci autorun --config=lighthouserc.json
 
-      - name: External links (site/内のストアバッジ等・外部リンクの到達性)
+      - name: External links (静的ディレクトリ内のストアバッジ等・外部リンクの到達性)
+        if: always()
         run: |
           npm install --no-save linkinator@^8.0.4
-          node templates/scripts/verify-external-links.mjs site
+          node scripts/verify-external-links.mjs "$GITHUB_WORKSPACE/<STATIC_DIR>"
