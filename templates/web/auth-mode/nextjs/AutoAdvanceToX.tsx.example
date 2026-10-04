@@ -127,7 +127,14 @@ function findClickableXButton(): HTMLElement | null {
     if (direct) return direct;
   }
 
-  const candidates = document.querySelectorAll<HTMLElement>(
+  // ★検索範囲は Clerk の UI の中だけ（2026-10-04 exosome の本番で実損。静的サイト版の部品と同じ修正）。
+  //   ページ全体を総当たりすると、Clerk の UI が描画される前に、ページ自身の「X でログイン」ボタン等を
+  //   拾って合成クリックし、本来の X ボタンへ進めなくなる。Clerk の UI がまだ無ければ何も返さず、次を待つ。
+  const scope = document.querySelector<HTMLElement>(
+    ".cl-rootBox, .cl-modalBackdrop, .cl-signIn-root"
+  );
+  if (!scope) return null;
+  const candidates = scope.querySelectorAll<HTMLElement>(
     "button, a, [role='button']"
   );
   for (const candidate of candidates) {
