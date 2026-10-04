@@ -1,0 +1,62 @@
+// clerk-ui-options.js / clerk-ja-JP.generated.js の契約テスト（node:test・依存は @clerk/localizations のみ）。
+// 使い方: サイトの test/ にコピーし、下の2つのパスと SERVICE_NAME を直して `node --test` で走らせる。
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import vm from 'node:vm';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+// ← サイトごとに直す
+const GENERATED = 'js/clerk-ja-JP.generated.js';
+const OPTIONS = 'js/clerk-ui-options.js';
+const SERVICE_NAME = 'テストサービス';
+
+function load(files, config = { serviceName: SERVICE_NAME }) {
+  const sandbox = { window: { KimitoClerkUiConfig: config } };
+  sandbox.window.window = sandbox.window;
+  vm.createContext(sandbox);
+  for (const f of files) vm.runInContext(readFileSync(join(ROOT, f), 'utf8'), sandbox, { filename: f });
+  return sandbox.window;
+}
+const BOTH = [GENERATED, OPTIONS];
+
+test('見出しを共有ClerkのApplication名に頼らず、サービス名で上書きする', () => {
+  const o = load(BOTH).KimitoClerkUiOptions.buildClerkLoadOptions();
+  assert.equal(o.localization.signIn.start.title, `${SERVICE_NAME}にログイン`);
+  assert.ok(!JSON.stringify(o.localization).includes('kimitolink'));
+});
+
+test('サービス名が未設定でも落ちない（fail-safe）', () => {
+  const o = load([OPTIONS], {}).KimitoClerkUiOptions.buildClerkLoadOptions();
+  assert.equal(o.localization.signIn.start.title, 'このサービスにログイン');
+});
+
+test('公式の日本語を壊さない（上書きしていない既存キーが残る）', () => {
+  const w = load(BOTH);
+  const o = w.KimitoClerkUiOptions.buildClerkLoadOptions();
+  assert.equal(o.localization.signIn.start.actionText, w.KimitoClerkJaJP.signIn.start.actionText);
+  assert.ok(Object.keys(o.localization).length > 20);
+});
+
+test('ソーシャルボタンは「◯◯で続ける」（Googleのブランド規約: 単独表記不可）', () => {
+  const l = load(BOTH).KimitoClerkUiOptions.buildClerkLoadOptions().localization;
+  assert.equal(l.socialButtonsBlockButton, '{{provider|titleize}}で続ける');
+  assert.equal(l.socialButtonsBlockButtonManyInView, '{{provider|titleize}}で続ける');
+});
+
+test('Apple/Google/Xのボタン寸法が同一で、Appleを消していない（App Store 4.8）', () => {
+  const a = load(BOTH).KimitoClerkUiOptions.appearance;
+  const e = a.elements;
+  const size = (b) => [b.minHeight, b.fontSize, b.borderRadius].join('|');
+  assert.equal(size(e.socialButtonsBlockButton__x), size(e.socialButtonsBlockButton__apple));
+  assert.equal(size(e.socialButtonsBlockButton__x), size(e.socialButtonsBlockButton__google));
+  assert.doesNotMatch(JSON.stringify(a), /"display":\s*"none"/);
+});
+
+test('生成物が @clerk/localizations と一致している（ドリフト検知）', async () => {
+  // gen-clerk-ja-localization.mjs（scripts/）の render() と突き合わせる
+  const { render } = await import('../scripts/gen-clerk-ja-localization.mjs');
+  assert.equal(readFileSync(join(ROOT, GENERATED), 'utf8'), render());
+});

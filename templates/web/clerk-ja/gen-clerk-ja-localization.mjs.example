@@ -1,0 +1,43 @@
+// Clerk 公式の日本語データ（@clerk/localizations の jaJP）を、静的サイト用の1ファイルに書き出す。
+//
+// ★なぜ生成物をコミットするか: 素の <script> のサイトにはビルド工程も npm の import も無い。
+//   Clerk SDK 自体は clerk.kimito.link から読むが、日本語データは CDN に依存させず自ドメインに置く。
+// ★手で編集しない。上書きしたい文言は clerk-ui-options.js 側（KimitoClerkUiConfig）で行う。
+// 使い方: サイトの scripts/ にコピーし、下の OUT_REL を実際の置き場に直す。
+//         devDependency に @clerk/localizations を足す。
+// 実行: node scripts/gen-clerk-ja-localization.mjs         （書き出す）
+//       node scripts/gen-clerk-ja-localization.mjs --check （コミット済みの生成物と一致するか検査）
+
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { jaJP } from '@clerk/localizations';
+
+// ← サイトごとに直す（このサイトの生成物の置き場。リポのルートからの相対パス）
+const OUT_REL = 'js/clerk-ja-JP.generated.js';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = join(ROOT, OUT_REL);
+
+export function render() {
+  return (
+    '/* 自動生成: scripts/gen-clerk-ja-localization.mjs（@clerk/localizations の jaJP）。手で編集しない。 */\n' +
+    'window.KimitoClerkJaJP = ' + JSON.stringify(jaJP) + ';\n'
+  );
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const body = render();
+  if (process.argv.includes('--check')) {
+    let current = '';
+    try { current = readFileSync(OUT, 'utf8'); } catch { /* 無ければ不一致扱い */ }
+    if (current !== body) {
+      console.error(`✖ ${OUT_REL} が @clerk/localizations と一致しません。node scripts/gen-clerk-ja-localization.mjs で再生成してください。`);
+      process.exit(1);
+    }
+    console.log(`✓ ${OUT_REL} は @clerk/localizations と一致`);
+  } else {
+    writeFileSync(OUT, body);
+    console.log('wrote ' + OUT + ' (' + body.length + ' bytes)');
+  }
+}

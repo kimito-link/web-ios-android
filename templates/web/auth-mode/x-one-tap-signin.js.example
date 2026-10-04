@@ -92,7 +92,13 @@
             if (direct) return direct;
         }
 
-        var candidates = document.querySelectorAll('button, a, [role="button"]');
+        // ★検索範囲は Clerk の UI の中だけ（2026-10-04 exosome の本番で実損）。ページ全体を総当たりすると、
+        //   モーダルが描画される前に、ページ自身の「X でログイン」ボタン等（例: exosome の LP の
+        //   `.lp-xbtn`）を拾って合成クリックしてしまい、openSignIn() に再入して、本来の X ボタンへ
+        //   進めなくなる。Clerk の UI がまだ無ければ何も返さず、次のポーリングを待つ。
+        var scope = document.querySelector('.cl-rootBox, .cl-modalBackdrop, .cl-signIn-root');
+        if (!scope) return null;
+        var candidates = scope.querySelectorAll('button, a, [role="button"]');
         for (var i = 0; i < candidates.length; i++) {
             var target = resolveClickableTarget(candidates[i]);
             if (!target) continue;
@@ -114,9 +120,12 @@
      * 実行した直後に呼ぶこと。ネイティブアプリシェル内では何もしない（fail-safe、
      * 通常の選択モーダルがそのまま残る）。
      *
-     * @param {{onOverlayShow?: function, onOverlayHide?: function}} [callbacks]
+     * @param {{onOverlayShow?: function, onOverlayHide?: function, onFallbackTimeout?: function}} [callbacks]
      *   全画面オーバーレイ（「Xの画面へ進んでいます…」等）の表示/非表示を呼び出し元の
      *   UIに任せるためのコールバック（正本§4.1「経由ページを見せたくない」）。省略可。
+     *   onFallbackTimeoutはTIMEOUT_MS内にXボタンが見つからなかった時に呼ばれる
+     *   （Clerk内部クラス名の変更でCSSセレクタ・フォールバック両方が外れた兆候）。
+     *   省略時はconsole.warnにフォールバックする（サイレント失敗にしない）。
      * @returns {boolean} 監視を開始したら true。ネイティブシェル・クールダウン中は false。
      */
     function triggerAutoXClick(callbacks) {
@@ -140,6 +149,14 @@
         function giveUp() {
             cleanupTimers();
             if (callbacks.onOverlayHide) callbacks.onOverlayHide();
+            // ★サイレント失敗の可視化（Clerkの内部クラス名変更でCSSセレクタ・
+            //   フォールバック両方が外れた場合の検知用）。コンソールに残すだけで
+            //   ユーザー体験は変えない（正本§4.1「壊れ方の上限を改善ゼロに固定」）。
+            if (callbacks.onFallbackTimeout) {
+                try { callbacks.onFallbackTimeout(); } catch (e) { /* no-op */ }
+            } else if (typeof console !== 'undefined' && console.warn) {
+                console.warn('[KimitoXOneTapSignIn] Xボタンが見つからずタイムアウトしました。通常の選択モーダルのまま表示します。Clerkの内部クラス名が変わった可能性があります。');
+            }
         }
 
         function tryClick() {

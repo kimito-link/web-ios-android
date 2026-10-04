@@ -444,6 +444,18 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-04追加。素の clerk-js サイト向けの「ログイン画面の日本語化＋見た目」の設定部品。
+     *   exosome が無改変コピーで使う（サービス名は KimitoClerkUiConfig で渡す）。
+     *   ★kimito-Link-Voice の js/modules/clerk-ui-options.js は同じ部品の初期版で、サービス名が
+     *     埋め込み・グローバル名も違う（VoiceClerkUiOptions）ためバイト一致の対象外。
+     *     次に Voice を触るとき、この金型へ移行すること（README 参照）。
+     */
+    label: 'Clerk日本語化の設定部品（素のclerk-js版）',
+    canonical: resolve(KIT_ROOT, 'templates/web/clerk-ja/clerk-ui-options.js.example'),
+    copies: [resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/clerk-ui-options.js')]
+  },
+  {
+    /*
      * ★2026-10-04追加。kimito.link系の全LPで共通の「運営表記＋利用規約・プライバシー」フッター
      *   （素のJS部品）。静的LPの3サービスが無改変コピーで使う。
      *   ★doin は Expo(React Native) のため同じ文言・順序の別実装（lib/legal-footer-content.ts）で、
