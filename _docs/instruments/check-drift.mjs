@@ -444,6 +444,19 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-04 追加。静的サイト向け Vanilla JS 版の Xワンタップ部品。
+     *   exosome は auth.js が openSignIn() の直後に triggerAutoXClick() を呼ぶ形で取り込んだ
+     *   （yukkuri-exosome.link/src/js/auth.js、配線は test/x-one-tap-wiring.test.mjs が見る）。
+     *   ★kimito-Link-Voice/js/modules/x-one-tap-signin.js も同じ部品のコピーだが、先頭の
+     *     コメント（出典の書き方）が金型と違う「意図的な差異」があるためバイト一致の対象外。
+     *     exosome は金型を無改変でコピーしたのでバイト一致を契約にできる。
+     */
+    label: 'Xワンタップ部品（静的サイト版 Vanilla JS）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/x-one-tap-signin.js.example'),
+    copies: [resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/x-one-tap-signin.js')]
+  },
+  {
+    /*
      * ★2026-09-10 追加。line-botセッションからの指摘で判明した登録漏れ。
      *   deploy-cloudflare-pages.mjsは配布先1件(kimito-Link-Voice)を
      *   持つが、check-drift.mjsのPAIRSに未登録だった。--branch明示化
