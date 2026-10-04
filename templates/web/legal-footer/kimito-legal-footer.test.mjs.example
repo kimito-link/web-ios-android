@@ -1,0 +1,53 @@
+// kimito-legal-footer.js の契約テスト（node:test・依存ゼロ）。
+// 使い方: 各サイトの tests/ にコピーし、下の FOOTER_JS を実際の配置に直して `node --test` で走らせる。
+// ★document の無い環境で読むと、自動マウントはせず window.KimitoLegalFooter（純関数）だけが生える。
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import vm from 'node:vm';
+
+// ← サイトごとに直す（このリポの kimito-legal-footer.js の場所）
+const FOOTER_JS = join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'kimito-legal-footer.js');
+
+function load() {
+  const sandbox = { window: {} };
+  sandbox.window.window = sandbox.window;
+  vm.createContext(sandbox);
+  vm.runInContext(readFileSync(FOOTER_JS, 'utf8'), sandbox, { filename: FOOTER_JS });
+  return sandbox.window.KimitoLegalFooter;
+}
+
+test('運営表記が全サービス共通の文言で出る', () => {
+  const html = load().buildHtml({ serviceName: 'テストサービス', terms: '/terms/', privacy: '/privacy/' });
+  assert.match(html, /テストサービスは、<a href="https:\/\/kimito-link\.com\/" rel="noopener">kimito-link\.com<\/a>（Kimito-Link Project）と同じ運営による公式サービスです。/);
+});
+
+test('リンクの順序は 利用規約 → プライバシー → 特商法 → お問い合わせ（渡した分だけ）', () => {
+  const f = load();
+  const all = f.buildHtml({ serviceName: 'x', terms: '/t/', privacy: '/p/', tokusho: '/s/', support: '/h/' });
+  const order = ['利用規約', 'プライバシーポリシー', '特定商取引法に基づく表記', 'お問い合わせ'].map((t) => all.indexOf(t));
+  assert.ok(order.every((i) => i > 0) && order.join() === [...order].sort((a, b) => a - b).join());
+  const some = f.buildHtml({ serviceName: 'x', privacy: '/p/' });
+  assert.ok(some.includes('プライバシーポリシー') && !some.includes('利用規約') && !some.includes('特定商取引法'));
+});
+
+test('存在しないページへのリンクは出さない（何も渡さなければリンク一覧ごと出ない）', () => {
+  assert.ok(!load().buildHtml({ serviceName: 'x' }).includes('<ul>'));
+});
+
+test('危険なURLは描画しない（javascript: / data: / プロトコル相対 / http:）', () => {
+  const f = load();
+  for (const bad of ['javascript:alert(1)', 'data:text/html,x', '//evil.example/', 'http://insecure.example/']) {
+    assert.equal(f.safeUrl(bad), '');
+  }
+  assert.equal(f.safeUrl('/terms/'), '/terms/');
+  assert.equal(f.safeUrl('https://example.com/terms'), 'https://example.com/terms');
+  assert.ok(!f.buildHtml({ serviceName: 'x', terms: 'javascript:alert(1)' }).includes('javascript:'));
+});
+
+test('サービス名の HTML は無害化される', () => {
+  const html = load().buildHtml({ serviceName: '<img src=x onerror=alert(1)>' });
+  assert.ok(!html.includes('<img') && html.includes('&lt;img'));
+});

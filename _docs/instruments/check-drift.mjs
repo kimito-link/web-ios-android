@@ -444,6 +444,21 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-04追加。kimito.link系の全LPで共通の「運営表記＋利用規約・プライバシー」フッター
+     *   （素のJS部品）。静的LPの3サービスが無改変コピーで使う。
+     *   ★doin は Expo(React Native) のため同じ文言・順序の別実装（lib/legal-footer-content.ts）で、
+     *     バイト一致の対象外。文言の一致は doin 側のテストが見張る。
+     */
+    label: 'LP共通フッター（静的サイト版 Vanilla JS）',
+    canonical: resolve(KIT_ROOT, 'templates/web/legal-footer/kimito-legal-footer.js.example'),
+    copies: [
+      resolve(GH_ROOT, 'surechigai-romi.link/public/lp/kimito-legal-footer.js'),
+      resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/kimito-legal-footer.js'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/js/modules/kimito-legal-footer.js')
+    ]
+  },
+  {
+    /*
      * ★2026-10-04 追加。静的サイト向け Vanilla JS 版の Xワンタップ部品。
      *   exosome は auth.js が openSignIn() の直後に triggerAutoXClick() を呼ぶ形で取り込んだ
      *   （yukkuri-exosome.link/src/js/auth.js、配線は test/x-one-tap-wiring.test.mjs が見る）。
