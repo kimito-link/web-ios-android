@@ -27,7 +27,7 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 
 | プロジェクト | 適用状況 |
 |---|---|
-| `yukkuri-exosome.link` | MVP実装済み（全21ページ）。2026-09-29に複数cookie併置バグ修正 |
+| `yukkuri-exosome.link` | MVP実装済み（全21ページ）。2026-09-29に複数cookie併置バグ修正。**2026-10-04にワンタップX適用**（`src/js/auth.js`の`openSignIn()`から呼ぶ・タップ起点のみ・下記注意6）。部品は金型の無改変コピーでcheck-drift登録済み |
 | `surechigai-romi.link` | 独自のゲストWebシェル判定に `__client_uat` を統合済み（`lib/clerk-public-routes.ts`）。2026-09-29に同じバグを修正 |
 | `kimito-Link-Voice` | `/try/`ページに適用済み（2026-09-29、PR #44） |
 
@@ -37,7 +37,7 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 |---|---|
 | `kimitolink-linktree` | 実装済み（`components/AutoAdvanceToX.tsx`）。原型・フォールバックセレクタ/ネイティブシェルガードは無し（Web専業のため不要） |
 | `surechigai-romi.link` | 実装済み（`components/auth/auto-advance-to-x.tsx`）。フォールバックセレクタ・ネイティブシェル除外ガード・純判定関数分離あり（最も完成度が高い） |
-| `kimito-Link-Voice` | 未適用。`x-one-tap-signin.js.example`がVanilla JS移植版の正本実装。適用時は`js/modules/clerk-auth-client.js`の`openSignIn()`から呼ぶ |
+| `kimito-Link-Voice` | 適用済み（2026-09-30 #45、`/try/`）。`js/modules/clerk-auth-client.js`の`openSignIn()`から呼ぶ。コピーはコメントが金型と意図的に違うためバイト一致の対象外 |
 
 ## ★Next.js + Clerk を使うなら `nextjs/` を見る（2026-10-01 追加）
 
