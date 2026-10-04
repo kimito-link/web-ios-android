@@ -16,7 +16,9 @@
  * ★設計の判断（2026-10-04）:
  *   - 色は既定で継承する（単色背景のLPならそのまま馴染む）。独自の背景色は持たない。
  *     ★背後が写真・グラデーション等で文字が読めなくなるLPは、LP側のCSSで差し替える:
- *       :root { --klf-bg: #efe7d6; --klf-fg: #3a352c; }   （surechigai の実例。部品は書き換えない）
+ *       :root { --klf-bg: #efe7d6; --klf-fg: #3a352c; --klf-z: 5; }   （surechigai の実例。部品は書き換えない）
+ *     ★背景の写真が position:fixed（z-index 付き）で全面に敷かれているLPでは、重なり順（--klf-z）も要る。
+ *       既定は position:relative + z-index:1（後ろから描かれる固定レイヤーに隠れないため）。
  *   - 何度読み込まれても1つだけ（冪等）。失敗してもページ本体は壊さない（fail-safe）。
  *   - javascript: 等の危険な URL は描画しない（相対パスと https:// だけ許可）。
  *   - 全部のサイトに kimito.link 本体と同じ「ヘッダー」を強制はしない。アプリ型の画面に合わないため。
@@ -33,7 +35,7 @@
     var OFFICIAL_URL = 'https://kimito-link.com/';
 
     var CSS =
-        '#' + ROOT_ID + '{box-sizing:border-box;width:100%;margin:0;padding:28px 16px 36px;' +
+        '#' + ROOT_ID + '{position:relative;z-index:var(--klf-z,1);box-sizing:border-box;width:100%;margin:0;padding:28px 16px 36px;' +
         'text-align:center;font-size:12px;line-height:1.8;color:var(--klf-fg,inherit);background:var(--klf-bg,transparent);' +
         'border-top:1px solid rgba(127,127,127,.35);}' +
         '#' + ROOT_ID + ' p{margin:0 0 10px;opacity:.85;}' +
