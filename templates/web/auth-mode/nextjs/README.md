@@ -91,6 +91,7 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
 | `KimitoLinkRedirect.tsx.example` | 中継ページの部品 | **無改変**（drift 検査対象） |
 | `auth-guide-page.tsx.example` | `/auth/kimito-link` ページ | **無改変**（drift 検査対象） |
 | `kimito-link-redirect.test.ts.example` | 純関数のテスト（相対 import を自リポの配置に合わせる） | **無改変**（drift 検査対象） |
+| `KimitoDashboardLink.tsx.example` | ログイン中だけ本家マイページ `https://kimito.link/dashboard/` へのリンクを出す（素の React。Clerk 状態は props で受ける。Expo でも使える。2026-10-05 追加、詳細は `../README.md` ③） | **無改変**（drift 検査対象） |
 
 ★「無改変」の4ファイルは `_docs/instruments/check-drift.mjs` の PAIRS に登録してある
 （surechigai のコピーとバイト一致を機械検査）。**書き換えたくなったら金型側を直して配り直す。**

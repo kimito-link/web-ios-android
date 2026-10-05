@@ -209,6 +209,17 @@
         "../tsuioku-no-kirameki.com/scripts/record-improvement.mjs",
         "templates/scripts/record-improvement.mjs"
       ]
+    },
+    {
+      "at": "2026-10-05T04:20:58.922Z",
+      "responsibility": "kimito-dashboard-link (姉妹→本家 https://kimito.link/dashboard/ のログイン中限定導線。templates/web/auth-mode/nextjs/KimitoLinkRedirect.tsx.example / kimito-link-redirect.ts.example は /auth/kimito-link 中継の行き先判定で責務が別、x-one-tap-signin.js.example はログイン開始で責務が別。純関数分離・固定URL・Clerk待ち の設計だけ写し、新規の正本を立てる)",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/web/auth-mode/kimito-dashboard-link.js.example",
+        "templates/web/auth-mode/kimito-dashboard-link.contract.test.mjs.example",
+        "templates/web/auth-mode/nextjs/KimitoDashboardLink.tsx.example"
+      ]
     }
   ]
 }

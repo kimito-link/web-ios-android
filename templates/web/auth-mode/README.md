@@ -56,6 +56,12 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 - `auth-mode-cookie-parsing.test.mjs.example`: cookie解析ロジックの契約テスト（実損再現ケース含む、①）
 - `x-one-tap-signin.js.example`: XボタンへDOM clickを送るワンタップログイン（②）。
   ネイティブアプリシェル除外ガード・CSSセレクタのフォールバックを内蔵
+- `kimito-dashboard-link.js.example`: ログイン中だけ本家マイページ（`https://kimito.link/dashboard/`）への
+  リンクを描く部品（③、Vanilla JS 版）。依存ゼロ・IIFE・`data-kimito-dashboard-link` コンテナへ描く
+- `kimito-dashboard-link.contract.test.mjs.example`: ③の契約テスト（未ログインで描かない／ログインで描く／
+  URL が `https://kimito.link/dashboard/` で `?` 無し／addListener でログアウトに追従）
+- `nextjs/KimitoDashboardLink.tsx.example`: ③の React 版（素の React。Clerk 状態は props で受ける＝
+  `@clerk/nextjs` / `@clerk/expo` / clerk-js のどれでも使える。`nextjs/README.md` も参照）
 
 ## 使うとき
 
@@ -81,6 +87,43 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 5. 実装後、正本§4.1.1のネイティブシェル除外ガードが機能しているか、ブリッジ注入
    （`window.Capacitor={isNativePlatform:()=>true}`）した状態で実際にクリックし、
    自動clickが発火せず通常の選択モーダルが残ることを確認する
+
+### ③本家マイページへの導線（2026-10-05 追加）
+
+**なぜ要るか**: 本家 `kimito.link` のダッシュボード（`/dashboard/`）は共通アカウントの拠点で、
+姉妹サービスごとの利用状況カード（`kimitolink-linktree/app/(auth)/dashboard/SiblingServiceCard.tsx`）
+がある。姉妹4サービス（surechigai / exosome / doin / voice）は利用状況の書き込み（`/api/hub/summary`）
+まで実装済みなのに、**見に行く入口が1つも無かった**（`kimito.link/dashboard` を含むリンクは
+4リポとも0件、2026-10-05 に grep で確認）。本家の共通ヘッダー（`components/HeaderNav.tsx`）が
+ログイン中だけ「マイページ」→ `/dashboard/` を出すのを写し、姉妹側では `https://` から始まる完全なURLにして出す。
+「本家の資産を姉妹が引き継ぐのが最初」の原則どおり、本家の挙動を金型にしたもの。
+
+**置き方**:
+1. **ログイン後の画面（マイページ／ヘッダー右上）に置く。LP には出さない**
+   （未ログインの人には何も描かれないので LP に置いても意味が無く、置き場所が散るだけ）
+2. Vanilla JS（exosome・voice）: `kimito-dashboard-link.js.example` をコピーして `<script>` で読み、
+   ヘッダーに `<span data-kimito-dashboard-link></span>` を置く。`window.Clerk` を自動で待って
+   `addListener` で追従する。`auth.js` 側で `Clerk.load()` の直後に
+   `window.KimitoDashboardLink.attach(window.Clerk)` を呼んでもよい（二重 attach は無視）。
+   ①ちらつきゼロを入れているサイトでは、コンテナに `member-only` クラスも付けると
+   ペイント前から隠れる（JS が描くまでの空白も出ない）
+3. React（surechigai Expo / doin Expo / 本家 Next）: `nextjs/KimitoDashboardLink.tsx.example` を
+   コピーし、`useUser()` / `useAuth()` の `isLoaded` / `isSignedIn` を props で渡す。
+   React Native では `<a>` が使えないので `as` に `Linking.openURL` する部品を渡す
+4. 契約テスト `kimito-dashboard-link.contract.test.mjs.example` をコピーし、冒頭の
+   `SOURCE_CANDIDATES` に自リポの配置を足す（`node --test`）。React 版は
+   `resolveKimitoDashboardLink` を vitest から直接 import してテストする
+
+**姉妹から本家の sign-in へは送らない**: 姉妹は各自の独自ドメインでログインする方式
+（`nextjs/README.md` 地雷4）。本家は `signInForceRedirectUrl=/dashboard/` なので、姉妹から
+`kimito.link/sign-in` へ送客するとログイン後に姉妹へ戻れない（exosome が 2026-09-16 に実測）。
+だからこの部品は「ログイン中だけ出す」に限定し、未ログイン時は何も描かない。
+未ログインの人の導線は各サービス自身の sign-in（②Xワンタップ）に任せる。
+
+**まだ確認していないこと**: 姉妹でログイン済みの人が本家 `/dashboard/` を開いたとき、
+本家の middleware が `__client_uat` を見て handshake し、そのまま入れるという理屈は、本家の
+`docs/SHARED-ACCOUNT-SATELLITE-GUIDE.md` が「実ログイン未検証」と明記している。
+配布後、姉妹でログイン→このリンクを押す→本家のダッシュボードが開く、を実機で1回見ること。
 
 ## 地雷
 

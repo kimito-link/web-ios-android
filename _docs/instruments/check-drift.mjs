@@ -528,6 +528,25 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-05 追加。姉妹サービス（surechigai / exosome / doin / voice）から本家マイページ
+     *   https://kimito.link/dashboard/ へ「ログイン中だけ」出す導線。本家 HeaderNav.tsx の
+     *   「マイページ」→ /dashboard/ を写した金型。姉妹4サービスは利用状況の書き込み
+     *   （/api/hub/summary）まで実装済みなのに見に行く入口が無かった（4リポともリンク0件）。
+     *   ★copies は配布後に埋める（`copies: []` は「まだ誰もコピーを持っていない」＝正常）。
+     *   契約テスト（kimito-dashboard-link.contract.test.mjs.example）は配布先でパス候補を
+     *   足して使うため、バイト一致の対象にしない。
+     */
+    label: '本家マイページ導線（Vanilla JS）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/kimito-dashboard-link.js.example'),
+    copies: []
+  },
+  {
+    label: '本家マイページ導線（React）',
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/KimitoDashboardLink.tsx.example'),
+    copies: []
+  },
+  {
+    /*
      * ★2026-09-10 追加。line-botセッションからの指摘で判明した登録漏れ。
      *   deploy-cloudflare-pages.mjsは配布先1件(kimito-Link-Voice)を
      *   持つが、check-drift.mjsのPAIRSに未登録だった。--branch明示化
