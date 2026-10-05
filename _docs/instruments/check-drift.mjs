@@ -547,7 +547,11 @@ export const PAIRS = [
   {
     label: '本家マイページ導線（React）',
     canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/KimitoDashboardLink.tsx.example'),
-    copies: []
+    copies: [
+      // 2026-10-05 配布（surechigai PR #72 / doin PR #71）。配線側の header-kimito-dashboard-link.tsx は各リポ固有なので対象外
+      resolve(GH_ROOT, 'surechigai-romi.link/components/auth/kimito-dashboard-link.tsx'),
+      resolve(GH_ROOT, 'doin-challenge.com/components/auth/kimito-dashboard-link.tsx')
+    ]
   },
   {
     /*
