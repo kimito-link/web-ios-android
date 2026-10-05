@@ -112,12 +112,12 @@ sign-in ページだけがこの型に戻っていた。
 
 | 対象 | 状態 |
 |---|---|
-| 本家 `kimito.link` sign-in（判断 1〜5） | **実装・マージ・本番反映済み**（`kimitolink-linktree` PR #381、commit `2488b86`、2026-10-05）。本番の after 計測でフラッシュ 0・縦ずれ 0（上の実測表）。判断 7（自インスタンス判定）は未適用 |
+| 本家 `kimito.link` sign-in（判断 1〜5） | **実装・マージ・本番反映済み**（`kimitolink-linktree` PR #381、commit `2488b86`、2026-10-05）。本番の after 計測でフラッシュ 0・縦ずれ 0（上の実測表）。判断 7（自インスタンス判定）も PR #384 で適用済み（本番 `<html data-auth-cookie-suffix="ZGVu8CMk">` を確認。再計測も 🟢） |
 | `doin-challenge.com` sign-in（Expo、判断 1・2 ＋下の追加知見 a〜d） | **実装・マージ・本番で計測済み**（PR #75 → #76 → #77、2026-10-05）。after（本番・CPU×2・3G・16 秒）で往復フラッシュ 0・縦ずれ 0。詳細は下の「doin の経緯」 |
 | `surechigai-romi.link` sign-in（Next.js `apps/web` ＋ Expo） | PR #73 マージ済み。**本番反映は手動デプロイ待ち**、after 未計測（下の「次に配る先」の訂正を参照） |
 | `yukkuri-exosome.link` / `kimito-Link-Voice` | モーダル型のため該当なし |
 | 計測道具の金型（`templates/scripts/qa/measure-page-flicker.mjs`） | マージ済み（このキット PR #29） |
-| 本家の実装の金型化（`templates/web/auth-mode/nextjs/` ④部品・`head-snippet.html.example` の判断 7） | このキットのブランチ `feat/auth-mode-signin-no-flicker-templates`（PR 作成）。本家の `lib/auth-mode/head-snippet.html` は判断 7 を含む金型と差分が出るので、配り直しが要る（下表） |
+| 本家の実装の金型化（`templates/web/auth-mode/nextjs/` ④部品・`head-snippet.html.example` の判断 7） | マージ済み（このキット PR #30）。本家は PR #384 で金型版に揃え、13 本が正本とバイト一致。`_docs/instruments/check-drift.mjs` の PAIRS「…（auth-mode）」で見張る |
 
 ### doin の経緯（PR #75 → #76 → #77、2026-10-05）
 
@@ -139,7 +139,7 @@ sign-in ページだけがこの型に戻っていた。
 
 | リポ | sign-in の形 | 該当する契約 | 見立て |
 |---|---|---|---|
-| `kimitolink-linktree`（本家） | Next.js `<SignIn/>` | 判断 7 | `lib/auth-mode/head-snippet.html` を金型の新版に揃え、`app/layout.tsx` の `<html>` に `data-auth-cookie-suffix={getAuthCookieSuffix()}` を足す。他の ④ 部品は本家が出典なので中身は同じ（金型の `.example` と並べてバイト一致にそろえる作業＝PAIRS 登録） |
+| `kimitolink-linktree`（本家） | Next.js `<SignIn/>` | 判断 7 | **完了（PR #384）**: `lib/auth-mode/head-snippet.html` を金型の新版に揃え、`app/layout.tsx` の `<html>` に `data-auth-cookie-suffix={getAuthCookieSuffix()}`。Playwright で「姉妹の cookie だけ」「接尾辞なし `__client_uat=1` だけ」は guest のまま、自分の接尾辞だけ member、を確認。④ 部品 13 本は PAIRS 登録済み |
 | `surechigai-romi.link`（★訂正: 本番 `/sign-in/` は Expo ではなく Next.js が応答） | 本番の `/sign-in/` は `vercel.json` の rewrite で **Next.js `apps/web`（別 Vercel プロジェクト `surechigai-web`、Git 連携なし・手動 `vercel deploy --prod`）** が応答する。Expo の `app/sign-in.tsx` ではない | 判断 1・2 | **before（本番）: フラッシュ 0・縦ずれ 1（+486px。Clerk 到着までカード枠が高さ 0）。** 対処は Next 側 `<SignIn fallback={<ClerkMountFallback/>}>`（金型のコピー。箱モデルは本番 DOM 実測の 486px）＋ Expo 側にも契約を適用（PR #73、マージ済み）。★押せるボタンを出す方針（iOS 2.1(a) 却下対策、2026-08-28）は Expo 側で維持。after は手動デプロイ後に計測予定。以前ここに書いた「Expo 側が応答し、到着 intro が原因」という見立ては、本番の応答元を調べた結果と合わず訂正した |
 | `doin-challenge.com`（Expo） | 同型（surechigai から 2026-09-01 移植） | 判断 1・2 | **実装・本番計測済み**（上の「doin の経緯」）。到着 intro の撤去と同寸化に加え、a〜d の 4 件が要った |
 | `yukkuri-exosome.link`（静的） | `Clerk.openSignIn()` のモーダル | 該当なし | ページ到着時に sign-in カードを描かない（タップ後にモーダル）。①は全 21 ページ適用済み。判断 7 は親ドメイン共有の立場が同じなので `<html data-auth-cookie-suffix>` を 1 回計算して付けると「本家だけにログイン中」の誤先出しが消える（任意） |
@@ -151,8 +151,8 @@ sign-in ページだけがこの型に戻っていた。
 - 白の 1.5 秒のうち、サーバー応答（約 0.5 秒）以外の内訳（HTML 配信・CSS の到着・フォント）
 - ログイン済み（`__client_uat` あり）で `/dashboard/` に着いたときの挙動（使い捨てスクリプトの `INJECT_UAT=1` の回でも
   未ログインと同じ 3 段が出た＝sign-in に 307 される経路は cookie の有無で変わらなかった。after は未ログインでのみ計測）
-- 判断 7（自インスタンス判定）を本家に適用したあと、「姉妹だけにログイン中」で注意書きが切り替わらないこと（金型の契約テストでは
-  guest 判定を固定済み。実機で `document.cookie` を姉妹のものだけにして確認する）
+- 判断 7 の「姉妹だけにログイン中」での非反応は、PR #384 でローカル（`next start`）の Playwright で cookie 注入して確認済み。
+  本番の実ログイン（姉妹でログイン→本家 `/dashboard/`）での確認は未実施（人の操作が要る）
 - surechigai の after 計測（PR #73 の本番反映＝`surechigai-web` の手動デプロイ後に、同じ道具で往復フラッシュ 0・縦ずれ 0 になること）
 - 本家の描画前の白 1.5 秒（no-store の SSR の TTFB。ちらつきとは別軸で、判断 5 の地色インラインの領分）
 
