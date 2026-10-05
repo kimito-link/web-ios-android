@@ -15,8 +15,17 @@
  * ■ 終了コード（この土台自身の3値規約に従う）
  *   0 = 一致 / 1 = ★実コードが割れている / ★2 = 測れなかった(ファイルが無い等)
  *
+ * ■ ★コピーのファイルが無いとき（2026-10-05 追加）
+ *   PAIRS の copies に書いたファイルが存在しないと、その本は比較されずに飛ばされる。
+ *   以前は「比較できた本数>0 なら pass」で、飛ばされたことが本文に出なかった
+ *   （voice のコピーが未存在のまま ✅ と表示され、別の担当が『本物の一致ではない』と気づいた）。
+ *   ⟹ 未存在が1本でもあれば、その項目に `⚠ 未存在 N本: <パス>` を【本文として】出す。
+ *   判定は変えない（kit の CI には兄弟リポが無く、fail にすると CI が常に赤になるため）。
+ *   ローカルで人が回すときは --strict-copies で、未存在を1本でも fail にできる。
+ *
  * ■ 使い方
  *   node _docs/instruments/check-drift.mjs
+ *   node _docs/instruments/check-drift.mjs --strict-copies  ★未存在のコピーが1本でもあれば fail（ローカル用）
  *   node _docs/instruments/check-drift.mjs --selftest   ★毒を入れて赤くなるか確認
  * ───────────────────────────────────────────────────────────────────────────
  */
@@ -78,6 +87,7 @@ const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href =
  *   ＝呼んだ側の検査は一度も走らないのに緑になる。実際に踏んだ（2026-08-28）。
  */
 const SELFTEST = isMain && process.argv.includes('--selftest');
+const STRICT_COPIES = isMain && process.argv.includes('--strict-copies');
 
 /**
  * ★正本（キット側）と、追随するコピー。
@@ -640,7 +650,23 @@ function driftDirection(base, copy) {
   return { onlyCanonical, onlyCopy };
 }
 
-function compare(canonicalPath, copies) {
+/**
+ * ★未存在のコピーを結果に載せ、strict のときは fail にする。
+ *   通常は判定を変えない（見えるようにするだけ）。strict は未存在1本で fail。
+ */
+function compare(canonicalPath, copies, { strict = false } = {}) {
+  const r = compareCore(canonicalPath, copies);
+  const missing = copies.filter((p) => !existsSync(p));
+  if (missing.length) r.missing = missing;
+  if (strict && missing.length && existsSync(canonicalPath)) {
+    r.verdict = 'fail';
+    r.howToFix = '★--strict-copies: 兄弟リポを clone して揃えるか、PAIRS の copies から外す。'
+      + (r.howToFix ? `\n    ${r.howToFix}` : '');
+  }
+  return r;
+}
+
+function compareCore(canonicalPath, copies) {
   if (!existsSync(canonicalPath)) {
     return {
       verdict: 'inconclusive',
@@ -731,6 +757,12 @@ function compare(canonicalPath, copies) {
   };
 }
 
+/** ★未存在のコピーを本文に出す1行（無ければ空文字）。 */
+function formatMissingLine(r) {
+  if (!r.missing || !r.missing.length) return '';
+  return `⚠ 未存在 ${r.missing.length}本: ${r.missing.map(rel).join(', ')}`;
+}
+
 /* ── --selftest: ★毒を食わせ、赤が出ることを確認する ───────────────── */
 if (SELFTEST) {
   const fails = [];
@@ -759,6 +791,30 @@ if (SELFTEST) {
   // 毒3: ★1本も存在しない → inconclusive であるべき(緑にしない)
   const r3 = compare(CANONICAL, [resolve(HERE, '.nope-does-not-exist.mjs')]);
   if (r3.verdict !== 'inconclusive') fails.push(`★0本を緑にした(得た: ${r3.verdict})`);
+
+  /*
+   * 毒3b: ★未存在のコピーがあると missing に載る（⚠行の元）／pass は変えない／
+   *   --strict-copies なら fail になる。★未存在が無ければ missing は出ない。
+   */
+  {
+    const cFile = resolve(HERE, '.drift-same.tmp.mjs');
+    const ghost = resolve(HERE, '.nope-ghost-copy.mjs');
+    try {
+      writeFileSync(cFile, readFileSync(CANONICAL, 'utf8'));
+      const rOk = compare(CANONICAL, [cFile]);
+      if (rOk.missing) fails.push('★未存在が無いのに missing が出た');
+      const rMix = compare(CANONICAL, [cFile, ghost]);
+      if (rMix.verdict !== 'pass') fails.push(`★未存在があるだけで判定が変わった(得た: ${rMix.verdict})`);
+      if (!rMix.missing || rMix.missing.length !== 1) fails.push('★未存在のコピーを missing に載せていない');
+      const rStrict = compare(CANONICAL, [cFile, ghost], { strict: true });
+      if (rStrict.verdict !== 'fail') fails.push(`★--strict-copies で未存在が fail にならない(得た: ${rStrict.verdict})`);
+      const rStrictOk = compare(CANONICAL, [cFile], { strict: true });
+      if (rStrictOk.verdict !== 'pass') fails.push(`★--strict-copies が未存在なしでも赤い(得た: ${rStrictOk.verdict})`);
+      if (!formatMissingLine(rMix).startsWith('⚠ 未存在 1本')) fails.push('★⚠ 未存在の行が本文に出ない');
+    } finally {
+      try { rmSync(cFile, { force: true }); } catch { /* 復帰は best-effort */ }
+    }
+  }
 
   /*
    * 毒4: ★放置日数が「測れなかった」ときに 0 を返してはいけない。
@@ -795,7 +851,7 @@ if (SELFTEST) {
     for (const f of fails) console.error('  - ' + f);
     process.exit(EXIT.FAIL);
   }
-  console.log('[check-drift] selftest OK（実コードの差を検知 / ★コメント差は誤検知しない / 0本を緑にしない）');
+  console.log('[check-drift] selftest OK（実コードの差を検知 / ★コメント差は誤検知しない / 0本を緑にしない / 未存在を ⚠ で出す・--strict-copies で fail）');
   process.exit(EXIT.PASS);
 }
 
@@ -807,10 +863,12 @@ if (SELFTEST) {
 let worst = EXIT.PASS;
 let worstStaleDays = 0;
 for (const pair of isMain ? PAIRS : []) {
-  const r = compare(pair.canonical, pair.copies);
+  const r = compare(pair.canonical, pair.copies, { strict: STRICT_COPIES });
   const mark = r.verdict === 'pass' ? '✅' : r.verdict === 'fail' ? '🔴' : '🟡';
   console.log(`[check-drift] ${mark} ${pair.label} — ${r.verdict}`);
   if (r.evidence) console.log('  根拠: ' + JSON.stringify(r.evidence, null, 0));
+  const missingLine = formatMissingLine(r);
+  if (missingLine) console.log('  ' + missingLine);
   if (r.detail) console.log('  ' + r.detail);
   if (r.howToFix) console.log('  → 直し方: ' + r.howToFix);
   if (r.limitation) console.log('  → この検査の限界: ' + r.limitation);
