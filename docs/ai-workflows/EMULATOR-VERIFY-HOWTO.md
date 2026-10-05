@@ -102,6 +102,23 @@ xcrun simctl io booted screenshot ios-01.png   # → Read で見る
 ★iOS 固有の審査地雷（1.1.6 端末スキャン誤読・デフォルトスプラッシュ）は、この目視 or CI ゲートで潰す。
 Android限定機能を iOS に出さない設計なら、**iOS シミュレータでは「出ないことの確認」を撮る**。
 
+## Android 実機で PWA(WebAPK) の起動を測る
+ホーム画面に追加した PWA の「開いた直後の約1秒」に、色の違う画面が何回出るかを録画で見る。
+エミュレータではなく **USB 接続した実機**で撮る（WebAPK の起動画面は OS と Chrome の組み合わせで決まるため）。
+```bash
+# 変更前に1回、変更後にもう1回。同じ手順で撮って比べる
+ANDROID_SERIAL=<adb devices の端末> bash templates/scripts/measure-webapk-launch.sh https://example.com/ before --out ./qa/evidence/launch
+```
+- WebAPK の入れ直し（Chrome のメニュー →「ホーム画面に追加」→「インストール」）→ 起動の録画 → `ffmpeg` で
+  タイル画像（`<label>-tiles.png`）と明るさの変化点（`<label>-y.txt`）まで自動。タイルは Read で見る。
+- 前提: adb・ffmpeg・python が使えること／Chrome が**日本語 UI**（メニューの文言で探す）。
+  端末の `org.chromium.webapk*` を最初に**全部消す**。
+- ★録画・タイル・`ui-<label>.xml` に端末の個人の内容が映りうる。確認後に消し、コミットしない。
+- Git Bash では `MSYS_NO_PATHCONV=1` と `pwd -W` が要る（スクリプトが設定する）。
+- 色の数値（アイコンの無い上部帯の平均 RGB など）は、このスクリプトは出さない。タイルを見て、必要ならフレームから別途出す。
+- 実機で動かして確認したのは surechigai の WebAPK（moto g64y 5G／Android 15／Chrome 154）の1例だけ。
+  判断と実測値は `_docs/DESIGN-pwa-launch-screen-2026-10-05.md`。
+
 ## 地雷（実証で踏んだもの）
 1. **cap add のスキップ**: android/ が中途半端に残っていると `[ -d android ] || cap add` が add を飛ばし、
    `cap sync` だけ走って **gradlew が生成されない**。作り直しは android/ を完全削除してから cap add。
