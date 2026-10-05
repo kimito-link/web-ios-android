@@ -198,8 +198,21 @@ export const PAIRS = [
       resolve(KIT_ROOT, 'scripts/check-improvement.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-improvement.mjs'),
       // ★2026-08-28 追加（登録漏れ）。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-improvement.mjs'),
-      resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/check-improvement.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-improvement.mjs')
+      /*
+       * ★2026-10-05 KEEP_SEPARATE: tsuioku-no-kirameki.com/scripts/check-improvement.mjs を外した。
+       *   割れ(正本のみ97行/コピーのみ46行)の中身は設定値の差ではなく【依存する台帳ライブラリの世代差】:
+       *     正本   … scripts/improvement-{history,metrics}.mjs を動的に読み、表を引数で渡す
+       *              lib/improvement-ledger.mjs(undeclaredRows を export)に判定を任せる
+       *     tsuioku … src/lib/improvementLedger.js(表を内蔵・L0層・vitest 22件)と
+       *              src/lib/improvementHistory.js を静的 import し、undeclaredRows を自前で持つ
+       *   ＝上の「進化台帳（判定）」で tsuioku の improvementLedger.js を旧世代として
+       *     登録していないのと同じ理由。門番だけ正本に揃えると、台帳ライブラリが無い
+       *     （scripts/improvement-*.mjs も scripts/lib/improvement-ledger.mjs も tsuioku に無い）ので
+       *     「台帳がありません」の黄になり、いま緑で動いている検査(selftest OK・--check pass・
+       *     2026-10-05 実測)が止まる。寄せるなら台帳ライブラリ側の世代を揃えてから門番を戻す。
+       *   除外の理由は check-drift-coverage.mjs の EXCLUDED にも書いた。
+       */
     ]
   },
   {
@@ -314,15 +327,24 @@ export const PAIRS = [
   {
     label: '本体の診断・進化進捗ページ（生成器）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/generate-shindan-version.mjs'),
-    // ★2026-08-28: 同上。
-      /*
-       * ★2026-09-04 時点で割れている（正本 440行 / このコピー 221行）。
-       *   ★あえて今回は寄せていない: これは【公開ページを生成する】スクリプトで、
-       *     CANONICAL_URL・製品名・homeUrl が本体ロジックに直書きされている。
-       *   正本へ寄せると本番の出力が変わるため、★生成結果を実ページと突き合わせて
-       *     から入れ替えること（登録は外さない＝割れたままだと分かる方が安全）。
-       */
-    copies: [resolve(GH_ROOT, 'soushin-suggest.link/scripts/generate-shindan-version.mjs')]
+    /*
+     * ★2026-10-05 KEEP_SEPARATE: soushin-suggest.link/scripts/generate-shindan-version.mjs を外した。
+     *   2026-09-04 の記録（正本 440行/コピー 221行。CANONICAL_URL 等の直書きが理由で寄せず、
+     *   「生成結果を実ページと突き合わせてから入れ替える」が宿題）を今回実物で突き合わせた:
+     *     正本を soushin に当てた出力 … 3/26 (12%)、段階 install/measurement/evolution/
+     *                                  continuity/publishing/splash/security（キット計器の導入進捗）
+     *     soushin の実レポート        … 20/21 (95%)、段階 release/diagnosis/verification/
+     *                                  context/publishing（AutoHotkey 製品の公開版・診断・出荷検証）
+     *   ＝直書き定数の差ではなく【測っている対象が別】。soushin 側の report.json は
+     *     evidence{verificationScriptCount,diagnosticProbeCount,releaseZipCount}を持ち
+     *     LP の summary.js がそれを読む。正本は index.html も書くので、soushin の手書き
+     *     診断ページ(1,215行・CSP付き)を 79行の生成物で上書きする。
+     *   「登録を外さない＝割れが見える方が安全」は、いつか寄せるコピーに対する判断だった。
+     *   別責務だと分かった今は、鳴り続ける赤が本物の割れを埋める側に回るので外す。
+     *   ★正本の行は残す（copies: [] ＝正本の存在確認と、coverage の監視名の供給は続ける）。
+     *   除外の理由は check-drift-coverage.mjs の EXCLUDED にも書いた。
+     */
+    copies: []
   },
   {
     /*

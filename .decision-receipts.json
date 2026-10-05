@@ -179,6 +179,26 @@
       "scopePaths": [
         "templates/scripts/lib/hosting-env-adapters.mjs"
       ]
+    },
+    {
+      "at": "2026-10-05T02:33:14.868Z",
+      "responsibility": "improvement-gatekeeper-cli (tsuioku-no-kirameki.com/scripts/check-improvement.mjs vs templates/scripts/check-improvement.mjs)",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "../tsuioku-no-kirameki.com/scripts/check-improvement.mjs",
+        "templates/scripts/check-improvement.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-05T02:33:14.956Z",
+      "responsibility": "shindan-version-page-generator (soushin-suggest.link/scripts/generate-shindan-version.mjs vs templates/scripts/generate-shindan-version.mjs)",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "../soushin-suggest.link/scripts/generate-shindan-version.mjs",
+        "templates/scripts/generate-shindan-version.mjs"
+      ]
     }
   ]
 }

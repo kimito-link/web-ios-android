@@ -144,6 +144,32 @@ export const EXCLUDED = Object.freeze([
      */
     match: (p) => /tsuioku-no-kirameki\.com[\\/]scripts[\\/]check-tracked-imports\.mjs$/.test(p),
     why: '★別実装（ロジックを src/lib/ へ切り出し・専用テストあり・実測で緑）'
+  },
+  {
+    /*
+     * tsuioku-no-kirameki.com/scripts/check-improvement.mjs
+     *
+     * ★2026-10-05 KEEP_SEPARATE（check-drift.mjs「進化台帳（門番）」から外した）。
+     *   上の check-tracked-imports と同型: 台帳ライブラリが src/lib/improvementLedger.js
+     *   （表を内蔵・L0層・vitest 22件＋staleness 12件が緑）で、キットの
+     *   「表を引数で渡す」世代と API が違う。門番だけ正本にすると台帳が読めず黄になる。
+     *   詳細は check-drift.mjs 側のコメント。戻すのは台帳ライブラリの世代を揃えたとき。
+     */
+    match: (p) => /tsuioku-no-kirameki\.com[\\/]scripts[\\/]check-improvement\.mjs$/.test(p),
+    why: '★別実装（台帳ライブラリが表内蔵の旧世代・専用テストあり・実測で緑）'
+  },
+  {
+    /*
+     * soushin-suggest.link/scripts/generate-shindan-version.mjs
+     *
+     * ★2026-10-05 KEEP_SEPARATE（check-drift.mjs「本体の診断・進化進捗ページ（生成器）」から外した）。
+     *   名前は同じだが測る対象が別: 正本はキット計器の導入進捗、soushin は AutoHotkey 製品の
+     *   公開版・診断・出荷検証（独自の evidence 欄を LP の summary.js が読む）。
+     *   正本を当てると 20/21→3/26 になり、手書きの診断ページも上書きされる（実測 2026-10-05）。
+     *   詳細は check-drift.mjs 側のコメント。
+     */
+    match: (p) => /soushin-suggest\.link[\\/]scripts[\\/]generate-shindan-version\.mjs$/.test(p),
+    why: '★別責務（キット計器の進捗ではなく AutoHotkey 製品の公開・診断・出荷状態を測る）'
   }
 ]);
 
