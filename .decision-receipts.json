@@ -220,6 +220,16 @@
         "templates/web/auth-mode/kimito-dashboard-link.contract.test.mjs.example",
         "templates/web/auth-mode/nextjs/KimitoDashboardLink.tsx.example"
       ]
+    },
+    {
+      "at": "2026-10-05T07:15:35.327Z",
+      "responsibility": "page-flicker-measurement (ブラウザで URL を開いた直後の白の長さ・フラッシュ・縦ずれを録画フレームと layout-shift で数える汎用計測。既存候補: surechigai-romi.link/scripts/qa/measure-launch-timeline.mjs はサイト固有の段階ラベル(ベール/骨組み/本編)を並べる責務で別、templates/scripts/measure-webapk-launch.sh は Android 実機の WebAPK 起動(adb)で別。置き場と流儀(scripts/qa/・Playwright・前後比較・合否ゲートに入れない)だけ揃え、新規の正本を templates/scripts/qa/ に立てる)",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/qa/measure-page-flicker.mjs",
+        "templates/scripts/qa/README.md"
+      ]
     }
   ]
 }

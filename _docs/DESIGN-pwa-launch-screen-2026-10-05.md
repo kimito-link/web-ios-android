@@ -155,6 +155,8 @@ iOS で `apple-touch-startup-image` が出ない原因は**未確定**。iPhone 
     フレームごとに出す。
   - 右端のオーバーレイのスクロールバーの退色は、暗転と誤読しやすい。本体領域から右端を外して見る。
 - ブラウザ上の描画の空白: surechigai の `scripts/qa/measure-launch-timeline.mjs`（合否には入れない計測）。
+- ブラウザ上の白の長さ・フラッシュ・縦ずれ（どのサイトでも）: [`templates/scripts/qa/measure-page-flicker.mjs`](../templates/scripts/qa/measure-page-flicker.mjs)
+  （実証は [`DESIGN-signin-no-flicker-2026-10-05.md`](DESIGN-signin-no-flicker-2026-10-05.md)）。
 - iOS: 実機が無いと測れない（Windows では iOS Simulator が使えない）。
 
 ## 関連ファイル
