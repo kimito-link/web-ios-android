@@ -50,6 +50,10 @@
  *   4. その画像の**地色が --expect-bg と一致**する（＝manifest・本体との食い違いを防ぐ）
  *   5. その画像が★**単色ではない**（＝ロゴ/マスコットが実際に描かれている）
  *      ★「地色が正しい真っ青な画像」でも合格してしまう穴を塞ぐため。
+ *      ★判定は「中央 60%×60% の矩形を全画素数え、地色と各チャンネル差 >16 の画素が
+ *        0.5% 以上あるか」。2026-10-05 までは中央1点(4x4px)だけを見ていたため、
+ *        文字ロゴ（ワードマーク）の文字間の隙間が中央に当たると「単色」と誤判定した
+ *        （kimito.link の apple-splash-750x1334.png: 中央は白だが中央矩形に非白画素 5.4%）。
  *   6. manifest が HTML に宣言され、配信されている（200 かつ JSON として読める）
  *   7. manifest の theme_color と HTML の <meta name="theme-color"> が同じ値
  *   8. 起動画像の href に「?」（クエリ）が無い（固定名＋クエリは CDN に旧版が残る罠。
@@ -67,6 +71,7 @@
  *   - theme_color / background_color の「色そのものが適切か」は見ない（一致だけを見る）。
  *   - アイコン画像の絵柄・実寸・maskable の安全領域は見ない（192/512 の宣言と配信だけ）。
  *   - href にクエリが無くても、CDN が古い画像を返していないかは見ない（名前の形だけ）。
+ *   - ロゴ/マスコットが**中央 60%×60% の矩形の外にしか無い**画像は検出しない（単色と判定する）。
  *
  * 終了コード: 0=合格 / 1=測れた上での赤 / 2=測れなかった
  *
@@ -162,6 +167,78 @@ export function looksSolidColor(samples, tolerance = 24) {
   return list.every(
     (s) => Math.abs(s.r - base.r) + Math.abs(s.g - base.g) + Math.abs(s.b - base.b) <= tolerance
   );
+}
+
+/**
+ * ★「単色でない」判定の設定（中央矩形の領域サンプリング）。
+ *
+ * ★なぜ点ではなく領域か（2026-10-05 実測）: 中央1点(4x4px)だけを見ると、
+ *   文字ロゴ（ワードマーク）の文字間の隙間が中央に当たったとき、四隅も中央も地色＝
+ *   「単色」と誤判定する。kimito.link の apple-splash-750x1334.png は白地に青いワードマークで、
+ *   中央(375,667)は白だが、中央 60% の矩形には非白画素が 5.4% あった。
+ *   点を増やしても同じ穴が別の位置で開くので、矩形の全画素を数える。
+ */
+export const LOGO_REGION = Object.freeze({
+  /** 画像中央の何割（幅・高さそれぞれ）を数えるか */
+  fraction: 0.6,
+  /** 地色と各チャンネル(R/G/B)の差がこれを超える画素を「非地色」とみなす */
+  channelDiff: 16,
+  /** 非地色画素の割合がこれ未満なら単色（fail） */
+  minRatio: 0.005,
+  /** 数える前に矩形の長辺をここまで縮める（割合は変わらない。巨大画像の時間対策） */
+  maxSide: 256,
+});
+
+/**
+ * ★画像中央の矩形（fraction×fraction）の座標を返す。純関数。
+ * @param {number} W 画像の幅
+ * @param {number} H 画像の高さ
+ * @param {number} [fraction]
+ * @returns {{ left:number, top:number, width:number, height:number }}
+ */
+export function centerRegion(W, H, fraction = LOGO_REGION.fraction) {
+  const w = Math.max(1, Math.min(W, Math.round(W * fraction)));
+  const h = Math.max(1, Math.min(H, Math.round(H * fraction)));
+  return { left: Math.floor((W - w) / 2), top: Math.floor((H - h) / 2), width: w, height: h };
+}
+
+/**
+ * ★raw 画素列のうち「地色と違う画素」の数と割合を数える。純関数。
+ * @param {Uint8Array|Buffer} data 画素列（1画素 = channels バイト、先頭3つが R,G,B）
+ * @param {number} channels 1画素あたりのチャンネル数（3 or 4）
+ * @param {{r:number,g:number,b:number}} base 地色
+ * @param {number} [channelDiff] 各チャンネルの差がこれを超えたら非地色
+ * @returns {{ total:number, nonBase:number, ratio:number }} ratio は total=0 なら NaN
+ */
+export function countNonBasePixels(data, channels, base, channelDiff = LOGO_REGION.channelDiff) {
+  const ch = Number(channels) >= 3 ? Number(channels) : 3;
+  const len = data ? data.length : 0;
+  const total = Math.floor(len / ch);
+  let nonBase = 0;
+  for (let i = 0; i + 2 < len; i += ch) {
+    if (
+      Math.abs(data[i] - base.r) > channelDiff
+      || Math.abs(data[i + 1] - base.g) > channelDiff
+      || Math.abs(data[i + 2] - base.b) > channelDiff
+    ) nonBase += 1;
+  }
+  return { total, nonBase, ratio: total > 0 ? nonBase / total : NaN };
+}
+
+/**
+ * ★非地色画素の割合から「単色か」を判定する。純関数。
+ * @param {number} ratio countNonBasePixels().ratio
+ * @param {number} [minRatio] これ未満なら単色
+ * @returns {boolean} true なら単色＝ロゴが描かれていない疑い。ratio が数でなければ true（測れていないを緑にしない）
+ */
+export function looksSolidByRatio(ratio, minRatio = LOGO_REGION.minRatio) {
+  if (!Number.isFinite(ratio)) return true;
+  return ratio < minRatio;
+}
+
+/** 0〜1 の割合を "5.40%" の形にする（evidence 用）。 */
+function pct(ratio) {
+  return Number.isFinite(ratio) ? `${(ratio * 100).toFixed(2)}%` : 'n/a';
 }
 
 /** ★HTML から <link rel="manifest"> の href を取る（属性の順序に依らない）。無ければ null。 */
@@ -272,6 +349,51 @@ async function loadSharp() {
   } catch {
     return null;
   }
+}
+
+/**
+ * ★起動画像の画素を実測する（四隅の地色＋中央矩形の非地色画素の割合）。
+ *   main と selftest が同じ経路を通る（selftest が別の近道を測って緑になるのを防ぐ）。
+ * @param {import('sharp')} sharp
+ * @param {Buffer} buf
+ * @returns {Promise<{
+ *   W:number, H:number, hex:string,
+ *   corners:{r:number,g:number,b:number}[],
+ *   center:{r:number,g:number,b:number},
+ *   region:{left:number,top:number,width:number,height:number},
+ *   counted:{total:number,nonBase:number,ratio:number},
+ *   sampled:string,
+ * }>}
+ */
+async function analyzeSplashPixels(sharp, buf) {
+  const meta = await sharp(buf).metadata();
+  const W = meta.width ?? 0;
+  const H = meta.height ?? 0;
+  const pick = async (left, top) => {
+    const d = await sharp(buf).extract({ left, top, width: 4, height: 4 }).raw().toBuffer();
+    return { r: d[0], g: d[1], b: d[2] };
+  };
+  // ★地色は四隅から取る（従来どおり。左上を代表値にする）
+  const corners = [
+    await pick(2, 2),
+    await pick(Math.max(0, W - 8), 2),
+    await pick(2, Math.max(0, H - 8)),
+    await pick(Math.max(0, W - 8), Math.max(0, H - 8)),
+  ];
+  const base = corners[0];
+  const hex = `#${[base.r, base.g, base.b].map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  // 中央1点は evidence 用（判定には使わない。文字間の隙間に当たると地色になる）
+  const center = await pick(Math.floor(W / 2), Math.floor(H / 2));
+
+  // ★中央 60%×60% の矩形を全画素数える。長辺が maxSide を超えるなら縮めてから数える
+  const region = centerRegion(W, H);
+  let pipeline = sharp(buf).extract(region);
+  if (Math.max(region.width, region.height) > LOGO_REGION.maxSide) {
+    pipeline = pipeline.resize({ width: LOGO_REGION.maxSide, height: LOGO_REGION.maxSide, fit: 'inside' });
+  }
+  const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
+  const counted = countNonBasePixels(data, info.channels, base);
+  return { W, H, hex, corners, center, region, counted, sampled: `${info.width}x${info.height}` };
 }
 
 async function main(argv) {
@@ -557,24 +679,9 @@ async function main(argv) {
   }
 
   try {
-    const img = sharp(buf);
-    const meta = await img.metadata();
-    const W = meta.width ?? 0;
-    const H = meta.height ?? 0;
-    const pick = async (left, top) => {
-      const d = await sharp(buf).extract({ left, top, width: 4, height: 4 }).raw().toBuffer();
-      return { r: d[0], g: d[1], b: d[2] };
-    };
-    // ★四隅＋中央を実際に取る（中央にロゴがあれば色が変わるはず）
-    const corner = await pick(2, 2);
-    const samples = [
-      corner,
-      await pick(Math.max(0, W - 8), 2),
-      await pick(2, Math.max(0, H - 8)),
-      await pick(Math.floor(W / 2), Math.floor(H / 2)),
-    ];
-    const hex = `#${[corner.r, corner.g, corner.b].map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
-    const solid = looksSolidColor(samples);
+    const px = await analyzeSplashPixels(sharp, buf);
+    const { W, H, hex } = px;
+    const solid = looksSolidByRatio(px.counted.ratio);
 
     if (expectBg) {
       const ok = hex === normalizeHex(expectBg);
@@ -588,14 +695,25 @@ async function main(argv) {
       });
     }
 
+    const { region, counted } = px;
     results.push({
       probe: '起動画像にロゴが描かれている（単色でない）',
       verdict: solid ? 'fail' : 'pass',
-      evidence: { サンプル: samples, サイズ: `${W}x${H}`, 単色: solid },
+      evidence: {
+        地色: hex,
+        四隅: px.corners,
+        中央1点: px.center,
+        中央矩形: `left=${region.left} top=${region.top} ${region.width}x${region.height}（${Math.round(LOGO_REGION.fraction * 100)}%）`,
+        数えた画素: `${px.sampled}=${counted.total}px`,
+        非地色画素の割合: pct(counted.ratio),
+        判定しきい値: `${pct(LOGO_REGION.minRatio)} 以上で合格（各チャンネル差 >${LOGO_REGION.channelDiff}）`,
+        サイズ: `${W}x${H}`,
+        単色: solid,
+      },
       detail: solid
-        ? '★四隅と中央がすべて同色＝ロゴ/マスコットが描かれていない疑い（色は正しくても「ただの単色塗り」になっています）'
+        ? `★中央 ${Math.round(LOGO_REGION.fraction * 100)}% の矩形で地色と違う画素が ${pct(counted.ratio)}（しきい値 ${pct(LOGO_REGION.minRatio)} 未満）＝ロゴ/マスコットが描かれていない疑い（色は正しくても「ただの単色塗り」になっています）`
         : '',
-      howToFix: 'ロゴ入りの起動画像を生成し直してください（地色だけの画像になっていないか確認）',
+      howToFix: 'ロゴ入りの起動画像を生成し直してください（地色だけの画像になっていないか、ロゴが中央 60% の矩形に入っているか確認）',
       limitation: LIMITATION,
     });
   } catch (e) {
@@ -615,7 +733,40 @@ async function main(argv) {
 // ─── selftest ────────────────────────────────────────────────────────
 //
 // ★実ファイル・ネットワークを触らず、純関数に文字列/配列を食わせる＝毒が確実に届く。
-function selftest() {
+//   画像の判定だけは sharp でメモリ上に PNG を作り、main と同じ analyzeSplashPixels を通す。
+async function selftest() {
+  // ── 画像ケース（sharp が無い環境では「測れない」として赤にする。黙って緑にしない） ──
+  const sharp = await loadSharp();
+  const PNG_W = 300;
+  const PNG_H = 500;
+  const BG = '#FFFFFF';
+  const INK = '#1E63C7';
+  const rect = (w, h) => sharp({ create: { width: w, height: h, channels: 3, background: INK } }).png().toBuffer();
+  const canvas = (shapes = []) =>
+    sharp({ create: { width: PNG_W, height: PNG_H, channels: 3, background: BG } })
+      .composite(shapes)
+      .png()
+      .toBuffer();
+  /** @type {Record<string, Awaited<ReturnType<typeof analyzeSplashPixels>>|null>} */
+  const px = { solid: null, wordmark: null, centered: null, speck: null };
+  if (sharp) {
+    // (a) 地色だけの単色
+    px.solid = await analyzeSplashPixels(sharp, await canvas());
+    // (b) ワードマークを模す: 中央(150,250)は地色のまま、中央矩形(60..240, 100..400)の左右に離れた図形
+    px.wordmark = await analyzeSplashPixels(
+      sharp,
+      await canvas([
+        { input: await rect(50, 20), left: 70, top: 240 },
+        { input: await rect(50, 20), left: 180, top: 240 },
+      ])
+    );
+    // (c) 従来どおり中央に図形
+    px.centered = await analyzeSplashPixels(sharp, await canvas([{ input: await rect(100, 100), left: 100, top: 200 }]));
+    // (d) 中央矩形内に数画素のノイズだけ（5x5=25px / 54000px = 0.046%）
+    px.speck = await analyzeSplashPixels(sharp, await canvas([{ input: await rect(5, 5), left: 100, top: 150 }]));
+  }
+  const isBase = (p) => p.r === 255 && p.g === 255 && p.b === 255;
+
   const HTML_WITH = `
 <html><head>
 <link rel="apple-touch-startup-image" href="/splash/a.png" media="(device-width: 390px)">
@@ -702,6 +853,71 @@ function selftest() {
       poison: () => {},
       restore: () => {},
       isRed: () => looksSolidColor([]) === true,
+    },
+    // ── 中央矩形の領域サンプリング（純関数） ──
+    {
+      name: '中央矩形は画像中央の 60%×60%（750x1334 → 450x800、left=150 top=267）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => {
+        const r = centerRegion(750, 1334);
+        return r.left === 150 && r.top === 267 && r.width === 450 && r.height === 800;
+      },
+    },
+    {
+      name: '★非地色画素を数える: 地色との差が 16 以下は数えない・17 以上は数える・RGBA の stride も正しい',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => {
+        const base = { r: 255, g: 255, b: 255 };
+        const rgb = Uint8Array.from([255, 255, 255, 239, 255, 255, 238, 255, 255, 30, 99, 199]);
+        const a = countNonBasePixels(rgb, 3, base);
+        const rgba = Uint8Array.from([255, 255, 255, 255, 30, 99, 199, 255]);
+        const b = countNonBasePixels(rgba, 4, base);
+        return a.total === 4 && a.nonBase === 2 && a.ratio === 0.5 && b.total === 2 && b.nonBase === 1;
+      },
+    },
+    {
+      name: '★割合が 0.5% 未満なら単色、以上なら単色でない。数でなければ単色（測れていないを緑にしない）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        looksSolidByRatio(0.0049) === true
+        && looksSolidByRatio(0.005) === false
+        && looksSolidByRatio(0.054) === false
+        && looksSolidByRatio(NaN) === true
+        && looksSolidByRatio(undefined) === true,
+    },
+    // ── 中央矩形の領域サンプリング（sharp で作った PNG を main と同じ経路で測る） ──
+    {
+      name: '★(a) 地色だけの PNG は単色＝赤（非地色画素 0%）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => Boolean(px.solid) && px.solid.counted.nonBase === 0 && looksSolidByRatio(px.solid.counted.ratio) === true,
+    },
+    {
+      name: '★(b) ワードマーク型（中央1点は地色だが、中央矩形に離れた図形がある）PNG を単色と誤判定しない',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => {
+        const p = px.wordmark;
+        if (!p) return false;
+        // 旧判定（四隅＋中央1点）だとこの画像は「単色」になる＝誤検知の再現
+        const oldVerdictWasSolid = looksSolidColor([...p.corners, p.center]) === true;
+        return isBase(p.center) && oldVerdictWasSolid && p.counted.ratio > 0.03 && looksSolidByRatio(p.counted.ratio) === false;
+      },
+    },
+    {
+      name: '(c) 中央に図形がある PNG は従来どおり単色でない＝緑',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => Boolean(px.centered) && !isBase(px.centered.center) && looksSolidByRatio(px.centered.counted.ratio) === false,
+    },
+    {
+      name: '★(d) 中央矩形に数画素のノイズしか無い PNG は「ロゴあり」と見なさない＝赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => Boolean(px.speck) && px.speck.counted.nonBase > 0 && looksSolidByRatio(px.speck.counted.ratio) === true,
     },
     {
       name: '8桁 ARGB を 6桁に正規化できる',
@@ -827,7 +1043,7 @@ function selftest() {
 
 const argv = process.argv.slice(2);
 if (argv.includes('--selftest')) {
-  selftest();
+  await selftest();
 } else {
   const results = await main(argv);
   console.log(formatProbeReport(results, { label: 'check-pwa-splash' }));
