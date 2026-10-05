@@ -446,13 +446,15 @@ export const PAIRS = [
     /*
      * ★2026-10-04追加。素の clerk-js サイト向けの「ログイン画面の日本語化＋見た目」の設定部品。
      *   exosome が無改変コピーで使う（サービス名は KimitoClerkUiConfig で渡す）。
-     *   ★kimito-Link-Voice の js/modules/clerk-ui-options.js は同じ部品の初期版で、サービス名が
-     *     埋め込み・グローバル名も違う（VoiceClerkUiOptions）ためバイト一致の対象外。
-     *     次に Voice を触るとき、この金型へ移行すること（README 参照）。
+     *   ★kimito-Link-Voice の js/modules/clerk-ui-options.js も 2026-10-05 に金型へ揃えて登録した
+     *     （サービス名は clerk-auth-client.js が KimitoClerkUiConfig で渡す）。
      */
     label: 'Clerk日本語化の設定部品（素のclerk-js版）',
     canonical: resolve(KIT_ROOT, 'templates/web/clerk-ja/clerk-ui-options.js.example'),
-    copies: [resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/clerk-ui-options.js')]
+    copies: [
+      resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/clerk-ui-options.js'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/js/modules/clerk-ui-options.js')
+    ]
   },
   {
     /*
@@ -474,13 +476,15 @@ export const PAIRS = [
      * ★2026-10-04 追加。静的サイト向け Vanilla JS 版の Xワンタップ部品。
      *   exosome は auth.js が openSignIn() の直後に triggerAutoXClick() を呼ぶ形で取り込んだ
      *   （yukkuri-exosome.link/src/js/auth.js、配線は test/x-one-tap-wiring.test.mjs が見る）。
-     *   ★kimito-Link-Voice/js/modules/x-one-tap-signin.js も同じ部品のコピーだが、先頭の
-     *     コメント（出典の書き方）が金型と違う「意図的な差異」があるためバイト一致の対象外。
-     *     exosome は金型を無改変でコピーしたのでバイト一致を契約にできる。
+     *   ★kimito-Link-Voice/js/modules/x-one-tap-signin.js も 2026-10-05 に金型へ揃えて登録した
+     *     （それまでは先頭コメントとタイムアウト時の警告が金型と違っていた）。
      */
     label: 'Xワンタップ部品（静的サイト版 Vanilla JS）',
     canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/x-one-tap-signin.js.example'),
-    copies: [resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/x-one-tap-signin.js')]
+    copies: [
+      resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/x-one-tap-signin.js'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/js/modules/x-one-tap-signin.js')
+    ]
   },
   {
     /*
