@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-16T03:14:04.864Z",
+  "generatedAt": "2026-10-05T02:42:05.010Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -875,14 +875,16 @@
       "kimito-link-reply-suggest",
       "line-bot",
       "manus",
+      "Orca",
       "ouenmovie",
+      "parterprogram",
       "patents",
       "removal",
       "reviewcheck.jp",
       "soushin-suggest.link",
       "tegiwai-video",
-      "web-health-check-lp",
       "works",
+      "x-block-checker",
       "_archive",
       "_handoff"
     ],
