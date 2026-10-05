@@ -1,6 +1,7 @@
 # ログイン画面に着く瞬間を「白 → 紺 → ずれ」にしない（kimito.link sign-in の実測と判断）
 
-> **今の到達点: 本家は実装・本番で計測済み（フラッシュ 0・縦ずれ 0、PR #381 マージ・本番反映 2026-10-05）／姉妹への配布は未着手。**
+> **今の到達点: 本家・doin は本番で 往復フラッシュ 0・縦ずれ 0 を実測／surechigai は PR #73 マージ済みだが本番反映は手動デプロイ待ち（`surechigai-web` は Git 連携なし）／exosome・voice はモーダル型で該当なし。**
+> （本家: `kimitolink-linktree` PR #381、本番反映 2026-10-05。doin: PR #75 → #76 → #77。）
 > キット側の金型（`templates/web/auth-mode/nextjs/` の ④ 部品・`head-snippet.html.example` の自インスタンス判定）は
 > ブランチ `feat/auth-mode-signin-no-flicker-templates` で配置。iOS Safari 実機での再測定は未実施。
 >
@@ -15,6 +16,19 @@
 - **プレースホルダ**: 本物が読み込まれるまで、その場所に置いておく仮の箱。
 - **到着 intro**: ページに着いた直後、何も押していないのに出る「準備しています」の全画面表示。
 - **auth-mode 金型**: `<head>` 先頭のインラインスクリプトが cookie だけでログイン状態を決め、最初の描画から正しい側を出す仕組み（[`templates/web/auth-mode/`](../templates/web/auth-mode/README.md)）。
+
+## 計測道具は v2（キット PR #31）
+
+最初の版（PR #29）は「平均輝度差 50 超」をすべてフラッシュと数えたため、暗い地色のサイトで偽の赤が出た。v2 の数え方
+（読み方の表は [`templates/scripts/qa/README.md`](../templates/scripts/qa/README.md)）:
+
+- **描画前の白は数えない**。Playwright の空白タブは白なので、最初に画面が変わる前の白と、そこから暗い地色への変化は
+  サイトの症状ではなく計測の都合。白一色フレーム数は「うち描画前」を別に出す。
+- **往復フラッシュ**（1.5 秒以内に元の輝度 ±25 へ戻る）だけを赤判定にする。全画面オーバーレイが出て消えた形。
+- **大きな切替**（輝度差 50 超で戻らない、コンテンツの出現）は情報として時刻と輝度だけ出し、赤にしない。
+- **縦ずれ**は Chrome の layout-shift。0 回が合格。
+
+以降の「フラッシュ」は、v1 の表（下の最初の実測）では v1 の数え方、doin の after 以降は v2 の「往復フラッシュ」を指す。
 
 ## 実測（2026-10-05、iPhone 15 Pro Max エミュレーション・CPU 2 倍遅・Fast 3G 相当・Service Worker 遮断）
 
@@ -99,28 +113,48 @@ sign-in ページだけがこの型に戻っていた。
 | 対象 | 状態 |
 |---|---|
 | 本家 `kimito.link` sign-in（判断 1〜5） | **実装・マージ・本番反映済み**（`kimitolink-linktree` PR #381、commit `2488b86`、2026-10-05）。本番の after 計測でフラッシュ 0・縦ずれ 0（上の実測表）。判断 7（自インスタンス判定）は未適用 |
+| `doin-challenge.com` sign-in（Expo、判断 1・2 ＋下の追加知見 a〜d） | **実装・マージ・本番で計測済み**（PR #75 → #76 → #77、2026-10-05）。after（本番・CPU×2・3G・16 秒）で往復フラッシュ 0・縦ずれ 0。詳細は下の「doin の経緯」 |
+| `surechigai-romi.link` sign-in（Next.js `apps/web` ＋ Expo） | PR #73 マージ済み。**本番反映は手動デプロイ待ち**、after 未計測（下の「次に配る先」の訂正を参照） |
+| `yukkuri-exosome.link` / `kimito-Link-Voice` | モーダル型のため該当なし |
 | 計測道具の金型（`templates/scripts/qa/measure-page-flicker.mjs`） | マージ済み（このキット PR #29） |
 | 本家の実装の金型化（`templates/web/auth-mode/nextjs/` ④部品・`head-snippet.html.example` の判断 7） | このキットのブランチ `feat/auth-mode-signin-no-flicker-templates`（PR 作成）。本家の `lib/auth-mode/head-snippet.html` は判断 7 を含む金型と差分が出るので、配り直しが要る（下表） |
 
-### 次に配る先（姉妹サービスの見立て。2026-10-05 に実コードを grep して確認）
+### doin の経緯（PR #75 → #76 → #77、2026-10-05）
+
+- **before（本番）**: 到着 intro の明フラッシュが 1.7 秒（doin は暗地に明色の全画面を被せていた）。Clerk 既定の小カード 336px が
+  doin の見た目の 474px に差し替わるとき、縦ずれが 3 回（CLS 0.1966）。
+- **追加で分かった原因と直し方**:
+  - (a) `vercel.json` の SPA rewrite で `/sign-in/` にも、トップを焼いた `index.html` が返り、hydration（JS が動き出す）まで
+    オンボーディングが 6 秒見えた。→ `<head>` のインラインで `data-overlay-free-route` を立て、CSS で隠す（PR #76）。
+  - (b) React Navigation の既定テーマ背景 #F2F2F2 が、JS 到着まで全画面に出た。→ `ThemeProvider` で暗色テーマにする（PR #76）。
+  - (c) **`import("@clerk/localizations")` は全言語入りの 5.1MB（gz 909KB）の 1 チャンク**で、3G では Clerk 本体より遅れる。
+    その間 Clerk が英語・既定ロゴ・小カードで先に描かれる。→ `@clerk/localizations/ja-JP`（126KB）だけを読み、
+    見た目を渡し終えるまで同寸のプレースホルダを維持する（上限 4 秒、PR #77）。
+  - (d) Clerk のロゴの高さは、最初に読んだ画像で決まり、差し替えても変わらない（既定ロゴなら 36px、自前の 192px なら 48px）。
+    見た目を渡す前に Clerk を描くと、ロゴの高さが既定側で固まる。
+- **after（本番・CPU×2・3G・16 秒）**: 往復フラッシュ 0、大きな切替 1（sign-in 画面の出現）、縦ずれ 0・CLS 0.0000、console 0。
+  証拠: 計測セッションの scratchpad `flicker-doin-signin-after4/`、doin リポの `qa/evidence/2026-10-05_signin-flicker/`。
+
+### 次に配る先（姉妹サービスの見立て。2026-10-05 に実コードを grep して確認。surechigai・doin の行は同日に訂正・更新済み）
 
 | リポ | sign-in の形 | 該当する契約 | 見立て |
 |---|---|---|---|
 | `kimitolink-linktree`（本家） | Next.js `<SignIn/>` | 判断 7 | `lib/auth-mode/head-snippet.html` を金型の新版に揃え、`app/layout.tsx` の `<html>` に `data-auth-cookie-suffix={getAuthCookieSuffix()}` を足す。他の ④ 部品は本家が出典なので中身は同じ（金型の `.example` と並べてバイト一致にそろえる作業＝PAIRS 登録） |
-| `surechigai-romi.link`（Expo） | `app/sign-in.tsx` に Clerk | 判断 1・2 | `components/auth/sign-in-auth-handoff-overlay.tsx` に本家と同じ到着 intro（`INTRO_MS = 1100`、`phase: "intro"`）が残っている（Web のみ発火、`Platform.OS === "web"`）。`clerk-mount-fallback.tsx` は「最初から押せる本物の X / Apple ボタン」を出す小箱（iOS 2.1(a) 却下対策、2026-08-28）で本物より低い。★押せるボタンを出す方針は維持し、高さだけ本物の箱モデルに合わせる（React Native なので Next.js 金型は直接使えない。契約だけ写す） |
-| `doin-challenge.com`（Expo） | 同型（surechigai から 2026-09-01 移植） | 判断 1・2 | `components/auth/sign-in-auth-handoff-overlay.tsx` に同じ `INTRO_MS = 1100`。`clerk-mount-fallback.tsx` は X ボタンのみの小箱（Apple 未設定）。対処は surechigai と同じ |
+| `surechigai-romi.link`（★訂正: 本番 `/sign-in/` は Expo ではなく Next.js が応答） | 本番の `/sign-in/` は `vercel.json` の rewrite で **Next.js `apps/web`（別 Vercel プロジェクト `surechigai-web`、Git 連携なし・手動 `vercel deploy --prod`）** が応答する。Expo の `app/sign-in.tsx` ではない | 判断 1・2 | **before（本番）: フラッシュ 0・縦ずれ 1（+486px。Clerk 到着までカード枠が高さ 0）。** 対処は Next 側 `<SignIn fallback={<ClerkMountFallback/>}>`（金型のコピー。箱モデルは本番 DOM 実測の 486px）＋ Expo 側にも契約を適用（PR #73、マージ済み）。★押せるボタンを出す方針（iOS 2.1(a) 却下対策、2026-08-28）は Expo 側で維持。after は手動デプロイ後に計測予定。以前ここに書いた「Expo 側が応答し、到着 intro が原因」という見立ては、本番の応答元を調べた結果と合わず訂正した |
+| `doin-challenge.com`（Expo） | 同型（surechigai から 2026-09-01 移植） | 判断 1・2 | **実装・本番計測済み**（上の「doin の経緯」）。到着 intro の撤去と同寸化に加え、a〜d の 4 件が要った |
 | `yukkuri-exosome.link`（静的） | `Clerk.openSignIn()` のモーダル | 該当なし | ページ到着時に sign-in カードを描かない（タップ後にモーダル）。①は全 21 ページ適用済み。判断 7 は親ドメイン共有の立場が同じなので `<html data-auth-cookie-suffix>` を 1 回計算して付けると「本家だけにログイン中」の誤先出しが消える（任意） |
 | `kimito-Link-Voice`（静的） | `Clerk.openSignIn()` のモーダル | 該当なし | exosome と同じ。`/try/` に①適用済み |
 
 ## 未確認
 
-- iOS Safari 実機での見え方（Chromium のエミュレーションで測っている。iOS の起動画像は別軸）
+- iOS Safari 実機での見え方（本家・doin・surechigai とも未測定。Chromium のエミュレーションで測っている。iOS の起動画像は別軸）
 - 白の 1.5 秒のうち、サーバー応答（約 0.5 秒）以外の内訳（HTML 配信・CSS の到着・フォント）
 - ログイン済み（`__client_uat` あり）で `/dashboard/` に着いたときの挙動（使い捨てスクリプトの `INJECT_UAT=1` の回でも
   未ログインと同じ 3 段が出た＝sign-in に 307 される経路は cookie の有無で変わらなかった。after は未ログインでのみ計測）
 - 判断 7（自インスタンス判定）を本家に適用したあと、「姉妹だけにログイン中」で注意書きが切り替わらないこと（金型の契約テストでは
   guest 判定を固定済み。実機で `document.cookie` を姉妹のものだけにして確認する）
-- 姉妹（surechigai / doin）の到着 intro 撤去と同寸化のあと、同じ道具で 0/0 になること
+- surechigai の after 計測（PR #73 の本番反映＝`surechigai-web` の手動デプロイ後に、同じ道具で往復フラッシュ 0・縦ずれ 0 になること）
+- 本家の描画前の白 1.5 秒（no-store の SSR の TTFB。ちらつきとは別軸で、判断 5 の地色インラインの領分）
 
 ## 関連ファイル
 
