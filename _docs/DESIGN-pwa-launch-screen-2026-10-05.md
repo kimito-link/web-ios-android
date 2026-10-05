@@ -1,6 +1,6 @@
 # PWA の起動画面は「地色1色をそろえる」
 
-> **今の到達点: 実装・本番検証済み（surechigai）／他サービスへの適用は未着手**
+> **今の到達点: 実装・本番検証済み（surechigai）／金型の検査も反転済み（2026-10-05）／他サービスへの適用は未着手**
 >
 > 出典: `surechigai-romi.link`（PR #61、2026-10-05 マージ・デプロイ済み）。
 > 入口はこのファイル。ai-hub 側の短い版は `../ai-hub/kb/pwa-launch-screen-one-color.md`、
@@ -98,8 +98,9 @@ manifest に `background_color` は無い。
 - このキット:
   - [`site/features/health-check/index.html`](../site/features/health-check/index.html) の「起動画面は自作しない」節は
     Capacitor ネイティブ（ストア版）向けの記述で、PWA の起動画面についての記述は無い
-  - ★**要判断・未対応**: [`templates/scripts/check-pwa-splash.mjs`](../templates/scripts/check-pwa-splash.mjs)
-    （surechigai の検査の元になった金型）は、いまも「`background_color` が**無い**こと」を合格条件にし、
-    冒頭コメントと自己テストに旧説を書いている。この判断と逆向き。surechigai 側は反転済みだが、
-    金型は直していない（`_docs/instruments/check-drift.mjs` の `PAIRS` への登録は確認できなかった）。
-    他サービスがこの金型をコピーすると、旧説の検査が配られる
+  - 2026-10-05 に金型も反転済み: [`templates/scripts/check-pwa-splash.mjs`](../templates/scripts/check-pwa-splash.mjs)
+    は「`background_color` が**あり**、`--expect-bg`（アプリ本体の地色）と一致」を合格にし、
+    `--expect-bg` が無いときは「測れなかった」にする。surechigai の検査は金型の無改変コピーに戻し、
+    色は `--expect-bg '#E2EDF7'` で渡す。同じ旧説を書いていた
+    [`SPLASH-SCREEN-PLAYBOOK.md`](SPLASH-SCREEN-PLAYBOOK.md) の警告節と
+    `site/assets/data/ai-instructions.json` の PWA の段落も、この判断に書き換えた

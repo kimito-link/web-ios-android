@@ -21,18 +21,33 @@
  *     PWA の起動画面を見る検査は**1本も存在しなかった**。
  *     オーナーが実際に困っているのはこちらだったのに。
  *
- * ■ ★iOS PWA 起動画面の落とし穴（kimito 2026-07-31 に実機で特定済み）
- *   iOS 16.4 以降、`display:standalone` かつ **manifest に background_color がある**と、
- *   iOS は manifest 由来の**単色塗り**を優先し、apple-touch-startup-image を**無視する**。
- *   画像もタグも正しく配信されていても使われない。
- *   → 対策は「画像を足す」ではなく ★**background_color を出さないこと**。
- *     （theme_color はステータスバー色なので残してよい）
+ * ■ ★background_color の扱い（2026-10-05 に判定を反転した）
+ *   【旧ルール】「manifest に background_color があると iOS 16.4+ が
+ *   apple-touch-startup-image を無視する」として、background_color が**無いこと**を
+ *   合格条件にしていた（kimito.link の実機観察1件 2026-07-31、surechigai の 78bad1380 =
+ *   2026-08-27 で manifest から削除）。
+ *   【2026-10-05 の調査】この説には Apple/WebKit の公式記述という一次情報が無く、
+ *   リポ内の根拠も kimito.link の実機観察1件（OS 版の記載なし）と静的検査だけだった。
+ *   さらに同日の iPhone 実機録画では、background_color を外した状態でも起動の最初が
+ *   黒で起動画像は出なかった。＝ この説では現実を説明できない。
+ *   一方 Android(Chrome の WebAPK) は name + background_color + icons から OS の起動画面を
+ *   生成する（web.dev）。background_color が無いと白になり、アプリ側のベール/本体の地色との
+ *   間で色が飛ぶ（surechigai の Android 実機録画で確認）。
+ *   【新ルール】「地色1色をそろえる」。manifest.background_color ＝ 起動画像の地色 ＝
+ *   アプリ本体の地色（自作ベールがあればその色）。この検査は、background_color が**あり**、
+ *   かつ --expect-bg（＝アプリ本体の地色）と一致することを見る。
+ *   （iOS で起動画像が出ない原因は未確定。候補は「ホーム画面追加時に画像が固定される」
+ *   「href の ?v=」「iOS 26 の挙動」）
+ *   設計記録: _docs/DESIGN-pwa-launch-screen-2026-10-05.md
  *
  * ■ ★この検査が守ること
- *   1. manifest に background_color が**無い**（あると startupImage が無視される）
+ *   1. manifest に background_color が**あり**、--expect-bg と一致する
+ *      （無い/違う色だと、Android の起動画面と本体・ベールの間で色が飛ぶ）。
+ *      ★--expect-bg が渡されていないときは、この項目は「測れなかった(inconclusive)」にする
+ *        （緑にしない。アプリ本体の地色は検査側が知り得ないので、呼び出し側が渡す）
  *   2. apple-touch-startup-image が**1つ以上**宣言されている
  *   3. 宣言された画像が**実在して開ける**（HTTP 200 / ローカルならファイルがある）
- *   4. その画像の**地色が期待値と一致**する（＝単色塗りとの食い違いを防ぐ）
+ *   4. その画像の**地色が --expect-bg と一致**する（＝manifest・本体との食い違いを防ぐ）
  *   5. その画像が★**単色ではない**（＝ロゴ/マスコットが実際に描かれている）
  *      ★「地色が正しい真っ青な画像」でも合格してしまう穴を塞ぐため。
  *
@@ -47,10 +62,9 @@
  *
  * 終了コード: 0=合格 / 1=測れた上での赤 / 2=測れなかった
  *
- * 使い方:
- *   node scripts/check-pwa-splash.mjs --url https://example.com
- *   node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#00427B'
- *   node scripts/check-pwa-splash.mjs --html out/index.html --manifest out/manifest.webmanifest
+ * 使い方（★--expect-bg にアプリ本体の地色を渡すこと。無いと manifest の判定は測れなかった扱い）:
+ *   node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#RRGGBB'
+ *   node scripts/check-pwa-splash.mjs --html out/index.html --manifest out/manifest.webmanifest --expect-bg '#RRGGBB'
  *   node scripts/check-pwa-splash.mjs --selftest
  */
 import { readFileSync, existsSync } from 'node:fs';
@@ -96,16 +110,23 @@ export function extractStartupImages(html) {
 /**
  * ★manifest の background_color を判定する。
  *
- * ★ここが「あると壊れる」という**逆向き**の検査であることに注意。
- *   普通は「設定が無い＝赤」だが、この項目だけは**あると赤**。
- *   数字や名前の有無で機械的に決めず、理由（iOS が単色塗りを優先する）で決める。
+ * 旧ルール（「無いこと」）は 2026-10-05 に根拠が無いと判明したため反転した（先頭コメント参照）。
+ * 今は「あり、かつ expected（アプリ本体の地色）と一致」で緑。
+ * 大文字小文字・`#` の有無・3桁/8桁表記の差は無視する。
+ * ★expected が無いときは判定できない（ok=null）。緑にも赤にもしない。
  *
  * @param {object|null} manifest
- * @returns {{ ok: boolean, value: unknown }}
+ * @param {string|null} [expected] 期待する地色（アプリ本体の地色。--expect-bg）
+ * @returns {{ ok: boolean|null, value: unknown, expected: string|null }}
  */
-export function judgeManifestBackground(manifest) {
+export function judgeManifestBackground(manifest, expected = null) {
   const value = manifest && typeof manifest === 'object' ? manifest.background_color : undefined;
-  return { ok: value === undefined || value === null, value: value ?? null };
+  if (expected == null || String(expected).trim() === '') {
+    return { ok: null, value: value ?? null, expected: null };
+  }
+  const exp = normalizeHex(expected);
+  const ok = typeof value === 'string' && value.trim() !== '' && normalizeHex(value) === exp;
+  return { ok, value: value ?? null, expected: exp };
 }
 
 /** #RRGGBBAA / #RGB を #RRGGBB に正規化する。 */
@@ -174,7 +195,7 @@ async function main(argv) {
       verdict: 'inconclusive',
       evidence: {},
       detail: '--url も --html も指定されていないため、何も測れませんでした',
-      howToFix: 'node scripts/check-pwa-splash.mjs --url https://example.com',
+      howToFix: "node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#RRGGBB'",
       limitation: LIMITATION,
     });
     return results;
@@ -227,20 +248,38 @@ async function main(argv) {
     });
   }
 
-  // 2. ★background_color が無いこと（あると startupImage が無視される）
+  // 2. ★background_color があり、--expect-bg（アプリ本体の地色）と一致すること
+  //    （Android の OS 起動画面の地色になる。無い/違うと本体・ベールとの間で色が飛ぶ）
   if (manifest) {
-    const bg = judgeManifestBackground(manifest);
-    results.push({
-      probe: 'manifest に background_color が無い',
-      verdict: bg.ok ? 'pass' : 'fail',
-      evidence: { source: manifestSource, background_color: bg.value, display: manifest.display ?? null },
-      detail: bg.ok
-        ? ''
-        : `background_color=${bg.value} があるため、iOS は単色塗りを優先し apple-touch-startup-image を無視します（＝ロゴ無しの起動画面になる）`,
-      howToFix:
-        'manifest から background_color を削除する（theme_color はステータスバー色なので残してよい）',
-      limitation: LIMITATION,
-    });
+    const bg = judgeManifestBackground(manifest, expectBg);
+    if (bg.ok === null) {
+      results.push({
+        probe: 'manifest の background_color が本体の地色と一致',
+        verdict: 'inconclusive',
+        evidence: { source: manifestSource, background_color: bg.value, display: manifest.display ?? null },
+        detail: '--expect-bg が渡されていないため、本体の地色と比べられませんでした',
+        howToFix: "--expect-bg にアプリ本体の地色を渡す（例: --expect-bg '#RRGGBB'）",
+        limitation: LIMITATION,
+      });
+    } else {
+      results.push({
+        probe: `manifest の background_color が本体の地色 ${bg.expected} と一致`,
+        verdict: bg.ok ? 'pass' : 'fail',
+        evidence: {
+          source: manifestSource,
+          background_color: bg.value,
+          期待: bg.expected,
+          display: manifest.display ?? null,
+        },
+        detail: bg.ok
+          ? ''
+          : bg.value === null
+            ? `background_color が無いため、Android(WebAPK) の起動画面が白になり、本体・ベール(${bg.expected})との間で色が飛びます`
+            : `background_color=${bg.value} が本体の地色 ${bg.expected} と違うため、起動画面と本体・ベールの間で色が飛びます`,
+        howToFix: `manifest に "background_color": "${bg.expected}" を入れる（theme_color はステータスバー色なので別）`,
+        limitation: LIMITATION,
+      });
+    }
   }
 
   // 3. startupImage が宣言されているか
@@ -371,16 +410,41 @@ function selftest() {
 
   const cases = [
     {
-      name: '★background_color があると赤（iOS が startupImage を無視する）',
+      name: '★background_color が無いと赤（Android の起動画面が白になり、本体と色が飛ぶ）',
       poison: () => {},
       restore: () => {},
-      isRed: () => judgeManifestBackground({ background_color: '#FFFFFF' }).ok === false,
+      isRed: () => judgeManifestBackground({ theme_color: '#00427B' }, '#E2EDF7').ok === false,
     },
     {
-      name: 'background_color が無ければ緑（誤検知しない）',
+      name: '★background_color が違う色だと赤',
       poison: () => {},
       restore: () => {},
-      isRed: () => judgeManifestBackground({ theme_color: '#00427B' }).ok === true,
+      isRed: () => judgeManifestBackground({ background_color: '#FFFFFF' }, '#E2EDF7').ok === false,
+    },
+    {
+      name: 'background_color が期待色と一致すれば緑（大文字小文字・# の有無・3桁表記は無視）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeManifestBackground({ background_color: '#E2EDF7' }, '#E2EDF7').ok === true
+        && judgeManifestBackground({ background_color: '#e2edf7' }, 'E2EDF7').ok === true
+        && judgeManifestBackground({ background_color: '#fff' }, '#FFFFFF').ok === true,
+    },
+    {
+      name: '★background_color が空文字・数値でも緑にしない',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeManifestBackground({ background_color: '' }, '#E2EDF7').ok === false
+        && judgeManifestBackground({ background_color: 123 }, '#E2EDF7').ok === false,
+    },
+    {
+      name: '★--expect-bg が無いと「測れなかった(null)」。緑にも赤にもしない',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeManifestBackground({ background_color: '#E2EDF7' }).ok === null
+        && judgeManifestBackground({}, '').ok === null,
     },
     {
       name: 'startupImage を宣言している HTML から href を拾える',

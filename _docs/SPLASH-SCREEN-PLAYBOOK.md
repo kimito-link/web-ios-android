@@ -114,34 +114,27 @@ target = int(size * safe_ratio / (2 ** 0.5))              # 正方形を円に�
 |---|---|
 | ネイティブ splash の `backgroundColor` | `#E2EDF7` |
 | アプリ本体のルート地色 | `#E2EDF7` |
-| PWA `manifest.json` の `background_color` | ★下の警告を読むこと |
+| PWA `manifest.json` の `background_color` | `#E2EDF7`（★下の注記を読むこと） |
 | Web のスプラッシュ画像の地色 | `#E2EDF7` |
 
 ★`surechigai` は**4箇所のうちネイティブだけが濃紺**で、
 起動直後に濃紺→ほぼ白へ切り替わっていた。
 
-> ### ⚠️ ★PWA の `background_color` は「揃える」より「置かない」が正解のことがある
+> ### ⚠️ ★PWA の `background_color` は「置いて、地色1色にそろえる」（2026-10-05 に旧説を撤回）
 >
-> **iOS 16.4 以降、`display:standalone` かつ manifest に `background_color` があると、
-> iOS は manifest 由来の“単色塗り”を優先し、`apple-touch-startup-image` を無視します。**
-> 画像もタグも正しく配信されていても使われません。
+> 以前この節は「manifest に `background_color` があると iOS 16.4+ が `apple-touch-startup-image` を
+> 無視するので、置かない」と書いていた（kimito.link 2026-07-31 の実機観察1件が出典）。
+> 2026-10-05 に調べ直したところ、この説に Apple/WebKit の公式記述は無く、
+> `background_color` を外した iPhone 実機録画でも起動画像は出なかった（＝説で現実を説明できない）。
+> 一方 Android(WebAPK) の OS 起動画面は `name`＋`background_color`＋`icons` から作られ、
+> `background_color` が無いと白になって本体・ベールとの間で色が飛ぶ（surechigai の Android 実機で確認）。
+> → 判断: **`manifest.background_color` ＝ 起動画像の地色 ＝ アプリ本体の地色**の1色をそろえる。
+> 詳細・実測・未確認事項は [`DESIGN-pwa-launch-screen-2026-10-05.md`](DESIGN-pwa-launch-screen-2026-10-05.md)。
+> iOS で起動画像が出ない原因は未確定。
 >
-> ★実損（kimito.link 2026-07-31・実機動画で特定）:
-> ホーム画面に追加した PWA を開くと、マスコットのスプラッシュではなく
-> **「ただ青いだけ」の画面**が約0.75秒出ていた。実機の実測色 RGB(0,57,112) が
-> スプラッシュ画像の地色 RGB(0,66,123)=`#00427B` と**一致しなかった**のが決め手で、
-> 出ていたのは画像ではなく単色塗りだと分かった。
-> → `background_color` を**出さない**ことで解決（`theme_color` は
->   ステータスバー色なので残してよい）。
->
-> ★つまりこの表の「4箇所を揃える」が効くのは
-> **ネイティブ／本体地色／Web 画像の3箇所**です。
-> PWA の manifest だけは「★ロゴ入りの起動画像を出したいなら置かない」を選びます。
-> （逆に、起動画像を用意せず単色でよいなら置いて揃える。**狙いによって正解が変わる**）
->
-> ★検査（2026-08-27 追加）:
+> ★検査（`--expect-bg` にアプリ本体の地色を渡す。無いと manifest の判定は「測れなかった」になる）:
 > ```
-> node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#00427B'
+> node scripts/check-pwa-splash.mjs --url https://example.com --expect-bg '#RRGGBB'
 > ```
 >
 > ★**この検査が緑でも、手元のアイコンが直るとは限りません。**
