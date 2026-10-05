@@ -1,6 +1,8 @@
 # ログイン画面に着く瞬間を「白 → 紺 → ずれ」にしない（kimito.link sign-in の実測と判断）
 
-> **今の到達点: 原因の特定と計測道具の金型化は完了（このキット PR）。本家 kimito.link への適用 PR は別担当が作成中（番号は後で追記）。iOS 実機・本番の適用後の再測定は未実施。**
+> **今の到達点: 本家は実装・本番で計測済み（フラッシュ 0・縦ずれ 0、PR #381 マージ・本番反映 2026-10-05）／姉妹への配布は未着手。**
+> キット側の金型（`templates/web/auth-mode/nextjs/` の ④ 部品・`head-snippet.html.example` の自インスタンス判定）は
+> ブランチ `feat/auth-mode-signin-no-flicker-templates` で配置。iOS Safari 実機での再測定は未実施。
 >
 > 出典: 2026-10-05、`https://kimito.link/dashboard/` を未ログインで開いたときの「白 → 紺がパッと出て消える → 中身が下にずれる」の調査。
 > 計測の道具: [`templates/scripts/qa/measure-page-flicker.mjs`](../templates/scripts/qa/measure-page-flicker.mjs)（使い方と読み方は [`templates/scripts/qa/README.md`](../templates/scripts/qa/README.md)）。
@@ -23,6 +25,12 @@
 |---|---|---|---|---|
 | `https://kimito.link/dashboard/`（未ログイン → `/sign-in/?redirect_url=%2Fdashboard%2F` へ 307） | 21 枚（0.0〜2.0 秒） | 2 枚: 3.5s（輝度 236→58）・4.5s（58→237）＝紺が 1.0 秒 | 2 回: 3.8s（`div.w-full.max-w-md` 163→268 ＝ +105px）・8.6s（プレースホルダの退場） | exit 1 |
 | `https://surechigai.kimito.link/` | 4 枚（0.0〜0.3 秒） | 0 | 0 | exit 0 |
+| **after**: `https://kimito.link/dashboard/`（本家 PR #381 本番反映後、同条件・10 秒） | 16 枚（0.0〜1.5 秒） | **0 枚** | **0 回**（CLS 合計 0.0061。before は 0.2155） | exit 0 |
+
+after の補足（同じ `summary.txt` / `timeline.json`。証拠は計測セッションの `flicker-kimito-after/` に summary.txt / tiles.png / timeline.json / frames.csv）:
+3xx は `/dashboard/`→`/sign-in/` の 307 が 1 回だけ（before はこれに加えて `clerk-js@6`→`6.36.0`・`@clerk/ui@1`→`1.38.0` の 307 が 2 回）。
+最初に画面が変わるまで 1.6 秒（before 2.1 秒）。console error 0・pageerror 0。
+残った白 1.5 秒はサーバー応答と HTML/CSS の到着（原因 5）で、判断 5（地色のインライン）の対象。
 
 使い捨てスクリプトでの同日の複数回の実測（CPU 1〜2 倍・ログイン済みヒント cookie の有無を変えて 6 回）でも形は同じで、
 白が 1.6〜2.6 秒、紺の全画面が diff 142 前後で 1.0〜1.1 秒、縦ずれが 2 回（注意書きの挿入で +105px、プレースホルダ 182px → Clerk 本体 424px の差で +242px、その後 −12px の微調整）だった。
@@ -67,6 +75,17 @@ sign-in ページだけがこの型に戻っていた。
    `DESIGN-pwa-launch-screen-2026-10-05.md` 判断 4 と同じ。
 6. **直したかどうかは、この計測道具の数字で判定する。** 「見た感じ消えた」で閉じない。前後を同じ条件で測り、
    フラッシュ 0・縦ずれ 0（exit 0）になった `summary.txt` と `tiles.png` を `qa/evidence/` に残す。
+7. **先出しの cookie 判定は自インスタンスの接尾辞付き cookie で行う**（2026-10-05、本家の適用で見つかった追加の判断）。
+   `.kimito.link` 親ドメインで cookie を共有しているため、姉妹サービス（別の Clerk インスタンス）の `__client_uat` も見える。
+   金型の従来判定（「`__client_uat*` のどれか 1 つでも 0 以外なら member」）だと、**姉妹だけにログイン中**の人が本家 `/sign-in/`
+   に来たとき member と先出しし、Clerk 読込後に guest へ直る＝注意書きが 1 回切り替わる。Clerk は publishableKey から作った
+   接尾辞付き `__client_uat_<suffix>` も書くので、`<html data-auth-cookie-suffix>` で自サービスの接尾辞を渡し、それだけを見る。
+   接尾辞の式は Clerk 公式 SDK の実装（`@clerk/shared` `getCookieSuffix`: `base64url(sha-1(publishableKey))` の先頭 8 文字、
+   [packages/shared/src/keys.ts](https://github.com/clerk/javascript/blob/main/packages/shared/src/keys.ts)）と同一にする。
+   既定は後方互換（属性を付けなければ従来判定）。金型: `templates/web/auth-mode/head-snippet.html.example`、
+   Next.js の読み口: `templates/web/auth-mode/nextjs/auth-mode-head-script.ts.example`（`getAuthCookieSuffix()`）。
+   ★「ログイン中にしか意味の無い案内」（本家 `AddXAccountNotice`）は接尾辞があっても先出しせず、Clerk の `isSignedIn` 確定を待つ
+   （誤表示を出さない側に倒す。本家 `AuthPageShell.first-paint.test.tsx` の契約）。
 
 ### 捨てた案
 
@@ -79,23 +98,36 @@ sign-in ページだけがこの型に戻っていた。
 
 | 対象 | 状態 |
 |---|---|
-| 本家 `kimito.link` sign-in（判断 1〜5） | 別担当が PR 作成中（番号は後で追記） |
-| 計測道具の金型（`templates/scripts/qa/measure-page-flicker.mjs`） | このキットの PR（`feat/measure-page-flicker`） |
-| 姉妹サービス（exosome / surechigai / voice / doin） | 認証モードは auth-mode 金型で適用済み。sign-in 相当の画面があるものは、同じ道具で測って 0/0 を確認する（未実施） |
+| 本家 `kimito.link` sign-in（判断 1〜5） | **実装・マージ・本番反映済み**（`kimitolink-linktree` PR #381、commit `2488b86`、2026-10-05）。本番の after 計測でフラッシュ 0・縦ずれ 0（上の実測表）。判断 7（自インスタンス判定）は未適用 |
+| 計測道具の金型（`templates/scripts/qa/measure-page-flicker.mjs`） | マージ済み（このキット PR #29） |
+| 本家の実装の金型化（`templates/web/auth-mode/nextjs/` ④部品・`head-snippet.html.example` の判断 7） | このキットのブランチ `feat/auth-mode-signin-no-flicker-templates`（PR 作成）。本家の `lib/auth-mode/head-snippet.html` は判断 7 を含む金型と差分が出るので、配り直しが要る（下表） |
+
+### 次に配る先（姉妹サービスの見立て。2026-10-05 に実コードを grep して確認）
+
+| リポ | sign-in の形 | 該当する契約 | 見立て |
+|---|---|---|---|
+| `kimitolink-linktree`（本家） | Next.js `<SignIn/>` | 判断 7 | `lib/auth-mode/head-snippet.html` を金型の新版に揃え、`app/layout.tsx` の `<html>` に `data-auth-cookie-suffix={getAuthCookieSuffix()}` を足す。他の ④ 部品は本家が出典なので中身は同じ（金型の `.example` と並べてバイト一致にそろえる作業＝PAIRS 登録） |
+| `surechigai-romi.link`（Expo） | `app/sign-in.tsx` に Clerk | 判断 1・2 | `components/auth/sign-in-auth-handoff-overlay.tsx` に本家と同じ到着 intro（`INTRO_MS = 1100`、`phase: "intro"`）が残っている（Web のみ発火、`Platform.OS === "web"`）。`clerk-mount-fallback.tsx` は「最初から押せる本物の X / Apple ボタン」を出す小箱（iOS 2.1(a) 却下対策、2026-08-28）で本物より低い。★押せるボタンを出す方針は維持し、高さだけ本物の箱モデルに合わせる（React Native なので Next.js 金型は直接使えない。契約だけ写す） |
+| `doin-challenge.com`（Expo） | 同型（surechigai から 2026-09-01 移植） | 判断 1・2 | `components/auth/sign-in-auth-handoff-overlay.tsx` に同じ `INTRO_MS = 1100`。`clerk-mount-fallback.tsx` は X ボタンのみの小箱（Apple 未設定）。対処は surechigai と同じ |
+| `yukkuri-exosome.link`（静的） | `Clerk.openSignIn()` のモーダル | 該当なし | ページ到着時に sign-in カードを描かない（タップ後にモーダル）。①は全 21 ページ適用済み。判断 7 は親ドメイン共有の立場が同じなので `<html data-auth-cookie-suffix>` を 1 回計算して付けると「本家だけにログイン中」の誤先出しが消える（任意） |
+| `kimito-Link-Voice`（静的） | `Clerk.openSignIn()` のモーダル | 該当なし | exosome と同じ。`/try/` に①適用済み |
 
 ## 未確認
 
-- 本家の修正後に同じ条件で再測定し、フラッシュ 0・縦ずれ 0 になること（PR マージ後）
 - iOS Safari 実機での見え方（Chromium のエミュレーションで測っている。iOS の起動画像は別軸）
-- 白の 2 秒のうち、サーバー応答（約 0.5 秒）以外の内訳（HTML 配信・CSS の到着・フォント）
+- 白の 1.5 秒のうち、サーバー応答（約 0.5 秒）以外の内訳（HTML 配信・CSS の到着・フォント）
 - ログイン済み（`__client_uat` あり）で `/dashboard/` に着いたときの挙動（使い捨てスクリプトの `INJECT_UAT=1` の回でも
-  未ログインと同じ 3 段が出た＝sign-in に 307 される経路は cookie の有無で変わらなかった。本家の修正で変わるか）
+  未ログインと同じ 3 段が出た＝sign-in に 307 される経路は cookie の有無で変わらなかった。after は未ログインでのみ計測）
+- 判断 7（自インスタンス判定）を本家に適用したあと、「姉妹だけにログイン中」で注意書きが切り替わらないこと（金型の契約テストでは
+  guest 判定を固定済み。実機で `document.cookie` を姉妹のものだけにして確認する）
+- 姉妹（surechigai / doin）の到着 intro 撤去と同寸化のあと、同じ道具で 0/0 になること
 
 ## 関連ファイル
 
 - 計測道具: [`templates/scripts/qa/measure-page-flicker.mjs`](../templates/scripts/qa/measure-page-flicker.mjs) ／ [`templates/scripts/qa/README.md`](../templates/scripts/qa/README.md)
 - 手順の入口: [`docs/ai-workflows/EMULATOR-VERIFY-HOWTO.md`](../docs/ai-workflows/EMULATOR-VERIFY-HOWTO.md)「ブラウザ上でちらつきを数える」
-- ペイント前の認証モード確定（判断 3 の正本）: [`DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md`](DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md) ／ 金型 [`templates/web/auth-mode/`](../templates/web/auth-mode/README.md)
+- ペイント前の認証モード確定（判断 3 の正本）: [`DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md`](DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md) ／ 金型 [`templates/web/auth-mode/`](../templates/web/auth-mode/README.md)（契約の一覧は README ④）
+- 判断 1〜5・7 の Next.js 金型: [`templates/web/auth-mode/nextjs/`](../templates/web/auth-mode/nextjs/README.md)（`auth-mode-head-script.ts` / `AuthModeSync.tsx` / `ClerkMountFallback.tsx` / `AuthBrowserSessionNotice.tsx` / `clerk-script-versions.ts` / `AuthPageShell.first-paint.test.tsx` / `e2e/sign-in-no-flicker.spec.ts` の `.example`）
 - 地色のインライン（判断 5 の正本）: [`DESIGN-pwa-launch-screen-2026-10-05.md`](DESIGN-pwa-launch-screen-2026-10-05.md)
 - 本家のコード（`kimitolink-linktree`）: `components/AuthHandoffOverlay.tsx` ／ `components/AuthBrowserSessionNotice.tsx` ／ `components/ClerkMountFallback.tsx` ／ `components/AuthPageShell.tsx` ／ `app/(auth)/layout.tsx`（`ClerkProvider`）／ `app/(auth)/sign-in/[[...sign-in]]/page.tsx`
 - 同じ流儀の道具: `surechigai-romi.link/scripts/qa/measure-launch-timeline.mjs`（PWA 起動の段階）／ [`templates/scripts/measure-webapk-launch.sh`](../templates/scripts/measure-webapk-launch.sh)（Android 実機）

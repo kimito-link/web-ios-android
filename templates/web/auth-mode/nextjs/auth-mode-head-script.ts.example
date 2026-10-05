@@ -1,0 +1,111 @@
+/**
+ * lib/auth-mode-head-script.ts — ペイント前に `<html data-auth="member|guest">` を確定する
+ * 同期スクリプトを、サーバーコンポーネントから `<head>` へインライン展開するための読み口（金型）。
+ *
+ * ★出典: kimitolink-linktree/lib/auth-mode-head-script.ts（2026-10-05 PR #381、本番稼働中）。
+ *
+ * ★正本はキットの金型 `templates/web/auth-mode/head-snippet.html.example`。
+ *   自リポの `lib/auth-mode/head-snippet.html` はその**バイト一致のコピー**（check-drift の PAIRS 対象）。
+ *   自リポ側で中身を書き換えない。直すならキット側を直して配り直す。
+ *   ここでは HTML ファイルから `<script>…</script>` の中身だけを取り出して、
+ *   `app/layout.tsx` の `<head>` にインラインで埋める（サーバーコンポーネントなので fs が使える）。
+ *
+ * ■ 何のために
+ *   未ログイン向けの注意書き（`.guest-only`）や、ログイン済み向けの案内（`.member-only`）を
+ *   **最初の描画から**出し分ける。Clerk の `useUser().isLoaded` を待って描き分けると、Clerk の起動
+ *   （到着から 2〜5 秒）後に要素が後から生えて画面が縦にずれる（本家 2026-10-05 実測: /sign-in/ で
+ *   注意書きが後から挿入され、カード以下が 105px 下へ跳ねていた）。
+ *
+ *   判定は cookie の存在だけを見る「先出し」で、本当のセッション状態は Clerk 読込後に
+ *   `components/AuthModeSync.tsx` が裏取りして `data-auth` を上書きする。
+ *   CSS 側の契約は `app/auth-mode.css`（同じくキット金型 `auth-mode.css.example` のバイト一致コピー）。
+ *
+ * ■ 自インスタンス判定（`data-auth-cookie-suffix`）
+ *   `.kimito.link` 親ドメインで cookie を共有しているため、別の Clerk インスタンス（姉妹サービス）の
+ *   `__client_uat` も見える。スニペットに自インスタンスの接尾辞を渡すと、自分の
+ *   `__client_uat_<suffix>` だけで判定する（head-snippet.html.example の冒頭コメント参照）。
+ *   接尾辞は Clerk 公式 SDK と同じ計算（@clerk/shared `getCookieSuffix`:
+ *   base64url(sha-1(publishableKey)) の先頭 8 文字）。@clerk/shared は @clerk/nextjs の**間接依存**
+ *   なので直接 import せず（pnpm 等の厳格な解決で落ちる）、node:crypto で同じ式を書く。
+ *   同一性の契約テスト: auth-mode-head-script.test.ts.example（@clerk/shared が解決できる環境では
+ *   実物の getCookieSuffix と突き合わせる）。
+ *
+ * ■ app/layout.tsx での使い方
+ *   import { getAuthCookieSuffix, getAuthModeHeadScript } from "@/lib/auth-mode-head-script";
+ *   …
+ *   <html lang="ja" data-auth-cookie-suffix={getAuthCookieSuffix()}>
+ *     <head>
+ *       {/* <link rel="stylesheet"> 等より前・<head> の最初の子に置く *\/}
+ *       <script dangerouslySetInnerHTML={{ __html: getAuthModeHeadScript() }} />
+ *     </head>
+ *     …
+ *   ★`data-auth-cookie-suffix` を付けない場合は従来判定（`__client_uat*` のどれか1つでも 0 以外なら member）。
+ *     既存サイトの挙動は変わらない。
+ */
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+/** 金型コピーの置き場。process.cwd() 起点にしておくと Vercel のファイル追跡（NFT）が拾う。 */
+export const AUTH_MODE_HEAD_SNIPPET_PATH = path.join(
+  process.cwd(),
+  "lib",
+  "auth-mode",
+  "head-snippet.html",
+);
+
+/** 金型の HTML から `<script>` の中身だけを取り出す（純関数・テスト用に公開）。 */
+export function extractInlineScript(html: string): string {
+  const m = html.match(/<script>([\s\S]*?)<\/script>/);
+  if (!m || !m[1].trim()) {
+    throw new Error(
+      "auth-mode head snippet: <script>…</script> が見つかりません（金型のコピーが壊れています）",
+    );
+  }
+  return m[1];
+}
+
+let cached: string | null = null;
+
+/**
+ * `<head>` に埋める JavaScript 文字列。初回だけファイルを読み、以後はキャッシュする。
+ * 見つからなければ例外を投げる（fail-closed: 黙ってちらつく版を出さない）。
+ */
+export function getAuthModeHeadScript(): string {
+  if (cached == null) {
+    cached = extractInlineScript(readFileSync(AUTH_MODE_HEAD_SNIPPET_PATH, "utf8"));
+  }
+  return cached;
+}
+
+/**
+ * Clerk が cookie 名に付ける接尾辞（`__client_uat_<suffix>` の `<suffix>`）を publishableKey から作る（純関数）。
+ *
+ * 計算式は Clerk 公式 SDK @clerk/shared の `getCookieSuffix` と同一:
+ *   base64(sha-1(publishableKey)) → `+`→`-`、`/`→`_`（RFC 4648 §5 の URL-safe 化）→ 先頭 8 文字。
+ *   出典: https://github.com/clerk/javascript/blob/main/packages/shared/src/keys.ts
+ *   （@clerk/shared@4.33.0 dist/keys.mjs L206-210 でも同一を確認、2026-10-05）
+ * ★公式 SDK の実装は async（SubtleCrypto）だが、サーバーコンポーネントの属性に同期で渡したいので
+ *   node:crypto で書く。結果が同じことは auth-mode-head-script.test.ts.example が見張る。
+ */
+export function computeClerkCookieSuffix(publishableKey: string): string {
+  return createHash("sha1")
+    .update(publishableKey, "utf8")
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .slice(0, 8);
+}
+
+/**
+ * `<html data-auth-cookie-suffix>` に渡す値。publishableKey は `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+ * （@clerk/nextjs が読む標準の環境変数）から取る。
+ * 未設定なら undefined を返し、属性は付かない＝スニペットは従来判定に落ちる（ビルドを止めない。
+ * Clerk 自体が鍵無しでは動かないので、ここで二重に落とす意味が無い）。
+ */
+export function getAuthCookieSuffix(
+  publishableKey: string | undefined = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+): string | undefined {
+  if (!publishableKey) return undefined;
+  return computeClerkCookieSuffix(publishableKey);
+}

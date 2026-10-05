@@ -80,6 +80,26 @@ export type AuthBrandConfig = {
     /** X の Sensitive permissions 警告への先出し案内。不要なら null。 */
     sensitiveNotice: string | null;
   };
+
+  /**
+   * Clerk カードと同寸のプレースホルダ（components/ClerkMountFallback.tsx）の材料。
+   * ★ちらつきゼロ契約（../README.md）: 置き換わっても下の要素が動かないよう、本番と同じ構成を写す。
+   */
+  clerkCard: {
+    /** カード左上のロゴ。clerk-appearance.ts の LOGO_PATH と同じ画像（実際に配信されているパス） */
+    logoSrc: string;
+    /**
+     * 本番 Clerk Dashboard のソーシャルプロバイダ（表示順）。hero は主役ボタン（黒地、appearance の heroButton）。
+     * ★Dashboard で増減したらここも合わせる（数が違うとボタン 1 個ぶん 58px ずつ縦ずれが戻る）。
+     */
+    providers: { key: string; title: string; hero: boolean }[];
+  };
+
+  /**
+   * 未ログイン向け注意書き（components/AuthBrowserSessionNotice.tsx）。Clerk カードの直上に出す。
+   * null なら出さない。★サーバーで最初から描き、CSS（.guest-only）で出し分ける（後から挿入しない）。
+   */
+  browserSessionNotice: { title: string; body: string } | null;
 };
 
 /**
@@ -136,5 +156,20 @@ export const authBrandConfig: AuthBrandConfig = {
     subline: "いまブラウザの X アカウントで入ります。",
     sensitiveNotice:
       "Sensitive permissions が出たら I trust this app にチェックして許可してください。",
+  },
+
+  clerkCard: {
+    logoSrc: "/pwa-icon-192.png",
+    // kimito.link 本番の構成（X / Apple / Google の 3 つ、2026-10-05 実測）。X が先頭なのは appearance の order:-1 と同じ
+    providers: [
+      { key: "x", title: "X / Twitter", hero: true },
+      { key: "apple", title: "Apple", hero: false },
+      { key: "google", title: "Google", hero: false },
+    ],
+  },
+
+  browserSessionNotice: {
+    title: "いまブラウザの X アカウントで入ります",
+    body: "別アカで入りたいときは、先に X で切り替えるか、シークレット（プライベート）ウィンドウで開き直してください。",
   },
 };

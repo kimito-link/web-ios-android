@@ -1,0 +1,24 @@
+/**
+ * lib/auth-mode.ts — `<html data-auth="member|guest">` の値（kimito.link 認証モード表示契約）の純関数（金型）。
+ *
+ * ★出典: kimitolink-linktree/lib/auth-mode.ts（2026-10-05 PR #381）。無改変で使う（drift 検査対象）。
+ *
+ * - ペイント前: `lib/auth-mode-head-script.ts`（キット金型の head スニペット）が cookie から先出しで確定する
+ * - Clerk 読込後: `components/AuthModeSync.tsx` が本当のセッション状態で上書きする
+ * - 表示: `app/auth-mode.css`（キット金型の CSS 契約）の `.guest-only` / `.member-only`
+ */
+export type AuthMode = "member" | "guest";
+
+type ClerkUserState = {
+  isLoaded: boolean;
+  isSignedIn: boolean | undefined;
+};
+
+/**
+ * Clerk の `useUser()` の状態から data-auth の値を決める（純関数）。
+ * Clerk 未読込（isLoaded=false）のときは判断材料が無いので null（＝先出しの値を触らない）。
+ */
+export function resolveAuthMode({ isLoaded, isSignedIn }: ClerkUserState): AuthMode | null {
+  if (!isLoaded) return null;
+  return isSignedIn ? "member" : "guest";
+}

@@ -4,10 +4,37 @@
   ★このファイル自体は使わない。中身を各ページの <head> 最初の子としてインラインで
     埋め込む（外部ファイル化しない。ダウンロード待ちでペイント前に間に合わない
     可能性があるため。DESIGN-kimito-family-prepaint-auth-mode-2026-09-29.md C-1）。
-  ★<link rel="stylesheet"> 等より必ず前に置く。
+  ★<link rel="stylesheet"> 等より前に置く。
 
   実証元: yukkuri-exosome.link（全21ページ, 2026-09-29 MVP確定・2026-09-29に
-  複数cookie併置バグを修正）。対応する契約テストの型:
+  複数cookie併置バグを修正）／kimitolink-linktree（2026-10-05 PR #381、
+  app/layout.tsx の <head> に nextjs/auth-mode-head-script.ts.example 経由で展開）。
+  対応する契約テストの型:
   auth-mode-cookie-parsing.test.mjs.example / auth-mode-source-drift.test.mjs.example
+
+  ★自インスタンス判定（2026-10-05 追加・既定は後方互換）:
+    <html data-auth-cookie-suffix="XXXXXXXX"> が付いていれば、接尾辞付き
+    `__client_uat_<suffix>` だけを見る（接尾辞無し `__client_uat` は見ない）。
+    無ければ従来どおり「`__client_uat*` のどれか1つでも 0 以外なら member」。
+
+    なぜ要るか: `.kimito.link` 親ドメインで cookie を共有しているため、別の Clerk
+    インスタンス（姉妹サービス）の `__client_uat` も document.cookie に見える。
+    「姉妹だけにログイン中・本家は未ログイン」の人が本家 /sign-in/ に来ると、
+    従来の判定は member と先出しし、Clerk 読込後に AuthModeSync が guest へ直す
+    ＝注意書きが1回切り替わる（本家で実測）。接尾辞は Clerk が publishableKey
+    から作るインスタンス固有の値なので、これで自インスタンスの cookie だけを見られる。
+
+    suffix の出典（Clerk 公式 SDK のソース。公式ドキュメントの散文には無い）:
+      @clerk/shared `getCookieSuffix(publishableKey)`
+        = base64url(sha-1(publishableKey)) の先頭 8 文字（`+`→`-`、`/`→`_`）
+      @clerk/shared `getSuffixedCookieName(name, suffix)` = `${name}_${suffix}`
+      https://github.com/clerk/javascript/blob/main/packages/shared/src/keys.ts
+      （インストール済み @clerk/shared@4.33.0 dist/keys.mjs L206-221 でも同一を確認、2026-10-05）
+      @clerk/backend も `getSuffixedCookie("__client_uat")` を優先して読む
+      （dist/chunk-*.mjs `AuthenticateContext.usesSuffixedCookies`）。
+    値の作り方: node -e "const c=require('crypto');console.log(c.createHash('sha1').update(process.env.PK).digest('base64').replace(/\+/g,'-').replace(/\//g,'_').slice(0,8))"
+    Next.js なら nextjs/auth-mode-head-script.ts.example の getAuthCookieSuffix() が同じ計算をする。
+    suffix が [A-Za-z0-9_-]{1,16} に合わない値なら無視して従来判定に落ちる（fail-open ではなく
+    「壊れた指定で全員 guest」にしないための後方互換）。
 -->
-<script>(function(){var h=false;var re=/(?:^|;\s*)__client_uat[^=]*=([^;]*)/g;var m;while((m=re.exec(document.cookie))){if(m[1]&&m[1]!=='0'){h=true;break}}document.documentElement.setAttribute('data-auth',h?'member':'guest');})();</script>
+<script>(function(){var h=false,e=document.documentElement,s=e.getAttribute('data-auth-cookie-suffix'),re=(s&&/^[A-Za-z0-9_-]{1,16}$/.test(s))?new RegExp('(?:^|;\\s*)__client_uat_'+s+'=([^;]*)','g'):/(?:^|;\s*)__client_uat[^=]*=([^;]*)/g,m;while((m=re.exec(document.cookie))){if(m[1]&&m[1]!=='0'){h=true;break}}e.setAttribute('data-auth',h?'member':'guest');})();</script>

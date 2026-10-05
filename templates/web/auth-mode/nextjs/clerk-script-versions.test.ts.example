@@ -1,0 +1,79 @@
+/**
+ * lib/clerk-script-versions.test.ts — 固定したバージョンが SDK（`@clerk/nextjs`）の想定と食い違ったら赤にする（金型）。
+ *
+ * ★出典: kimitolink-linktree/lib/clerk-script-versions.test.ts（2026-10-05 PR #381）。無改変で使う（drift 検査対象）。
+ *
+ * 2 段で見る:
+ *   1. package.json の `@clerk/nextjs` のメジャー → 期待する clerk-js / @clerk/ui のメジャー（対応表）。
+ *      `@clerk/nextjs` を 8 系に上げたら対応表に行が無いので赤になり、固定値の見直しを強制する。
+ *   2. インストール済み `@clerk/shared` が既定で選ぶバージョン（versionSelector の既定値）のメジャー。
+ *      対応表が古くなっても、実際に入っている SDK の想定とズレれば赤になる。
+ */
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { CLERK_JS_VERSION, CLERK_UI_VERSION } from "./clerk-script-versions";
+
+/** @clerk/nextjs メジャー → そのメジャーが読み込む clerk-js / @clerk/ui のメジャー（2026-10-05 時点）。 */
+const EXPECTED_MAJORS_BY_NEXTJS_MAJOR: Record<string, { js: string; ui: string }> = {
+  "7": { js: "6", ui: "1" },
+};
+
+function readPackageJsonClerkNextjsMajor(): string | null {
+  const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
+    dependencies?: Record<string, string>;
+  };
+  const range = pkg.dependencies?.["@clerk/nextjs"];
+  const major = range?.match(/(\d+)\./)?.[1];
+  return major ?? null;
+}
+
+/**
+ * `@clerk/shared` は versionSelector の既定値（例: "6.32.1" / "1.33.1"）をビルド成果物に埋め込んでいる。
+ * 公開 API としては export されていないため、ファイルを読んで数字だけ取り出す（検査専用）。
+ */
+function readShippedDefaults(): { js: string; ui: string } | null {
+  try {
+    const require = createRequire(import.meta.url);
+    const sharedPkg = require.resolve("@clerk/shared/package.json");
+    const dist = join(dirname(sharedPkg), "dist");
+    const selector = readFileSync(join(dist, "versionSelector.mjs"), "utf8");
+    const loader = readFileSync(join(dist, "loadClerkJsScript.mjs"), "utf8");
+    const js = selector.match(/packageVersion\s*=\s*"(\d+\.\d+\.\d+)"/)?.[1];
+    const ui = loader.match(/versionSelector\([^,]+,\s*"(\d+\.\d+\.\d+)"\)/)?.[1];
+    if (!js || !ui) return null;
+    return { js, ui };
+  } catch {
+    return null;
+  }
+}
+
+const major = (v: string) => v.split(".")[0];
+
+describe("clerk-script-versions", () => {
+  it("固定値は実バージョン（x.y.z）の形で、タグ（@6 等）ではない", () => {
+    expect(CLERK_JS_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(CLERK_UI_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it("package.json の @clerk/nextjs のメジャーに対応する clerk-js / @clerk/ui のメジャーと一致する", () => {
+    const nextjsMajor = readPackageJsonClerkNextjsMajor();
+    expect(nextjsMajor, "package.json に @clerk/nextjs が見つかりません").not.toBeNull();
+    const expected = EXPECTED_MAJORS_BY_NEXTJS_MAJOR[nextjsMajor!];
+    expect(
+      expected,
+      `@clerk/nextjs ${nextjsMajor} 系の対応表がありません。lib/clerk-script-versions.ts の値を見直し、対応表に行を足してください`,
+    ).toBeDefined();
+    expect(major(CLERK_JS_VERSION)).toBe(expected.js);
+    expect(major(CLERK_UI_VERSION)).toBe(expected.ui);
+  });
+
+  it("インストール済み @clerk/shared の既定メジャーと一致する", () => {
+    const defaults = readShippedDefaults();
+    // 読めなかった場合は「測れていない」。緑扱いにせず明示的に落とす（fail-closed）。
+    expect(defaults, "@clerk/shared の既定バージョンを読めませんでした（dist の構造が変わった可能性）").not.toBeNull();
+    expect(major(CLERK_JS_VERSION)).toBe(major(defaults!.js));
+    expect(major(CLERK_UI_VERSION)).toBe(major(defaults!.ui));
+  });
+});
