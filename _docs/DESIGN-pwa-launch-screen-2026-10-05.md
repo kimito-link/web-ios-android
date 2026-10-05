@@ -1,6 +1,6 @@
 # PWA の起動画面は「地色1色をそろえる」
 
-> **今の到達点: 実装・本番検証済み（5サービス: surechigai / exosome / voice / doin / kimito.link）／Android 実機で起動→本編の色の飛び無しを実測（voice・exosome・surechigai。doin・kimito.link は計測中）／iOS 実機は未測定／金型の検査も反転済み（2026-10-05）**
+> **今の到達点: 実装・本番検証済み（5サービス: surechigai / exosome / voice / doin / kimito.link）／Android 実機で5サービスとも起動→本編の色の飛び無しを実測／iOS 実機は未測定／金型の検査も反転済み（2026-10-05）**
 >
 > 出典: `surechigai-romi.link`（PR #61、2026-10-05 マージ・デプロイ済み）を起点に、同日 5 サービスへ展開（PR は「適用の仕方」の表）。
 > 入口はこのファイル。ai-hub 側の短い版は `../ai-hub/kb/pwa-launch-screen-one-color.md`、
@@ -75,8 +75,10 @@ Android の OS 起動画面は `name`＋`background_color`＋`icons` から作�
 | surechigai | #E0ECF6 | #E0ECF6 | ヒーロー #EEF4F5 | 緩やかな明度差。フラッシュ無し |
 | voice（修正前） | #FCF5EC | **白 #FCFCFC が 1 フレーム（約 23ms・画面の 91%）** | #FDF6F2 | 白のフラッシュあり |
 | voice（修正後、PR #58） | #FCF5EC | 最初のフレームから無地クリーム #FCF5ED | #FDF6F2 | 地色から各チャンネル差 >8 のフレーム 0 枚 |
+| doin（期待 #0D1117） | #0A1016 | アプリ窓の最初のフレーム（オンボーディングの骨組み）#0B1014 | 「ようこそ！」本文 #0A1014 | 起動以降の全フレームで地色からの各チャンネル差 ≤3。白・灰のフレーム無し。初回起動でオンボーディングが出ること、その背景が起動画面と同じ濃紺黒であることをタイルで目視 |
+| kimito.link（期待 #FFFFFF） | #FCFDFD | Chrome 側の起動画面 #FCFDFC（2.939s。ナビバーの色だけ黒→白） | 本文 #FCFCFC（5.212s に完成形で一度に描画） | 全フレームで差 ≤3。黒・灰の骨組みフレーム無し |
 
-doin・kimito.link は 2026-10-05 時点で計測中（結果が出たらこの表に足す）。iOS 実機は未測定。
+iOS 実機は未測定。
 
 ## 適用の仕方
 
