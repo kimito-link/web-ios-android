@@ -538,7 +538,11 @@ export const PAIRS = [
      */
     label: '本家マイページ導線（Vanilla JS）',
     canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/kimito-dashboard-link.js.example'),
-    copies: []
+    copies: [
+      // 2026-10-05 配布（exosome: 共通ヘッダー app.js が読み込む／voice: index.html・try/index.html が読み込む）
+      resolve(GH_ROOT, 'yukkuri-exosome.link/src/js/kimito-dashboard-link.js'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/js/modules/kimito-dashboard-link.js')
+    ]
   },
   {
     label: '本家マイページ導線（React）',
