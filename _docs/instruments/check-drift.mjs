@@ -573,9 +573,14 @@ const CANONICAL = PAIRS[0].canonical;
  * ★2026-09-14: 行末インラインコメント（`break; // 説明`）も除去するよう拡張
  * （`templates/scripts/lib/instrument-proof.mjs`・`templates/diagnostics/check-shared-parts-used.mjs`
  * と3箇所同期）。
+ * ★2026-10-05: 改行を先に LF へ正規化する（3箇所同期）。
+ *   実損: 正本 templates/scripts/check-tracked-imports.mjs が CRLF、配布先 surechigai が
+ *   .gitattributes（eol=lf）で LF。`.` は \r に一致しないため CRLF 側だけ行コメントが
+ *   `//...$` で落ちず、`diff --strip-trailing-cr` が差分0なのに「正本にしか無い行 52」と出た。
+ *   改行の違いは実コードの違いではない。
  */
 export function codeOnly(text) {
-  const noBlock = text.replace(/\/\*[\s\S]*?\*\//g, '');
+  const noBlock = String(text || '').replace(/\r\n?/g, '\n').replace(/\/\*[\s\S]*?\*\//g, '');
   return noBlock
     .split('\n')
     .map((l) => l.replace(/^\s*\/\/.*$/, ''))
@@ -808,6 +813,18 @@ if (SELFTEST) {
     if (r.verdict !== 'pass') fails.push(`★コメント差を割れと誤検知した(得た: ${r.verdict})`);
   } finally {
     try { rmSync(commentFile, { force: true }); } catch { /* 復帰は best-effort */ }
+  }
+
+  // 毒2b: ★改行だけ違う（CRLF）コピー → pass のままであるべき(2026-10-05 実損: 52行の嘘の割れ)
+  const crlfFile = resolve(HERE, '.drift-crlf.tmp.mjs');
+  try {
+    const lf = readFileSync(CANONICAL, 'utf8').replace(/\r\n?/g, '\n');
+    writeFileSync(crlfFile, lf.replace(/\n/g, '\r\n'));
+    const r = compare(CANONICAL, [crlfFile]);
+    if (r.verdict !== 'pass') fails.push(`★改行コード(CRLF)の差を割れと誤検知した(得た: ${r.verdict})`);
+    if (codeOnly('a();\r\n// c\r\nb(); // d\r\n') !== 'a();\nb();') fails.push('★CRLF の行コメントを落とせない');
+  } finally {
+    try { rmSync(crlfFile, { force: true }); } catch { /* 復帰は best-effort */ }
   }
 
   // 毒3: ★1本も存在しない → inconclusive であるべき(緑にしない)

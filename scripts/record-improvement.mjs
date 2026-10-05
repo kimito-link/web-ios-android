@@ -28,7 +28,21 @@
  *     auto: { kind: 'file-size-kb', path: 'dist/bundle.js' }
  *     auto: { kind: 'file-count',   glob: 'scripts/*.mjs' }
  *     auto: { kind: 'command-number', cmd: ['node','scripts/x.mjs','--count'] }
+ *     auto: { kind: 'commit-body-matches', pattern: '別の手段|裏を取|実測で確認', sinceDays: 30 }
  *   ★測れなければ **null**（0として書かない）。
+ *
+ * ■ ★commit-body-matches（2026-10-05 tsuioku-no-kirameki.com から還流）
+ *   直近 sinceDays 日のコミット本文(%b)で pattern（正規表現文字列、flags 既定 'gi'）に
+ *   一致した回数。tsuioku では「別の手段でも確かめた回数」として使った:
+ *     pattern: '毒テスト|毒で赤|毒で確認|実測で確認|測り直|再現し|目視確認|別の手段|裏を取|裏どり|実際に走らせ'
+ *   ★なぜ「確かめた回数」で「間違えた回数」ではないのか（tsuioku 2026-09-06 の実測）:
+ *     訂正9件のうち3件が「道具の出力を1つだけ見て断定」だった（merge-tree だけ見て衝突0件→
+ *     実際は7ファイル衝突、など）。どれも別の手段で1回確かめれば1分で分かった。
+ *     ★正直に訂正を書くほど悪化する指標は、正直さを罰する。だから【確かめた回数】を数える。
+ *     増やす行動がそのまま正解になる。
+ *   ★0件は「本当に0件」なので null にしない。ただしコミットが1件も無い・pattern が無い・
+ *     git が使えない場合は測っていないので null。
+ *   ★語句はアプリごとに違うので pattern は【アプリの表】が持つ（キットは既定語を持たない）。
  *
  * ■ 使い方
  *   node scripts/record-improvement.mjs --auto             ★自動で測れる指標を記録
@@ -67,12 +81,24 @@ function currentVersion() {
 
 /**
  * ★宣言された `auto` の指示どおりに測る。★測れなければ null（0を返さない）。
- * @param {{kind?:string, path?:string, glob?:string, cmd?:string[]}} spec
+ * @param {{kind?:string, path?:string, glob?:string, cmd?:string[], pattern?:string, flags?:string, sinceDays?:number}} spec
  * @returns {number|null}
  */
 function measureAuto(spec) {
   if (!spec || typeof spec !== 'object') return null;
   try {
+    if (spec.kind === 'commit-body-matches') {
+      if (typeof spec.pattern !== 'string' || spec.pattern === '') return null; // ★語句が無い＝測れない
+      const re = new RegExp(spec.pattern, typeof spec.flags === 'string' ? spec.flags : 'gi');
+      const days = Number.isFinite(Number(spec.sinceDays)) && Number(spec.sinceDays) > 0 ? Math.floor(Number(spec.sinceDays)) : 30;
+      const since = ['--since=' + days + ' days ago'];
+      const gitOpt = { cwd: ROOT, encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'ignore'] };
+      // ★コミットが無い＝測れていない（0件と区別する）
+      const commits = execFileSync('git', ['log', ...since, '--oneline'], gitOpt).trim();
+      if (!commits) return null;
+      const bodies = execFileSync('git', ['log', ...since, '--format=%b'], gitOpt);
+      return (bodies.match(re) || []).length; // ★0 は本当に0件
+    }
     if (spec.kind === 'file-size-kb') {
       const p = join(ROOT, String(spec.path || ''));
       if (!existsSync(p)) return null; // ★測れなかった（0ではない）
@@ -212,6 +238,13 @@ if (has('--selftest')) {
       poison: () => {}, restore: () => {},
       isRed: () => measureAuto({ kind: 'file-size-kb', path: '★存在しないファイル.js' }) === null
         && measureAuto({ kind: 'file-count', glob: '★無いディレクトリ/*.mjs' }) === null
+    },
+    {
+      name: '★語句の無い commit-body-matches は null(0にしない)',
+      poison: () => {}, restore: () => {},
+      isRed: () => measureAuto({ kind: 'commit-body-matches' }) === null
+        && measureAuto({ kind: 'commit-body-matches', pattern: '' }) === null
+        && measureAuto({ kind: 'commit-body-matches', pattern: '(' }) === null // 壊れた正規表現
     }
   ]);
 
@@ -253,7 +286,11 @@ if (has('--auto')) {
   for (const m of autos) {
     const value = measureAuto(m.auto);
     // ★[auto] を前置する。手書きと見分けの付かない印は印ではない（tsuioku の実損）。
-    const source = '[auto] ' + (m.auto.path || m.auto.glob || (m.auto.cmd || []).join(' ') || m.id);
+    const source = '[auto] ' + (
+      m.auto.kind === 'commit-body-matches'
+        ? 'git log --since=' + (m.auto.sinceDays || 30) + ' days ago --format=%b =~ /' + m.auto.pattern + '/'
+        : (m.auto.path || m.auto.glob || (m.auto.cmd || []).join(' ') || m.id)
+    );
     results.push({ metric: m.id, ...record({ version, metric: m.id, value, source }, { dryRun, metrics }) });
   }
 } else {
