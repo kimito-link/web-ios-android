@@ -71,7 +71,7 @@ function aggregate(results) {
 
 function run(label, script, args = []) {
   // ★scriptPath: 証明3点台帳(instrument-proof)がこの検査を再特定するためのキー。
-  //   ROOTからの相対パスに揃える（絶対パスだと環境で変わり、台帳のキーとして不安定）。
+  //   ROOTからの相対パスに揃える（フルパスだと環境で変わり、台帳のキーとして不安定）。
   const scriptPath = script ? relative(ROOT, script).split('\\').join('/') : null;
   if (!script) {
     console.log(`\n[instruments] 🟡 ${label}: 実体がありません（測れませんでした）`);

@@ -143,7 +143,9 @@ export function extractFunctionBody(src, name) {
  * @returns {string}
  */
 function codeOnly(text) {
-  const noBlock = String(text || '').replace(/\/\*[\s\S]*?\*\//g, '');
+  // ★改行を先に LF へ正規化（2026-10-05、check-drift.mjs と3箇所同期。CRLF だと `.` が \r に
+  //   一致せず行コメントが落ちない＝改行の違いを実コードの違いと誤認する）。
+  const noBlock = String(text || '').replace(/\r\n?/g, '\n').replace(/\/\*[\s\S]*?\*\//g, '');
   return noBlock
     .split('\n')
     .map((l) => l.replace(/^\s*\/\/.*$/, ''))
