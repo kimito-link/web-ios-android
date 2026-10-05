@@ -49,6 +49,11 @@ export function generateConfigJs(config) {
     homeLabel: config.homeLabel,
     navItems,
   };
+  // ★任意キーは「書かれているときだけ」payloadに載せる。既定で undefined を出力すると、
+  //   adminUrl を使わない既存consumerの site-chrome.config.js のバイト列が変わり、
+  //   全サイトが一斉に DRIFTED 判定になる（決定論的生成の契約を守る）。
+  if (config.adminUrl) payload.adminUrl = config.adminUrl;
+  if (config.adminLabel) payload.adminLabel = config.adminLabel;
   return `// site-chrome.config.js — generated from site-chrome.config.json. Do not edit by hand.\nwindow.SITE_CHROME_CONFIG = ${JSON.stringify(payload, null, 2)};\n`;
 }
 

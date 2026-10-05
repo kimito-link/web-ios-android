@@ -5,6 +5,28 @@
  *   node scripts/run-instruments.mjs [対象リポ]
  *   node scripts/run-instruments.mjs --deep [対象リポ]  # 各計器のselftestも実行
  *   node scripts/run-instruments.mjs --security-url https://example.com [対象リポ]
+ *   node scripts/run-instruments.mjs --security-local-only [対象リポ]  # 本番URL実測をしない
+ *
+ * ★--security-local-only（2026-09-29 surechigai-romi.link で追加、2026-10-05 正本へ還流）:
+ *   デプロイ前チェック（push直後、まだ本番に反映されていない新しいコードを検査する場）で
+ *   本番URL実測（malwarecheck.site API呼び出し）を行うと、これから出す新しいコードではなく
+ *   「入れ替わる前の今の本番」を測ってしまい、その時点の本番の既存状態（CSP設定等、
+ *   デプロイしようとしている差分と無関係な過去からの技術的負債）でデプロイ自体がブロックされる
+ *   （実損: CSPのunsafe-inline/unsafe-eval設定による既存の減点で、Deploy to Vercel の checks
+ *   ジョブが常に失敗し、本番へのデプロイが一切通らなくなっていた）。新しいコードのCSP設定等は
+ *   内部先取り検査（ヘッダ・HTML静的解析）で判定できるため、デプロイ前はそちらに留め、
+ *   本番URLでの実測はデプロイ完了後（Post-deploy verify以降）に行う。
+ *   環境変数 RUN_INSTRUMENTS_SECURITY_LOCAL_ONLY=1 でも同じ（package.json の固定引数を
+ *   変えずに、CIの特定ジョブだけに渡す経路）。CLI引数を優先する。
+ *
+ * ★環境による省略（どちらも「無ければ緑」にはしない。skip したと明示する）:
+ *   - 「計器が走ったか」は .instrument-ran.json というそのマシンのローカル状態を見る計器で、
+ *     CI（使い捨てランナー・shallow clone）では原理的に測れない。process.env.CI のときは
+ *     理由付きで skip する（surechigai 2026-08-29 実測: 記録を追跡して CI を落とした）。
+ *   - レスポンシブ静的チェックは、スタイルがCSSに無いプロジェクト（Expo/React Native等、
+ *     StyleSheet オブジェクト）では走査対象が実質ゼロで非該当。RESPONSIVE_STATIC=0 で
+ *     理由付きの非該当宣言にできる（既定は実行する。『緑にするために弱める』のではなく、
+ *     測っていないことを出力に残す）。
  *
  * 0=全て測れて緑 / 1=赤あり / 2=測れなかった項目あり。
  */
@@ -17,6 +39,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const DEEP = argv.includes('--deep');
 const SELFTEST = argv.includes('--selftest');
+// ★環境変数でも切り替え可能にする（package.json の `pnpm check` は固定引数のため、
+//   CIワークフロー側から特定ジョブだけに渡せる経路が要る）。CLI引数を優先する。
+const SECURITY_LOCAL_ONLY = argv.includes('--security-local-only') || process.env.RUN_INSTRUMENTS_SECURITY_LOCAL_ONLY === '1';
 function option(name, fallback = null) {
   const at = argv.lastIndexOf(name);
   return at >= 0 && at + 1 < argv.length ? argv[at + 1] : fallback;
@@ -79,7 +104,10 @@ if (SELFTEST) {
 }
 
 const context = firstExisting(['scripts/context-engine.mjs', 'templates/scripts/context-engine.mjs']);
-const diagnostics = firstExisting(['diagnostics/run.mjs', 'templates/diagnostics/run.mjs']);
+// ★配布先が診断キットを scripts/diagnostics/ に置くことがある（キット既定は diagnostics/）。
+//   候補を足さないと『汎用診断: inconclusive』となり、診断が丸ごと測られない
+//   （surechigai 2026-08-28、素のまま乗せて実際にそうなることを実測してから足した）。
+const diagnostics = firstExisting(['scripts/diagnostics/run.mjs', 'diagnostics/run.mjs', 'templates/diagnostics/run.mjs']);
 const improvement = firstExisting(['scripts/check-improvement.mjs']);
 const ran = firstExisting(['scripts/check-instrument-ran.mjs']);
 const drift = firstExisting(['_docs/instruments/check-drift.mjs']);
@@ -107,16 +135,44 @@ const results = [];
 results.push(run('全文脈パケット', context, ['--write', '.instrument-context.md', ROOT]));
 results.push(run('汎用診断', diagnostics, [ROOT]));
 results.push(run('進化台帳', improvement, ['--check']));
-results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
+// ★「計器が走ったか」は**そのマシンのローカル状態**を見る計器（2026-08-29 実測）。
+//   .instrument-ran.json に『どのコミットで緑になったか』を書き、git cat-file でSHAを解決する。
+//
+//   ★CI では原理的に測れない:
+//     ・ランナーは毎回使い捨てなので記録が存在しない
+//     ・記録をコミットしても shallow clone でSHAが解決できず
+//       『記録のコミットがこのリポに見つかりません』になる
+//   ★実際に .instrument-ran.json を追跡して Deploy to Vercel を落とした。
+//   意味は『手元で最近ちゃんと計器を回したか』であって、CI に問う質問ではない。
+//
+//   ⟹ CI では理由付きで skip する（★『無ければ緑』にはしない。skip したと明示する）。
+//   check-symptom-index / check-kit-reinvention と同じ扱いに揃えた。
+if (process.env.CI) {
+  console.log(
+    '\n[instruments] ⏭ 計器が走ったか: skip（CI は使い捨て環境で記録が存在しないため**測っていません**）',
+  );
+} else {
+  results.push(run('計器が走ったか', ran, ['--check', '--max-days', '14']));
+}
 if (drift) results.push(run('配布コードのドリフト', drift));
 if (crossToolSync) results.push(run('クロスツール指示書の同期（CLAUDE.md核ブロック→AGENTS.md転記）', crossToolSync));
 if (rootCauseClaim) results.push(run('直近コミットの根治宣言の根拠', rootCauseClaim));
 results.push(run(
   '公開サイトのセキュリティ満点チェック',
   security,
-  SECURITY_URL ? ['--url', SECURITY_URL] : [],
+  SECURITY_LOCAL_ONLY ? ['--local-only'] : (SECURITY_URL ? ['--url', SECURITY_URL] : []),
 ));
-results.push(run('レスポンシブ設計の静的先取りチェック', responsive));
+// ★レスポンシブ静的チェックは CSS ファイル・HTML内<style> を静的解析する。スタイルが JS の
+//   StyleSheet オブジェクトにあるプロジェクト（Expo/React Native）では走査対象が実質ゼロで、
+//   実際に app/ を指定すると『CSS/HTMLが1件も見つかりません』で黄、リポ全体を指定すると
+//   無関係な印刷用HTMLを拾って赤になる（surechigai 2026-08-28 実測）。どちらも実態を測っていない。
+//   ⟹ そういうプロジェクトは RESPONSIVE_STATIC=0 で【非該当】を理由付きで宣言できる
+//   （既定は実行する。画面の崩れは実ブラウザ実測で見る）。
+if (process.env.RESPONSIVE_STATIC === '0') {
+  console.log('\n[instruments] ⏭ レスポンシブ設計の静的先取りチェック: skip（RESPONSIVE_STATIC=0 ＝非該当と宣言。**測っていません**）');
+} else {
+  results.push(run('レスポンシブ設計の静的先取りチェック', responsive));
+}
 if (claimsProvenance) results.push(run('数値主張の出典スクリーニング', claimsProvenance));
 if (appConfigSchema) results.push(run('app.config.jsonのスキーマ適合', appConfigSchema));
 if (assetlinksPublished) results.push(run('assetlinks.jsonの公開疎通', assetlinksPublished));
