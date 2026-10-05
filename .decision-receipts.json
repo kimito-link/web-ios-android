@@ -199,6 +199,16 @@
         "../soushin-suggest.link/scripts/generate-shindan-version.mjs",
         "templates/scripts/generate-shindan-version.mjs"
       ]
+    },
+    {
+      "at": "2026-10-05T03:15:47.288Z",
+      "responsibility": "improvement-recorder-cli (tsuioku-no-kirameki.com/scripts/record-improvement.mjs vs templates/scripts/record-improvement.mjs)",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "../tsuioku-no-kirameki.com/scripts/record-improvement.mjs",
+        "templates/scripts/record-improvement.mjs"
+      ]
     }
   ]
 }

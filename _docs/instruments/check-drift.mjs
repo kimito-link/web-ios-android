@@ -222,8 +222,16 @@ export const PAIRS = [
       resolve(KIT_ROOT, 'scripts/record-improvement.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/record-improvement.mjs'),
       // ★2026-08-28 追加（登録漏れ）。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/record-improvement.mjs'),
-      resolve(GH_ROOT, 'tsuioku-no-kirameki.com/scripts/record-improvement.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/record-improvement.mjs')
+      /*
+       * ★2026-10-05 KEEP_SEPARATE: tsuioku-no-kirameki.com/scripts/record-improvement.mjs を外した。
+       *   台帳ライブラリが旧世代（src/lib/improvementLedger.js／improvementHistory.js を静的 import）で、
+       *   正本の scripts/improvement-history.mjs・improvement-metrics.mjs 決め打ち（無ければ exit 2）と
+       *   噛み合わない。tsuioku の gate-selftest（audit-gates --json の rows を集計）は正本の auto 種別
+       *   （file-size-kb / file-count / command-number / commit-body-matches）で表現できない。
+       *   揃えるなら台帳3点（history / metrics / ledger）ごと移行する別作業。上の「進化台帳（門番）」の
+       *   check-improvement と同じ判断。除外の理由は check-drift-coverage.mjs の EXCLUDED にも書いた。
+       */
     ]
   },
   {
