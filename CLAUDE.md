@@ -237,10 +237,10 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
    （2026-09-29実損、`kimito-Link-Voice`）。`index.html`（旧「声優マッチング」時代のダッシュボード）
    を設計書どおりに全面実装・本番デプロイしたが、`server.js`の実ルーティングは`/`に`lp/index.html`
    を配信しており、`index.html`はどこからもリンクされていない未使用ファイルだった。設計書
-   （`docs/DESIGN-clerk-migration-2026-09-26.md`）自体が、事業ピボット（`docs/BILLING-DESIGN.md`）
+   （`../kimito-Link-Voice/docs/DESIGN-clerk-migration-2026-09-26.md`）自体が、事業ピボット（`../kimito-Link-Voice/docs/BILLING-DESIGN.md`）
    を踏まえず旧`index.html`を前提に書かれた古い設計書だった。「ファイルが存在する」ことと
    「そのファイルが実際に配信されている」ことは別の命題——複数のHTML/エントリファイルが
-   存在するプロジェクトで大きな変更に着手する前は、`server.js`/`app.py`等のルーティング定義を
+   存在するプロジェクトで大きな変更に着手する前は、`server.js`等（各言語のアプリ起動ファイル）のルーティング定義を
    grepするか、本番/ローカルの該当パスへ実際にアクセスして確認する。この1番目の「既存実装を
    検索する」を「対象ファイルが到達可能か」にまで広げたもの。
    ★機械化: 「HTMLファイルへの大規模書き換え直前に、ルーティング定義の検索(Grepで`app.get`等)
@@ -355,7 +355,7 @@ canonical HEADが意図したshaになっている・remoteと一致している
   **その瞬間の作業ツリーにあった、自分が関知していない未コミット変更まで巻き込んで
   消える**。実損: `git branch <退避用>`で自分のコミットを退避した直後、続けて
   `git reset --hard origin/main`を実行し、無関係な3ファイル
-  （`council/HANDOFF-ogp-and-app.md`・`scripts/design-council.mjs`・
+  （`council/HANDOFF-ogp-and-app.md`・`../kimitolink-linktree/scripts/design-council.mjs`・
   `templates-app/android-twa/README.md`。いずれも`git add`前の未コミット変更で、
   他セッションかユーザー本人の作業）を消した。**未コミットの変更はgit addもコミットも
   していない限り、通常のgit操作では復元不可能**（stashしていない・commitしていない
