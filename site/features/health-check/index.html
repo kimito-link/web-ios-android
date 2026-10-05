@@ -312,6 +312,11 @@
           <td><code>check-near-duplicates</code></td>
           <td>★<b>同名ではない「少しずつ違う実装」が複数箇所に増えている数</b>。<code>check-shared-parts-used</code>は同じ名前の関数しか拾えませんが、実際に増えるのは<b>コピー&amp;ペーストで名前や変数だけ変えた画面・カード</b>です。行を正規化して連続する一致の塊を検出し、<b>3ファイル以上に同じ塊があれば</b>共通化のサインとして数えます。<b>統合すべきかは判定しません</b>（構造が違う同目的コードは拾えず、意図的な複製が混ざることもあります）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-doc-rot.mjs（2026-09-03追加・CLAUDE.mdが指す実体が消えていた実損より） -->
+        <tr>
+          <td><code>check-doc-rot</code></td>
+          <td>★<b>指示書（CLAUDE.mdなど）が「使うこと」と書いているファイルやスクリプトが、すでに存在しない状態</b>を数えます。指示書は人が書いて人が守るものなので、書いた人がいなくなると<b>黙って腐り、CIも赤になりません</b>。実際に、最上位の指示が存在しない3つの実体を「使え」と命じていたのに誰も気づかなかったことがあります。リポ内パス・スクリプト名・npm scriptの呼び出しのように<b>実在を確かめられる主張だけ</b>を見て、<b>方針や思想といった文章の中身は判定しません</b>。</td>
+        </tr>
         <!-- 出典: templates/diagnostics/check-orphan-worktrees.mjs（2026-09-14追加・_archive移動作業の実損より） -->
         <tr>
           <td><code>check-orphan-worktrees</code></td>
