@@ -50,6 +50,11 @@
  *   4. その画像の**地色が --expect-bg と一致**する（＝manifest・本体との食い違いを防ぐ）
  *   5. その画像が★**単色ではない**（＝ロゴ/マスコットが実際に描かれている）
  *      ★「地色が正しい真っ青な画像」でも合格してしまう穴を塞ぐため。
+ *   6. manifest が HTML に宣言され、配信されている（200 かつ JSON として読める）
+ *   7. manifest の theme_color と HTML の <meta name="theme-color"> が同じ値
+ *   8. 起動画像の href に「?」（クエリ）が無い（固定名＋クエリは CDN に旧版が残る罠。
+ *      内容ハッシュ入りのファイル名にする。参照: surechigai docs/symptoms.md SG-02）
+ *   9. manifest.icons に 192 と 512 の PNG があり、--url 指定時は実際に配信されている
  *
  * ■ ★見ないこと（限界。過信を防ぐ）
  *   - ★**実機で本当に出るかは判定できない。** iOS は追加済み PWA の manifest を
@@ -59,6 +64,9 @@
  *   - Android(TWA) の起動画面は見ない（twa-manifest.json 側の担当）。
  *   - Capacitor ネイティブ版の起動画面も見ない（check-splash-config.mjs 等の担当）。
  *   - media クエリが手元の端末に一致するかは見ない（解像度の網羅性は別問題）。
+ *   - theme_color / background_color の「色そのものが適切か」は見ない（一致だけを見る）。
+ *   - アイコン画像の絵柄・実寸・maskable の安全領域は見ない（192/512 の宣言と配信だけ）。
+ *   - href にクエリが無くても、CDN が古い画像を返していないかは見ない（名前の形だけ）。
  *
  * 終了コード: 0=合格 / 1=測れた上での赤 / 2=測れなかった
  *
@@ -156,7 +164,93 @@ export function looksSolidColor(samples, tolerance = 24) {
   );
 }
 
+/** ★HTML から <link rel="manifest"> の href を取る（属性の順序に依らない）。無ければ null。 */
+export function extractManifestHref(html) {
+  const linkRe = /<link\b[^>]*>/gi;
+  let m;
+  while ((m = linkRe.exec(String(html || ''))) != null) {
+    const tag = m[0];
+    if (!/rel\s*=\s*["']?manifest\b/i.test(tag)) continue;
+    const href = tag.match(/href\s*=\s*["']([^"']+)["']/i);
+    if (href) return href[1];
+  }
+  return null;
+}
+
+/** ★HTML から <meta name="theme-color"> の content を全部取る（media 付きの複数宣言も拾う）。 */
+export function extractThemeColors(html) {
+  const out = [];
+  const metaRe = /<meta\b[^>]*>/gi;
+  let m;
+  while ((m = metaRe.exec(String(html || ''))) != null) {
+    const tag = m[0];
+    if (!/name\s*=\s*["']?theme-color/i.test(tag)) continue;
+    const c = tag.match(/content\s*=\s*["']([^"']*)["']/i);
+    if (c) out.push(c[1]);
+  }
+  return out;
+}
+
+/** hex ならそろえ、それ以外（rgb() や色名）は小文字・空白除去だけして比べる。 */
+function comparableColor(v) {
+  const t = String(v ?? '').trim();
+  return /^#?[0-9a-f]{3}([0-9a-f]{3}([0-9a-f]{2})?)?$/i.test(t)
+    ? normalizeHex(t)
+    : t.toLowerCase().replace(/\s+/g, '');
+}
+
+/**
+ * ★manifest.theme_color と HTML の meta theme-color が同じ値かを判定する。
+ * ok=true: manifest と meta がすべて同じ / false: meta が無い・manifest に無い・値が食い違う
+ * @returns {{ ok: boolean, reason: string, manifestValue: unknown, metaValues: string[] }}
+ */
+export function judgeThemeColor(manifest, metaColors) {
+  const metaValues = Array.isArray(metaColors) ? metaColors : [];
+  const mv = manifest && typeof manifest === 'object' ? manifest.theme_color : undefined;
+  if (metaValues.length === 0) {
+    return { ok: false, reason: 'meta-missing', manifestValue: mv ?? null, metaValues };
+  }
+  if (typeof mv !== 'string' || mv.trim() === '') {
+    return { ok: false, reason: 'manifest-missing', manifestValue: mv ?? null, metaValues };
+  }
+  const base = comparableColor(mv);
+  const allSame = metaValues.every((c) => comparableColor(c) === base);
+  return { ok: allSame, reason: allSame ? '' : 'mismatch', manifestValue: mv, metaValues };
+}
+
+/** ★起動画像の href のうち、クエリ（?）を含むものを返す。 */
+export function findQueryHrefs(images) {
+  return (Array.isArray(images) ? images : []).filter((i) => String(i.href).includes('?')).map((i) => i.href);
+}
+
+/**
+ * ★manifest.icons に 192 と 512 の PNG があるかを判定する。
+ * sizes は空白区切り（"192x192 512x512"）、PNG は type=image/png または src が .png。
+ * @returns {{ ok: boolean, found: {192: string|null, 512: string|null} }}
+ */
+export function judgeIcons(manifest) {
+  const icons = manifest && Array.isArray(manifest.icons) ? manifest.icons : [];
+  const found = { 192: null, 512: null };
+  for (const ic of icons) {
+    if (!ic || typeof ic.src !== 'string') continue;
+    const isPng = String(ic.type || '').toLowerCase() === 'image/png' || /\.png$/i.test(ic.src.split(/[?#]/)[0]);
+    if (!isPng) continue;
+    const sizes = String(ic.sizes || '').split(/\s+/);
+    for (const want of [192, 512]) {
+      if (!found[want] && sizes.includes(`${want}x${want}`)) found[want] = ic.src;
+    }
+  }
+  return { ok: Boolean(found[192] && found[512]), found };
+}
+
 // ─── I/O ───────────────────────────────────────────────────────────────
+
+/** 取得して status と content-type だけ返す（ネットワーク失敗は例外）。 */
+async function fetchStatus(url) {
+  const res = await fetch(url, { redirect: 'follow' });
+  await res.arrayBuffer().catch(() => {});
+  return { status: res.status, type: (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase() };
+}
 
 async function fetchText(url) {
   const res = await fetch(url, { redirect: 'follow' });
@@ -224,18 +318,60 @@ async function main(argv) {
     return results;
   }
 
+  // 1b. ★manifest が HTML に宣言され、配信されていること（無い/404/JSON でない＝赤）
+  const manifestHref = extractManifestHref(html);
+  const MANIFEST_FIX =
+    '<link rel="manifest" href="/manifest.webmanifest"> を HTML に入れ、そのパスが 200 で JSON を返すようにする';
+  const MANIFEST_WHY =
+    'manifest が無い/読めないと、ホーム画面に追加しても名前・アイコン・起動画面の色を制御できません';
   try {
     if (manifestPath) {
       if (!existsSync(manifestPath)) throw new Error(`${manifestPath} が無い`);
       manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
       manifestSource = manifestPath;
-    } else if (url) {
-      const href =
-        html.match(/<link\b[^>]*rel\s*=\s*["']manifest["'][^>]*href\s*=\s*["']([^"']+)["']/i)?.[1]
-        ?? '/manifest.webmanifest';
-      const abs = new URL(href, url).toString();
-      manifest = JSON.parse(await fetchText(abs));
+    } else if (url && manifestHref != null) {
+      const abs = new URL(manifestHref, url).toString();
+      const res = await fetch(abs, { redirect: 'follow' });
       manifestSource = abs;
+      if (!res.ok) {
+        results.push({
+          probe: 'manifest が配信されている',
+          verdict: 'fail',
+          evidence: { href: manifestHref, status: res.status },
+          detail: `manifest が HTTP ${res.status} です。${MANIFEST_WHY}`,
+          howToFix: MANIFEST_FIX,
+          limitation: LIMITATION,
+        });
+      } else {
+        try {
+          manifest = JSON.parse(await res.text());
+          results.push({
+            probe: 'manifest が配信されている',
+            verdict: 'pass',
+            evidence: { href: manifestHref, status: res.status },
+            limitation: LIMITATION,
+          });
+        } catch {
+          results.push({
+            probe: 'manifest が配信されている',
+            verdict: 'fail',
+            evidence: { href: manifestHref, status: res.status },
+            detail: `manifest が 200 でも JSON として読めません。${MANIFEST_WHY}`,
+            howToFix: MANIFEST_FIX,
+            limitation: LIMITATION,
+          });
+        }
+      }
+    }
+    if (manifestHref == null) {
+      results.push({
+        probe: 'manifest が配信されている',
+        verdict: 'fail',
+        evidence: { 宣言: null },
+        detail: `HTML に <link rel="manifest"> がありません。${MANIFEST_WHY}`,
+        howToFix: MANIFEST_FIX,
+        limitation: LIMITATION,
+      });
     }
   } catch (e) {
     results.push({
@@ -243,7 +379,7 @@ async function main(argv) {
       verdict: 'inconclusive',
       evidence: { error: e.message },
       detail: 'manifest を取得/解析できませんでした',
-      howToFix: '--manifest でパスを渡すか、/manifest.webmanifest が配信されているか確認',
+      howToFix: '--manifest でパスを渡すか、manifest が配信されているか確認',
       limitation: LIMITATION,
     });
   }
@@ -282,6 +418,71 @@ async function main(argv) {
     }
   }
 
+  // 2b. ★theme_color と <meta name="theme-color"> が同じ値
+  if (manifest) {
+    const metas = extractThemeColors(html);
+    const th = judgeThemeColor(manifest, metas);
+    results.push({
+      probe: 'manifest の theme_color と meta theme-color が一致',
+      verdict: th.ok ? 'pass' : 'fail',
+      evidence: { manifest: th.manifestValue, meta: th.metaValues },
+      detail: th.ok
+        ? ''
+        : th.reason === 'meta-missing'
+          ? '<meta name="theme-color"> が HTML にありません。ブラウザ枠の色が manifest と別になります'
+          : th.reason === 'manifest-missing'
+            ? 'manifest に theme_color がありません。meta theme-color と値をそろえられません'
+            : `meta theme-color(${th.metaValues.join(', ')}) が manifest の theme_color(${th.manifestValue}) と違います`,
+      howToFix: 'manifest の theme_color と <meta name="theme-color" content="..."> を同じ値にする',
+      limitation: LIMITATION,
+    });
+
+    // 2c. ★アイコン: 192 と 512 の PNG があり、--url 指定時は配信されている
+    const ic = judgeIcons(manifest);
+    if (!ic.ok) {
+      results.push({
+        probe: 'manifest.icons に 192 と 512 の PNG がある',
+        verdict: 'fail',
+        evidence: { 192: ic.found[192], 512: ic.found[512] },
+        detail: 'manifest.icons に 192x192 と 512x512 の PNG が両方そろっていません（ホーム画面・起動画面のアイコンが作れません）',
+        howToFix: 'manifest.icons に sizes "192x192" と "512x512" の PNG（type image/png）を入れる',
+        limitation: LIMITATION,
+      });
+    } else if (url && manifestSource && /^https?:/i.test(manifestSource)) {
+      for (const want of [192, 512]) {
+        const src = ic.found[want];
+        try {
+          const r = await fetchStatus(new URL(src, manifestSource).toString());
+          const ok = r.status === 200 && r.type === 'image/png';
+          results.push({
+            probe: `アイコン ${want}x${want} が配信されている`,
+            verdict: ok ? 'pass' : 'fail',
+            evidence: { src, status: r.status, contentType: r.type },
+            detail: ok ? '' : `アイコン ${src} が HTTP ${r.status} / ${r.type || 'content-type なし'} です（200 かつ image/png が必要）`,
+            howToFix: 'アイコン PNG を配置し、manifest の src が 200 / image/png で返るようにする',
+            limitation: LIMITATION,
+          });
+        } catch (e) {
+          results.push({
+            probe: `アイコン ${want}x${want} が配信されている`,
+            verdict: 'inconclusive',
+            evidence: { src, error: e.message },
+            detail: 'アイコンを取得できず測れませんでした',
+            howToFix: 'ネットワークと URL を確認して再実行',
+            limitation: LIMITATION,
+          });
+        }
+      }
+    } else {
+      results.push({
+        probe: 'manifest.icons に 192 と 512 の PNG がある',
+        verdict: 'pass',
+        evidence: { 192: ic.found[192], 512: ic.found[512], 配信確認: 'ローカルのため宣言のみ' },
+        limitation: LIMITATION,
+      });
+    }
+  }
+
   // 3. startupImage が宣言されているか
   const images = extractStartupImages(html);
   results.push({
@@ -295,6 +496,20 @@ async function main(argv) {
   });
 
   if (images.length === 0) return results;
+
+  // 3b. ★起動画像の href にクエリ（?）が無いこと（固定名＋クエリは CDN に旧版が残る。内容ハッシュ名にする）
+  const queried = findQueryHrefs(images);
+  results.push({
+    probe: '起動画像の href にクエリ（?）が無い',
+    verdict: queried.length === 0 ? 'pass' : 'fail',
+    evidence: { 検査数: images.length, クエリ付き: queried.length, 例: queried.slice(0, 2) },
+    detail:
+      queried.length === 0
+        ? ''
+        : `起動画像 ${queried.length}/${images.length} 本の href に「?」があります（例: ${queried[0]}）。固定名＋クエリだと CDN に旧版が残る罠があります`,
+    howToFix: '起動画像のファイル名を内容ハッシュ入りにし、href から ?v= 等を外す（参照: surechigai docs/symptoms.md SG-02）',
+    limitation: LIMITATION,
+  });
 
   // 4-5. 画像が実在し、地色が正しく、★単色でないこと
   const target = images[0];
@@ -493,6 +708,110 @@ function selftest() {
       poison: () => {},
       restore: () => {},
       isRed: () => normalizeHex('#00427BFF') === '#00427B',
+    },
+    // ── manifest の宣言 ──
+    {
+      name: '★<link rel="manifest"> が無い HTML は null（宣言なし＝赤）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => extractManifestHref('<html><head><link rel="icon" href="/i.png"></head></html>') === null,
+    },
+    {
+      name: 'manifest の href を属性の順序・引用符に依らず拾える',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        extractManifestHref('<link rel="manifest" href="/m.json">') === '/m.json'
+        && extractManifestHref("<link href='/n.webmanifest' rel='manifest'>") === '/n.webmanifest'
+        && extractManifestHref('<link rel="manifest" crossorigin="use-credentials" href="/c.json" />') === '/c.json',
+    },
+    // ── theme-color ──
+    {
+      name: '★meta theme-color が無いと赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => judgeThemeColor({ theme_color: '#E2EDF7' }, []).ok === false,
+    },
+    {
+      name: '★manifest に theme_color が無いと赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => judgeThemeColor({}, ['#E2EDF7']).ok === false,
+    },
+    {
+      name: '★meta と manifest の theme-color が違うと赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => judgeThemeColor({ theme_color: '#E2EDF7' }, ['#00427B']).ok === false,
+    },
+    {
+      name: '★meta が2つあり片方だけ違っても赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => judgeThemeColor({ theme_color: '#E2EDF7' }, ['#E2EDF7', '#0D1117']).ok === false,
+    },
+    {
+      name: 'theme-color が同値なら緑（大文字小文字・# の有無・3桁を無視、複数 meta も全部一致なら緑）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeThemeColor({ theme_color: '#E2EDF7' }, ['#e2edf7']).ok === true
+        && judgeThemeColor({ theme_color: '#fff' }, ['FFFFFF', '#ffffff']).ok === true,
+    },
+    {
+      name: 'HTML から meta theme-color を media 付き複数宣言ごと拾える',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => {
+        const h = '<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)"><meta content="#EEEEEE" name="theme-color"><meta name="viewport" content="width=device-width">';
+        const got = extractThemeColors(h);
+        return got.length === 2 && got[0] === '#111111' && got[1] === '#EEEEEE';
+      },
+    },
+    // ── 起動画像の href のクエリ ──
+    {
+      name: '★起動画像の href に ?v= があると検出する（固定名＋クエリは CDN に旧版が残る）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        findQueryHrefs([{ href: '/splash/a.png?v=2' }, { href: '/splash/b.png' }]).length === 1,
+    },
+    {
+      name: 'クエリの無い（内容ハッシュ名の）href は検出しない',
+      poison: () => {},
+      restore: () => {},
+      isRed: () => findQueryHrefs([{ href: '/splash/a.3fa9c1.png' }, { href: '/splash/b.9b2e44.png' }]).length === 0,
+    },
+    // ── アイコン ──
+    {
+      name: '★512 の PNG が無いと赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeIcons({ icons: [{ src: '/i192.png', sizes: '192x192', type: 'image/png' }] }).ok === false,
+    },
+    {
+      name: '★192 の PNG が無いと赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeIcons({ icons: [{ src: '/i512.png', sizes: '512x512', type: 'image/png' }] }).ok === false,
+    },
+    {
+      name: '★192/512 が PNG でない（SVG だけ）と赤',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeIcons({ icons: [{ src: '/i.svg', sizes: '192x192 512x512', type: 'image/svg+xml' }] }).ok === false
+        && judgeIcons({}).ok === false,
+    },
+    {
+      name: '192 と 512 の PNG がそろえば緑（sizes 複数指定・type 省略で拡張子 .png も可）',
+      poison: () => {},
+      restore: () => {},
+      isRed: () =>
+        judgeIcons({ icons: [{ src: '/a.png', sizes: '192x192', type: 'image/png' }, { src: '/b.png?v=3', sizes: '512x512' }] }).ok === true
+        && judgeIcons({ icons: [{ src: '/c.png', sizes: '192x192 512x512', type: 'image/png' }] }).ok === true,
     },
   ];
 
