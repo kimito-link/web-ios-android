@@ -33,7 +33,7 @@ Apple/Google/Xの選択モーダルを経由せず直接X認可画面へ遷移�
 | `yukkuri-exosome.link` | MVP実装済み（全21ページ）。2026-09-29に複数cookie併置バグ修正。**2026-10-04にワンタップX適用**（`src/js/auth.js`の`openSignIn()`から呼ぶ・タップ起点のみ・下記注意6）。部品は金型の無改変コピーでcheck-drift登録済み |
 | `surechigai-romi.link` | 独自のゲストWebシェル判定に `__client_uat` を統合済み（`lib/clerk-public-routes.ts`）。2026-09-29に同じバグを修正 |
 | `kimito-Link-Voice` | `/try/`ページに適用済み（2026-09-29、PR #44） |
-| `kimitolink-linktree`（本家） | 2026-10-05 PR #381 で全ページに適用（`lib/auth-mode/head-snippet.html`＝`head-snippet.html.example` のコピーを `app/layout.tsx` の `<head>` に `lib/auth-mode-head-script.ts` でインライン展開、`app/auth-mode.css`＝`auth-mode.css.example` のコピー）。裏取りは `components/AuthModeSync.tsx`。★自インスタンス判定（`data-auth-cookie-suffix`、下記④）は金型側で 2026-10-05 に追加、本家への配布は未着手 |
+| `kimitolink-linktree`（本家） | 2026-10-05 PR #381 で全ページに適用（`lib/auth-mode/head-snippet.html`＝`head-snippet.html.example` のコピーを `app/layout.tsx` の `<head>` に `lib/auth-mode-head-script.ts` でインライン展開、`app/auth-mode.css`＝`auth-mode.css.example` のコピー）。裏取りは `components/AuthModeSync.tsx`。★自インスタンス判定（`data-auth-cookie-suffix`、下記④）は金型側で 2026-10-05 に追加し、同日 PR #384 で本家へ配布済み（13 本が正本とバイト一致。check-drift の PAIRS「…（auth-mode）」で見張る） |
 
 ### ②Xワンタップログイン
 

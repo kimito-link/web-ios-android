@@ -155,7 +155,17 @@ describe("接尾辞の計算（Clerk 公式 SDK @clerk/shared getCookieSuffix �
   });
 
   it("鍵が未設定なら undefined（属性を付けず従来判定に落ちる）", () => {
-    expect(getAuthCookieSuffix(undefined)).toBeUndefined();
+    // ★引数に undefined を渡すと JS の既定引数が働き process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY を読む。
+    //   CI のように env に鍵がある環境では「未設定」を再現できないので、この検査の間だけ env を外す
+    //   （2026-10-05 本家 CI で実際に赤になった。金型 auth-mode-head-script.test.ts.example も同じ直しが要る）。
+    const saved = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    try {
+      expect(getAuthCookieSuffix()).toBeUndefined();
+      expect(getAuthCookieSuffix(undefined)).toBeUndefined();
+    } finally {
+      if (saved !== undefined) process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = saved;
+    }
     expect(getAuthCookieSuffix("")).toBeUndefined();
     expect(getAuthCookieSuffix("pk_test_abc")).toBe(computeClerkCookieSuffix("pk_test_abc"));
   });

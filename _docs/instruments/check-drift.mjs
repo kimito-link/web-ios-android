@@ -544,6 +544,31 @@ export const PAIRS = [
       resolve(GH_ROOT, 'kimito-Link-Voice/js/modules/kimito-dashboard-link.js')
     ]
   },
+  /*
+   * ★2026-10-05 追加: ログイン画面のちらつきゼロ契約（templates/web/auth-mode/README.md ④、
+   * _docs/DESIGN-signin-no-flicker-2026-10-05.md）。本家 kimitolink-linktree で確立した実装を
+   * 金型化（PR #30）し、本家を金型版に揃えた（kimitolink PR #384）。13 本とも正本↔本家がバイト一致。
+   * 本家固有の AuthPageShell / auth-brand.config / clerk-localization は責務が別なので登録しない。
+   */
+  ...[
+    ['ペイント前の認証モード確定（head スニペット）', 'head-snippet.html.example', 'lib/auth-mode/head-snippet.html'],
+    ['ペイント前の認証モード確定（CSS 契約）', 'auth-mode.css.example', 'app/auth-mode.css'],
+    ['認証モードの裏取り（純関数）', 'nextjs/auth-mode.ts.example', 'lib/auth-mode.ts'],
+    ['認証モードの裏取り（純関数テスト）', 'nextjs/auth-mode.test.ts.example', 'lib/auth-mode.test.ts'],
+    ['認証モードの裏取り（Clerk 読込後）', 'nextjs/AuthModeSync.tsx.example', 'components/AuthModeSync.tsx'],
+    ['Clerk JS 版固定', 'nextjs/clerk-script-versions.ts.example', 'lib/clerk-script-versions.ts'],
+    ['Clerk JS 版固定（SDK 整合テスト）', 'nextjs/clerk-script-versions.test.ts.example', 'lib/clerk-script-versions.test.ts'],
+    ['head スニペットの Next.js 埋め込み', 'nextjs/auth-mode-head-script.ts.example', 'lib/auth-mode-head-script.ts'],
+    ['head スニペットの Next.js 埋め込み（テスト）', 'nextjs/auth-mode-head-script.test.ts.example', 'lib/auth-mode-head-script.test.ts'],
+    ['Clerk 同寸プレースホルダ', 'nextjs/ClerkMountFallback.tsx.example', 'components/ClerkMountFallback.tsx'],
+    ['ブラウザセッション注意書き（SSR 先出し）', 'nextjs/AuthBrowserSessionNotice.tsx.example', 'components/AuthBrowserSessionNotice.tsx'],
+    ['ログイン画面 初回描画の契約テスト', 'nextjs/AuthPageShell.first-paint.test.tsx.example', 'components/AuthPageShell.first-paint.test.tsx'],
+    ['ログイン画面 ちらつきゼロ e2e', 'nextjs/e2e/sign-in-no-flicker.spec.ts.example', 'e2e/sign-in-no-flicker.spec.ts']
+  ].map(([label, tpl, copy]) => ({
+    label: `${label}（auth-mode）`,
+    canonical: resolve(KIT_ROOT, 'templates/web/auth-mode', tpl),
+    copies: [resolve(GH_ROOT, 'kimitolink-linktree', copy)]
+  })),
   {
     label: '本家マイページ導線（React）',
     canonical: resolve(KIT_ROOT, 'templates/web/auth-mode/nextjs/KimitoDashboardLink.tsx.example'),
