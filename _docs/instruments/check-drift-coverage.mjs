@@ -160,6 +160,20 @@ export const EXCLUDED = Object.freeze([
   },
   {
     /*
+     * tsuioku-no-kirameki.com/scripts/record-improvement.mjs
+     *
+     * ★2026-10-05 KEEP_SEPARATE（check-drift.mjs「進化台帳（記録の口）」から外した）。
+     *   上の check-improvement と同じ台帳世代の問題: 台帳ライブラリが旧世代
+     *   （src/lib/improvementLedger.js／improvementHistory.js を静的 import）で、正本の
+     *   scripts/improvement-history.mjs・improvement-metrics.mjs 決め打ち（無ければ exit 2）と
+     *   噛み合わない。gate-selftest（audit-gates --json の rows 集計）は正本の auto 種別で
+     *   表現できない。揃えるなら台帳3点ごと移行する別作業。詳細は check-drift.mjs 側のコメント。
+     */
+    match: (p) => /tsuioku-no-kirameki\.com[\\/]scripts[\\/]record-improvement\.mjs$/.test(p),
+    why: '★別実装（台帳ライブラリが旧世代・正本の台帳パス決め打ちと噛み合わない）'
+  },
+  {
+    /*
      * soushin-suggest.link/scripts/generate-shindan-version.mjs
      *
      * ★2026-10-05 KEEP_SEPARATE（check-drift.mjs「本体の診断・進化進捗ページ（生成器）」から外した）。
