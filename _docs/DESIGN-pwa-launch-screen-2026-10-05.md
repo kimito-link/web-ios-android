@@ -1,6 +1,6 @@
 # PWA の起動画面は「地色1色をそろえる」
 
-> **今の到達点: 実装・本番検証済み（5サービス: surechigai / exosome / voice / doin / kimito.link）／Android 実機で5サービスとも起動→本編の色の飛び無しを実測／iOS 実機は未測定／金型の検査も反転済み（2026-10-05）**
+> **今の到達点: 実装・本番検証済み（5サービス: surechigai / exosome / voice / doin / kimito.link）／Android 実機で5サービスとも起動→本編の色の飛び無しを実測／iOS 実機は未測定／theme_color も地色に統一（5サービス）／金型の検査も反転済み（2026-10-05）**
 >
 > 出典: `surechigai-romi.link`（PR #61、2026-10-05 マージ・デプロイ済み）を起点に、同日 5 サービスへ展開（PR は「適用の仕方」の表）。
 > 入口はこのファイル。ai-hub 側の短い版は `../ai-hub/kb/pwa-launch-screen-one-color.md`、
@@ -31,6 +31,14 @@
    旧版が残る。kimito.link は固定名のまま紺 → 白に変えたため、ハッシュ名化（PR #376）で対処した。
 6. **初回だけ出る画面（オンボーディング等）も、起動画面と同じ地色の源を使う**。doin は起動画面の直後に出るのが
    オンボーディングだったので、`#0A1628` の直書き 6 か所を `themeColors.background.dark` に置き換えた。
+7. **`theme_color`（ステータスバーの色）も、本体の地色（`background_color`）と同じ1色にする**（本人指示 2026-10-05）。
+   Android の WebAPK では OS 起動画面のステータスバーが `theme_color` で塗られ、Chrome の窓に切り替わる瞬間に
+   一度明色になってから戻る往復が見えた。`theme_color` を地色にすると往復が消える。
+   **ブランド色のステータスバーは捨てる判断**。実装:
+   - surechigai PR #71（#00427B → #E2EDF7。meta は `palette.kimitoBlueSoft` を参照）
+   - exosome PR #21（#c9899a → #FFFAF3。17 ページの静的 meta と `common.js`・生成元・`setup-new-app` の `BASE_COLOR`）
+   - kimito.link PR #379（`PWA_THEME_COLOR` を廃止し `PWA_LAUNCH_COLOR` #FFFFFF に一本化。TWA の `themeColor` も白。次回の Play ビルドから反映）
+   - voice・doin は元から同色
 
 ## 根拠
 
@@ -80,6 +88,18 @@ Android の OS 起動画面は `name`＋`background_color`＋`icons` から作�
 
 iOS 実機は未測定。
 
+### ステータスバーの色の往復（解消済み）
+
+往復が見えていた時点（`theme_color` を地色と別の色にしていた状態）: WebAPK の OS 起動画面ではステータスバーが
+`theme_color` で塗られ、Chrome の窓に切り替わった瞬間に一度明色になり、ページの `theme-color` が効いてから元に戻った。
+exosome はピンク → 明色 → ピンク、surechigai は紺 → 明色 → 紺、kimito.link も同じ構造。
+voice は `theme_color` が明色なので見えなかった。
+
+`theme_color` を地色と同じ1色にして往復が消えた。端末は同じ moto g64y 5G で、ステータスバー帯（y 0〜4%）の最頻色を
+フレームごとに出した。surechigai・exosome・kimito.link の3サイトとも、Chrome の窓が出て以降、地色から各チャンネル差 >12 の
+フレームは 0 枚（exosome は #FCF9F0 で終始一定、surechigai は #E0ECF5、kimito.link は #FCFCFC）。本体領域の飛びも再発していない。
+キット検査 `check-pwa-splash` も3サイトとも合格（根拠 10 件。`theme_color` と meta の `theme-color` の一致を含む）。
+
 ## 適用の仕方
 
 - `manifest.background_color` ＝ アプリ本体の地色 ＝（自作ベールがあれば）ベールの色。
@@ -92,7 +112,7 @@ iOS 実機は未測定。
   | exosome | #FFFAF3 | `style.css` の `--color-bg`（`html`/`body` がそれを使う） | #19 |
   | voice | #FFF6EE | 各ページ CSS の `--day` | #57, #58 |
   | doin | #0D1117 | `theme.config.cjs` の `themeColors.background.dark`（オンボーディング画面も同じ源） | #69 |
-  | kimito.link | #FFFFFF | body の `bg-white`。起動画像は白地＋青ロゴに作り直し。`theme_color` は別定数 #00427B | #374, #376 |
+  | kimito.link | #FFFFFF | body の `bg-white`。起動画像は白地＋青ロゴに作り直し。`theme_color` も #FFFFFF（`PWA_LAUNCH_COLOR`） | #374, #376, #379 |
 
 - 5 サービス共通の型:
   - `manifest.background_color` ＝ 本体の地色
@@ -115,17 +135,13 @@ iOS で `apple-touch-startup-image` が出ない原因は**未確定**。iPhone 
 
 認証済みで開いたときの待機画面も、契約テストでの確認のみで実測していない。
 
-### ステータスバーの色の往復（本文の地色とは別件・未着手）
-
-WebAPK の OS 起動画面ではステータスバーが `theme_color` で塗られる。Chrome の窓に切り替わった瞬間に一度明色になり、
-ページの `theme-color` が効いてから元に戻る。exosome はピンク → 明色 → ピンク、surechigai は紺 → 明色 → 紺、
-kimito.link も同じ構造。voice は `theme_color` が明色なので見えない。
-`theme_color` を本体の地色に寄せれば消えるが、ブランド色のステータスバーを捨てる判断になるため未着手。
+ステータスバーの色の往復は解消済み（判断 7 と「根拠」の該当小節）。
 
 ## 他の起動画面の例
 
 本家 `kimito.link` は、以前は起動画像が濃紺 #00427B の地＋ロゴで、次の本編が白っぽく、紺 → 白の飛びがあった。
-2026-10-05 に白地＋青ロゴ・`background_color` #FFFFFF に揃えた（PR #374, #376。`theme_color` は #00427B のまま）。
+2026-10-05 に白地＋青ロゴ・`background_color` #FFFFFF に揃えた（PR #374, #376）。
+`theme_color` も同日 #00427B から白に統一した（PR #379、判断 7）。
 
 ## 測り方
 
