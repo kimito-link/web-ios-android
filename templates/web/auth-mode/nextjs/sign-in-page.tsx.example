@@ -10,12 +10,21 @@
  *     （kimito が db0032a で実際に壊し、eda1133 で標準に戻して復旧した）。
  *
  * ★catch-all（[[...sign-in]]）が必須。Clerk が /sign-in/sso-callback を使うため。
+ *
+ * ★ちらつきゼロ契約（../README.md「ログイン画面のちらつきゼロ契約」、2026-10-05 本家 PR #381）:
+ *   - `<SignIn fallback={<ClerkMountFallback/>}/>`: Clerk 本体が描かれるまで**同寸**のプレースホルダを置く
+ *     （置き換わっても下が動かない）
+ *   - `noticesAboveCard={<AuthBrowserSessionNotice/>}`: 注意書きはサーバーで最初から描き、
+ *     出し分けは CSS（.guest-only）に任せる（Clerk 起動後に挿入して押し下げない）
+ *   - 到着時に全画面を被せる intro は置かない（handoffOverlay はボタン押下後にだけ描くものに限る）
  */
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
 import { AutoAdvanceToX } from "@/components/AutoAdvanceToX";
+import { AuthBrowserSessionNotice } from "@/components/AuthBrowserSessionNotice";
 import { AuthPageIntro } from "@/components/AuthPageIntro";
 import { AuthPageShell } from "@/components/AuthPageShell";
+import { ClerkMountFallback } from "@/components/ClerkMountFallback";
 import { isClerkSsoCallback } from "@/lib/auth-routes";
 
 export const metadata: Metadata = {
@@ -33,15 +42,21 @@ export default async function SignInPage({ params }: SignInPageProps) {
 
   // ★SSO コールバック中は装飾を出さない（戻り処理の邪魔をしない）。
   if (isClerkSsoCallback(segments)) {
-    return <SignIn />;
+    return <SignIn fallback={<ClerkMountFallback mode="sign-in" />} />;
   }
 
   return (
     // ★intro を渡さないと Clerk カードだけが中央に出て「寂しい」画面になる。
-    <AuthPageShell variant="sign-in" intro={<AuthPageIntro />}>
+    <AuthPageShell
+      variant="sign-in"
+      intro={<AuthPageIntro />}
+      // ★注意書きはカードの直上に、最初の描画から置く（ちらつきゼロ契約）。
+      noticesAboveCard={<AuthBrowserSessionNotice />}
+    >
       {/* ★?auto=x のときだけ発火して X ボタンへ click を送る。 */}
       <AutoAdvanceToX />
-      <SignIn />
+      {/* ★fallback は本物と同寸のプレースホルダ（くるくるにしない。ちらつきゼロ契約）。 */}
+      <SignIn fallback={<ClerkMountFallback mode="sign-in" />} />
     </AuthPageShell>
   );
 }

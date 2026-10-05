@@ -13,6 +13,9 @@ import { authBrandConfig } from "@/lib/auth-brand.config";
 //   （"Sign in to ◯◯"）と素の見た目になる。要 `@clerk/localizations`（pnpm add）。
 import { brandJaJP } from "@/lib/clerk-localization";
 import { brandClerkAppearance } from "@/lib/clerk-appearance";
+// ★<html data-auth> の裏取り（ちらつきゼロ契約、../README.md）。ペイント前の先出しは
+//   app/layout.tsx の <head> スニペット（lib/auth-mode-head-script.ts）が行う。
+import { AuthModeSync } from "@/components/AuthModeSync";
 
 const {
   afterAuthPath,
@@ -62,7 +65,12 @@ export default function AuthLayout({
       afterSignOutUrl={afterSignOutPath}
       localization={brandJaJP}
       appearance={brandClerkAppearance}
+      // ※ clerk-js / @clerk/ui の実バージョン固定（タグ @6/@1 → 実バージョンの 307 往復を無くす）は
+      //   next.config.ts の env（NEXT_PUBLIC_CLERK_JS_VERSION / NEXT_PUBLIC_CLERK_UI_VERSION）で渡す。
+      //   値と更新手順は lib/clerk-script-versions.ts。@clerk/nextjs 7.x の公開 prop には無く env 経路のみ。
     >
+      {/* <html data-auth> の裏取り: Clerk 読込後に本当のセッション状態で上書き（描画は無し）。 */}
+      <AuthModeSync />
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>

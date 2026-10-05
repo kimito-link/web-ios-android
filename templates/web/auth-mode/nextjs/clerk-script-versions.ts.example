@@ -1,0 +1,42 @@
+/**
+ * lib/clerk-script-versions.ts — Clerk のフロント資産（clerk-js / @clerk/ui）のバージョン固定（金型）。
+ *
+ * ★出典: kimitolink-linktree/lib/clerk-script-versions.ts（2026-10-05 PR #381）。
+ *   値は自サービスの FAPI で下のコマンドを叩いて取り直す（本家の値をそのまま使ってもよい。同じ Clerk のタグが解決する先）。
+ *
+ * ■ なぜ固定するか（本家 2026-10-05 実測）
+ *   `@clerk/nextjs` 7.x は既定でタグ指定の URL
+ *   `https://<FAPI>/npm/@clerk/clerk-js@6/dist/clerk.browser.js`（@clerk/ui は `@1`）を `<script async>`
+ *   として出す。FAPI はタグを実バージョンへ解決するために 307 を返すので、3G 相当（RTT 150ms）で
+ *   往復 2 本ぶん（clerk-js と ui で各 150ms×2）だけ本物のカードが出るのが遅れ、白い待ち時間が延びる。
+ *   実バージョンを書けば 307 が消え、HTML を受け取った瞬間から本体のダウンロードが始まる
+ *   （本家の after 計測: 3xx が `/dashboard/`→`/sign-in/` の 1 回だけになり、clerk-js / @clerk/ui の 307 が消えた）。
+ *
+ * ■ 値の出典（本番 FAPI の 307 Location を実測。更新時も同じコマンドで確認する）
+ *   curl -sI https://clerk.kimito.link/npm/@clerk/clerk-js@6/dist/clerk.browser.js | grep -i location
+ *     → .../npm/@clerk/clerk-js@6.36.0/dist/clerk.browser.js
+ *   curl -sI https://clerk.kimito.link/npm/@clerk/ui@1/dist/ui.browser.js | grep -i location
+ *     → .../npm/@clerk/ui@1.38.0/dist/ui.browser.js
+ *   （自サービスの FAPI ドメインは auth-brand.config の clerkFrontendApiDomain）
+ *
+ * ★固定の代償: `@6` タグは Clerk 側の更新に自動で追従するが、固定すると追従しない。
+ *   `@clerk/nextjs` を上げたとき・Clerk から不具合修正の案内があったときは、上のコマンドで
+ *   最新の実バージョンを取り直してここを更新する。メジャー（6 / 1）が SDK の想定と食い違ったら
+ *   `clerk-script-versions.test.ts` が赤になる。
+ *
+ * ■ 渡し方（next.config.ts）
+ *   `@clerk/nextjs` 7.x の `ClerkProvider` に公開 prop は無く、環境変数 `NEXT_PUBLIC_CLERK_JS_VERSION` /
+ *   `NEXT_PUBLIC_CLERK_UI_VERSION` が唯一の経路（node_modules/@clerk/nextjs/dist/esm/utils/mergeNextClerkPropsWithEnv.js、
+ *   @clerk/nextjs 7.9.4 で確認）。env ではなくコードに書くのは、値が git で追えて PR レビューに乗るようにするため。
+ *
+ *     import { CLERK_JS_VERSION, CLERK_UI_VERSION } from "./lib/clerk-script-versions";
+ *     const nextConfig: NextConfig = {
+ *       env: {
+ *         NEXT_PUBLIC_CLERK_JS_VERSION: CLERK_JS_VERSION,
+ *         NEXT_PUBLIC_CLERK_UI_VERSION: CLERK_UI_VERSION,
+ *       },
+ *       …
+ *     };
+ */
+export const CLERK_JS_VERSION = "6.36.0";
+export const CLERK_UI_VERSION = "1.38.0";

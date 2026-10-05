@@ -7,16 +7,39 @@
 // フラグ無し、最初の1件のみ）を使っていたため、接尾辞付きの'0'が先に出現すると
 // 実際のログイン済み値を見ずにゲスト誤判定していた。
 //
-// head-snippet.html.example / auth-mode.js 相当の判定ロジックと完全に同一の
-// 正規表現を再現し、本番で実際に観測したcookie並びを含む複数シナリオで
-// 正しく判定できることを固定する。
+// ★2026-10-05 追加（自インスタンス判定）: 本家 kimito.link で「姉妹サービスだけに
+// ログイン中」の人が /sign-in/ に来ると、親ドメイン共有の別インスタンスの
+// __client_uat が見えて member と先出しし、Clerk 読込後に guest へ戻る（1回切り替わる）
+// のを観測した。<html data-auth-cookie-suffix="…"> を付けると自インスタンスの
+// 接尾辞付き cookie だけを見る。接尾辞の作り方は head-snippet.html.example の
+// コメント（Clerk 公式 SDK @clerk/shared getCookieSuffix と同一）。
+//
+// 2 段で固定する:
+//   A. head-snippet.html.example と同一の判定ロジック（JS 関数に写したもの）を複数シナリオで検査
+//   B. 金型ファイル本体（<script> の中身）を偽の document で実行し、A と同じ結果になることを検査
+//      ＝「テストの写し」と「本番に出る文字列」が食い違っていないか（ソースドリフト）も見る
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+// ★コピー先で自リポの配置を足す（最初に見つかったものを使う。無ければ B はスキップ）。
+const SNIPPET_CANDIDATES = [
+  resolve(HERE, 'head-snippet.html.example'), // キット内
+  resolve(HERE, '../lib/auth-mode/head-snippet.html'), // Next.js 配布先（本家 kimitolink-linktree の置き場）
+  resolve(HERE, '../src/partials/auth-mode-head.html'), // 静的サイト配布先の例
+];
 
 // head-snippet.html.example / 各プロジェクトのauth-mode.js相当と同一実装（exec-loop版）。
-// ロジックが変わったら、この関数もソース側の実装を見て同期させること（PAIRS対象）。
-function hasLiveClerkCookie(cookieString) {
-  const re = /(?:^|;\s*)__client_uat[^=]*=([^;]*)/g;
+// ロジックが変わったら、この関数もソース側の実装を見て同期させること（下の B が食い違いを検出する）。
+function hasLiveClerkCookie(cookieString, suffix) {
+  const re =
+    suffix && /^[A-Za-z0-9_-]{1,16}$/.test(suffix)
+      ? new RegExp('(?:^|;\\s*)__client_uat_' + suffix + '=([^;]*)', 'g')
+      : /(?:^|;\s*)__client_uat[^=]*=([^;]*)/g;
   let m;
   while ((m = re.exec(cookieString))) {
     if (m[1] && m[1] !== '0') return true;
@@ -24,55 +47,129 @@ function hasLiveClerkCookie(cookieString) {
   return false;
 }
 
+// ── B 用: 金型本体の <script> を、DOM 無しの偽 document で実行する ──
+function loadSnippetScript() {
+  const path = SNIPPET_CANDIDATES.find((p) => existsSync(p));
+  if (!path) return null;
+  const html = readFileSync(path, 'utf8');
+  const m = html.match(/<script>([\s\S]*?)<\/script>/);
+  if (!m || !m[1].trim()) throw new Error(`head snippet に <script> が無い: ${path}`);
+  return m[1];
+}
+
+function runSnippet(script, cookieString, suffix) {
+  const attrs = suffix == null ? {} : { 'data-auth-cookie-suffix': suffix };
+  const fakeDocument = {
+    cookie: cookieString,
+    documentElement: {
+      getAttribute: (k) => (k in attrs ? attrs[k] : null),
+      setAttribute: (k, v) => {
+        attrs[k] = v;
+      },
+    },
+  };
+  new Function('document', script)(fakeDocument);
+  return attrs['data-auth'];
+}
+
+const SNIPPET = loadSnippetScript();
+
+/** A と B を同時に検査するヘルパ（B は金型が見つかったときだけ）。 */
+function expectMode(cookieString, suffix, expectedMember) {
+  assert.equal(hasLiveClerkCookie(cookieString, suffix), expectedMember, `A: "${cookieString}" suffix=${suffix}`);
+  if (SNIPPET) {
+    assert.equal(
+      runSnippet(SNIPPET, cookieString, suffix),
+      expectedMember ? 'member' : 'guest',
+      `B(金型本体): "${cookieString}" suffix=${suffix}`
+    );
+  }
+}
+
+// ───────────── 従来判定（suffix 無し＝後方互換） ─────────────
+
 test('cookieが無ければゲスト扱い', () => {
-  assert.equal(hasLiveClerkCookie(''), false);
+  expectMode('', undefined, false);
 });
 
 test('__client_uat=0 のみ（未ログイン）はゲスト扱い', () => {
-  assert.equal(hasLiveClerkCookie('__client_uat=0'), false);
+  expectMode('__client_uat=0', undefined, false);
 });
 
 test('__client_uat が0以外ならログイン済み扱い', () => {
-  assert.equal(hasLiveClerkCookie('__client_uat=1234567890'), true);
+  expectMode('__client_uat=1234567890', undefined, true);
 });
 
 test('★実損の再現: 接尾辞付きcookieが先・値0、接尾辞無しが後・値ありでもログイン済みと判定する', () => {
   // 本番で実際に観測した並び（surechigai-romi.link / yukkuri-exosome.link, 2026-09-29）
-  assert.equal(
-    hasLiveClerkCookie('__client_uat_ZGVu8CMk=0; __client_uat=1234567890'),
-    true
-  );
+  expectMode('__client_uat_ZGVu8CMk=0; __client_uat=1234567890', undefined, true);
 });
 
 test('接尾辞付き・接尾辞無し、両方とも0ならゲスト扱い', () => {
-  assert.equal(
-    hasLiveClerkCookie('__client_uat_ZGVu8CMk=0; __client_uat=0'),
-    false
-  );
+  expectMode('__client_uat_ZGVu8CMk=0; __client_uat=0', undefined, false);
 });
 
 test('接尾辞付きのみが0以外でもログイン済み扱い（接尾辞無しが無い場合）', () => {
-  assert.equal(hasLiveClerkCookie('__client_uat_ZGVu8CMk=9876543210'), true);
+  expectMode('__client_uat_ZGVu8CMk=9876543210', undefined, true);
 });
 
 test('3つ以上のClerk系cookieが混在しても、いずれか1つが0以外ならログイン済み扱い', () => {
-  assert.equal(
-    hasLiveClerkCookie(
-      '__client_uat_aaa=0; __client_uat_bbb=0; __client_uat=0; __client_uat_ccc=5555555555'
-    ),
-    true
-  );
+  expectMode('__client_uat_aaa=0; __client_uat_bbb=0; __client_uat=0; __client_uat_ccc=5555555555', undefined, true);
 });
 
 test('無関係な他のcookieが混在していても正しく判定する', () => {
-  assert.equal(
-    hasLiveClerkCookie('theme=dark; __client_uat_ZGVu8CMk=0; __client_uat=1234567890; lang=ja'),
-    true
-  );
+  expectMode('theme=dark; __client_uat_ZGVu8CMk=0; __client_uat=1234567890; lang=ja', undefined, true);
 });
 
 test('__client_uatという文字列を含むが無関係な名前のcookieには反応しない', () => {
   // __client_uatxyz=... のような偶然の部分一致ではなく、
   // __client_uat[^=]* という接尾辞パターンに一致するもの限定
-  assert.equal(hasLiveClerkCookie('some_other_cookie=1234567890'), false);
+  expectMode('some_other_cookie=1234567890', undefined, false);
+});
+
+// ───────────── 自インスタンス判定（data-auth-cookie-suffix あり） ─────────────
+
+test('★suffix指定: 姉妹だけにログイン中（自分の接尾辞は0・接尾辞無しは値あり）はゲスト扱い', () => {
+  // 本家 kimito.link で観測した誤判定の形（2026-10-05）。従来判定なら member になる並び。
+  expectMode('__client_uat_ZGVu8CMk=0; __client_uat=1234567890', 'ZGVu8CMk', false);
+  // 従来判定（suffix 無し）では member のまま＝既存サイトの挙動は変えていない
+  expectMode('__client_uat_ZGVu8CMk=0; __client_uat=1234567890', undefined, true);
+});
+
+test('suffix指定: 自分の接尾辞付きが0以外ならログイン済み扱い（接尾辞無しが0でも）', () => {
+  expectMode('__client_uat=0; __client_uat_ZGVu8CMk=1234567890', 'ZGVu8CMk', true);
+});
+
+test('suffix指定: 自分の接尾辞付きcookieが無ければゲスト扱い（接尾辞無しの値は見ない）', () => {
+  expectMode('__client_uat=1234567890', 'ZGVu8CMk', false);
+  expectMode('__client_uat_other1=1234567890; __client_uat=1234567890', 'ZGVu8CMk', false);
+});
+
+test('suffix指定: 接尾辞が前方一致するだけの別cookieには反応しない', () => {
+  // __client_uat_ZGVu8CMkXX は別インスタンス。`=` が接尾辞の直後に来るものだけ見る
+  expectMode('__client_uat_ZGVu8CMkXX=1234567890', 'ZGVu8CMk', false);
+});
+
+test('suffix指定: 他のcookieが混在していても自分の接尾辞だけで判定する', () => {
+  expectMode('theme=dark; __client_uat_aaa=5; __client_uat_ZGVu8CMk=1700000000; lang=ja', 'ZGVu8CMk', true);
+  expectMode('theme=dark; __client_uat_aaa=5; __client_uat_ZGVu8CMk=0; lang=ja', 'ZGVu8CMk', false);
+});
+
+test('suffix指定: 形式に合わない値（空・記号・長すぎ）は無視して従来判定に落ちる', () => {
+  for (const bad of ['', 'a.b', 'has space', 'x'.repeat(17), '*']) {
+    expectMode('__client_uat_ZGVu8CMk=0; __client_uat=1234567890', bad, true);
+  }
+});
+
+// ───────────── B の前提（金型本体が見つかっているか） ─────────────
+
+test('金型本体（head-snippet）が見つかり、exec-loop（gフラグ）で全件走査している', (t) => {
+  if (!SNIPPET) {
+    t.skip('head-snippet が見つからない（SNIPPET_CANDIDATES に自リポの配置を足す）');
+    return;
+  }
+  assert.match(SNIPPET, /__client_uat\[\^=\]\*=\(\[\^;\]\*\)\/g/, '従来判定の正規表現（gフラグ付き）');
+  assert.match(SNIPPET, /re\.exec\(document\.cookie\)/, 'exec-loop で全件走査');
+  assert.match(SNIPPET, /data-auth-cookie-suffix/, '自インスタンス判定の属性名');
+  assert.match(SNIPPET, /setAttribute\('data-auth'/);
 });

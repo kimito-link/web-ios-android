@@ -1,0 +1,36 @@
+"use client";
+
+import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { resolveAuthMode } from "@/lib/auth-mode";
+
+/**
+ * components/AuthModeSync.tsx — `<html data-auth>` の「裏取り係」（金型）。
+ *
+ * ★出典: kimitolink-linktree/components/AuthModeSync.tsx（2026-10-05 PR #381）。無改変で使う（drift 検査対象）。
+ * ★置き場: app/(auth)/layout.tsx の `<ClerkProvider>` 直下に `<AuthModeSync />` を 1 つ置く
+ *   （`useUser()` を使うので ClerkProvider の内側であること）。
+ *
+ * ペイント前の判定（`lib/auth-mode-head-script.ts`、`app/layout.tsx` の `<head>`）は
+ * cookie の有無だけを見た先出しなので、Clerk が読み込まれて本当のセッション状態が分かったら
+ * ここで `data-auth` を上書きする。表示の出し分けは CSS（`.guest-only` / `.member-only`、
+ * `app/auth-mode.css`）に任せ、このコンポーネントは DOM に何も描かない。
+ *
+ * 通常は先出しと一致するので何も変わらない。変わるのは「cookie は残っているが
+ * セッションは切れていた」等の例外だけで、その場合は Clerk 確定後に 1 回だけ切り替わる。
+ * ★「姉妹サービスだけにログイン中」で毎回 1 回切り替わるなら、先出し側に自インスタンスの
+ *   接尾辞（`<html data-auth-cookie-suffix>`、lib/auth-mode-head-script.ts の getAuthCookieSuffix）を渡す。
+ */
+export function AuthModeSync() {
+  const { isLoaded, isSignedIn } = useUser();
+
+  useEffect(() => {
+    const mode = resolveAuthMode({ isLoaded, isSignedIn });
+    if (!mode) return;
+    if (document.documentElement.getAttribute("data-auth") !== mode) {
+      document.documentElement.setAttribute("data-auth", mode);
+    }
+  }, [isLoaded, isSignedIn]);
+
+  return null;
+}

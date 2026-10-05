@@ -92,9 +92,21 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
 | `auth-guide-page.tsx.example` | `/auth/kimito-link` ページ | **無改変**（drift 検査対象） |
 | `kimito-link-redirect.test.ts.example` | 純関数のテスト（相対 import を自リポの配置に合わせる） | **無改変**（drift 検査対象） |
 | `KimitoDashboardLink.tsx.example` | ログイン中だけ本家マイページ `https://kimito.link/dashboard/` へのリンクを出す（素の React。Clerk 状態は props で受ける。Expo でも使える。2026-10-05 追加、詳細は `../README.md` ③） | **無改変**（drift 検査対象） |
+| **ログイン画面のちらつきゼロ（`../README.md` ④、2026-10-05 追加。出典: 本家 PR #381）** | | |
+| `auth-mode-head-script.ts.example` | `lib/auth-mode/head-snippet.html`（`../head-snippet.html.example` のコピー）から `<script>` を取り出し `app/layout.tsx` の `<head>` へ展開（fail-closed）。`getAuthCookieSuffix()` で自インスタンス判定の接尾辞も作る | **無改変**（drift 検査対象） |
+| `auth-mode-head-script.test.ts.example` | 実物のスクリプト文字列を jsdom で実行する契約テスト（従来判定・自インスタンス判定・接尾辞計算が Clerk 公式 SDK と同じ値） | **無改変**（drift 検査対象） |
+| `auth-mode.ts.example` / `auth-mode.test.ts.example` | `resolveAuthMode`（Clerk の `useUser` 状態 → `data-auth` の値。純関数）とテスト | **無改変**（drift 検査対象） |
+| `AuthModeSync.tsx.example` | Clerk 読込後に `<html data-auth>` を裏取りして上書き（描画無し）。`auth-layout` の `ClerkProvider` 直下 | **無改変**（drift 検査対象） |
+| `ClerkMountFallback.tsx.example` | `<SignIn fallback={…}/>` に入れる**同寸**プレースホルダ。箱モデルは `CLERK_CARD_BOX_MODEL`、ボタン構成・ロゴ・文言は `auth-brand.config` / `clerk-localization` から | **無改変**（設定で変える） |
+| `AuthBrowserSessionNotice.tsx.example` | 未ログイン向け注意書き。SSR で描き `.guest-only` で出し分け。文言は `auth-brand.config.browserSessionNotice` | **無改変**（設定で変える） |
+| `clerk-script-versions.ts.example` / `.test.ts.example` | clerk-js / @clerk/ui の実バージョン固定（`next.config.ts` の env へ）とSDK メジャーとの整合テスト | 値は自 FAPI で取り直す（コメントのコマンド） |
+| `AuthPageShell.first-paint.test.tsx.example` | 初回描画（Clerk 未読込）の契約テスト（全画面オーバーレイ無し／注意書きが SSR 時点で存在／同寸プレースホルダが最初から居る） | **無改変**（drift 検査対象） |
+| `e2e/sign-in-no-flicker.spec.ts.example` | Playwright: 本物の Clerk カードとプレースホルダの高さ一致 ±1px・オーバーレイが一度も出ない。先頭の定数（本番プロバイダ数）だけ合わせる | 先頭定数のみ |
 
-★「無改変」の4ファイルは `_docs/instruments/check-drift.mjs` の PAIRS に登録してある
-（surechigai のコピーとバイト一致を機械検査）。**書き換えたくなったら金型側を直して配り直す。**
+★「無改変」のファイルは `_docs/instruments/check-drift.mjs` の PAIRS に登録してある
+（surechigai のコピーとバイト一致を機械検査。④の部品は本家 `kimitolink-linktree` が最初のコピー先で、
+金型化（2026-10-05）の時点では本家側の実装が先に在り、金型へ揃える配布は未着手）。
+**書き換えたくなったら金型側を直して配り直す。**
 
 ## 使うとき
 
@@ -116,6 +128,21 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
      kimito-link-redirect.test.ts  → __tests__/
      signed-in-bounce.ts           → lib/
      signed-in-bounce.test.ts      → __tests__/
+   ── ④ ログイン画面のちらつきゼロ（../README.md ④） ──
+     ../head-snippet.html          → lib/auth-mode/head-snippet.html（バイト一致コピー）
+     ../auth-mode.css              → app/auth-mode.css（バイト一致コピー。globals.css から @import）
+     auth-mode-head-script.ts      → lib/        （app/layout.tsx の <head> 最初の子に
+                                                   <script dangerouslySetInnerHTML={{__html: getAuthModeHeadScript()}}/>、
+                                                   <html data-auth-cookie-suffix={getAuthCookieSuffix()}>）
+     auth-mode-head-script.test.ts → lib/
+     auth-mode.ts / .test.ts       → lib/
+     AuthModeSync.tsx              → components/ （auth-layout が ClerkProvider 直下に置く）
+     ClerkMountFallback.tsx        → components/ （sign-in-page が <SignIn fallback> に渡す）
+     AuthBrowserSessionNotice.tsx  → components/ （sign-in-page が noticesAboveCard に渡す）
+     clerk-script-versions.ts      → lib/        （next.config.ts の env に CLERK_JS_VERSION / CLERK_UI_VERSION を渡す）
+     clerk-script-versions.test.ts → lib/
+     AuthPageShell.first-paint.test.tsx → components/
+     e2e/sign-in-no-flicker.spec.ts     → e2e/   （test:e2e:smoke 等に足す）
 3. `pnpm add @clerk/localizations`（リポのルートで。サブディレクトリで実行するとロックファイルが重複する）
    ★Next.js 16 以上なら middleware のファイル名は `proxy.ts`（`../../../next-app/middleware.ts.template`
    の冒頭コメント参照。中身は同じ `clerkMiddleware()` のまま）
@@ -125,6 +152,24 @@ Expo で使うならそちらを見ること（`components/auth/auto-advance-to-
 ★`sign-up` ページは**作らない**のが既定。X OAuth だけなら `<SignIn />` が兼ねる。
 メール＋パスワード等で新規登録フォームが別に要るサービスだけ、`sign-in-page` をコピーして
 `<SignUp />`・`variant="sign-up"` にする（その場合 `SIGN_UP_HREF` も別パスに戻す）。
+
+## ★ログイン画面のちらつきゼロ（2026-10-05 追加）
+
+契約の本文・本家の数字・計測コマンドは [`../README.md` ④](../README.md) に 1 か所でまとめてある（ここへコピーしない）。
+Next.js でやることは「使うとき」2 の ④ ブロックのコピーと、次の 3 点:
+
+1. `app/layout.tsx`: `<html data-auth-cookie-suffix={getAuthCookieSuffix()}>` と `<head>` 最初の子のインラインスクリプト
+   （`lib/auth-mode-head-script.ts`）。`<link rel="stylesheet">` より前に置く
+2. `next.config.ts`: `env: { NEXT_PUBLIC_CLERK_JS_VERSION: CLERK_JS_VERSION, NEXT_PUBLIC_CLERK_UI_VERSION: CLERK_UI_VERSION }`
+   （`@clerk/nextjs` 7.x に公開 prop は無く env 経路のみ。値は `lib/clerk-script-versions.ts`）
+3. `auth-brand.config.ts` の `clerkCard.providers` を**本番 Clerk Dashboard の構成に合わせる**（数が違うと 58px ずつ縦ずれが戻る）。
+   `browserSessionNotice` を自サービスの言葉にする（null で出さない）
+
+★到着時の全画面 intro（`AuthHandoffOverlay` の `phase: "intro"` / `INTRO_MS`）を持っているリポは**撤去する**。
+  押下後の handoff 表示だけ残す（本家 PR #381 の A）。Expo の surechigai / doin の
+  `components/auth/sign-in-auth-handoff-overlay.tsx`（`INTRO_MS = 1100`）がこの型で、次に配る先
+  （`_docs/DESIGN-signin-no-flicker-2026-10-05.md`「適用」）。
+★直したら `measure-page-flicker.mjs` で前後を測り、`qa/evidence/` に `summary.txt` / `tiles.png` を残してから閉じる。
 
 ## ★別 Vercel プロジェクトへ段階移行（strangler）するとき
 

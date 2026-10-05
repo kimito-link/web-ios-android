@@ -1,0 +1,86 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { AuthPageShell } from "./AuthPageShell";
+import { AuthBrowserSessionNotice } from "./AuthBrowserSessionNotice";
+import { ClerkMountFallback, expectedClerkCardBoxHeight } from "./ClerkMountFallback";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+/**
+ * components/AuthPageShell.first-paint.test.tsx — sign-in の「初回描画（サーバー描画＝Clerk 未読込）」の契約（金型）。
+ *
+ * ★出典: kimitolink-linktree/components/AuthPageShell.first-paint.test.tsx（2026-10-05 PR #381）を、
+ *   キットの AuthPageShell（注意書きは noticesAboveCard スロットで渡す）に合わせたもの。
+ *
+ * 本家 2026-10-05 に /dashboard/ → /sign-in/ の「一瞬まっ白→ちかちか」を Playwright 録画で解析した結果:
+ *   1. 到着直後に全画面を紺で塗る intro（AuthHandoffOverlay）が最長 1.1 秒出て消えていた
+ *   2. 未ログイン向け注意書き（AuthBrowserSessionNotice）が Clerk 起動後に後から挿入され 105px ずれていた
+ *   3. プレースホルダ（ClerkMountFallback）が本物のカードより 242px 低く、差し替えで下がずれていた
+ * この 3 点が再発しないことを、Clerk が読み込まれる前の状態（useUser が isLoaded=false）で固定する。
+ * ★3（高さ一致）は jsdom では測れないので、実寸の契約は e2e/sign-in-no-flicker.spec.ts が持つ。
+ *   ここでは「箱モデルの式がプロバイダ数と整合している」ことだけ見る。
+ */
+const useUserMock = vi.fn();
+
+vi.mock("@clerk/nextjs", () => ({
+  useUser: () => useUserMock(),
+}));
+
+describe("AuthPageShell: sign-in の初回描画契約（Clerk 未読込）", () => {
+  afterEach(() => {
+    useUserMock.mockReset();
+    document.documentElement.removeAttribute("data-auth");
+  });
+
+  function renderSignInFirstPaint() {
+    useUserMock.mockReturnValue({ isLoaded: false, isSignedIn: undefined, user: null });
+    return render(
+      <AuthPageShell variant="sign-in" noticesAboveCard={<AuthBrowserSessionNotice />}>
+        <ClerkMountFallback mode="sign-in" />
+      </AuthPageShell>,
+    );
+  }
+
+  it("全画面オーバーレイ（fixed inset-0）が 1 つも無い＝到着時の紺フラッシュを出さない", () => {
+    const { container } = renderSignInFirstPaint();
+
+    expect(screen.queryByTestId("auth-handoff-overlay")).not.toBeInTheDocument();
+    expect(container.querySelector(".fixed.inset-0")).toBeNull();
+  });
+
+  it("注意書きの出し分けは cookie 先出し（data-auth）＋ CSS で、JS の isLoaded 待ちではない", () => {
+    // isLoaded=false のまま描いても注意書きが DOM にある＝Clerk 起動後に「後から生える」構造ではない。
+    document.documentElement.setAttribute("data-auth", "member");
+    renderSignInFirstPaint();
+    // DOM には居る（CSS が html[data-auth=member] .guest-only を隠す。jsdom は CSS を評価しないので存在だけ見る）
+    expect(screen.getByTestId("auth-browser-session-notice")).toBeInTheDocument();
+  });
+
+  it("未ログイン向け注意書きの枠が初回描画の時点で存在し、出し分けは CSS（.guest-only）に任せている", () => {
+    renderSignInFirstPaint();
+
+    const notice = screen.getByTestId("auth-browser-session-notice");
+    expect(notice.className).toContain("guest-only");
+  });
+
+  it("Clerk カードの位置には同寸プレースホルダが最初から居る（くるくるではない）", () => {
+    const { container } = renderSignInFirstPaint();
+
+    const fallback = screen.getByTestId("clerk-mount-fallback");
+    expect(fallback).toHaveAccessibleName("ログイン画面を準備中");
+    expect(container.querySelector(".animate-spin")).toBeNull();
+    // 注意書き → カード の DOM 順（注意書きが後から差し込まれる構造になっていない）
+    const notice = screen.getByTestId("auth-browser-session-notice");
+    expect(notice.compareDocumentPosition(fallback) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("プレースホルダのボタン数は設定（本番 Clerk Dashboard の構成）と同じで、箱モデルの式と整合する", () => {
+    renderSignInFirstPaint();
+
+    const providers = authBrandConfig.clerkCard.providers;
+    expect(screen.getAllByTestId("clerk-mount-fallback-button")).toHaveLength(providers.length);
+    // 本家の値（3 プロバイダ・subtitle 2 行）で 474px。設定を変えたらこの数も変わる（式が正）
+    if (providers.length === 3) expect(expectedClerkCardBoxHeight(3)).toBe(474);
+    // ボタンが 1 つ増えるごとに 48 + 10 = 58px
+    expect(expectedClerkCardBoxHeight(providers.length + 1) - expectedClerkCardBoxHeight(providers.length)).toBe(58);
+  });
+});

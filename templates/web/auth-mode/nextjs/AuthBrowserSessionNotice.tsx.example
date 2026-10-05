@@ -1,0 +1,39 @@
+"use client";
+
+import { useUser } from "@clerk/nextjs";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+
+/**
+ * components/AuthBrowserSessionNotice.tsx — 未ログイン向け注意書き（金型）。
+ * 「いまブラウザの X アカウントで入ります」のような、押す前に 1 点だけ伝える短い枠。
+ *
+ * ★出典: kimitolink-linktree/components/AuthBrowserSessionNotice.tsx（2026-10-05 PR #381）。
+ *   文言は auth-brand.config.ts の `browserSessionNotice` に外出し（null なら描かない）。
+ *
+ * ★表示タイミングの契約（ちらつきゼロ）:
+ *   以前は `isLoaded`（Clerk 起動後、到着から 2〜5 秒）まで何も描かず、起動後に後から挿入していたため、
+ *   カード以下が 105px 下へ跳ねていた（本家 2026-10-05 Playwright 録画で実測）。
+ *   今はサーバーで最初から描き、見せるかどうかは CSS の `.guest-only`（`<html data-auth>`、
+ *   ペイント前に lib/auth-mode-head-script.ts が確定）に任せる。Clerk が読み込まれて
+ *   ログイン中だと分かったときだけ DOM から外す（その時点では既に CSS で隠れているので動かない）。
+ *
+ * ★置き場: AuthPageShell の `noticesAboveCard`（Clerk カードの直上）。sign-in-page.tsx.example 参照。
+ */
+export function AuthBrowserSessionNotice() {
+  const { isLoaded, isSignedIn } = useUser();
+  const copy = authBrandConfig.browserSessionNotice;
+
+  if (!copy) return null;
+  if (isLoaded && isSignedIn) return null;
+
+  return (
+    <section
+      role="note"
+      data-testid="auth-browser-session-notice"
+      className="guest-only w-full max-w-md rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-3"
+    >
+      <p className="text-sm font-bold text-slate-800">{copy.title}</p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-600">{copy.body}</p>
+    </section>
+  );
+}

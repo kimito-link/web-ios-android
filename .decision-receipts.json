@@ -230,6 +230,25 @@
         "templates/scripts/qa/measure-page-flicker.mjs",
         "templates/scripts/qa/README.md"
       ]
+    },
+    {
+      "at": "2026-10-05T07:42:06.093Z",
+      "responsibility": "signin-no-flicker-templates (ログイン画面のちらつきゼロ: ペイント前 data-auth 確定の Next.js 読み口・Clerk 読込後の裏取り・同寸プレースホルダ・SSR 注意書き・Clerk JS 版固定・契約テスト/e2e。既存候補: 本家 kimitolink-linktree の実装(PR #381)が唯一の実物で、キット側に同責務の金型は無い(templates/web/auth-mode/ 配下を Grep、ai-hub find --tag auth-mode,clerk,flicker は該当なし)。本家の実装をサイト固有値(ロゴ・プロバイダ・文言・箱モデル)を設定へ外出しして templates/web/auth-mode/nextjs/ に正本を立て、本家をコピー側に回す=ESTABLISH_REHOME。head-snippet.html.example は既存正本への薄い拡張(data-auth-cookie-suffix、後方互換))",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/web/auth-mode/nextjs/",
+      "scopePaths": [
+        "templates/web/auth-mode/nextjs/auth-mode-head-script.ts.example",
+        "templates/web/auth-mode/nextjs/auth-mode-head-script.test.ts.example",
+        "templates/web/auth-mode/nextjs/auth-mode.ts.example",
+        "templates/web/auth-mode/nextjs/auth-mode.test.ts.example",
+        "templates/web/auth-mode/nextjs/AuthModeSync.tsx.example",
+        "templates/web/auth-mode/nextjs/AuthBrowserSessionNotice.tsx.example",
+        "templates/web/auth-mode/nextjs/ClerkMountFallback.tsx.example",
+        "templates/web/auth-mode/nextjs/clerk-script-versions.ts.example",
+        "templates/web/auth-mode/nextjs/clerk-script-versions.test.ts.example",
+        "templates/web/auth-mode/nextjs/AuthPageShell.first-paint.test.tsx.example",
+        "templates/web/auth-mode/nextjs/e2e/sign-in-no-flicker.spec.ts.example"
+      ]
     }
   ]
 }

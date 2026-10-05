@@ -1,0 +1,223 @@
+import type { ReactNode } from "react";
+import { authBrandConfig } from "@/lib/auth-brand.config";
+import { brandJaJP } from "@/lib/clerk-localization";
+
+/**
+ * components/ClerkMountFallback.tsx — Clerk 本体（`<SignIn/>` / `<SignUp/>`）が描かれるまでの間、
+ * **本物のカードと同じ寸法**で同じ位置に置くプレースホルダ（金型）。
+ * 差し替わった瞬間に下の要素が動かない（縦ずれゼロ）のが目的。
+ *
+ * ★出典: kimitolink-linktree/components/ClerkMountFallback.tsx（2026-10-05 PR #381）。
+ *   箱モデルの数値を CLERK_CARD_BOX_MODEL に、プロバイダ数・ロゴ・文言を auth-brand.config /
+ *   clerk-localization / props に外出しして金型化したもの。
+ *
+ * ★使い方: `<SignIn fallback={<ClerkMountFallback mode="sign-in" />} />`（sign-in-page.tsx.example）。
+ *
+ * ■ なぜ同寸にするか
+ *   本家は 2026-10-05 以前「X ボタン 1 個ぶん」の小さな箱（高さ 182px）だったため、本物
+ *   （X/Apple/Google 3 ボタン＋見出し＋フッター＝高さ 474px）に差し替わると、カード以下が
+ *   242px 下へ跳ねていた（Playwright 録画で実測）。「大きめにして吸収」も不可（今度は縮む方向にずれる）。
+ *   同寸にする以外に無い（_docs/DESIGN-signin-no-flicker-2026-10-05.md 判断 2）。
+ *
+ * ■ 寸法の出典（CLERK_CARD_BOX_MODEL）
+ *   https://kimito.link/sign-in/ を iPhone 15 Pro Max（幅 430px）で実測した Clerk の箱モデル（2026-10-05）。
+ *   Clerk の appearance は lib/clerk-appearance.ts（ボタン minHeight 3rem＝48px）、文言は lib/clerk-localization.ts
+ *   と同じものを使い、二重に書かない。
+ *
+ *     .cl-cardBox   width 25rem / max-width calc(100vw - 2.5rem)   → 390px @430
+ *       .cl-card    margin -1px -1px 0 / padding 32px 40px / gap 32px / radius 8px / 白
+ *         header    logo 36px ＋ gap 16px ＋ (title 24px ＋ gap 4px ＋ subtitle 18px×2行)      = 116px
+ *         main      ボタン 48px × 3 ＋ gap 10px × 2                                           = 164px
+ *         → card 376px（上下 padding 64 を含む。-1px の margin で流れの上では 375px）
+ *       .cl-footer  padding-top 8 / margin-top -8（＝カード直下から）
+ *         action    「アカウントをお持ちでないですか？ サインアップ」 padding 16px → 50px
+ *         item      Secured by Clerk バッジの行                       padding 16px → 49px
+ *       → cardBox 合計 474px（expectedClerkCardBoxHeight(3) がこの式を持つ。e2e の契約と同じ）
+ *
+ * ★プロバイダは本番の Clerk Dashboard の構成をそのまま写す（auth-brand.config の clerkCard.providers）。
+ *   Clerk Dashboard でプロバイダを増減したら設定も合わせる（数が違うと 58px ずつ縦ずれが戻る）。
+ *   開発インスタンスのプロバイダ数が本番と違う場合、ローカルでは差が残る。これは本番との差で、
+ *   プレースホルダの誤りではない（e2e 側でボタン数の差を補正して比べる）。
+ * ★subtitle の行数（subtitleLines）は文言の長さで変わる。clerk-localization の subtitle を短くして
+ *   1 行になったら 1 にする（箱モデルの数値はここ 1 か所）。
+ * ★押下処理は付けない＝認証コアは Clerk 本体に委ねる（自前 OAuth はしない。CLERK_X_LOGIN_PLAYBOOK §1）。
+ *   ★Expo(React Native) の surechigai / doin は「最初から押せる本物のボタンを出す」別方針
+ *     （components/auth/clerk-mount-fallback.tsx。iOS 審査 2.1(a) 却下の再発防止）で、この金型の対象外。
+ */
+
+/** 本物の Clerk カード（.cl-cardBox）の箱モデル。単位は px（cardBoxWidthRem だけ rem）。 */
+export const CLERK_CARD_BOX_MODEL = {
+  cardBoxWidthRem: 25,
+  cardBoxMaxWidth: "calc(100vw - 2.5rem)",
+  /** .cl-card の margin（-1px -1px 0）。流れの高さを 1px 削る */
+  cardMarginPx: -1,
+  cardPaddingY: 32,
+  cardPaddingX: 40,
+  /** header と main の間 */
+  cardGap: 32,
+  logoHeight: 36,
+  logoWidth: 48,
+  /** logo と見出しブロックの間 */
+  headerGap: 16,
+  titleLineHeight: 24,
+  /** title と subtitle の間 */
+  titleSubtitleGap: 4,
+  subtitleLineHeight: 18,
+  /** subtitle の行数（文言の長さで変わる。本家の文言は 2 行） */
+  subtitleLines: 2,
+  buttonHeight: 48,
+  buttonGap: 10,
+  /** フッター「アカウントをお持ちでないですか？ サインアップ」の行（padding 16 + 18 + 16） */
+  footerActionHeight: 50,
+  /** フッター Secured by Clerk バッジの行（本番。開発インスタンスの「Development mode」は 45） */
+  footerBadgeHeight: 49,
+} as const;
+
+export type ClerkCardBoxModel = typeof CLERK_CARD_BOX_MODEL;
+
+/** header（logo ＋ 見出しブロック）の高さ。本家の値で 116。 */
+export function clerkCardHeaderHeight(box: ClerkCardBoxModel = CLERK_CARD_BOX_MODEL): number {
+  return (
+    box.logoHeight +
+    box.headerGap +
+    box.titleLineHeight +
+    box.titleSubtitleGap +
+    box.subtitleLineHeight * box.subtitleLines
+  );
+}
+
+/**
+ * プロバイダ数から .cl-cardBox の流れの高さを出す（純関数）。本家の値で 3 ボタン → 474。
+ * e2e（sign-in-no-flicker.spec）の「プレースホルダと本物の高さ一致」と同じ式。
+ */
+export function expectedClerkCardBoxHeight(
+  providerCount: number,
+  box: ClerkCardBoxModel = CLERK_CARD_BOX_MODEL,
+): number {
+  const buttons = providerCount * box.buttonHeight + Math.max(0, providerCount - 1) * box.buttonGap;
+  const card = box.cardPaddingY * 2 + clerkCardHeaderHeight(box) + box.cardGap + buttons;
+  return card + box.cardMarginPx + box.footerActionHeight + box.footerBadgeHeight;
+}
+
+export type ClerkCardProvider = {
+  /** Clerk の strategy 名（x / apple / google …）。アイコンの出し分けに使う */
+  key: string;
+  /** Clerk の `{{provider|titleize}}` に入る表示名（"X / Twitter" 等） */
+  title: string;
+  /** 主役ボタン（黒地）。appearance の heroButton と同じ見た目にする */
+  hero?: boolean;
+  /** アイコンを差し替えたいとき（省略時: x は X ロゴ、他は薄い四角） */
+  icon?: ReactNode;
+};
+
+type ClerkMountFallbackProps = {
+  mode: "sign-in" | "sign-up";
+  /** 本番 Clerk のソーシャルボタン（表示順）。省略時は auth-brand.config の clerkCard.providers */
+  providers?: readonly ClerkCardProvider[];
+  /** カード左上のロゴ。省略時は auth-brand.config の clerkCard.logoSrc */
+  logoSrc?: string;
+  /** 見出し・フッター文言の出所。省略時は brandJaJP（Clerk と同じ文字列＝二重管理しない） */
+  localization?: typeof brandJaJP;
+  /** 箱モデルを差し替えたいとき（通常は触らない） */
+  box?: ClerkCardBoxModel;
+  /** role="status" の読み上げ名 */
+  ariaLabel?: string;
+};
+
+function XGlyph() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+/** Clerk と同じテンプレート（"{{provider|titleize}}で続ける"）からラベルを作る。 */
+function socialButtonLabel(template: string, providerTitle: string): string {
+  return template.replace("{{provider|titleize}}", providerTitle);
+}
+
+export function ClerkMountFallback({
+  mode,
+  providers = authBrandConfig.clerkCard.providers,
+  logoSrc = authBrandConfig.clerkCard.logoSrc,
+  localization = brandJaJP,
+  box = CLERK_CARD_BOX_MODEL,
+  ariaLabel,
+}: ClerkMountFallbackProps) {
+  const copy = mode === "sign-in" ? localization.signIn.start : localization.signUp.start;
+  const title = copy?.title ?? "";
+  const subtitle = copy?.subtitle ?? "";
+  const actionText = copy?.actionText ?? "";
+  const actionLink = copy?.actionLink ?? "";
+  const buttonTemplate = localization.socialButtonsBlockButtonManyInView ?? "{{provider|titleize}}";
+
+  return (
+    <div
+      role="status"
+      aria-label={ariaLabel ?? (mode === "sign-in" ? "ログイン画面を準備中" : "登録画面を準備中")}
+      data-testid="clerk-mount-fallback"
+      // = .cl-cardBox（幅と角丸を合わせる。本物も slot の padding より広く出る）。
+      //   flex にするのは本物と同じ箱にするため＝子の -1px margin が親と相殺（margin collapsing）せず、
+      //   流れの高さが本物と同じになる（block だと 1px ずれる。本家 2026-10-05 実測）。
+      className="mx-auto flex flex-col rounded-xl"
+      style={{ width: `${box.cardBoxWidthRem}rem`, maxWidth: box.cardBoxMaxWidth }}
+    >
+      {/* = .cl-card: 本物と同じ -1px の margin */}
+      <div
+        className="flex flex-col rounded-lg bg-white shadow-[0_0_2px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.03)]"
+        style={{
+          margin: `${box.cardMarginPx}px ${box.cardMarginPx}px 0`,
+          padding: `${box.cardPaddingY}px ${box.cardPaddingX}px`,
+          gap: box.cardGap,
+        }}
+      >
+        {/* = .cl-header */}
+        <div className="flex flex-col" style={{ gap: box.headerGap }}>
+          <span
+            aria-hidden
+            className="block bg-contain bg-left bg-no-repeat"
+            style={{ height: box.logoHeight, width: box.logoWidth, backgroundImage: `url(${logoSrc})` }}
+          />
+          <div className="flex flex-col" style={{ gap: box.titleSubtitleGap }}>
+            <p className="text-[17px] font-bold text-slate-900" style={{ lineHeight: `${box.titleLineHeight}px` }}>
+              {title}
+            </p>
+            <p className="text-[13px] text-slate-600" style={{ lineHeight: `${box.subtitleLineHeight}px` }}>
+              {subtitle}
+            </p>
+          </div>
+        </div>
+        {/* = .cl-socialButtons（ボタン × n ＋ gap × (n-1)）。押下不可・薄く脈動 */}
+        <div aria-hidden className="flex flex-col" style={{ gap: box.buttonGap }}>
+          {providers.map((p) => (
+            <div
+              key={p.key}
+              data-testid="clerk-mount-fallback-button"
+              style={{ height: box.buttonHeight }}
+              className={
+                p.hero
+                  ? "flex animate-pulse items-center justify-center gap-4 rounded-[14px] bg-[#0f1419] px-3 text-[15px] font-semibold text-white"
+                  : "flex animate-pulse items-center justify-center gap-4 rounded-[14px] bg-white px-3 text-[15px] font-semibold text-slate-500 shadow-[0_0_0_1px_rgba(15,23,42,0.18)]"
+              }
+            >
+              {p.icon ?? (p.key === "x" ? <XGlyph /> : <span className="h-4 w-4 rounded-sm bg-slate-200" />)}
+              <span>{socialButtonLabel(buttonTemplate, p.title)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* = .cl-footer（カード直下から action 行 ＋ バッジ行）。文言は Clerk の jaJP と同じ */}
+      <div aria-hidden className="text-center">
+        <p
+          className="text-[13px] text-slate-500"
+          style={{ padding: "16px 32px", lineHeight: `${box.footerActionHeight - 32}px` }}
+        >
+          {actionText} <span className="font-medium text-slate-700">{actionLink}</span>
+        </p>
+        {/* Secured by Clerk バッジの行ぶんの高さ（Clerk が描くまで空けておく） */}
+        <div style={{ height: box.footerBadgeHeight }} />
+      </div>
+    </div>
+  );
+}

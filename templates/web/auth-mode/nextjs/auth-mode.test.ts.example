@@ -1,0 +1,22 @@
+/**
+ * lib/auth-mode.test.ts — resolveAuthMode の契約（金型）。
+ * ★出典: kimitolink-linktree/lib/auth-mode.test.ts（2026-10-05 PR #381）。無改変で使う（drift 検査対象）。
+ */
+import { describe, expect, it } from "vitest";
+import { resolveAuthMode } from "./auth-mode";
+
+describe("resolveAuthMode", () => {
+  it("Clerk 未読込のときは null（ペイント前の先出し値を触らない）", () => {
+    expect(resolveAuthMode({ isLoaded: false, isSignedIn: undefined })).toBeNull();
+    expect(resolveAuthMode({ isLoaded: false, isSignedIn: true })).toBeNull();
+  });
+
+  it("読込済み・ログイン中は member", () => {
+    expect(resolveAuthMode({ isLoaded: true, isSignedIn: true })).toBe("member");
+  });
+
+  it("読込済み・未ログインは guest", () => {
+    expect(resolveAuthMode({ isLoaded: true, isSignedIn: false })).toBe("guest");
+    expect(resolveAuthMode({ isLoaded: true, isSignedIn: undefined })).toBe("guest");
+  });
+});

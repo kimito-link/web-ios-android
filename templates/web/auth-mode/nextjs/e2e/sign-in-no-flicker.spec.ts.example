@@ -1,0 +1,95 @@
+import { test, expect } from "@playwright/test";
+
+/**
+ * e2e/sign-in-no-flicker.spec.ts — /sign-in/ の「ちらつきゼロ」契約（実寸・金型）。
+ *
+ * ★出典: kimitolink-linktree/e2e/sign-in-no-flicker.spec.ts（2026-10-05 PR #381）。
+ *   本番構成の数値を先頭の定数に外出しした以外は同じ。
+ *
+ * 本家 2026-10-05 に Playwright 録画＋フレーム解析で見つけた 3 点の再発防止:
+ *   1. 到着直後の全画面オーバーレイ（紺フラッシュ）が一度も現れない
+ *   2. 未ログイン向け注意書きが Clerk 起動前から DOM にある（後から生えて押し下げない）
+ *   3. プレースホルダ（ClerkMountFallback）と本物の Clerk カード（.cl-rootBox）の高さが同じ
+ *      ＝差し替わっても下の要素が動かない
+ *
+ * ★3 について: プレースホルダは本番 Clerk の構成（PRODUCTION_PROVIDER_COUNT 個のボタン、Clerk バッジ行）に
+ *   合わせてある。開発インスタンスはプロバイダ数が違う・「Development mode」バッジ（45px）になることが
+ *   あるので、本物のボタン数から差を補正して比べる（本番と同じ構成なら補正ゼロ＝厳密一致）。
+ *   補正の根拠（components/ClerkMountFallback.tsx の CLERK_CARD_BOX_MODEL と同じ数）:
+ *   ボタン 1 個 = 48px + gap 10px = 58px、バッジ行の差 = 49 - 45 = 4px。
+ *
+ * ★ページ全体の「フラッシュ 0・縦ずれ 0」は Playwright だけでは数えない。
+ *   web-ios-android/templates/scripts/qa/measure-page-flicker.mjs で前後を同じ条件で測る（README「ちらつきゼロ契約」）。
+ */
+
+/** 本番 Clerk Dashboard のソーシャルプロバイダ数（auth-brand.config の clerkCard.providers.length と同じにする） */
+const PRODUCTION_PROVIDER_COUNT = 3;
+/** ボタン 1 個ぶんの高さ（48）＋ gap（10） */
+const BUTTON_STEP_PX = 58;
+/** 本番バッジ行（49）と開発インスタンスの「Development mode」行（45）の差 */
+const DEV_BADGE_DIFF_PX = 4;
+/** sign-in の URL（auth-brand.config の signInPath） */
+const SIGN_IN_PATH = "/sign-in/";
+
+const gotoOpts = { waitUntil: "domcontentloaded" as const };
+
+test.describe("sign-in no flicker", () => {
+  test("到着直後に全画面オーバーレイが出ず、注意書きは最初から居て、プレースホルダは本物と同寸", async ({ page }) => {
+    // 全画面オーバーレイが「一瞬でも」出たら記録する（スクショの間に消える 0.1 秒を見逃さない）。
+    await page.addInitScript(() => {
+      const w = window as unknown as { __overlaySeen: number };
+      w.__overlaySeen = 0;
+      const check = () => {
+        if (document.querySelector("[data-testid='auth-handoff-overlay']")) w.__overlaySeen += 1;
+      };
+      new MutationObserver(check).observe(document.documentElement, { childList: true, subtree: true });
+      document.addEventListener("DOMContentLoaded", check);
+    });
+
+    await page.goto(SIGN_IN_PATH, gotoOpts);
+
+    // 2. 注意書きの枠は Clerk 起動前から DOM にある（未ログインなので data-auth=guest → 見える）
+    const notice = page.getByTestId("auth-browser-session-notice");
+    await expect(notice).toBeAttached();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.getAttribute("data-auth")))
+      .toBe("guest");
+    await expect(notice).toBeVisible();
+
+    // 3. プレースホルダの寸法を、本物に差し替わる前に取る
+    const fallback = page.getByTestId("clerk-mount-fallback");
+    await expect(fallback).toBeVisible();
+    const fallbackBox = await fallback.boundingBox();
+    expect(fallbackBox).not.toBeNull();
+
+    // 本物の Clerk カードが出るのを待つ（外部 CDN なので余裕を持つ）
+    const clerkRoot = page.locator(".cl-rootBox");
+    await expect(clerkRoot).toBeVisible({ timeout: 60_000 });
+    const socialButtons = page.locator(".cl-rootBox .cl-socialButtonsBlockButton, .cl-rootBox .cl-socialButtonsIconButton");
+    await expect(socialButtons.first()).toBeVisible({ timeout: 60_000 });
+    // レイアウトが落ち着くまで少し待つ（フッターのバッジ等）
+    await page.waitForTimeout(1000);
+
+    const providerCount = await socialButtons.count();
+    const isDevInstance = await clerkRoot.getByText("Development mode").count().then((n) => n > 0);
+    const clerkBox = await clerkRoot.boundingBox();
+    expect(clerkBox).not.toBeNull();
+
+    // 本番構成なら補正ゼロ。開発インスタンスの差だけを補正する。
+    const expectedRealHeight =
+      fallbackBox!.height -
+      BUTTON_STEP_PX * (PRODUCTION_PROVIDER_COUNT - providerCount) -
+      (isDevInstance ? DEV_BADGE_DIFF_PX : 0);
+    expect(
+      Math.abs(clerkBox!.height - expectedRealHeight),
+      `fallback=${fallbackBox!.height}px, clerk=${clerkBox!.height}px, providers=${providerCount}, dev=${isDevInstance}`,
+    ).toBeLessThanOrEqual(1);
+    // 横位置・上端も同じ場所（置き換わりで動かない）
+    expect(Math.abs(clerkBox!.y - fallbackBox!.y)).toBeLessThanOrEqual(1);
+
+    // 1. 全画面オーバーレイは一度も現れなかった
+    const overlaySeen = await page.evaluate(() => (window as unknown as { __overlaySeen: number }).__overlaySeen);
+    expect(overlaySeen).toBe(0);
+    await expect(page.getByTestId("auth-handoff-overlay")).toHaveCount(0);
+  });
+});
