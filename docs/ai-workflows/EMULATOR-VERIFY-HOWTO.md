@@ -119,10 +119,11 @@ ANDROID_SERIAL=<adb devices の端末> bash templates/scripts/measure-webapk-lau
 - 実機で動かして確認したのは surechigai の WebAPK（moto g64y 5G／Android 15／Chrome 154）の1例だけ。
   判断と実測値は `_docs/DESIGN-pwa-launch-screen-2026-10-05.md`。
 
-## ブラウザ上でちらつきを数える（白の長さ・フラッシュ・縦ずれ）
-ページを開いた直後の「白 → 別の色がパッと出る → 中身が下にずれる」を、実機を触らずに PC 上で数える。
+## ブラウザ上でちらつきを数える（白の長さ・往復フラッシュ・縦ずれ）
+ページを開いた直後の「白 → 別の色がパッと出て消える → 中身が下にずれる」を、実機を触らずに PC 上で数える。
 ```bash
-# Playwright が入っているリポのルートで。変更前と変更後を同じ条件で測って比べる（exit 0 = フラッシュ 0 かつ縦ずれ 0）
+# Playwright が入っているリポのルートで。変更前と変更後を同じ条件で測って比べる（exit 0 = 往復フラッシュ 0 かつ縦ずれ 0。
+# 戻らない大きな切替＝コンテンツの出現は判定に入れない）
 node scripts/qa/measure-page-flicker.mjs https://example.com/dashboard/ --out ./qa/evidence/2026-10-05_signin-flicker/before
 ```
 - 金型: `templates/scripts/qa/measure-page-flicker.mjs`。読み方・オプション・測っていないものは `templates/scripts/qa/README.md`。
