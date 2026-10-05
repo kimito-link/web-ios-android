@@ -85,3 +85,7 @@ header nav a.active { background: var(--site-chrome-accent); color: white; }
 .site-footer-links a { color: var(--site-chrome-accent); text-decoration: none; font-size: .85em; font-weight: 700; }
 .site-footer-links a:hover { text-decoration: underline; }
 .site-footer-copy { font-size: .78em; color: #6b7280; }
+/* 管理者ログイン。★運営だけが使う導線なので、目立たせず控えめに置く。 */
+.site-footer-admin { margin-top: 10px; font-size: .72em; }
+.site-footer-admin a { color: #9ca3af; text-decoration: none; }
+.site-footer-admin a:hover { color: #6b7280; text-decoration: underline; }

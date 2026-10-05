@@ -67,12 +67,28 @@
       }))
       .join('\n    ');
 
+    // ★管理者ログインはフッターの隅に小さく出す。
+    //   一般の来訪者には用が無いのでナビには入れない（navItems と分けてある）。
+    //   ★リンクを置くだけで、認証は既存の管理画面が担う
+    //   （HttpOnly Cookie / CSRF / staff権限）。LP側に認証を二重に持たない。
+    //   rel="nofollow" は検索結果にログイン画面を載せないため。
+    //   ★adminUrl 未指定（既定）なら何も出さない。値は site-chrome.config.json の
+    //   adminUrl / adminLabel（config/schema.json）から generator が config.js へ渡す。
+    //   2026-10-05: line-bot/apps/lp（kimitotalk.link）で先に実装されていたものを正本へ還流。
+    var admin = CONFIG.adminUrl
+      ? '  <div class="site-footer-admin">' +
+        '<a href="' + CONFIG.adminUrl + '" rel="nofollow noopener">' +
+        (CONFIG.adminLabel || '管理者ログイン') +
+        '</a></div>\n'
+      : '';
+
     return (
       '<footer class="site-footer">\n' +
       '  <div class="site-footer-links">\n' +
       '    ' + links + '\n' +
       '  </div>\n' +
       '  <div class="site-footer-copy">' + CONFIG.brandCopyright + '</div>\n' +
+      admin +
       '</footer>'
     );
   }

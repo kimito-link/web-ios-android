@@ -38,6 +38,16 @@
         },
         "additionalProperties": false
       }
+    },
+    "adminUrl": {
+      "type": "string",
+      "minLength": 1,
+      "description": "任意。運営向け管理画面ログインのURL。指定するとフッター末尾に小さく .site-footer-admin リンクを出す（rel=nofollow noopener）。未指定なら導線そのものを出さない。認証はリンク先の管理画面が担い、LP側は何も持たない。2026-10-05、line-bot/apps/lp の実装を正本へ還流。"
+    },
+    "adminLabel": {
+      "type": "string",
+      "minLength": 1,
+      "description": "任意。adminUrl のリンク文言。未指定なら Core が「管理者ログイン」を使う。adminUrl が無いときは無視される。"
     }
   },
   "additionalProperties": false

@@ -44,6 +44,15 @@
 7. web-ios-android固有のAI共有ボタン等、そのサイトだけの拡張機能が要る場合は
    `site-chrome.local.js`を任意で追加し、`"site-chrome:mounted"`イベントを購読する
    （Coreの末尾でこのイベントが1回発火される。plugin機構ではなく最小限の1フックのみ）
+8. 運営向けの管理画面ログイン導線をフッターに出したい場合は、`site-chrome.config.json` に
+   任意キー `adminUrl`（リンク先URL）と `adminLabel`（文言、省略時「管理者ログイン」）を書く。
+   Coreは `adminUrl` があるときだけフッター末尾に `.site-footer-admin`（小さく控えめ・
+   `rel="nofollow noopener"`）を出し、未指定なら導線そのものを出さない。認証はリンク先の
+   管理画面が担い、LP側に認証を二重に持たない。
+   ★出典（2026-10-05還流）: `line-bot/apps/lp`（kimitotalk.link）が先にCoreへ直接足していた
+   7行＋CSS3行。Coreは無改変が契約なので、サイト固有値（URL・文言）はconfigへ外出しして
+   正本に取り込んだ。generatorは`adminUrl`が書かれているときだけ`config.js`へ載せるため、
+   使わないサイトの生成物は1バイトも変わらない。
 
 ### ★CSS読み込み順の罠（2026-09-03、line-bot/apps/lp移行で実際に踏んだ事故）
 
