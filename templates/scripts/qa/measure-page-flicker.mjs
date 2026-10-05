@@ -7,10 +7,12 @@
  *   使い捨ての計測スクリプト（Playwright 録画 ＋ ffmpeg フレーム解析）で原因を 3 つに分けられたので、
  *   どのサイト・どのページでも同じ数値が出る道具にした。次に同じ症状が出たとき、誰でも同じ道具で測る。
  *
- * ■ 何を測るか（summary.txt の 3 行）
- *   白一色フレーム    … 画面の 98% 以上が白(輝度>=250)のフレーム枚数。描画前の地色が見えている時間
- *   フラッシュ        … 前フレームとの平均輝度差 > 50 のフレーム枚数。全画面が一瞬で別の色になった回数
- *                        （全画面オーバーレイの出現・消滅が典型。出る・消えるで 2 枚になる）
+ * ■ 何を測るか（summary.txt の 4 行）
+ *   白一色フレーム    … 画面の 98% 以上が白(輝度>=250)のフレーム枚数と、そのうち描画前（最初に画面が変わる前）の枚数
+ *   往復フラッシュ    … 前フレームとの平均輝度差 > 50 で別の色になり、1.5 秒以内に元の輝度（±25）へ戻った回数
+ *                        （全画面オーバーレイが出て消える形。赤の判定に使うのはこれだけ）
+ *   大きな切替        … 輝度差 > 50 だが戻らず新しい定常状態へ移ったもの（コンテンツの出現・画面遷移）。情報表示のみ。
+ *                        描画前の遷移（Playwright の空白タブ → 最初の描画）はどちらにも数えない
  *   縦ずれ            … 既にあった要素が縦に動いた回数。Chrome の Layout Instability API（layout-shift エントリ、
  *                        CLS の元データ）をそのまま数える＝車輪の再発明をしない。動いた要素と前後の top を添える
  *                        （後から挿入される要素／本物と寸法の違うプレースホルダが典型）
@@ -32,10 +34,10 @@
  *   timeline.json  遷移列・3xx 応答・console error・navigation timing・layout-shift・要素の座標履歴・パラメータ
  *   frames.csv     0.1 秒ごと: 時刻・平均輝度・白画素率・前フレーム差分・追跡要素ごとの top
  *   tiles.png      0.2 秒ごとのフレームを 8 列に並べた画像（目視用。Read で見る）
- *   summary.txt    上の 3 行と補助情報。標準出力にも同じものを出す
+ *   summary.txt    上の 4 行と補助情報。標準出力にも同じものを出す
  *
  * ■ 終了コード（3 値。_docs/instruments/HANDOFF-new-app.md）
- *   0 = フラッシュ 0 かつ 縦ずれ 0
+ *   0 = 往復フラッシュ 0 かつ 縦ずれ 0
  *   1 = どちらかが 1 以上（測れた上での赤）
  *   2 = 測れなかった（Playwright/ffmpeg が無い・ページが開けない・録画が 0 フレーム 等）。0 と同じ緑に数えない
  *
@@ -66,8 +68,10 @@ const TH = Object.freeze({
   FPS: 10,            // 解析のフレームレート
   WHITE_PX: 250,      // この輝度以上を「白画素」とみなす
   WHITE_ONLY_PCT: 98, // 白画素がこの割合以上のフレームを「白一色」とみなす
-  FLASH_DIFF: 50,     // 前フレームとの平均輝度差がこれを超えたら「フラッシュ」
-  CHANGE_DIFF: 8,     // これを超えたら「画面が変わった」（地色が続いた長さの終点）
+  FLASH_DIFF: 50,     // 前フレームとの平均輝度差がこれを超えたら「大きく変わった」候補
+  FLASH_RETURN_S: 1.5,   // 候補の後、この秒数以内に元の輝度へ戻れば「往復フラッシュ」。戻らなければ「大きな切替」
+  FLASH_RETURN_TOL: 25,  // 「元の輝度へ戻った」とみなす許容差
+  CHANGE_DIFF: 8,     // これを超えたら「画面が変わった」（地色が続いた長さの終点。これより前は描画前なので数えない）
   SCALE_W: 86,        // 解析用の縮小幅（1/5 程度で十分）
   MAX_TRACKED: 24,    // 追跡する要素の上限（frames.csv の列数を抑える）
 });
@@ -178,18 +182,53 @@ function analyzeFrames(raw, w, h, fps) {
   return rows;
 }
 
-/** フレーム表 → 白一色・フラッシュ・最初の変化 */
+/**
+ * フレーム表 → 白一色・往復フラッシュ・大きな切替・最初の変化。
+ *
+ * ★2026-10-06 に数え方を直した（3 サイトに当てて判定が粗かった）:
+ *   - 描画前の遷移は数えない: Playwright の空白タブ（白）→最初の描画 は、暗い地色のサイト（doin #0D1117）で毎回
+ *     diff 238 として「フラッシュ」に乗っていた。「最初に画面が変わる」フレームまで（その 1 枚を含む）は候補から外す。
+ *   - 往復（flash）と落ち着き（settle）を分ける: 輝度差分 > 50 の後、1.5 秒以内に元の輝度（±25）へ戻るものだけが
+ *     「往復フラッシュ」＝全画面オーバーレイが出て消えた形で、赤の判定に使う。戻らずに新しい定常状態へ移るもの
+ *     （コンテンツの出現・画面遷移。doin の sign-in 初回描画 16→124 が典型）は「大きな切替」として情報表示だけにする。
+ *     往復の「戻り」の 1 枚は往復に含め、二重に数えない。
+ */
 function summarizeFrames(rows) {
   const whiteOnly = rows.filter((r) => r.whitePct >= TH.WHITE_ONLY_PCT);
-  const flash = rows.filter((r) => r.diff != null && r.diff > TH.FLASH_DIFF);
-  const firstChange = rows.find((r) => r.diff != null && r.diff > TH.CHANGE_DIFF);
+  const firstIdx = rows.findIndex((r) => r.diff != null && r.diff > TH.CHANGE_DIFF);
+  const firstChangeAt = firstIdx >= 0 ? rows[firstIdx].t : null;
+  const whiteBeforePaint = whiteOnly.filter((r) => firstIdx < 0 || rows.indexOf(r) < firstIdx).length;
+  const flashes = [];   // 往復: { tOut, tBack, duration, meanBefore, meanDuring, meanAfter, diff }
+  const settles = [];   // 落ち着き: { t, meanBefore, meanAfter, diff }
+  const consumed = new Set();
+  const fps = rows.length > 1 ? 1 / (rows[1].t - rows[0].t) : TH.FPS;
+  const window = Math.round(TH.FLASH_RETURN_S * fps);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (consumed.has(i) || r.diff == null || r.diff <= TH.FLASH_DIFF) continue;
+    if (firstIdx < 0 || i <= firstIdx) continue; // 描画前の遷移（空白タブ→最初の描画）は数えない
+    const before = rows[i - 1].mean;
+    let back = -1;
+    for (let j = i + 1; j < rows.length && j <= i + window; j++) {
+      if (Math.abs(rows[j].mean - before) <= TH.FLASH_RETURN_TOL) { back = j; break; }
+    }
+    if (back >= 0) {
+      for (let j = i + 1; j <= back; j++) consumed.add(j);
+      flashes.push({ tOut: r.t, tBack: rows[back].t, duration: rows[back].t - r.t, meanBefore: before, meanDuring: r.mean, meanAfter: rows[back].mean, diff: r.diff });
+    } else {
+      settles.push({ t: r.t, meanBefore: before, meanAfter: r.mean, diff: r.diff });
+    }
+  }
   return {
     frames: rows.length,
     whiteOnlyCount: whiteOnly.length,
     whiteOnlyAt: whiteOnly.map((r) => r.t),
-    flashCount: flash.length,
-    flashAt: flash.map((r) => ({ t: r.t, diff: r.diff, meanBefore: rows[rows.indexOf(r) - 1]?.mean ?? null, meanAfter: r.mean })),
-    firstChangeAt: firstChange ? firstChange.t : null,
+    whiteBeforePaint,
+    flashCount: flashes.length,
+    flashes,
+    settleCount: settles.length,
+    settles,
+    firstChangeAt,
   };
 }
 
@@ -230,17 +269,31 @@ function countVerticalShifts(rectEvents) {
 function selftest() {
   const fails = [];
   const check = (name, ok) => { if (!ok) fails.push(name); };
-  // 1) 白 3 枚 → 暗転 → 戻る: 白一色 3、フラッシュ 2、最初の変化は 0.3s
+  // 1) 本家の紺フラッシュの形: 白 3 枚 → ページ(236) 2 枚 → 紺(58) 1.0 秒 → ページ(237)。
+  //    白一色 3、描画前の白 3、最初の変化 0.3s、往復フラッシュ 1 回（0.5s→1.5s・1.0 秒）、大きな切替 0
   const w = 4, h = 2, fps = 10;
   const frame = (v) => Buffer.alloc(w * h, v);
-  const raw = Buffer.concat([frame(255), frame(255), frame(255), frame(72), frame(72), frame(215)]);
+  const rep = (v, n) => Array.from({ length: n }, () => frame(v));
+  const raw = Buffer.concat([...rep(255, 3), ...rep(236, 2), ...rep(58, 10), ...rep(237, 2)]);
   const rows = analyzeFrames(raw, w, h, fps);
   const s = summarizeFrames(rows);
-  check("フレーム数を数える", s.frames === 6);
-  check("白一色フレームを数える", s.whiteOnlyCount === 3);
-  check("フラッシュを出入りで 2 枚数える", s.flashCount === 2 && s.flashAt[0].t === 0.3);
+  check("フレーム数を数える", s.frames === 17);
+  check("白一色フレームを数える", s.whiteOnlyCount === 3 && s.whiteBeforePaint === 3);
   check("最初の変化の時刻", s.firstChangeAt === 0.3);
+  check("往復フラッシュを 1 回と数える（戻りの 1 枚を二重に数えない）", s.flashCount === 1 && s.flashes[0].tOut === 0.5 && s.flashes[0].tBack === 1.5 && Math.abs(s.flashes[0].duration - 1.0) < 1e-9);
+  check("往復は大きな切替に数えない", s.settleCount === 0);
   check("変化の無い録画はフラッシュ 0", summarizeFrames(analyzeFrames(Buffer.concat([frame(200), frame(200)]), w, h, fps)).flashCount === 0);
+  // 1b) 暗い地色のサイト（doin）の形: 空白タブ(255) 2 枚 → 暗(16) 3 枚 → sign-in 初回描画(124) 3 枚。
+  //     空白→暗 は描画前なので数えない。16→124 は戻らないので「大きな切替」1 回・往復 0
+  const s2 = summarizeFrames(analyzeFrames(Buffer.concat([...rep(255, 2), ...rep(16, 3), ...rep(124, 3)]), w, h, fps));
+  check("描画前の遷移(空白タブ→暗い地色)をフラッシュに数えない", s2.flashCount === 0 && s2.firstChangeAt === 0.2);
+  check("戻らない大きな変化は settle として 1 回", s2.settleCount === 1 && s2.settles[0].t === 0.5 && s2.settles[0].meanBefore === 16 && s2.settles[0].meanAfter === 124);
+  // 1c) 1.5 秒を超えてから戻る暗転は往復ではない（出・戻りがそれぞれ大きな切替）
+  const s3 = summarizeFrames(analyzeFrames(Buffer.concat([...rep(255, 2), ...rep(236, 2), ...rep(58, 20), ...rep(237, 2)]), w, h, fps));
+  check("1.5 秒を超える暗転は往復に数えない", s3.flashCount === 0 && s3.settleCount === 2);
+  // 1d) 戻り先が元の輝度 ±25 を超えていれば往復ではない
+  const s4 = summarizeFrames(analyzeFrames(Buffer.concat([...rep(255, 2), ...rep(236, 2), ...rep(58, 3), ...rep(180, 3)]), w, h, fps));
+  check("別の輝度へ移るものは往復に数えない", s4.flashCount === 0 && s4.settleCount === 2);
   // 2) 0 フレームを緑にしない（呼び出し側で INCONCLUSIVE にする前提。summarize は frames=0 を返す）
   check("0 フレームは frames=0", summarizeFrames(analyzeFrames(Buffer.alloc(0), w, h, fps)).frames === 0);
   // 3) 縦ずれ
@@ -271,7 +324,7 @@ function selftest() {
   check("引数を読む", o.url === "https://x.test/" && o.cpu === 4 && o.network === "none" && o.track.length === 2 && o.standalone === false);
   check("cookie を読む", (() => { const c = parseCookie("__client_uat=1;domain=.example.com", "https://a.example.com/"); return c.name === "__client_uat" && c.value === "1" && c.domain === ".example.com" && c.secure === true; })());
   if (fails.length) { console.error("selftest FAIL:\n  - " + fails.join("\n  - ")); return EXIT.FAIL; }
-  console.log("selftest OK (14 checks)");
+  console.log("selftest OK (20 checks)");
   return EXIT.PASS;
 }
 
@@ -495,8 +548,9 @@ async function measure(o) {
     const lines = [
       `measure-page-flicker  ${o.url}`,
       `  device=${o.device} cpu×${o.cpu} network=${o.network} seconds=${o.seconds} standalone=${o.standalone ? "yes" : "no"} frames=${fs.frames}@${TH.FPS}fps`,
-      `  白一色フレーム(>=${TH.WHITE_ONLY_PCT}% が輝度>=${TH.WHITE_PX}): ${fs.whiteOnlyCount} 枚${fs.whiteOnlyCount ? ` at t=[${fs.whiteOnlyAt.map((t) => t.toFixed(1)).join(",")}]` : ""}`,
-      `  フラッシュ(前フレームとの平均輝度差>${TH.FLASH_DIFF}): ${fs.flashCount} 枚${fs.flashCount ? ` at ${fs.flashAt.map((f) => `${f.t.toFixed(1)}s(diff=${f.diff.toFixed(0)}, 輝度 ${f.meanBefore?.toFixed(0)}→${f.meanAfter.toFixed(0)})`).join(" ")}` : ""}`,
+      `  白一色フレーム(>=${TH.WHITE_ONLY_PCT}% が輝度>=${TH.WHITE_PX}): ${fs.whiteOnlyCount} 枚（うち描画前の白 ${fs.whiteBeforePaint} 枚）${fs.whiteOnlyCount ? ` at t=[${fs.whiteOnlyAt.map((t) => t.toFixed(1)).join(",")}]` : ""}`,
+      `  往復フラッシュ(輝度差>${TH.FLASH_DIFF} で別の色になり ${TH.FLASH_RETURN_S} 秒以内に元の輝度±${TH.FLASH_RETURN_TOL} へ戻る): ${fs.flashCount} 回${fs.flashCount ? ` at ${fs.flashes.map((f) => `${f.tOut.toFixed(1)}s→${f.tBack.toFixed(1)}s(${f.duration.toFixed(1)}秒, 輝度 ${f.meanBefore.toFixed(0)}→${f.meanDuring.toFixed(0)}→${f.meanAfter.toFixed(0)})`).join(" ")}` : ""}`,
+      `  大きな切替(戻らない輝度差>${TH.FLASH_DIFF}。コンテンツの出現・画面遷移。判定に入れない): ${fs.settleCount} 回${fs.settleCount ? ` at ${fs.settles.map((f) => `${f.t.toFixed(1)}s(輝度 ${f.meanBefore.toFixed(0)}→${f.meanAfter.toFixed(0)})`).join(" ")}` : ""}`,
       `  縦ずれ(layout-shift: 既にあった要素が縦に動いた回数): ${shifts.length} 回  CLS 合計 ${clsTotal.toFixed(4)}${shifts.length ? "\n" + shifts.map((e) => `    ${e.tVideo.toFixed(1)}s score=${e.value.toFixed(4)} ` + e.sources.filter((s) => s.fromTop !== s.toTop).map((s) => `${s.node} ${s.fromTop}→${s.toTop}`).join(", ")).join("\n") : ""}`,
       `  追跡要素の移動(--track の要素の top が動いた回数): ${trackedMoves.length} 回${trackedMoves.length ? "\n" + log.trackedMoves.map((s) => `    ${s.tVideo.toFixed(1)}s ${s.key} top ${s.from}→${s.to} (${s.delta > 0 ? "+" : ""}${s.delta}px)`).join("\n") : ""}`,
       `  最初に画面が変わるまで(差分>${TH.CHANGE_DIFF}): ${fs.firstChangeAt == null ? "変化なし" : fs.firstChangeAt.toFixed(1) + " 秒"}`,
@@ -505,7 +559,7 @@ async function measure(o) {
       `  3xx: ${log.responses.filter((r) => r.status >= 300 && r.status < 400).map((r) => `${r.status} ${r.url} → ${r.location}`).join(" | ") || "(なし)"}`,
       `  navigation timing: ${log.final?.nav ? `responseStart=${Math.round(log.final.nav.responseStart)}ms DCL=${Math.round(log.final.nav.domContentLoaded)}ms load=${Math.round(log.final.nav.load)}ms redirects=${log.final.redirectCount}` : "(取れず)"}`,
       `  追跡した要素: ${keys.length ? keys.join(", ") : "(なし。--track で指定するか、main/body の子が描かれていない)"}`,
-      `  判定: ${exit === EXIT.PASS ? "🟢 フラッシュ 0・縦ずれ 0" : "🔴 フラッシュまたは縦ずれあり"}  (exit ${exit})`,
+      `  判定: ${exit === EXIT.PASS ? "🟢 往復フラッシュ 0・縦ずれ 0" : "🔴 往復フラッシュまたは縦ずれあり"}  (exit ${exit})`,
       `  出力: ${outDir}  (video.webm / timeline.json / frames.csv / tiles.png / summary.txt)`,
     ];
     const summary = lines.join("\n") + "\n";
