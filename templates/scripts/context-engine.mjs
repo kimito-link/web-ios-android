@@ -305,9 +305,9 @@ function collectContext(root, ledgerRel = DEFAULT_LEDGER) {
   const openActions = collectOpenActions(root, ledger.rows);
   problems.push(...openActions.errors);
   const inconclusiveExtra = [];
-  if (openActions.plansDirReadable === false) {
-    inconclusiveExtra.push('計画ファイル置き場を読めず、確定アクションの転記漏れを検査できませんでした');
-  }
+  // ★既定の置き場が無いだけ（CI 等）は非該当で pass。明示したのに無い／読めないときだけ inconclusive。
+  const plansReason = plansDirInconclusive(openActions);
+  if (plansReason) inconclusiveExtra.push(plansReason);
   for (const item of openActions.open) inconclusiveExtra.push(`未実行の確定アクション: [${item.action?.kind || '?'}] ${item.action?.target || item.problem}`);
   for (const item of openActions.unclosedAfterExecution) inconclusiveExtra.push(`実行済みの疑い・台帳未閉: [${item.action?.kind || '?'}] ${item.action?.target}`);
   for (const item of openActions.transcriptionGaps) inconclusiveExtra.push(`転記漏れ: ${item.file}:${item.line} の確定アクション表がまだ台帳にありません（${item.recordHint}）`);
@@ -328,8 +328,19 @@ function normalizePathForCompare(p) {
   return slash(String(p || '')).toLowerCase().replace(/\/+$/, '');
 }
 
+/**
+ * 計画ファイル置き場を読む。
+ *
+ * ★戻り値の state は3つを区別する（2026-10-05）:
+ *   'ok'         … 存在して読めた（files に .md の一覧）
+ *   'absent'     … ディレクトリそのものが無い
+ *   'unreadable' … 存在するが読めない（権限等）
+ * ★「無い」と「読めない」を同じ readable:false に潰していたため、既定の ~/.claude/plans が
+ *   無い CI ランナーで inconclusive（exit 2）になり、配布先（surechigai-romi.link の
+ *   `pnpm check`）の CI を止めた。CI 等に計画置き場が無いのは正常であり、測り損ねではない。
+ */
 function findPlanFiles(plansDir) {
-  if (!existsSync(plansDir)) return { readable: false, files: [] };
+  if (!existsSync(plansDir)) return { state: 'absent', readable: false, files: [] };
   try {
     const now = Date.now();
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -339,10 +350,35 @@ function findPlanFiles(plansDir) {
       .filter((abs) => {
         try { return (now - statSync(abs).mtimeMs) <= thirtyDaysMs; } catch { return false; }
       });
-    return { readable: true, files };
+    return { state: 'ok', readable: true, files };
   } catch {
-    return { readable: false, files: [] };
+    return { state: 'unreadable', readable: false, files: [] };
   }
+}
+
+/**
+ * 計画置き場の状態から「測れなかった」理由を返す（無ければ null）。
+ *
+ * ★既定の置き場が【無い】だけなら非該当（pass）。`--plans-dir` を明示したのに無い、または
+ *   存在するのに読めないときだけ inconclusive。純関数にして --selftest で両方を毒として確認する。
+ */
+function plansDirInconclusive(oa) {
+  if (!oa) return null;
+  if (oa.plansDirState === 'ok' || oa.plansDirState === 'absent-default') return null;
+  if (oa.plansDirState === 'absent-explicit') {
+    return `--plans-dir で指定した計画ファイル置き場が存在せず、確定アクションの転記漏れを検査できませんでした: ${oa.plansDir}`;
+  }
+  return `計画ファイル置き場を読めず、確定アクションの転記漏れを検査できませんでした: ${oa.plansDir}`;
+}
+
+/** 計画置き場の状態を本文1行にする（pass でも理由を出す）。 */
+function plansDirNote(oa) {
+  if (!oa) return '';
+  if (oa.plansDirState === 'absent-default') {
+    return `計画ファイル置き場は非該当（既定の ${oa.plansDir} が無い。CI 等では置き場が無いのが正常。手元で検査するには --plans-dir <dir>）`;
+  }
+  if (oa.plansDirState === 'ok') return '計画ファイル置き場と突き合わせ済み';
+  return '計画ファイル置き場は未照合';
 }
 
 function stripCodeFences(text) {
@@ -408,8 +444,12 @@ function collectOpenActions(root, ledgerRows, plansDirOverride) {
     }
   }
 
-  const plansDir = plansDirOverride || value('--plans-dir', join(process.env.USERPROFILE || process.env.HOME || '.', '.claude', 'plans'));
-  const { readable, files } = findPlanFiles(plansDir);
+  // ★明示（引数 or --plans-dir）か既定かを分けて持つ。既定が無いのは非該当、明示が無いのは測り損ね。
+  const explicitPlansDir = plansDirOverride || value('--plans-dir', null);
+  const plansDirExplicit = Boolean(explicitPlansDir);
+  const plansDir = explicitPlansDir || join(process.env.USERPROFILE || process.env.HOME || '.', '.claude', 'plans');
+  const { state, readable, files } = findPlanFiles(plansDir);
+  const plansDirState = state === 'absent' ? (plansDirExplicit ? 'absent-explicit' : 'absent-default') : state;
   if (readable) {
     const closedTargets = new Set(
       ledgerRows.filter((r) => r.status === 'approved' || r.status === 'confirmed' || r.status === 'rejected')
@@ -433,7 +473,10 @@ function collectOpenActions(root, ledgerRows, plansDirOverride) {
     }
   }
 
-  return { open, unclosedAfterExecution, transcriptionGaps, warnings, errors, plansDirReadable: readable, plansDir: slash(plansDir) };
+  return {
+    open, unclosedAfterExecution, transcriptionGaps, warnings, errors,
+    plansDirReadable: readable, plansDirState, plansDirExplicit, plansDir: slash(plansDir)
+  };
 }
 
 function activeRows(rows) {
@@ -456,7 +499,7 @@ function renderOpenActionsSection(ctx) {
   const lines = ['## 0. 最優先・未実行の確定アクション', ''];
   const totalOpen = oa.open.length + oa.unclosedAfterExecution.length + oa.transcriptionGaps.length;
   if (totalOpen === 0) {
-    lines.push(`開いている確定アクションはありません（台帳${ctx.ledger.rows.length}行・計画ファイル置き場と突き合わせ済み）。`);
+    lines.push(`開いている確定アクションはありません（台帳${ctx.ledger.rows.length}行・${plansDirNote(oa)}）。`);
   } else {
     for (const row of oa.open) {
       lines.push(`- 🟡 未実行: [${row.action?.kind}] \`${row.action?.target}\`${row.action?.to ? ` → \`${row.action.to}\`` : ''}（${row.id}）`);
@@ -550,6 +593,7 @@ function printCheck(ctx) {
   const totalOpen = oa ? (oa.open.length + oa.unclosedAfterExecution.length + oa.transcriptionGaps.length) : 0;
   if (totalOpen === 0) {
     console.log(`[context-engine] ✅ 確定アクション: 開いている行はありません（台帳${ctx.ledger.rows.length}行と突き合わせ済み）`);
+    if (oa && oa.plansDirState === 'absent-default') console.log(`  ⚪ ${plansDirNote(oa)}`);
   } else {
     console.log(`[context-engine] 🟡 確定アクション: 未処理が${totalOpen}件あります`);
     for (const row of oa.open) console.log(`  🟡 未実行: [${row.action?.kind}] ${row.action?.target} (${row.id})`);
@@ -699,6 +743,29 @@ function runSelfTest() {
     } finally {
       try { rmSync(emptyPlansDir, { recursive: true, force: true }); } catch { /* best effort */ }
     }
+
+    // 毒8: ★既定の ~/.claude/plans が無い（CI ランナー相当）→ 非該当で pass（inconclusive にしない）。
+    //   2026-10-05 実損: ここを inconclusive にしていたため surechigai-romi.link の `pnpm check` が CI で exit 2。
+    const savedEnv = { USERPROFILE: process.env.USERPROFILE, HOME: process.env.HOME };
+    const noHome = join(tmpdir(), 'context-engine-nohome-' + process.pid + '-' + Date.now());
+    try {
+      process.env.USERPROFILE = noHome;
+      process.env.HOME = noHome;
+      const oa8 = collectOpenActions(root, []);
+      if (oa8.plansDirState !== 'absent-default' || plansDirInconclusive(oa8) !== null) {
+        fails.push('毒8: 既定の計画置き場が無いだけなのに inconclusive にした（CI では無いのが正常）');
+      }
+      if (!plansDirNote(oa8).includes('非該当')) fails.push('毒8: 非該当の理由を本文に出していない');
+    } finally {
+      if (savedEnv.USERPROFILE === undefined) delete process.env.USERPROFILE; else process.env.USERPROFILE = savedEnv.USERPROFILE;
+      if (savedEnv.HOME === undefined) delete process.env.HOME; else process.env.HOME = savedEnv.HOME;
+    }
+
+    // 毒9: ★--plans-dir を明示したのに無い → 従来どおり inconclusive（指定ミスを緑にしない）。
+    const oa9 = collectOpenActions(root, [], join(tmpdir(), 'context-engine-missing-plans-' + process.pid + '-' + Date.now()));
+    if (oa9.plansDirState !== 'absent-explicit' || plansDirInconclusive(oa9) === null) {
+      fails.push('毒9: 明示した計画置き場が無いのに inconclusive にならない');
+    }
   } catch (error) {
     fails.push('selftest 自体が例外: ' + oneLine(error.message));
   } finally {
@@ -709,7 +776,7 @@ function runSelfTest() {
     for (const fail of fails) console.error('  - ' + fail);
     return EXIT.FAIL;
   }
-  console.log('[context-engine] selftest OK（全件計上 / 秘密隔離 / 全履歴 / 証拠なし知識を拒否 / 却下案を継承 / 確定アクション台帳の7毒）');
+  console.log('[context-engine] selftest OK（全件計上 / 秘密隔離 / 全履歴 / 証拠なし知識を拒否 / 却下案を継承 / 確定アクション台帳の9毒）');
   return EXIT.PASS;
 }
 
