@@ -515,6 +515,18 @@ export const PAIRS = [
     copies: [
       resolve(homedir(), '.claude/skills/self-verification/SKILL.md')
     ]
+  },
+  {
+    /*
+     * ★2026-10-05追加。PWA起動画面の検査。旧説（background_color を外す）を反転し、
+     *   「background_color があり --expect-bg と一致」を合格にした金型。
+     *   surechigai は APP_BASE_BG を埋め込んだ特化コピーをやめ、無改変コピー＋
+     *   package.json の --expect-bg "#E2EDF7" に戻した（PR #63）。
+     *   設計記録: _docs/DESIGN-pwa-launch-screen-2026-10-05.md
+     */
+    label: 'PWA起動画面の検査（check-pwa-splash）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/check-pwa-splash.mjs'),
+    copies: [resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-pwa-splash.mjs')]
   }
 ];
 
