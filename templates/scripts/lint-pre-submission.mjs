@@ -1051,6 +1051,7 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
       distinction,
       teamApps,
       bundleId: appConfig?.identity?.bundleId ?? null,
+      ownProductionDomain: appConfig?.identity?.productionDomain ?? null,
       files: codeFiles,
       blankOutComments,
     }),

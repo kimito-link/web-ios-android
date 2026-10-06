@@ -306,11 +306,74 @@ export function isShortSiblingTerm(term) {
   return [...String(term || '')].length <= 2;
 }
 
+/** 2つの文字列の共通の先頭部分 */
+function commonPrefix(a, b) {
+  const x = [...String(a)];
+  const y = [...String(b)];
+  let i = 0;
+  while (i < x.length && i < y.length && x[i] === y[i]) i++;
+  return x.slice(0, i).join('');
+}
+
+/**
+ * 他アプリの名義から「コードの文字列に出てはいけない語」を作る（純関数・export は検証用）。
+ *
+ * ★実測（2026-10-06、S/D の実コードで較正）で分かった2つの落とし穴を塞ぐ:
+ *   1. 表示名どうしが共通の接頭辞（例「君斗りんくの」）を持つと、コードには接頭辞を除いた
+ *      「動員ちゃれんじ」で書かれる。表示名そのままでは、S に出荷された D 名義を**見逃す**。
+ *      → 接頭辞（3文字以上・2本以上で共通）を除いた形も比較語に足す。
+ *   2. 共通の本番ドメイン親（例 kimito.link。自分のドメイン surechigai.kimito.link の親）は、
+ *      全アプリが正当に参照する共通基盤。姉妹名義として数えると全アプリが赤になる。
+ *      → 自分の本番ドメインの親（suffix）に当たる語は自動で除く。
+ *      それ以外の共通語（例 表示名 "KimitoLink"）は distinction.allowedSiblingMentions で明示する。
+ * @param {{ displayName?: string, shortName?: string, productionDomain?: string, bundleId?: string }[]} teamApps
+ * @param {{ bundleId?: string | null, ownProductionDomain?: string | null, allowed?: Set<string> }} [opts]
+ * @returns {string[]}
+ */
+export function siblingTerms(teamApps, { bundleId = null, ownProductionDomain = null, allowed = new Set() } = {}) {
+  const apps = (Array.isArray(teamApps) ? teamApps : []).filter((a) => a && typeof a === 'object');
+  const names = apps.map((a) => (typeof a.displayName === 'string' ? a.displayName : null)).filter(Boolean);
+  const prefixes = new Set();
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const p = commonPrefix(names[i], names[j]);
+      if ([...p].length >= 3) prefixes.add(p);
+    }
+  }
+  const own = ownProductionDomain ? String(ownProductionDomain).toLowerCase() : null;
+  const terms = [];
+  const push = (t) => {
+    if (typeof t !== 'string') return;
+    if (isShortSiblingTerm(t)) return;
+    if (allowed.has(t)) return;
+    if (!terms.includes(t)) terms.push(t);
+  };
+  for (const app of apps) {
+    if (bundleId && app.bundleId && String(app.bundleId) === String(bundleId)) continue;
+    if (typeof app.bundleId === 'string' && app.bundleId.startsWith('<')) continue; // テンプレのプレースホルダ
+    push(app.displayName);
+    // 表示名そのものを許可したなら、そこから作る接頭辞除去の形も許可（同じ名義の別表記）
+    if (typeof app.displayName === 'string' && !allowed.has(app.displayName)) {
+      for (const p of prefixes) {
+        if (app.displayName.startsWith(p) && app.displayName.length > p.length) push(app.displayName.slice(p.length));
+      }
+    }
+    push(app.shortName);
+    const d = typeof app.productionDomain === 'string' ? app.productionDomain.toLowerCase() : null;
+    if (d) {
+      const isParentOfOwn = own != null && (own === d || own.endsWith('.' + d));
+      if (!isParentOfOwn) push(app.productionDomain);
+    }
+  }
+  return terms;
+}
+
 /**
  * @param {{
  *   distinction?: { allowedSiblingMentions?: string[] } | null,
  *   teamApps?: { displayName?: string, shortName?: string, productionDomain?: string, bundleId?: string }[] | null,
  *   bundleId?: string | null,
+ *   ownProductionDomain?: string | null,
  *   files?: { path: string, text: string }[],
  *   blankOutComments: (text: string) => string,
  * }} input
@@ -319,6 +382,7 @@ export function checkNoSiblingNamesInCode({
   distinction,
   teamApps = null,
   bundleId = null,
+  ownProductionDomain = null,
   files = [],
   blankOutComments,
 } = {}) {
@@ -345,18 +409,7 @@ export function checkNoSiblingNamesInCode({
       String,
     ),
   );
-  const terms = [];
-  for (const app of teamApps) {
-    if (!app) continue;
-    if (bundleId && app.bundleId && String(app.bundleId) === String(bundleId)) continue;
-    for (const key of ['displayName', 'shortName', 'productionDomain']) {
-      const t = app[key];
-      if (typeof t !== 'string') continue;
-      if (isShortSiblingTerm(t)) continue;
-      if (allowed.has(t)) continue;
-      if (!terms.includes(t)) terms.push(t);
-    }
-  }
+  const terms = siblingTerms(teamApps, { bundleId, ownProductionDomain, allowed });
   if (terms.length === 0) {
     return result('ok', name, '比較対象の姉妹アプリ名義が無い');
   }
