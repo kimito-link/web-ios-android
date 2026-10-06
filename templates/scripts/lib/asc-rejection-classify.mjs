@@ -14,6 +14,29 @@
 // Apple は書き込まない。これを Apple の feedback として読むと誤分類するので読まない。
 
 const PATTERNS = [
+  // ★4.3(a) スパム / 4.2 最低限の機能（2026-10-06 追加）。必ず先頭に置く。
+  //   後続の SCREENSHOT（/misleading|inaccurate/）等が却下文中の語に当たって、
+  //   「スクショを直せば再提出できる」と誤分類し自動再提出してしまうのを防ぐ。
+  //   action は RETRY_ACTIONS（asc-review-poll.yml）に含めない = 自動再提出しない。
+  //   4.3/4.2 の自動再提出は、却下文の "Accounts that repeatedly submit ... face removal" そのもの。
+  //   設計: _docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md §C2
+  {
+    code: 'FOUR_THREE_SPAM',
+    label: 'Guideline 4.3(a) — Spam (similar binary, metadata, and/or concept)',
+    // (?<!数字や.)4.3(?!数字): 'iOS 14.3' や 'v1.4.3' の誤爆を避ける（条項番号の 4.3 だけ）
+    regex: /(?<![\d.])4\.3(?!\d)|spam|similar binary|repackaged|app template/i,
+    action: 'manual-review-no-retry',
+    hint:
+      '4.3(a) Spam。自動再提出しない。Resolution Center で「類似と見た画面・要素」を具体的に指摘してもらい、電話相談/予約相談を使う。直した事実だけを返信に書く。repeated submission は Developer Program 除名の根拠になる。',
+  },
+  {
+    code: 'FOUR_TWO',
+    label: 'Guideline 4.2 — Minimum Functionality / repackaged website',
+    regex: /(?<![\d.])4\.2(?!\d)|minimum functionality|repackaged website|web clipping/i,
+    action: 'manual-review-no-retry',
+    hint:
+      '4.2 最低限の機能。自動再提出しない。ネイティブ専用機能を足した上で、Resolution Center に具体的に説明する（KB §4.2）。',
+  },
   {
     code: 'TWO_THREE_TEN',
     label: 'Guideline 2.3.10 — other-platform reference',

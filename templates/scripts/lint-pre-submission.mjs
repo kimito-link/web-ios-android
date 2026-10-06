@@ -20,9 +20,26 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { blankOutComments } from './check-tracked-imports.mjs';
+import {
+  DISTINCTION_CODE_DIRS,
+  DISTINCTION_CODE_EXTS,
+  checkConfigMatchesIap,
+  checkConfigMatchesIosPublished,
+  checkConfigMatchesLoginCopy,
+  checkConfigMatchesPlayListing,
+  checkConfigMatchesSiwa,
+  checkDistinctionMatchesDescription,
+  checkDistinctionMatchesScreenshots,
+  checkDistinctionPresent,
+  checkNoMarketingPageScreenshot,
+  checkNoSiblingNamesInCode,
+  checkNoStaleCapacitorConfig,
+} from './lib/distinction-checks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
+// LINT_ROOT: 別リポのつもりで検査する（キット側から S/D 等の実物に当てて毒テストするため）。既定は従来どおり。
+const ROOT = process.env.LINT_ROOT ? path.resolve(process.env.LINT_ROOT) : path.resolve(__dirname, '..');
 
 const ANSI_RED = '\x1b[31m';
 const ANSI_YELLOW = '\x1b[33m';
@@ -45,7 +62,6 @@ function ok(name, detail) {
 function skip(name, why) {
   console.log(`${ANSI_DIM}- ${name} (skip: ${why})${ANSI_RESET}`);
 }
-
 function readFile(rel) {
   const p = path.join(ROOT, rel);
   if (!fs.existsSync(p)) return null;
@@ -965,6 +981,139 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
       }
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 24〜30 — 4.3(a) スパム対策の「既知の寄与要因の自己点検」
+//   2026-10-06追加。設計: _docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md §C1/C2
+//
+// 【位置づけ】Apple の判定の再現ではない。公式の寄与要因（他アプリ名義の混入・使用中でない
+//   スクショ・同型メタデータ・残骸設定・公開状態と設定の食い違い）を、提出前に自分で点検する。
+//   判定の純関数は lib/distinction-checks.mjs（テスト付き）。ここは読み込みと出力だけ。
+//   - 24 distinction-present / 25 説明文一致 / 26 スクショ一致
+//   - 27 他アプリ名義の混入（store-assets/team-apps.json が要る。無ければ fail＝測れないものは通さない）
+//   - 28 マーケ系ページのスクショ / 29 Expo なのに capacitor.config 残骸 / 30 設定と実態の食い違い
+//   姉妹リポが要る検査（コード同一率・スクショ知覚ハッシュ・説明文の姉妹間類似）は verify-team-distinction.mjs。
+// ----------------------------------------------------------------------------
+{
+  const reportOne = (r) => {
+    if (r.status === 'ok') ok(r.name, r.detail);
+    else if (r.status === 'warn') warn(r.name, r.guideline || '4.3(a)', r.detail);
+    else if (r.status === 'fail') fail(r.name, r.guideline || '4.3(a)', r.detail);
+    else skip(r.name, r.detail);
+  };
+  const report = (r) => (Array.isArray(r) ? r.forEach(reportOne) : reportOne(r));
+  const tryJson = (rel) => {
+    try {
+      return readJson(rel);
+    } catch (e) {
+      fail('distinction-input-unreadable', '4.3(a)', `${rel} を JSON として読めない: ${e.message}`);
+      return null;
+    }
+  };
+
+  const distinction = appConfig?.distinction ?? null;
+  report(checkDistinctionPresent({ ascAppId: appConfig?.stores?.ascAppId, distinction }));
+
+  // 25: 説明文（ja があれば ja だけ。en に日本語の oneLiner を要求しない）
+  const apDir = path.join(ROOT, 'store-assets', 'appstore');
+  let descNames = fs.existsSync(apDir) ? fs.readdirSync(apDir).filter((f) => /^description-.*.txt$/i.test(f)) : [];
+  const jaNames = descNames.filter((f) => /^description-ja/i.test(f));
+  if (jaNames.length > 0) descNames = jaNames;
+  const descriptionFiles = descNames.map((f) => ({ name: f, text: fs.readFileSync(path.join(apDir, f), 'utf8') }));
+  report(
+    checkDistinctionMatchesDescription({
+      distinction,
+      descriptionFiles,
+      releaseNotesJa: readFile('release-notes/CURRENT-ja.txt'),
+    }),
+  );
+
+  // 26 / 28: スクショ計画
+  const screenshotPlan = tryJson('store-assets/screenshot-plan.json');
+  report(checkDistinctionMatchesScreenshots({ distinction, screenshotPlan }));
+  report(checkNoMarketingPageScreenshot({ screenshotPlan }));
+
+  // 27: 他アプリ名義の混入
+  const teamApps = tryJson('store-assets/team-apps.json');
+  const codeFiles = [];
+  if (hasDistinctionObject(distinction)) {
+    for (const d of DISTINCTION_CODE_DIRS) {
+      for (const f of walkDir(path.join(ROOT, d))) {
+        if (f.split(path.sep).includes('node_modules')) continue;
+        if (!DISTINCTION_CODE_EXTS.includes(path.extname(f))) continue;
+        codeFiles.push({ path: path.relative(ROOT, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') });
+      }
+    }
+  }
+  report(
+    checkNoSiblingNamesInCode({
+      distinction,
+      teamApps,
+      bundleId: appConfig?.identity?.bundleId ?? null,
+      files: codeFiles,
+      blankOutComments,
+    }),
+  );
+
+  // 29: 残骸の capacitor.config
+  report(
+    checkNoStaleCapacitorConfig({
+      hasAppConfigTs: fs.existsSync(path.join(ROOT, 'app.config.ts')),
+      hasCapacitorConfig:
+        fs.existsSync(path.join(ROOT, 'capacitor.config.json')) || fs.existsSync(path.join(ROOT, 'capacitor.config.ts')),
+      packageJson: pkg,
+    }),
+  );
+
+  // 30: 設定と実態（オフライン分は常に、ネットワーク分は LINT_NETWORK=1 のときだけ）
+  report(checkConfigMatchesIap({ hasInAppPurchase: appConfig?.businessModel?.hasInAppPurchase, packageJson: pkg }));
+  report(
+    checkConfigMatchesLoginCopy({
+      loginRequired: appConfig?.auth?.loginRequired,
+      summaryJa: appConfig?.businessModel?.summaryJa,
+    }),
+  );
+  report(
+    checkConfigMatchesSiwa({
+      siwaEnabled: appConfig?.auth?.siwaEnabled,
+      thirdPartyProvidersOnIos: appConfig?.auth?.thirdPartyProvidersOnIos,
+    }),
+  );
+  let playStatus = null;
+  let controlStatus = null;
+  let resultCount = null;
+  if (process.env.LINT_NETWORK === '1' && appConfig) {
+    const status = async (url) => {
+      try {
+        return (await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(10000) })).status;
+      } catch {
+        return null; // 不通は skip 扱い（測れなかったことを緑にしない）
+      }
+    };
+    const pkgName = appConfig.stores?.playPackageName || appConfig.identity?.bundleId;
+    if (pkgName) {
+      playStatus = await status(`https://play.google.com/store/apps/details?id=${encodeURIComponent(pkgName)}`);
+      controlStatus = await status('https://play.google.com/store/apps/details?id=com.kimito.link.notexist999');
+    }
+    if (appConfig.identity?.bundleId) {
+      try {
+        const res = await fetch(
+          `https://itunes.apple.com/lookup?bundleId=${encodeURIComponent(appConfig.identity.bundleId)}&country=jp`,
+          { signal: AbortSignal.timeout(10000) },
+        );
+        resultCount = (await res.json()).resultCount ?? null;
+      } catch {
+        resultCount = null;
+      }
+    }
+  }
+  report(checkConfigMatchesPlayListing({ playAppId: appConfig?.stores?.playAppId, playStatus, controlStatus }));
+  report(checkConfigMatchesIosPublished({ iosPublished: appConfig?.stores?.iosPublished, resultCount }));
+}
+
+function hasDistinctionObject(d) {
+  return d != null && typeof d === 'object';
 }
 
 // ----------------------------------------------------------------------------
