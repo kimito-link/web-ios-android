@@ -49,6 +49,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-commit-preceded-by-verification.mjs\"",
             "timeout": 10,
             "statusMessage": "実地検証の履歴チェック中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-external-actions.mjs\"",
+            "timeout": 10,
+            "statusMessage": "外向き操作の前提(CLAUDE.md既読・coord・チェック)確認中..."
           }
         ]
       }
