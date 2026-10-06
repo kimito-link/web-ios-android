@@ -35,7 +35,12 @@
 name: ios-appstore-release
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      override_freeze_reason:
+        description: "★提出凍結(store-submission-freeze.json)を個別に通すときの理由。空なら凍結中は止まる"
+        type: string
+        default: ""
   push:
     branches:
       - main
@@ -88,6 +93,30 @@ jobs:
       APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
 
     steps:
+      # ★提出凍結ゲート（2026-10-06、App Store 4.3(a) 対応で追加。設計: _docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md §B4）
+      # 凍結スイッチは1つ: キット公開リポの store-submission-freeze.json。各アプリに個別フラグを作らない。
+      # fail-closed: 取得できない・読めないときは止める（「測れなかった」を緑にしない）。
+      # push / workflow_dispatch / asc-review-poll の自動 dispatch のどれで起動しても、ここを必ず通る。
+      - name: Store-submission freeze gate
+        env:
+          OVERRIDE_REASON: ${{ github.event.inputs.override_freeze_reason }}
+        run: |
+          set -uo pipefail
+          URL="https://raw.githubusercontent.com/kimito-link/web-ios-android/main/store-submission-freeze.json"
+          if ! BODY="$(curl -fsS --max-time 10 "$URL")"; then
+            STATE="unreadable"
+          else
+            STATE="$(printf '%s' "$BODY" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.frozen===true?"frozen":j.frozen===false?"open":"unreadable")}catch(e){console.log("unreadable")}})')"
+          fi
+          echo "freeze state: $STATE"
+          if [ "$STATE" = "open" ]; then exit 0; fi
+          if [ -n "${OVERRIDE_REASON:-}" ]; then
+            echo "::warning::提出凍結を個別に通します（理由: ${OVERRIDE_REASON}）"
+            exit 0
+          fi
+          echo "::error::提出は凍結中、または凍結ファイルを読めません（state=$STATE）。解除は store-submission-freeze.json の frozen を false に。緊急時のみ workflow_dispatch の override_freeze_reason に理由を書く"
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v6
 

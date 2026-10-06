@@ -8,6 +8,32 @@
   "properties": {
     "$schema": { "type": "string" },
     "_README": { "type": "string", "description": "テンプレ冒頭の案内文（値の検証対象外）" },
+    "_status": { "type": "string", "description": "進捗メモ（値の検証対象外）" },
+    "android": {
+      "type": "object",
+      "description": "Play App Signing が再署名した署名証明書の SHA-256（assetlinks.json 用）。TWA で使う",
+      "additionalProperties": false,
+      "properties": {
+        "_note": { "type": "string" },
+        "sha256CertFingerprints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "distinction": {
+      "type": "object",
+      "description": "★4.3(a)対策（2026-10-06）。このアプリが同一Team内の他アプリと『別アプリ』である根拠を、外から読める形で宣言する。lint-pre-submission の CHECK 24〜26 と verify-team-distinction.mjs が、説明文・スクショ・他アプリとの交わりと照合する。設計: _docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md §C1",
+      "required": ["oneLiner", "audience", "subject", "coreFeatures"],
+      "additionalProperties": false,
+      "properties": {
+        "oneLiner": { "type": "string", "minLength": 10, "description": "このアプリを1文で言う。ストア説明文の先頭1文と完全一致させる" },
+        "audience": { "type": "string", "minLength": 4, "description": "誰のためのアプリか（対象者）" },
+        "subject": { "type": "string", "minLength": 2, "description": "題材（何について）" },
+        "coreFeatures": { "type": "array", "minItems": 3, "maxItems": 6, "items": { "type": "string", "minLength": 2 }, "description": "この版が売りにする機能。同一Team内の他アプリと交わらせない" },
+        "notThisApp": { "type": "array", "items": { "type": "string" }, "description": "意図的にやらないこと（他アプリの領分を含む）" },
+        "sharedFoundation": { "type": "array", "items": { "type": "string" }, "description": "他アプリと意図的に共通にしている基盤（認証・UI部品など）。審査ノートの根拠にも使う" },
+        "sharedFoundationPaths": { "type": "array", "items": { "type": "string" }, "description": "同一率検査（verify-team-distinction）から除外するパス（glob）" },
+        "allowedSiblingMentions": { "type": "array", "items": { "type": "string" }, "description": "到達コードの文字列に出てよい姉妹アプリ名（例: 診断結果から別アプリへ送る導線）" }
+      }
+    },
 
     "identity": {
       "type": "object",
@@ -21,7 +47,8 @@
         "iosScheme": { "type": "string", "description": "Capacitor iOS URL scheme (e.g., rhpartner)" },
         "appleSiwaServiceId": { "type": ["string", "null"], "description": "Apple Sign in with Apple Service ID, or null if SIWA not configured" },
         "productionDomain": { "type": "string", "format": "hostname" },
-        "stagingDomain": { "type": ["string", "null"] }
+        "stagingDomain": { "type": ["string", "null"] },
+        "shortDescription": { "type": "string", "description": "短い説明（ストア掲載・メタ用の1文）" }
       }
     },
 
@@ -35,7 +62,9 @@
         "playPackageName": { "type": "string" },
         "appleTeamId": { "type": ["string", "null"] },
         "playDeveloperId": { "type": ["string", "null"] },
-        "primaryCategory": { "type": "string", "enum": ["BUSINESS", "PRODUCTIVITY", "LIFESTYLE", "UTILITIES", "FINANCE", "EDUCATION", "HEALTH_AND_FITNESS"] },
+        "primaryCategory": { "type": "string", "enum": ["BUSINESS", "PRODUCTIVITY", "LIFESTYLE", "UTILITIES", "FINANCE", "EDUCATION", "HEALTH_AND_FITNESS", "ENTERTAINMENT", "SOCIAL_NETWORKING"] },
+        "iosPublished": { "type": "boolean", "description": "App Store に公開済みか。★ローカル申告であり正本ではない（正本は ASC / iTunes Lookup。食い違いは lint CHECK 30 が見る）" },
+        "playVersionCode": { "type": "integer", "description": "Play の versionCode（Android リリース workflow が使う）" },
         "ageRating": { "type": "string", "enum": ["FOUR_PLUS", "NINE_PLUS", "TWELVE_PLUS", "SEVENTEEN_PLUS"] },
         "contentRights": { "type": "string", "enum": ["DOES_NOT_USE_THIRD_PARTY_CONTENT", "USES_THIRD_PARTY_CONTENT"] },
         "marketingVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
@@ -53,7 +82,11 @@
         "accentColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
         "iconSource": { "type": "string", "description": "Path to 1024x1024 source PNG used by icon generators" },
         "featureGraphicSource": { "type": ["string", "null"] },
-        "logoTypeWeb": { "type": "string" }
+        "logoTypeWeb": { "type": "string" },
+        "faviconSource": { "type": ["string", "null"], "description": "favicon の元画像パス" },
+        "wordmarkSource": { "type": ["string", "null"], "description": "ワードマークの元画像パス" },
+        "iconWeb512": { "type": ["string", "null"], "description": "Web 用 512px アイコンのパス（URL パス）" },
+        "faviconWeb": { "type": ["string", "null"], "description": "Web 用 favicon のパス（URL パス）" }
       }
     },
 
@@ -63,12 +96,14 @@
       "additionalProperties": false,
       "properties": {
         "email": { "type": "string", "format": "email" },
-        "phoneE164": { "type": "string", "pattern": "^\\+\\d{1,3} \\d.+$", "description": "E.164 with one space after country code, e.g. '+81 90 1234 5678'" },
+        "phoneE164": { "type": "string", "pattern": "^\\+\\d{1,3} ?\\d.+$", "description": "E.164。国番号の後の空白は有っても無くてもよい（例 '+81 90 1234 5678' / '+819012345678'）" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "supportUrl": { "type": "string", "format": "uri" },
         "privacyUrl": { "type": "string", "format": "uri" },
-        "dataDeletionUrl": { "type": "string", "format": "uri" },
+        "dataDeletionUrl": { "type": ["string", "null"], "format": "uri", "description": "データ削除の案内URL。アカウントを作らないアプリは null（キー自体は必須）" },
+        "lineUrl": { "type": ["string", "null"], "format": "uri", "description": "LINE 公式アカウントの URL" },
+        "lineId": { "type": ["string", "null"], "description": "LINE 公式アカウントの ID（@xxx）" },
         "termsUrl": { "type": ["string", "null"], "format": "uri" },
         "marketingUrl": { "type": "string", "format": "uri" }
       }
@@ -83,6 +118,12 @@
         "thirdPartyProvidersOnWeb": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
         "thirdPartyProvidersOnIos": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
         "thirdPartyProvidersOnAndroid": { "type": "array", "items": { "type": "string", "enum": ["google", "apple", "github", "microsoft", "facebook", "twitter", "discord"] } },
+        "_note": { "type": "string" },
+        "_xOAuthAppNote": { "type": "string" },
+        "_scopeNote": { "type": "string" },
+        "loginRequired": { "type": "boolean", "description": "ログインしないと使えないアプリか。★説明文の「アカウント登録なし」と食い違わせない（lint CHECK 30）" },
+        "xOAuthSharedApp": { "type": ["boolean", "null"], "description": "X OAuth アプリを他サービスと共有しているか" },
+        "clerkProxyUrl": { "type": ["string", "null"], "format": "uri", "description": "Clerk の FAPI をアプリ自身のドメイン経由にするプロキシ URL" },
         "siwaEnabled": { "type": "boolean", "description": "Whether Sign in with Apple is configured in the auth provider (true → SIWA button shows on all platforms)" },
         "demoAccountUsernameSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo username" },
         "demoAccountPasswordSecret": { "type": "string", "description": "Name of GitHub secret holding the reviewer demo password" },
@@ -102,7 +143,7 @@
       "properties": {
         "_note": { "type": "string" },
         "enabled": { "type": "boolean" },
-        "itemId": { "type": "string", "description": "Chromeウェブストアの拡張ID(32文字)。初回だけ手動で作って控える" },
+        "itemId": { "type": ["string", "null"], "description": "Chromeウェブストアの拡張ID(32文字)。初回だけ手動で作って控える" },
         "manifestPath": { "type": "string" }
       }
     },
@@ -113,7 +154,7 @@
       "additionalProperties": false,
       "properties": {
         "_note": { "type": "string" },
-        "kind": { "type": "string", "enum": ["b2b-referral", "b2c-saas", "b2c-content", "informational", "b2b-saas", "marketplace"] },
+        "kind": { "type": "string", "enum": ["b2b-referral", "b2c-saas", "b2c-content", "informational", "b2b-saas", "marketplace", "free-self-care"] },
         "hasInAppPurchase": { "type": "boolean" },
         "hasSubscription": { "type": "boolean" },
         "hasPaidContent": { "type": "boolean" },

@@ -1,0 +1,7 @@
+{
+  "frozen": true,
+  "reason": "提出前の自己点検ゲート(区別軸の宣言・lint CHECK 24〜30)を各アプリへ配るまで、同一 Team の新規ストア提出を一時的に止める。",
+  "since": "2026-10-06",
+  "how_to_unfreeze": "このファイルの frozen を false にして main に入れる（解除は人間）。個別に通す緊急時だけ workflow_dispatch の override_freeze_reason に理由を書く。",
+  "readers": "各アプリの ios-appstore-release.yml の先頭ステップ(templates/workflows/ios-appstore-release.yml)が raw URL で取得する。取得できなければ止まる(fail-closed)。公開リポなので詳細な事情はここに書かない。"
+}

@@ -77,6 +77,8 @@ Capacitor + Vite + 認証SaaS でWebアプリを包んだ構成で最も刺さ�
 | v1.0.8 | 2.3.3(再) "screenshots only display a login screen" | 新スクショを撮ったのに slot1 が旧ログイン画面のまま | upload が filename 一致で skip(ASC slot は versionString を跨いで persist) | upload で **delete-then-reupload**(撮り直すたび全削除→再upload)。slot1(最左)を最強画面に |
 | kimito 0.1.0 | **4 Design** "taken to the **default web browser** to sign in" | ログインボタンで外部Safariが開く | `capacitor.config.ts` の `server.allowNavigation` に **`appleid.apple.com` が無く**、SIWAボタンで未許可ドメイン遷移→iOSが外部Safariを開いた | **allowNavigation に `appleid.apple.com`/`*.apple.com` を追加**（1ドメイン足すだけ・ネイティブパッチ不要・追加のみで本番ログイン無傷）。Googleは WKWebView ブロックのため足さない。詳細§4 Design |
 | kimito 0.1.0 | **2.1(a)** ソーシャルログインの仕方が不明 | 審査員がX専用ログイン(email/PWフォーム無し)でアクセス不可 | reviewer notes にログイン手順が無かった | `review-notes/CURRENT-en.txt` を版管理し「Continue with X→デモ垢→2FA無効」手順＋**SIWA保険経路**を明記。詳細§4 Design 末尾 |
+| S 1.0.0 | **4.3(a)** Spam（Extended Review） | "shares a similar binary, metadata, and/or concept ... with only minor differences" | 他アプリ(D)の文言が出荷・D の中核の簡略移植・空スクショ・同型メタデータ（推測順位。Apple 未回答） | **再提出の結果は未検証**（自己点検 CHECK 24〜30 を作った。§4.3） |
+| D 1.0.0 | **4.3(a)** Spam（Extended Review） | 同上 | スクショがマーケLP・描画の壊れた全国マップ・空状態／S と土台が同じ | **再提出の結果は未検証**（マップの描画不具合を修正。§4.3） |
 
 ---
 
@@ -515,9 +517,38 @@ X/Apple 専用ログイン(email/PWフォーム無し)のアプリは、審査 N
 
 > "Don't create multiple Bundle IDs of the same app."
 
-WebView wrapper の "1コードベースで brand-B の URL を指すだけ" が 4.3(a) の標的。Apple は asset hash /
-framework signature(`CAPBridgeViewController`)/ Info.plist 形状で同一開発者のアプリを clustering する。
-対処: マルチテナント化 / クライアント別開発者アカウント / 機能セットを本当に差別化。
+**★2026-10-06 に前提を訂正した（実損）**: 以前ここは「WebView wrapper だけが標的」と書いていたが、
+**Expo prebuild のネイティブアプリでも 4.3(a) を食らう**（すれ違ひ通信 2026-09-23・動員ちゃれんじ 2026-10-04。
+どちらも Capacitor 依存0）。Apple の文言（原文のまま）:
+
+> "shares a similar binary, metadata, and/or concept as apps submitted to the App Store by you or other developers, with only minor differences"
+> 寄与要因: "Creating and submitting multiple similar apps using a repackaged app template"
+> Extended Review の通告（繰り返せば審査延長）と "Accounts that repeatedly submit ... face removal from the Apple Developer Program"
+
+**公式の例は「同一アプリを複数 Bundle ID に分ける」こと**（都市ごとの地図アプリ → 1つの世界地図アプリ、
+場所・チーム・大学ごとの版 → 1アプリ＋アプリ内課金）。「同じ会社が複数アプリを出してはいけない」とは書いていない。
+共通ID基盤の上に別目的のアプリが並ぶこと自体は普通（大手の実測: 楽天45本・LINE42本が1アカウントに並存）。
+
+**実測で分かったこと（断定できる範囲。★どれが決め手かは Apple 未回答）**
+- 到達コード（`app/` から import で届く範囲）の完全一致は S 7.3%・D 4.5% と低かった。それでも却下された。
+- 片方のバイナリに**他方のアプリの文言が出荷**されていた（S のログイン成功モーダルに「動員ちゃれんじへようこそ！」）。
+- 片方に、他方の中核機能の簡略移植が入っていた（S の「集まり」＝ D の参加表明）。
+- 提出スクショが使用中の画面でなかった（マーケLPのキャプチャ・描画の壊れた画面・空状態）。
+- ASC 上の説明文・審査メモがリポ外にあり、提出スクリプトが ASC 側を優先していたため、リポの修正が提出物に届かず、
+  他方のアプリの記述（D の審査メモに S の機能名）が残っていた。
+- 同じ Team に、説明文の構造・文言が同一の**公開済みの双子アプリ**（同一リポ・同一コードのブランド違い）があった。
+
+**撤回する助言**: 「クライアント別開発者アカウント」。公式の寄与要因に「複数アカウントにまたがる類似アプリ」があり、
+リンクされた2アカウントで本体まで終了予告となった公開事例がある。別アカウント・新規 Bundle ID での出し直しは対策ではなく悪化要因。
+
+**対処（根本）**: 同一 Team のアプリごとに `app.config.json` の `distinction`（区別軸の宣言）を持ち、提出前に自己点検する。
+- 同リポ: `lint-pre-submission.mjs` の CHECK 24〜30（宣言の有無・説明文先頭1文との一致・スクショ・他アプリ名義の混入・マーケ系ページのスクショ・残骸 capacitor.config・設定と実態の食い違い）
+- 姉妹リポ横断: `verify-team-distinction.mjs`（機能の交わり・説明文の5-gram・リリースノート冒頭の型）。名義一覧は `asc-list-team-apps.mjs`
+- ★これは「Apple の判定の再現」ではなく「既知の寄与要因の自己点検」。コード同一率・スクショの類似は未実装
+- 却下後の自動再提出は**しない**（`asc-rejection-classify.mjs` の FOUR_THREE_SPAM / FOUR_TWO は `manual-review-no-retry`）。
+  キットの `store-submission-freeze.json` を使うと、同一 Team の提出を一括で止められる（凍結ゲート）
+- **再提出の結果はまだ無い（未検証）**。通ったら、効いた対処をここに書く
+- 設計と経緯: `_docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md`
 
 ---
 
@@ -624,7 +655,9 @@ KB照合の優先順位は既存の実際の却下/通過ログの方が上。�
 3. **視覚的争点なら注釈付きスクショを添付**。
 4. **テンプレの後でも事実を再陳述**(bot生成 / stale screenshot 相手のことがある)。
 5. **政策を論じない**("4.8は不合理")**、事実だけ論じる**("we don't trigger 4.8")。
-6. **escalation**: 同テンプレ再来 → 前回返信を日付つきで引用し「該当画面を指摘してください」→
+6. **4.3(a) / 4.2 は自動再提出しない**。2回目の却下で人間接触（Resolution Center で類似と見た画面・要素の具体的指摘を求める・電話・予約相談）。
+   appeal は1提出につき1回、追加情報要求には先に答える。**直した事実だけを書く**（直す前に「直した」と書かない。別アカウント・新規 Bundle ID の話は書かない）。
+7. **escalation**: 同テンプレ再来 → 前回返信を日付つきで引用し「該当画面を指摘してください」→
    3振目で **App Review Board appeal**(Contact Us → App Review → Submit an appeal、3-5営業日、別の人間)。
 
 ### B. テンプレ返信 — 4.8 / 2.1(a) / 2.1(b) を一度に潰す(v1.0.1 で送り前進した実文)
@@ -830,6 +863,11 @@ Thank you for your patience.
 - [ ] "Android" / "Google Play" / "Play Store" / "Galaxy" / "Pixel" / "Material Design" なし
 - [ ] スクショに URLバー等のブラウザ chrome が見えない
 - [ ] 全表示素材が 4+ 準拠
+- [ ] **説明文の先頭1文＝`distinction.oneLiner`**（lint CHECK 25）。同一 Team の他アプリと型・冒頭文が同じでない
+- [ ] **他アプリの名義がバイナリ（コードの文字列リテラル）に無い**（CHECK 27。`store-assets/team-apps.json` が要る）
+- [ ] スクショにマーケLP・空状態・描画の壊れた画面が無い（CHECK 28。2.3.3）
+- [ ] Expo なら `capacitor.config.json` の残骸が無い（CHECK 29）／公開状態と `stores.*`・`auth.*` が実態と一致（CHECK 30）
+- [ ] 説明文・審査メモの正本はリポ（ASC 側だけに文面を置かない。`description-ja.txt`）
 
 ### reviewer アクセス
 
