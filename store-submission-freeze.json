@@ -1,0 +1,7 @@
+{
+  "frozen": true,
+  "reason": "App Store 4.3(a) スパム却下（Extended Review）への対応中。S・D の再提出判定が出るまで、同一 Team の新規提出を止める。設計: _docs/DESIGN-apple-4-3a-spam-response-2026-10-06.md",
+  "since": "2026-10-06",
+  "how_to_unfreeze": "このファイルの frozen を false にして main に入れる（解除は人間）。個別に通す緊急時だけ workflow_dispatch の override_freeze_reason に理由を書く。",
+  "readers": "各アプリの ios-appstore-release.yml の先頭ステップ（templates/workflows/ios-appstore-release.yml）が raw URL で取得する。取得できなければ止まる（fail-closed）。"
+}
