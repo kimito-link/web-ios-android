@@ -154,6 +154,23 @@ describe("実プロセス（毒テスト＝止まること／緑＝通ること�
     const green = { GUARD_TEST_CHECKS_JSON: JSON.stringify([{ name: "lint", bucket: "pass" }]) };
     expect(run(dir, "gh pr merge 74 -R o/r --squash", t, green).out).toBe("");
   });
+  it("【毒】サブエージェント(agent_id あり)の外向き操作は、親が全部満たしていても止め、理由を正しく言う", () => {
+    const dir = makeRepo();
+    const t = transcript(dir, [...readClaude(dir), ...touchCoord(dir)]);
+    const input = { cwd: dir, transcript_path: t, tool_name: "Bash", agent_id: "subagent_x", agent_type: "general-purpose", tool_input: { command: "git push origin x" } };
+    const r = spawnSync("node", [HOOK], { input: JSON.stringify(input), encoding: "utf8" });
+    expect(r.stdout).toContain('"permissionDecision":"deny"');
+    expect(r.stdout).toContain("サブエージェント");
+    expect(r.stdout).toContain("親セッション");
+    // 「Read してください」と案内して無限に誤誘導しない
+    expect(r.stdout).not.toContain("を Read してください");
+  });
+  it("サブエージェントでも、外向きでないコマンドは止めない", () => {
+    const dir = makeRepo();
+    const input = { cwd: dir, transcript_path: transcript(dir, []), tool_name: "Bash", agent_id: "subagent_x", tool_input: { command: "git status" } };
+    const r = spawnSync("node", [HOOK], { input: JSON.stringify(input), encoding: "utf8" });
+    expect(r.stdout).toBe("");
+  });
   it("外向きでないコマンドは、CLAUDE.md を読んでいなくても止めない", () => {
     const dir = makeRepo();
     expect(run(dir, "git status && ls", transcript(dir, [])).out).toBe("");
