@@ -149,6 +149,24 @@ function main() {
   const repoRoot = findRepoRoot(cwd);
   if (!repoRoot) process.exit(0);
 
+  // 0. サブエージェントからの外向き操作は、ここでは検証できないので拒否する。
+  //    ★公式仕様: PreToolUse の transcript_path は**親セッションの会話ログ**を指し、サブエージェント自身の
+  //    Read・coord 参照はそこに残らない。agent_id があれば呼び出し元はサブエージェント
+  //    （https://code.claude.com/docs/en/hooks 「Subagent-Specific Fields」「Transcript Path Behavior」）。
+  //    2026-10-07、子エージェントが CLAUDE.md を全文 Read しても「Read していません」と拒否され続けた
+  //    （Read しても解けない拒否を『Read せよ』と案内していたのが誤誘導）。外向きの操作は親セッションで、
+  //    差分・チェックを確かめてから実行する運用にし、理由をそのまま伝える。緩めるのではなく、理由を正しく言う。
+  if (input.agent_id) {
+    deny(
+      `外向き・取り消せない操作（${risky.join(' / ')}）は、サブエージェントからは実行できません。\n- ` +
+        'このガードは親セッションの会話ログで「CLAUDE.md を全文 Read したか」「coord.md に触れたか」を確かめますが、' +
+        'サブエージェント自身の Read はそこに残らないため、Read しても通りません（試さなくてよい）。\n- ' +
+        '作業は commit までで止め、push・マージ・デプロイは親セッションに引き継いでください' +
+        '（親が差分とチェックを確かめてから実行します）。バイパス変数や別シェルでの迂回はしないこと。' +
+        '\n（このガードは .claude/hooks/guard-external-actions.mjs）'
+    );
+  }
+
   const reasons = [];
 
   // 1. CLAUDE.md を現在の内容のまま全文 Read したか

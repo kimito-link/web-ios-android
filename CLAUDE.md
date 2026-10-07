@@ -162,6 +162,10 @@ write_lock（Main-Write Pause）を取らずに3リポの main へ PR をマー�
   （付けた事実がコマンド履歴に残る＝後から検査できる、までが限界）。
 - ★判定しないこと: 読んだ内容に**従ったか**／引用符に隠した操作（`bash -c "..."`）／MCP・Agent 経由の外向き操作。
   「全文Read」は「見た」までの証拠で、読んでも破る可能性は残る。だから他の hook・Gate は別に残す。
+- ★サブエージェント（Agent で起動した子）からの外向き操作は**常に拒否**する（2026-10-07）。公式仕様で `transcript_path` は
+  親セッションの会話ログを指し、子の Read・coord 参照はそこに残らない（`agent_id` があれば子の呼び出し）ため、
+  子が CLAUDE.md を全文 Read しても通らない。子は commit までで止め、push・マージ・デプロイは**親が差分とチェックを
+  確かめてから代行**する。拒否メッセージもこの理由を言う（以前は「Read してください」と誤誘導していた）。
 - 配線: このリポのセッションは `.claude/settings.json`、他プロジェクトのセッションは
   `~/.claude/settings.json`（`web-ios-android-relay.mjs guard-external-actions.mjs`）。後者は PC ローカルで
   git に載らないので、**新しい PC では手で足す**（設計: 本節。確認は `node .claude/hooks/guard-external-actions.test.mjs` 相当の
