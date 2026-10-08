@@ -6,6 +6,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
   python dispatch.py --brain oc    --cwd <dir> "task"    # OpenCode + Alibaba qwen3.8-27b (direct)
   python dispatch.py --brain cf    --cwd <dir> "task"    # OpenCode + Cloudflare qwen3.8-27b (free daily quota)
+  python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
 
 Why fallback exists: free quotas die without warning (Alibaba flash and max each ran out within about 1.5 days on
@@ -28,17 +29,25 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # Full picture: MULTI-BRAIN-HOWTO.md §0. Grok Bot writes jobs into <repo>/_jobs/inbox; job-runner.py (Task
 # Scheduler, every 10 min) runs them through this dispatch. "The real Claude only plans/judges; hands are free brains."
 # Agent brains (can read/write files, run commands): auto tries them in this order.
-AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "local"]
+AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
               "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
               "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded"]
-TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "local": 1800}
+TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "glm": 900, "local": 1800}
 
 
 def say(msg):
-    print(msg, flush=True)
+    # Windows consoles default to cp932 here; brain output can contain chars it cannot encode
+    # (e.g. GLM returns "·"), which made print() raise UnicodeEncodeError and abort the run after
+    # the work had already succeeded. Re-encode to the stream's codec with replacement as a fallback.
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        enc = (getattr(sys.stdout, "encoding", None) or "utf-8")
+        sys.stdout.buffer.write((msg + "\n").encode(enc, "replace"))
+        sys.stdout.flush()
 
 
 def ensure_relay():
@@ -134,6 +143,13 @@ def build(brain, task, allowed, model=None):
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "cf":
         model = model or "cloudflare/@cf/qwen/qwen3.8-27b"
+        cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "glm":
+        # OpenCode + OpenRouter GLM-5.3-Flash (320B MoE, ~18B active, MIT). Paid but very cheap
+        # (~$0.15/$0.50 per 1M in/out on 2026-10-08); Opus-4.8-class coding. Placed AFTER the free
+        # brains (grok/qwen/oc/cf) and BEFORE local in AUTO_CHAIN: used when free quotas are spent,
+        # in preference to local (free but slow + weak at agent tasks). Key: user env OPENROUTER_API_KEY.
+        model = model or "openrouter/z-ai/glm-5.3-flash"
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "groq":
         # Groq free tier caps tokens per minute (8000 on gpt-oss-120b, similar on qwen3.8-27b), so an agent's
@@ -232,7 +248,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")

@@ -129,10 +129,11 @@ Qwen / Cloudflare / ローカルへ振り分ける**前**に、まずこの段�
 
 ```
 python docs/ai-workflows/tools/dispatch.py --cwd <作業フォルダ> "<やること>"            # 既定 --brain auto
-python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|local> --cwd <作業フォルダ> "<やること>"
+python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|glm|local> --cwd <作業フォルダ> "<やること>"
 ```
 
-**`--brain auto`（既定）は grok → qwen → oc → cf → local の順に試し、失敗したら次へ自動で移る**（2026-09-16 追加）。
+**`--brain auto`（既定）は grok → qwen → oc → cf → glm → local の順に試し、失敗したら次へ自動で移る**（2026-09-16 追加、glm は 2026-10-08 追加）。
+glm は無料枠（grok/qwen/oc/cf）を尽くした後・遅い local の前に入れている（格安だが従量課金なので無料の後、Opus 級なので遅い local より先）。
 失敗の判定は「終了コード≠0／タイムアウト／出力に `insufficient_quota`・`data_inspection_failed`・`API Error` 等」。
 `qwen` は Alibaba のモデルを kimi-k3 → glm-5.2 → deepseek-v4.1-flash → qwen3.8-27b → max → flash の順に**1トークンの探りを打って枠が残っているものだけ**使う。
 背景: 2026-09-16 に別セッションが `--brain grok`（権限待ちでタイムアウト）と `--brain qwen`（max の枠切れで403）に連続で失敗し、
@@ -145,6 +146,7 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 | `qwen` | Claude Code + Qwen3.8-Max（Alibaba、ローカル中継経由） | Alibaba 無料枠（Max 分） | CLAUDE.md・スキル・メモリを効かせたい仕事、文章・調査 |
 | `oc` | OpenCode + Qwen3.8-27B（Alibaba 直） | Alibaba 無料枠（27B 分） | 身軽なコード作業 |
 | `cf` | OpenCode + Cloudflare Qwen3.8-27B | Cloudflare の1日無料枠 | Alibaba の枠を温存したいとき |
+| `glm` | OpenCode + OpenRouter GLM-5.3-Flash（320B MoE・約18B アクティブ・MIT） | 従量だが激安（2026-10-08 実測で $0.15/$0.50 per 1M in/out）。`OPENROUTER_API_KEY` | **Opus-4.8 級のコーディングを無料枠が尽きた後に使う**。auto では cf の次・local の前。2026-10-08 追加・実呼び出し確認済み |
 | `local` | Claude Code + Ollama（Qwen3.6-35B-A3B） | 無料・無制限 | 急がない量産・退路 |
 | `gemini` | Gemini API 直叩き（**文章専用**、`GEMINI_API_KEY`、モデル鎖 3.8-flash → 3.5-flash-lite → 3.1-flash-lite → 2.5-flash-lite を1回の探りで選ぶ） | 無料枠は**モデルごと**。★調査にあった「Google ログインで1000/日」は 2026-09-16 実機で **`IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals`**（Antigravity へ移行済み）。Gemini CLI のエージェントは `-m` を指定しても内部で gemini-3.5-flash（無料 **20回/日**）を呼んで `TerminalQuotaError` になるため採用しない | 2026-09-16 追加。auto では grok の次 |
 | `groq` | Groq 無料枠（OpenAI 互換、`GROQ_API_KEY`） | カード不要。ただし **1リクエストの入力トークン上限が小さく、OpenCode の指示文が入らない**（`Request too large for model qwen/qwen3.8-27b ... on input tokens per ...`） | 2026-09-16 追加。**文章専用**（ファイル操作なし・会話1往復）。会議ハーネスと同じ使い方 |
