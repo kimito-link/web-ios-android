@@ -1,0 +1,17 @@
+{
+  "repos": {
+    "OWNER/REPO": {
+      "path": "C:/path/to/local/clone/of/REPO",
+      "installCommand": ["npm", "ci"],
+      "gateCommand": ["npm", "test"]
+    }
+  },
+  "allowedAuthors": ["YOUR-GITHUB-LOGIN"],
+  "maxRunsPer24h": 5,
+  "maxTurns": 40,
+  "workTimeoutMinutes": 30,
+  "maxChangedFiles": 50,
+  "keepFailedWorktrees": true,
+  "verifyGraceMinutes": 15,
+  "stateDir": "C:/Users/YOU/.idea-pipeline"
+}

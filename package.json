@@ -27,6 +27,7 @@
     "instrument": "node templates/scripts/run-instruments.mjs --deep --report .instrument-report.json .",
     "instrument:site": "node templates/scripts/run-instruments.mjs --deep --security-url https://kimito-skill.link --report .instrument-report.json .",
     "instrument:selftest": "node templates/scripts/run-instruments.mjs --selftest",
+    "idea-pipeline:selftest": "node templates/idea-to-pr-local/worker.mjs --selftest",
     "security:score": "node templates/scripts/verify-security-score.mjs --url https://kimito-skill.link",
     "security:score:selftest": "node templates/scripts/verify-security-score.mjs --selftest",
     "responsive:check": "node templates/scripts/verify-responsive-design.mjs site",
