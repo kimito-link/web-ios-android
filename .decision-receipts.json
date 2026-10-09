@@ -249,6 +249,49 @@
         "templates/web/auth-mode/nextjs/AuthPageShell.first-paint.test.tsx.example",
         "templates/web/auth-mode/nextjs/e2e/sign-in-no-flicker.spec.ts.example"
       ]
+    },
+    {
+      "at": "2026-10-09T00:52:30.267Z",
+      "responsibility": "idea-to-pr-local: 常駐PCの claude -p で Issue を実装し PR 後に事実確認する（Actions 版 idea-to-pr.yml とは実行場所と責務が違う）",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": "templates/workflows/idea-to-pr.yml",
+      "scopePaths": [
+        "templates/idea-to-pr-local/worker.mjs",
+        "templates/idea-to-pr-local/verify-pr.mjs",
+        "templates/idea-to-pr-local/lib/pipeline-core.mjs",
+        "templates/idea-to-pr-local/lib/pr-facts.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-09T00:52:30.346Z",
+      "responsibility": "idea-to-pr-local の Actions 消費の監視（再実装せず既存の check-actions-usage.mjs を使う。実行回数は worker.mjs --status が数える）",
+      "decision": "REUSE",
+      "canonicalSource": "templates/scripts/check-actions-usage.mjs",
+      "scopePaths": [
+        "templates/idea-to-pr-local/README.md"
+      ]
+    },
+    {
+      "at": "2026-10-09T00:53:34.516Z",
+      "responsibility": "idea-to-pr-local の単体・統合テスト（実装と同じ場所に置く。run() の名前が他のテストにもあるが、各ファイル内の局所ヘルパーで共有部品ではない）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/idea-to-pr-local/create-issue.test.mjs",
+        "templates/idea-to-pr-local/lib/pipeline-core.test.mjs",
+        "templates/idea-to-pr-local/verify-pr.test.mjs",
+        "templates/idea-to-pr-local/worker.integration.test.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-09T00:53:34.593Z",
+      "responsibility": "idea-to-pr-local のテスト専用の偽 gh / 偽 claude（このパイプラインの呼び出し形だけを再現する。他に同じ役目の共有部品は無い）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/idea-to-pr-local/test-fixtures/fake-gh.mjs",
+        "templates/idea-to-pr-local/test-fixtures/fake-claude.mjs"
+      ]
     }
   ]
 }
