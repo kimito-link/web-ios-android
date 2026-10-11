@@ -7,6 +7,11 @@
     }
   },
   "allowedAuthors": ["YOUR-GITHUB-LOGIN"],
+  "inboxes": [
+    { "repo": "OWNER/INBOX_REPO", "issue": 1, "defaultTarget": "OWNER/REPO" }
+  ],
+  "ledgerPath": "C:/path/to/best-trust/data/repositories.json",
+  "siteAliases": { "example.com": "OWNER/REPO" },
   "maxRunsPer24h": 5,
   "maxTurns": 40,
   "workTimeoutMinutes": 30,
