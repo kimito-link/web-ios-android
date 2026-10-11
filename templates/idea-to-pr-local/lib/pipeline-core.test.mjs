@@ -142,23 +142,35 @@ describe('回数上限', () => {
   const ago = (h) => new Date(now - h * 3600 * 1000).toISOString();
   it('直近24時間の「着手」だけ数える（見送り・検証は数えない）', () => {
     const e = [
-      { ts: ago(1), kind: 'work' },
-      { ts: ago(5), kind: 'work' },
-      { ts: ago(30), kind: 'work' },
+      { ts: ago(1), kind: 'work', outcome: 'started' },
+      { ts: ago(5), kind: 'work', outcome: 'started' },
+      { ts: ago(30), kind: 'work', outcome: 'started' },
       { ts: ago(1), kind: 'verify' },
       { ts: ago(1), kind: 'skip' },
     ];
     expect(workRunsInLast24h(e, now)).toBe(2);
   });
+  it('【毒】1回の作業は「着手」と「結果」の2行を記録する。2行で1回と数える（1回を2回に数えて上限の半分で止めない）', () => {
+    // 実機の通しで見つかった実際の記録の形（2026-10-12）
+    const e = [
+      { ts: ago(3), kind: 'work', outcome: 'started' },
+      { ts: ago(3), kind: 'work', outcome: 'pr_created', durationMs: 36934 },
+      { ts: ago(2), kind: 'work', outcome: 'started' },
+      { ts: ago(2), kind: 'work', outcome: 'failed' },
+    ];
+    expect(workRunsInLast24h(e, now)).toBe(2);
+    expect(dailyCapReached(e, now, 3)).toBe(false); // 2回しか着手していないので、上限3回には達していない
+    expect(dailyCapReached(e, now, 2)).toBe(true);
+  });
   it('【毒】上限に達したら止める。上限が壊れていても止める（fail-closed）', () => {
-    const e = [{ ts: ago(1), kind: 'work' }, { ts: ago(2), kind: 'work' }];
+    const e = [{ ts: ago(1), kind: 'work', outcome: 'started' }, { ts: ago(2), kind: 'work', outcome: 'started' }];
     expect(dailyCapReached(e, now, 2)).toBe(true);
     expect(dailyCapReached(e, now, 3)).toBe(false);
     expect(dailyCapReached(e, now, 0)).toBe(true);
     expect(dailyCapReached(e, now, NaN)).toBe(true);
   });
   it('壊れたログ行を無視する', () => {
-    expect(workRunsInLast24h([null, {}, { ts: 'x', kind: 'work' }], now)).toBe(0);
+    expect(workRunsInLast24h([null, {}, { ts: 'x', kind: 'work', outcome: 'started' }], now)).toBe(0);
   });
 });
 
@@ -222,8 +234,11 @@ describe('summarizeRuns', () => {
   it('24時間・7日の着手数、結果の内訳、所要分を集計する', () => {
     const s = summarizeRuns(
       [
+        { ts: ago(1), kind: 'work', outcome: 'started' },
         { ts: ago(1), kind: 'work', outcome: 'pr_created', durationMs: 600000, numTurns: 20 },
+        { ts: ago(50), kind: 'work', outcome: 'started' },
         { ts: ago(50), kind: 'work', outcome: 'failed', durationMs: 120000, numTurns: 5 },
+        { ts: ago(24 * 9), kind: 'work', outcome: 'started' },
         { ts: ago(24 * 9), kind: 'work', outcome: 'pr_created', durationMs: 999999, numTurns: 99 },
         { ts: ago(1), kind: 'verify', outcome: 'verified' },
       ],
