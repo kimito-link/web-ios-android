@@ -230,6 +230,141 @@ describe('作業の周回', () => {
   });
 });
 
+describe('受付（Grok に普通に話した依頼をコメントで受け取る）', () => {
+  const INBOX = 50;
+  const ledger = { repositories: [{ name: 'r', github: { url: `https://github.com/${REPO}`, homepage: 'https://site.example.com', isArchived: false } }] };
+  const inboxCfg = { inboxes: [{ repo: REPO, issue: INBOX }], ledger, maxIntakePerPass: 5, siteAliases: {} };
+  const inboxIssue = () => issue({ number: INBOX, title: '受付', body: '依頼はコメントで', labels: [] });
+  const addComment = (id, body, over = {}) => {
+    const s = readState();
+    const r = s.repos[REPO];
+    r.comments = r.comments || {};
+    (r.comments[INBOX] = r.comments[INBOX] || []).push({ id, body, user: { login: 'me' }, author_association: 'OWNER', ...over });
+    fs.writeFileSync(env.state, JSON.stringify(s));
+  };
+  const workIssues = () => readState().repos[REPO].issues.filter((i) => i.number !== INBOX);
+  const inboxText = () => commentsOf(INBOX).join('\n---\n');
+  const setup = (existing = []) => {
+    writeState({ issues: [inboxIssue()], comments: { [INBOX]: existing } });
+  };
+
+  it('【毒】初回は、受付に昔からあるコメントを依頼として実行しない（これ以降だけ処理する）', () => {
+    setup([{ id: 5, body: 'https://site.example.com を直して', user: { login: 'me' }, author_association: 'OWNER' }]);
+    pipeline(inboxCfg).runOnce();
+    expect(workIssues()).toEqual([]);
+    expect(runLog().filter((e) => e.kind === 'intake')).toEqual([]);
+  });
+
+  it('依頼 → 「わかりました」→ 作業用 Issue が自動で作られ → 実装されて PR → 受付に結果が戻る', () => {
+    setup();
+    pipeline(inboxCfg).runOnce(); // 初回の基準づくり（受付は空）
+    addComment(10, 'https://site.example.com が気になるから直して\nフォントが小さい');
+    pipeline(inboxCfg).runOnce();
+
+    const created = workIssues();
+    expect(created.length).toBe(1);
+    expect(created[0].body).toContain('フォントが小さい');
+    expect(created[0].body).toContain('idea-pipeline:inbox repo=o/r issue=50 comment=10');
+    // 作業用 Issue は ai-task で作られ、同じ周回で実装まで進み PR になった
+    expect(created[0].labels.map((l) => l.name)).toContain(LABELS.prOpen);
+    expect(readState().repos[REPO].pulls.length).toBe(1);
+    // 受付には「わかりました」と、PR を作った旨が書かれている
+    const t = inboxText();
+    expect(t).toContain('わかりました');
+    expect(t).toContain('管理番号');
+    expect(t).toContain('修正案（PR）を作りました');
+    expect(t).toContain('まだ完了ではありません');
+  });
+
+  it('事実確認で成功したら、受付に「自動チェックも全て成功・まだ公開されていない」と書く。失敗なら失敗と書く', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    pipeline(inboxCfg).runOnce();
+    const s = readState();
+    s.repos[REPO].checkRuns = { deadbeefcafe: [{ name: 'ci', status: 'completed', conclusion: 'success' }] };
+    fs.writeFileSync(env.state, JSON.stringify(s));
+    pipeline(inboxCfg).runOnce({ verifyOnly: true });
+    const t = inboxText();
+    expect(t).toContain('自動チェックも全て成功');
+    expect(t).toContain('まだ公開には反映されていません');
+    expect(t).toContain('正しいとは限りません');
+  });
+
+  it('【毒】worker 自身の返事（わかりました・報告）を、次の周回で依頼として拾い直さない（作業用 Issue が増え続けない）', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    pipeline(inboxCfg).runOnce();
+    const n = workIssues().length;
+    pipeline(inboxCfg).runOnce();
+    pipeline(inboxCfg).runOnce();
+    expect(workIssues().length).toBe(n);
+  });
+
+  it('【毒】どのサイトか決まらない依頼は、勝手に選ばず聞き返す。Issue は作らず、同じ依頼に何度も聞き返さない', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://unknown-site.example.org を直して');
+    pipeline(inboxCfg).runOnce();
+    expect(workIssues()).toEqual([]);
+    expect(inboxText()).toContain('見つかりませんでした');
+    expect(inboxText()).toContain('もう一度書いてください');
+    const before = commentsOf(INBOX).length;
+    pipeline(inboxCfg).runOnce();
+    expect(commentsOf(INBOX).length).toBe(before);
+  });
+
+  it('【毒】許可していない作者のコメントは、依頼として扱わない（返事もしない）', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して', { user: { login: 'stranger' } });
+    addComment(11, 'https://site.example.com を直して', { author_association: 'NONE' });
+    pipeline(inboxCfg).runOnce();
+    expect(workIssues()).toEqual([]);
+    expect(commentsOf(INBOX).length).toBe(2); // 増えていない
+  });
+
+  it('dry-run は何も書かない（Issue も返事も状態の保存も）', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    const calls0 = mutations().length;
+    pipeline(inboxCfg, { dryRun: true }).runOnce();
+    expect(workIssues()).toEqual([]);
+    expect(mutations().length).toBe(calls0);
+    // dry-run の後に本番を回すと、その依頼をちゃんと処理できる（dry-run が「見た」ことにしていない）
+    pipeline(inboxCfg).runOnce();
+    expect(workIssues().length).toBe(1);
+  });
+
+  it('【毒】作成した Issue に作業開始のラベルが付かなかったら、作業を始めず、あなたの確認が必要だと受付に書く', () => {
+    setup();
+    const s = readState();
+    s.repos[REPO].dropLabelsOnCreate = true;
+    fs.writeFileSync(env.state, JSON.stringify(s));
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    pipeline(inboxCfg).runOnce();
+    expect(readState().repos[REPO].pulls || []).toEqual([]);
+    expect(inboxText()).toContain('ラベル');
+    expect(inboxText()).toContain('あなたの確認が必要');
+  });
+
+  it('失敗したときも受付に伝える。ただし、この PC の作業ツリーのパスは書かない', () => {
+    process.env.FAKE_CLAUDE_MODE = 'forbidden';
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    pipeline(inboxCfg).runOnce();
+    const t = inboxText();
+    expect(t).toContain('自動では直せませんでした');
+    expect(t).toContain('.github/workflows/evil.yml');
+    expect(t).not.toContain('この PC に残してあります');
+    expect(t).not.toContain(env.stateDir);
+  });
+});
+
 describe('事実確認の周回', () => {
   const prState = (over = {}) => ({
     // 作成から5分（猶予15分の内側）。猶予を過ぎた場合は verifyGraceMinutes を小さくして再現する。

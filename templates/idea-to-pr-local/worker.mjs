@@ -49,6 +49,15 @@ import {
   summarizeRuns,
 } from './lib/pipeline-core.mjs';
 import { fetchPrFacts, findPrNumberForIssue } from './lib/pr-facts.mjs';
+import {
+  ackText,
+  askText,
+  buildWorkIssue,
+  parseInboxMarker,
+  reportText,
+  resolveTargetRepos,
+  selectNewInboxComments,
+} from './lib/inbox-core.mjs';
 
 const DEFAULTS = Object.freeze({
   repos: {},
@@ -59,6 +68,12 @@ const DEFAULTS = Object.freeze({
   maxChangedFiles: 50,
   keepFailedWorktrees: true,
   verifyGraceMinutes: 15,
+  // 受付 Issue（Grok に普通に話した依頼を、コメントとして受け取る窓口）。空なら受付は使わない。
+  // 各要素: { repo: "owner/name", issue: 番号, defaultTarget?: "owner/name", processExisting?: boolean }
+  inboxes: [],
+  siteAliases: {}, // 台帳に無いドメイン → リポ。例: { "kimito-skill.link": "owner/web-ios-android" }
+  ledgerPath: '', // 全リポ台帳（best-trust/data/repositories.json）。サイト名→リポの照合に使う。空なら別名表だけ
+  maxIntakePerPass: 5,
   claudeCommand: ['claude'],
   ghCommand: ['gh'],
   gitCommand: ['git'],
@@ -103,6 +118,12 @@ export function validateConfig(cfg) {
   }
   if (!Array.isArray(cfg.allowedAuthors) || cfg.allowedAuthors.length === 0) errs.push('allowedAuthors が空（誰の Issue も拾わない設定になってしまう）');
   if (!Number.isFinite(cfg.maxRunsPer24h) || cfg.maxRunsPer24h <= 0) errs.push('maxRunsPer24h が正の数ではない');
+  for (const [i, b] of (Array.isArray(cfg.inboxes) ? cfg.inboxes : []).entries()) {
+    if (!b || !/^[\w.-]+\/[\w.-]+$/.test(String(b.repo)) || !Number.isInteger(b.issue) || b.issue <= 0) errs.push(`inboxes[${i}] が { repo: "owner/name", issue: 正の整数 } の形ではない`);
+    if (b && b.defaultTarget && !(b.defaultTarget in (cfg.repos || {}))) errs.push(`inboxes[${i}].defaultTarget が repos に無い（作業できないリポは既定の対象にできない）`);
+  }
+  if (cfg.inboxes !== undefined && !Array.isArray(cfg.inboxes)) errs.push('inboxes が配列ではない');
+  if (cfg.ledgerPath && !fs.existsSync(expandHome(cfg.ledgerPath))) errs.push(`ledgerPath が存在しない: ${cfg.ledgerPath}`);
   // 空や相対パスのままだと、状態ファイル（ロック・実行記録・作業ツリー）が起動した場所に散らばる
   if (typeof cfg.stateDir !== 'string' || !path.isAbsolute(cfg.stateDir)) errs.push('stateDir が絶対パスではない');
   if (!Number.isFinite(cfg.maxTurns) || cfg.maxTurns <= 0 || !Number.isFinite(cfg.workTimeoutMinutes) || cfg.workTimeoutMinutes <= 0) errs.push('maxTurns / workTimeoutMinutes が正の数ではない');
@@ -139,7 +160,8 @@ export function exec(cmd, args, opts = {}) {
  * @param {{cfg:any, exec?:typeof exec, now?:()=>number, dryRun?:boolean, log?:(m:string)=>void}} deps
  */
 export function createPipeline(deps) {
-  const cfg = deps.cfg;
+  // 設定に無い項目は既定値で補う（loadConfig を通さずに直接呼ぶ場合も、項目の追加で落ちないように）
+  const cfg = { ...DEFAULTS, ...deps.cfg };
   const run = deps.exec || exec;
   const now = deps.now || (() => Date.now());
   const dryRun = Boolean(deps.dryRun);
@@ -217,13 +239,107 @@ export function createPipeline(deps) {
     return r.default_branch;
   }
 
+  // ───────── 受付 Issue（Grok に普通に話した依頼の窓口。判断は lib/inbox-core.mjs） ─────────
+  /** 書き込み＋結果の JSON を返す（Issue の作成で番号が要る）。dry-run では書かず null。 */
+  function ghWriteJson(args) {
+    if (dryRun) { log(`(dry-run) gh ${args.join(' ').slice(0, 120)}`); return null; }
+    return ghJson(args);
+  }
+
+  /** 台帳（サイト名→リポの照合用）。無ければ null（別名表だけで照合する）。 */
+  function loadLedger() {
+    if (cfg.ledger) return cfg.ledger;
+    if (!cfg.ledgerPath) return null;
+    try {
+      return JSON.parse(fs.readFileSync(expandHome(cfg.ledgerPath), 'utf8'));
+    } catch (e) {
+      log(`台帳を読めない（別名表だけで照合する）: ${e instanceof Error ? e.message : e}`);
+      return null;
+    }
+  }
+
+  const inboxStatePath = (b) => path.join(stateDir, `inbox-${b.repo.replace('/', '__')}-${b.issue}.json`);
+  function readInboxLastId(b) {
+    try { return Number(JSON.parse(fs.readFileSync(inboxStatePath(b), 'utf8')).lastCommentId); } catch { return null; }
+  }
+  function saveInboxLastId(b, id) {
+    if (dryRun) return;
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(inboxStatePath(b), JSON.stringify({ lastCommentId: id }));
+  }
+
+  /**
+   * 作業用 Issue が受付から作られたものなら、結果を受付 Issue にも書く（Grok がそのスレッドを読んで人に報告する）。
+   * 失敗しても本筋（作業・確認）を止めない。
+   * @param {any} issue @param {string} repo @param {Parameters<typeof reportText>[0]['kind']} kind
+   * @param {{prUrl?:string, detail?:string, sha?:string}} [extra]
+   */
+  function notifyInbox(issue, repo, kind, extra = {}) {
+    try {
+      const ref = issue && parseInboxMarker(issue.body);
+      if (!ref) return;
+      comment(ref.repo, ref.issue, reportText({ kind, title: issue.title || '', workRef: `${repo}#${issue.number}`, ...extra }));
+    } catch (e) {
+      log(`受付への報告に失敗（本筋は続ける）: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+
+  /** 受付 Issue の新しいコメントを依頼として取り込む。1コメント＝1つの作業用 Issue。 */
+  function intakeInbox(b) {
+    const comments = ghJson(['api', `repos/${b.repo}/issues/${b.issue}/comments?per_page=100`]);
+    const all = Array.isArray(comments) ? comments : [];
+    let lastId = readInboxLastId(b);
+    if (lastId === null) {
+      // 初回。受付に昔から付いているコメントを依頼として一斉に実行しない（長く使われている Issue を指定した場合の事故を防ぐ）
+      lastId = b.processExisting ? 0 : all.reduce((m, c) => Math.max(m, Number(c.id) || 0), 0);
+      saveInboxLastId(b, lastId);
+      log(`受付 ${b.repo}#${b.issue}: 初回。${b.processExisting ? '既存のコメントも処理する' : `既存のコメント（〜${lastId}）は処理せず、これ以降を処理する`}`);
+    }
+    const { requests, skipped } = selectNewInboxComments(all, { allowedAuthors: cfg.allowedAuthors, lastId });
+    for (const s of skipped) if (dryRun) log(`(dry-run) 受付のコメント ${s.id} は拾わない: ${s.reason}`);
+    // 拾わなかったコメントも「見た」ことにして、次回以降は評価し直さない
+    const maxSeen = all.reduce((m, c) => (Number(c.id) > lastId ? Math.max(m, Number(c.id)) : m), lastId);
+    const workable = Object.keys(cfg.repos);
+    let done = 0;
+    for (const req of requests) {
+      if (done >= cfg.maxIntakePerPass) { log('受付: 1周の上限に達したので残りは次回'); return; }
+      done++;
+      const commentUrl = `https://github.com/${b.repo}/issues/${b.issue}#issuecomment-${req.id}`;
+      const result = resolveTargetRepos(req.body, { ledger: loadLedger(), aliases: cfg.siteAliases, workableRepos: workable, defaultTarget: b.defaultTarget });
+      if (result.status !== 'one' || !result.repo) {
+        log(`受付 ${req.id}: 対象が決まらない（${result.status}）→ 聞き返す`);
+        saveInboxLastId(b, req.id);
+        comment(b.repo, b.issue, askText({ commentId: req.id, result }));
+        appendRun({ kind: 'intake', repo: b.repo, issue: b.issue, outcome: `ask_${result.status}` });
+        continue;
+      }
+      const w = buildWorkIssue({ text: req.body, commentUrl, inbox: { repo: b.repo, issue: b.issue, commentId: req.id } });
+      const created = ghWriteJson(['api', '-X', 'POST', `repos/${result.repo}/issues`, '-f', `title=${redact(w.title)}`, '-f', `body=${redact(w.body)}`, '-f', `labels[]=${LABELS.task}`]);
+      if (dryRun) { log(`(dry-run) 受付 ${req.id} → ${result.repo} に作業用 Issue を作る予定`); continue; }
+      if (!created || !Number.isInteger(created.number)) throw new Error('作業用 Issue の作成結果が読めなかった');
+      // 先に「ここまで処理した」を記録する（作成後に落ちても、同じ依頼から二重に Issue を作らない）
+      saveInboxLastId(b, req.id);
+      const labelled = Array.isArray(created.labels) && created.labels.some((l) => (typeof l === 'string' ? l : l && l.name) === LABELS.task);
+      comment(b.repo, b.issue, labelled
+        ? ackText({ commentId: req.id, repo: result.repo, issueNumber: created.number, issueUrl: created.html_url || `https://github.com/${result.repo}/issues/${created.number}` })
+        : `<!-- idea-pipeline:ack comment=${req.id} -->\n依頼から管理番号 #${created.number} を作りましたが、作業開始の目印（ラベル）が付かず、作業を始められません。あなたの確認が必要です。`);
+      appendRun({ kind: 'intake', repo: result.repo, issue: created.number, outcome: labelled ? 'issue_created' : 'issue_created_without_label', inboxComment: req.id });
+      log(`受付 ${req.id}: ${result.repo}#${created.number} を作った`);
+    }
+    if (maxSeen > lastId) saveInboxLastId(b, Math.max(maxSeen, readInboxLastId(b) ?? 0));
+  }
+
   // ───────── 失敗の記録 ─────────
+  /** いま作業中の Issue（fail が受付へ報告するため）。 */
+  let currentIssue = null;
   function fail(repo, n, reason, extra = {}) {
     log(`#${n} 失敗: ${reason}`);
     removeLabel(repo, n, LABELS.working);
     addLabel(repo, n, LABELS.failed);
     comment(repo, n, `❌ 自動実装は止まりました。\n\n理由: ${reason}\n\n（人の確認が必要です。再実行したいときは \`${LABELS.failed}\` ラベルを外してください。）`);
     appendRun({ kind: 'work', repo, issue: n, outcome: 'failed', reason: redact(reason).slice(0, 300), ...extra });
+    // 受付へは短く。理由の後半（この PC の作業ツリーのパス等）は書かない
+    if (currentIssue && currentIssue.number === n) notifyInbox(currentIssue, repo, 'failed', { detail: String(reason).split('\n\n')[0].slice(0, 300) });
   }
 
   // ───────── 作業の周回 ─────────
@@ -356,6 +472,7 @@ export function createPipeline(deps) {
       addLabel(repo, n, LABELS.prOpen);
       comment(repo, n, `📝 PR を作りました: ${prUrl}\n\nまだ「完了」ではありません。PR のチェック結果を確かめたら、この Issue に事実を書きます。マージは人の確認待ちです。`);
       appendRun({ kind: 'work', repo, issue: n, outcome: 'pr_created', durationMs: now() - t0, pr: prUrl, files: files.length, ...meta });
+      notifyInbox(issue, repo, 'pr_created', { prUrl });
       log(`#${n} PR 作成: ${prUrl}`);
     } finally {
       if (!keep) {
@@ -382,6 +499,7 @@ export function createPipeline(deps) {
       removeLabel(repo, n, LABELS.prOpen);
       addLabel(repo, n, LABELS.failed);
       comment(repo, n, `⚠ PR #${prNum} はマージされずに閉じられました。この Issue の自動実装は未完了です。`);
+      notifyInbox(issue, repo, 'pr_closed');
       appendRun({ kind: 'verify', repo, issue: n, outcome: 'pr_closed' });
       return;
     }
@@ -404,12 +522,15 @@ export function createPipeline(deps) {
       comment(repo, n, `${marker}\n✅ 機械確認: PR #${prNum}（${sha.slice(0, 7)}）のチェックは全て成功 — ${counts}。${merged}。\n\n※「チェックが通った」は「内容が正しい」ではありません。マージ前に人が差分を確認してください。`);
       removeLabel(repo, n, LABELS.prOpen);
       addLabel(repo, n, LABELS.verified);
+      notifyInbox(issue, repo, 'verified', { prUrl: pr.html_url, sha: sha.slice(0, 7) });
     } else if (v.verdict === 'failure') {
       comment(repo, n, `${marker}\n❌ 機械確認: PR #${prNum}（${sha.slice(0, 7)}）のチェックに失敗があります — ${counts}。\n${v.reasons.map((r) => `- ${r}`).join('\n')}\n\n${merged}。修正が必要です。`);
       removeLabel(repo, n, LABELS.prOpen);
       addLabel(repo, n, LABELS.checkFailed);
+      notifyInbox(issue, repo, 'check_failed', { prUrl: pr.html_url, sha: sha.slice(0, 7), detail: v.reasons.join('／').slice(0, 300) });
     } else {
       comment(repo, n, `${marker}\n❔ 未確認: PR #${prNum}（${sha.slice(0, 7)}）は、${v.reasons.join('／') || v.verdict}。「成功」とは言えません。${merged}。`);
+      notifyInbox(issue, repo, 'unverified', { prUrl: pr.html_url, sha: sha.slice(0, 7) });
     }
     appendRun({ kind: 'verify', repo, issue: n, outcome: v.verdict, pr: prNum });
   }
@@ -426,6 +547,10 @@ export function createPipeline(deps) {
       return { ok: true, locked: true };
     }
     try {
+      // 0. 受付（Grok に普通に話した依頼を、作業用 Issue にして「わかりました」と返す）。claude は使わないので回数上限の対象外
+      for (const b of cfg.inboxes) {
+        try { intakeInbox(b); } catch (e) { log(`受付 ${b.repo}#${b.issue} で例外: ${e instanceof Error ? e.message : e}`); }
+      }
       for (const [repo, rc] of Object.entries(cfg.repos)) {
         // 1. 事実確認（PR を作った Issue のチェック結果を確かめて書く）
         try {
@@ -457,7 +582,8 @@ export function createPipeline(deps) {
           log(`${repo}: 拾う Issue は無い`);
           continue;
         }
-        processIssue(repo, rc, candidates[0]);
+        currentIssue = candidates[0];
+        try { processIssue(repo, rc, candidates[0]); } finally { currentIssue = null; }
       }
       return { ok: true };
     } finally {
@@ -486,6 +612,13 @@ function selftest() {
   check('失敗を成功で隠す（毒）', computeVerdict({ merged: false }, [{ status: 'completed', conclusion: 'success' }, { status: 'completed', conclusion: 'failure' }], null).verdict === 'failure');
   check('壊れた上限で動く（毒）', dailyCapReached([], Date.now(), NaN) === true);
   check('PR 不明を成功にする（毒）', computeVerdict(null, [], null).verdict === 'unknown');
+  // 受付（Grok に普通に話した依頼）
+  const cm = (o = {}) => ({ id: 5, body: '依頼', user: { login: 'me' }, author_association: 'OWNER', ...o });
+  check('許可外の作者の受付コメントを拾う（毒）', selectNewInboxComments([cm({ user: { login: 'x' } })], { allowedAuthors: ['me'], lastId: 0 }).requests.length === 0);
+  check('worker 自身の返事を依頼として拾い直す（毒）', selectNewInboxComments([cm({ body: ackText({ commentId: 1, repo: 'o/r', issueNumber: 1, issueUrl: 'u' }) })], { allowedAuthors: ['me'], lastId: 0 }).requests.length === 0);
+  check('正当な受付コメントを拾えない（誤検知）', selectNewInboxComments([cm()], { allowedAuthors: ['me'], lastId: 0 }).requests.length === 1);
+  check('サイトが無い依頼の対象を勝手に決める（毒）', resolveTargetRepos('直して', { workableRepos: ['o/r'] }).status !== 'one');
+  check('作業できないリポを対象にする（毒）', resolveTargetRepos('a.example.com', { workableRepos: ['o/r'], aliases: { 'a.example.com': 'o/other' } }).status !== 'one');
   if (fails.length) {
     console.error('❌ selftest 失敗:\n' + fails.map((f) => '  - ' + f).join('\n'));
     process.exit(1);

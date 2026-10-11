@@ -36,7 +36,7 @@ if (args[0] === 'pr' && args[1] === 'create') {
   const r = state.repos[repo];
   r.pulls = r.pulls || [];
   const number = 100 + r.pulls.length;
-  r.pulls.push({ number, state: 'open', merged: false, created_at: new Date().toISOString(), head: { ref: flag('--head'), sha: 'deadbeefcafe' }, title: flag('--title'), body: flag('--body') });
+  r.pulls.push({ number, state: 'open', merged: false, created_at: new Date().toISOString(), head: { ref: flag('--head'), sha: 'deadbeefcafe' }, title: flag('--title'), body: flag('--body'), html_url: `https://github.com/${repo}/pull/${number}` });
   save();
   process.stdout.write(`https://github.com/${repo}/pull/${number}\n`);
   process.exit(0);
@@ -80,8 +80,20 @@ if ((mm = rest.match(/^issues\/(\d+)\/labels\/(.+)$/)) && method === 'DELETE') {
 }
 if ((mm = rest.match(/^issues\/(\d+)\/comments$/)) && method === 'POST') {
   r.comments = r.comments || {};
-  (r.comments[mm[1]] = r.comments[mm[1]] || []).push({ body: fields().body });
-  out({ id: 1 });
+  // 実物と同じく、コメントには ID と作者（この PC の gh のログイン＝許可作者）が付く。
+  // worker が自分の返信を依頼と取り違えないことを、この作者情報つきで確かめられるようにする。
+  state.nextCommentId = (state.nextCommentId || 1000) + 1;
+  (r.comments[mm[1]] = r.comments[mm[1]] || []).push({ id: state.nextCommentId, body: fields().body, user: { login: state.me || 'me' }, author_association: 'OWNER' });
+  out({ id: state.nextCommentId });
+}
+if (rest === 'issues' && method === 'POST') {
+  // Issue の作成（worker が受付の依頼から作る）。実物と同じく、ラベル名を指定すれば付く。
+  const f = fields();
+  const number = Math.max(0, ...r.issues.map((i) => i.number)) + 1;
+  const labels = f['labels[]'] && !(r.dropLabelsOnCreate) ? [{ name: f['labels[]'] }] : [];
+  const issue = { number, title: f.title, body: f.body, state: 'open', labels, user: { login: state.me || 'me' }, author_association: 'OWNER', html_url: `https://github.com/${repo}/issues/${number}` };
+  r.issues.push(issue);
+  out(issue);
 }
 if ((mm = rest.match(/^issues\/(\d+)\/comments$/)) && method === 'GET') {
   out((r.comments || {})[mm[1]] || []);

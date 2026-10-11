@@ -292,6 +292,24 @@
         "templates/idea-to-pr-local/test-fixtures/fake-gh.mjs",
         "templates/idea-to-pr-local/test-fixtures/fake-claude.mjs"
       ]
+    },
+    {
+      "at": "2026-10-11T21:06:33.575Z",
+      "responsibility": "受付 Issue 方式の判断部分（依頼コメントの選別・サイト名からの対象リポ決定・報告文）。台帳 repositories.json は実行時に読み、コピーしない。既存の product-map.mjs は『product→ストアID』で責務が違う",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": "scripts/revenue/lib/product-map.mjs",
+      "scopePaths": [
+        "templates/idea-to-pr-local/lib/inbox-core.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-11T21:06:33.642Z",
+      "responsibility": "inbox-core の単体テスト（実装と同じ場所に置く）",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/idea-to-pr-local/lib/inbox-core.test.mjs"
+      ]
     }
   ]
 }
