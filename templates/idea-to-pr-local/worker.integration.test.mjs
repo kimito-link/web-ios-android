@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createPipeline, validateConfig } from './worker.mjs';
-import { LABELS } from './lib/pipeline-core.mjs';
+import { LABELS, dailyCapReached, workRunsInLast24h } from './lib/pipeline-core.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FAKE_GH = path.join(here, 'test-fixtures', 'fake-gh.mjs');
@@ -129,6 +129,9 @@ describe('作業の周回', () => {
     expect(readState().repos[REPO].pulls[0].body).toContain('Closes #1');
     expect(commentsOf(1).join('\n')).toContain('まだ「完了」ではありません');
     expect(runLog().map((e) => e.outcome)).toEqual(['started', 'pr_created']);
+    // ★worker 自身が実際に書く記録の形で、「1回の作業は1回」と数えられること（実機の通しで見つかったバグの再発防止）
+    expect(workRunsInLast24h(runLog(), NOW)).toBe(1);
+    expect(dailyCapReached(runLog(), NOW, 2)).toBe(false);
     const cl = JSON.parse(fs.readFileSync(env.claudeLog, 'utf8').trim().split('\n')[0]);
     expect(cl.hasApiKey).toBe(false); // 課金が API に切り替わらない
     expect(cl.hasGhToken).toBe(false); // push・gh をさせない
@@ -179,7 +182,9 @@ describe('作業の周回', () => {
   it('【毒】24時間の上限に達していれば着手しない', () => {
     fs.mkdirSync(env.stateDir, { recursive: true });
     const recent = new Date(NOW - 3600 * 1000).toISOString();
-    fs.writeFileSync(path.join(env.stateDir, 'runs.jsonl'), [1, 2].map(() => JSON.stringify({ ts: recent, kind: 'work', outcome: 'pr_created' })).join('\n') + '\n');
+    // 1回の作業は「着手」と「結果」の2行。2回分＝4行を用意し、上限2回に達していることを確かめる
+    const twoRuns = ['pr_created', 'failed'].flatMap((o) => [{ ts: recent, kind: 'work', outcome: 'started' }, { ts: recent, kind: 'work', outcome: o }]);
+    fs.writeFileSync(path.join(env.stateDir, 'runs.jsonl'), twoRuns.map((e) => JSON.stringify(e)).join('\n') + '\n');
     pipeline({ maxRunsPer24h: 2 }).runOnce();
     expect(mutations()).toEqual([]);
   });

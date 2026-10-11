@@ -173,15 +173,20 @@ export function redact(text) {
 }
 
 /**
- * 直近24時間に着手した回数を数える（回数上限のため）。「着手」だけを数え、見送り・検証だけの周回は数えない。
- * @param {Array<{ts?:string, kind?:string}>} entries
+ * 直近24時間に着手した回数を数える（回数上限のため）。
+ *
+ * ★数えるのは「着手（outcome: 'started'）」の行だけ。
+ *   1回の作業は「着手」と「結果（pr_created / failed）」の2行を記録する。結果の行まで数えると、
+ *   1回が2回に数えられ、上限の半分で止まる（2026-10-12、実機の通しで発覚。単体テストは
+ *   私が同じ誤解で書いた入力を使っていたため見逃した）。見送り・検証だけの周回も数えない。
+ * @param {Array<{ts?:string, kind?:string, outcome?:string}>} entries
  * @param {number} nowMs
  */
 export function workRunsInLast24h(entries, nowMs) {
   const since = nowMs - 24 * 60 * 60 * 1000;
   let n = 0;
   for (const e of Array.isArray(entries) ? entries : []) {
-    if (!e || e.kind !== 'work') continue;
+    if (!e || e.kind !== 'work' || e.outcome !== 'started') continue;
     const t = Date.parse(e.ts || '');
     if (Number.isFinite(t) && t >= since && t <= nowMs + 60 * 1000) n++;
   }
@@ -306,17 +311,21 @@ export function summarizeRuns(entries, nowMs) {
     const t = Date.parse(e.ts || '');
     return Number.isFinite(t) && t >= nowMs - ms;
   });
-  const work24 = within(24 * 3600 * 1000).filter((e) => e.kind === 'work');
-  const work7d = within(7 * 24 * 3600 * 1000).filter((e) => e.kind === 'work');
+  // 回数は「着手」の行、結果の内訳・所要時間・ターン数は「結果」の行（着手以外の work 行）から数える
+  const isStart = (e) => e.kind === 'work' && e.outcome === 'started';
+  const isResult = (e) => e.kind === 'work' && e.outcome !== 'started';
+  const start24 = within(24 * 3600 * 1000).filter(isStart);
+  const start7d = within(7 * 24 * 3600 * 1000).filter(isStart);
+  const result7d = within(7 * 24 * 3600 * 1000).filter(isResult);
   /** @type {Record<string, number>} */
   const outcomes = {};
-  for (const e of work7d) outcomes[e.outcome || '（不明）'] = (outcomes[e.outcome || '（不明）'] || 0) + 1;
+  for (const e of result7d) outcomes[e.outcome || '（不明）'] = (outcomes[e.outcome || '（不明）'] || 0) + 1;
   const sum = (arr, key) => arr.reduce((a, e) => a + (Number(e[key]) || 0), 0);
   return {
-    workRuns24h: work24.length,
-    workRuns7d: work7d.length,
+    workRuns24h: start24.length,
+    workRuns7d: start7d.length,
     outcomes7d: outcomes,
-    totalMinutes7d: Math.round(sum(work7d, 'durationMs') / 60000),
-    totalTurns7d: sum(work7d, 'numTurns'),
+    totalMinutes7d: Math.round(sum(result7d, 'durationMs') / 60000),
+    totalTurns7d: sum(result7d, 'numTurns'),
   };
 }
