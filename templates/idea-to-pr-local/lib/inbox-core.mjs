@@ -65,24 +65,90 @@ function repoFullNameOf(url) {
   return m ? `${m[1]}/${m[2]}` : '';
 }
 
+/** 名前での照合の前に依頼文から外す、どのサイトにも付く言葉（これだけで照合が成立しないように） */
+const GENERIC_WORDS = ['ウェブサイト', 'ホームページ', 'サイト', 'アプリ', 'ページ', '直して', 'なおして', '気になる', 'お願い', 'してほしい', 'ください'];
+/** 名前の一致とみなす最小の長さ（これ未満の共通部分は偶然の一致として無視） */
+const MIN_NAME_MATCH = 4;
+/** 最有力と次点の差がこれ未満なら、一意とみなさず聞き返す */
+const NAME_MARGIN = 2;
+
+/** @param {unknown} t */
+function norm(t) {
+  return String(t ?? '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+}
+
+/** 2つの文字列の最長共通部分文字列の長さ */
+function longestCommonSubstring(a, b) {
+  if (!a || !b) return 0;
+  let best = 0;
+  let prev = new Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = new Array(b.length + 1).fill(0);
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        cur[j] = prev[j - 1] + 1;
+        if (cur[j] > best) best = cur[j];
+      }
+    }
+    prev = cur;
+  }
+  return best;
+}
+
+/** 台帳の note の先頭（製品名の部分）。例: 'マルウェアチェック.site' → 'マルウェアチェック' */
+export function noteHead(note) {
+  const head = String(note ?? '').split(/[。（(、,/]/)[0] || '';
+  return head.replace(new RegExp(`\.(?:${TLDS})$`, 'i'), '').trim();
+}
+
 /**
- * 依頼文のサイトから、直す対象のリポを決める。
+ * URL が無い依頼（「マルウェアチェックのやつ」「健康診断のサイト」）を、リポ名と台帳の note（製品名）から探す。
+ * 日本語は単語に区切れないので、依頼文とリポ名・製品名との「最長の共通部分」の長さで比べる。
+ * 4文字未満の一致は偶然とみなす。最有力が次点より十分長いときだけ1件に決め、僅差なら全部を候補として返す。
+ * @param {string} text
+ * @param {any[]} repos 台帳の repositories
+ * @returns {{score:number, candidates:Array<{full:string, label:string, score:number}>}}
+ */
+export function matchRepoByName(text, repos) {
+  const strip = (t) => GENERIC_WORDS.reduce((acc, w) => acc.split(norm(w)).join(''), norm(t));
+  const req = strip(text);
+  /** @type {Array<{full:string, label:string, score:number}>} */
+  const scored = [];
+  for (const r of repos) {
+    if (!r || !r.github || r.github.isArchived) continue;
+    const full = repoFullNameOf(r.github.url);
+    if (!full) continue;
+    const head = noteHead(r.note);
+    const terms = [norm(r.name), strip(head)].filter(Boolean);
+    const score = Math.max(0, ...terms.map((t) => longestCommonSubstring(req, t)));
+    if (score >= MIN_NAME_MATCH) scored.push({ full, label: head ? `${full}（${head}）` : full, score });
+  }
+  scored.sort((x, y) => y.score - x.score);
+  if (scored.length === 0) return { score: 0, candidates: [] };
+  const best = scored[0].score;
+  if (scored.length === 1 || best - scored[1].score >= NAME_MARGIN) return { score: best, candidates: [scored[0]] };
+  return { score: best, candidates: scored.filter((c) => best - c.score < NAME_MARGIN) };
+}
+
+/**
+ * 依頼文から、直す対象のリポを決める。
  *
  * 照合の仕方（台帳 best-trust/data/repositories.json を実行時に読む。コピーを作らない）:
- *   1. 設定の別名表（例: "kimito-skill.link" → "owner/web-ios-android"）
+ *   1. 設定の別名表（例: 'kimito-skill.link' → 'owner/web-ios-android'、'健康診断' → 'owner/web-health-check-app'）
  *   2. リポ名がドメインそのもの（例: malwarecheck.site）
  *   3. 台帳の homepage のホスト
  *   4. Vercel 形式（例: surechigai-romi.link → surechigai-romi-link.vercel.app の先頭ラベル）
+ *   5. URL が無いとき: リポ名・製品名との共通部分（matchRepoByName。「マルウェアチェックのサイト」）
  * 一意に決まらなければ決めない（status で理由を返す）。
  *
  * @param {string} text
  * @param {{ledger?:any, aliases?:Record<string,string>, workableRepos:string[], defaultTarget?:string}} opts
- * @returns {{status:'one'|'none'|'many'|'not_workable'|'no_host', repo?:string, candidates:string[], hosts:string[]}}
+ * @returns {{status:'one'|'none'|'many'|'not_workable'|'no_host', repo?:string, candidates:string[], hosts:string[], labels?:string[]}}
  */
 export function resolveTargetRepos(text, opts) {
   const hosts = extractHosts(text);
   const workable = new Set((opts.workableRepos || []).map((r) => r.toLowerCase()));
-  const aliases = Object.fromEntries(Object.entries(opts.aliases || {}).map(([k, v]) => [k.toLowerCase().replace(/^www\./, ''), v]));
+  const aliases = Object.fromEntries(Object.entries(opts.aliases || {}).map(([k, v]) => [k.toLowerCase().replace(/^www./, ''), v]));
   /** @type {Set<string>} */
   const found = new Set();
   const repos = Array.isArray(opts.ledger && opts.ledger.repositories) ? opts.ledger.repositories : [];
@@ -91,7 +157,7 @@ export function resolveTargetRepos(text, opts) {
       found.add(aliases[host]);
       continue;
     }
-    const slug = host.replace(/\./g, '-');
+    const slug = host.replace(/./g, '-');
     for (const r of repos) {
       if (!r || !r.github || r.github.isArchived) continue;
       const full = repoFullNameOf(r.github.url);
@@ -103,16 +169,30 @@ export function resolveTargetRepos(text, opts) {
       if (byName || byHomepage || byVercel) found.add(full);
     }
   }
-  const candidates = [...found];
-  if (hosts.length === 0) {
+  // URL でない別名（日本語の呼び名など）が依頼文に入っていれば、それを使う
+  const normText = norm(text);
+  for (const [k, v] of Object.entries(opts.aliases || {})) {
+    if (extractHosts(k).length === 0 && norm(k).length > 0 && normText.includes(norm(k))) found.add(v);
+  }
+  let candidates = [...found];
+  /** @type {string[]|undefined} */
+  let labels;
+  if (candidates.length === 0 && hosts.length === 0) {
+    const byName = matchRepoByName(String(text ?? ''), repos);
+    if (byName.candidates.length > 0) {
+      candidates = byName.candidates.map((c) => c.full);
+      labels = byName.candidates.map((c) => c.label);
+    }
+  }
+  if (candidates.length === 0 && hosts.length === 0) {
     if (opts.defaultTarget && workable.has(opts.defaultTarget.toLowerCase())) return { status: 'one', repo: opts.defaultTarget, candidates: [opts.defaultTarget], hosts };
     return { status: 'no_host', candidates: [], hosts };
   }
   if (candidates.length === 0) return { status: 'none', candidates, hosts };
   const ok = candidates.filter((c) => workable.has(c.toLowerCase()));
   if (ok.length === 1 && candidates.length === 1) return { status: 'one', repo: ok[0], candidates, hosts };
-  if (ok.length === 0) return { status: 'not_workable', candidates, hosts };
-  return { status: 'many', candidates, hosts };
+  if (ok.length === 0) return { status: 'not_workable', candidates, hosts, ...(labels ? { labels } : {}) };
+  return { status: 'many', candidates, hosts, ...(labels ? { labels } : {}) };
 }
 
 /**
@@ -206,12 +286,12 @@ export function askText(p) {
   const r = p.result;
   const reason = {
     none: `「${r.hosts.join('、')}」に当てはまるリポジトリが見つかりませんでした。`,
-    no_host: 'どのサイトのことか分かりませんでした（サイトの URL が書かれていません）。',
-    many: `複数のリポジトリに当てはまりました: ${r.candidates.join('、')}。`,
-    not_workable: `当てはまるリポジトリ（${r.candidates.join('、')}）は、この PC で作業できる設定に入っていません。`,
+    no_host: 'どのサイトのことか分かりませんでした（サイトの URL も、名前らしい言葉も見つかりません）。',
+    many: `複数のリポジトリに当てはまりました: ${(r.labels || r.candidates).join('、')}。`,
+    not_workable: `当てはまるリポジトリ（${(r.labels || r.candidates).join('、')}）は、この PC で作業できる設定に入っていません。`,
     one: '',
   }[r.status];
-  return `${ackMarker(p.commentId)}\n依頼は受け取りましたが、まだ作業を始められません。\n\n${reason}\n\nサイトの URL（例: https://…）か、リポジトリの名前を、もう一度書いてください。`;
+  return `${ackMarker(p.commentId)}\n依頼は受け取りましたが、まだ作業を始められません。\n\n${reason}\n\nサイトの URL（例: https://…）か、サイトやアプリの名前（例: マルウェアチェック）を、もう一度書いてください。`;
 }
 
 /**

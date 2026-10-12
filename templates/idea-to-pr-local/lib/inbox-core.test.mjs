@@ -8,6 +8,8 @@ import {
   inboxMarker,
   parseInboxMarker,
   reportText,
+  matchRepoByName,
+  noteHead,
   resolveTargetRepos,
   selectNewInboxComments,
 } from './inbox-core.mjs';
@@ -148,5 +150,75 @@ describe('人に読まれる文', () => {
     expect(t).toContain('全て成功');
     expect(t).toContain('まだ公開には反映されていません');
     expect(t).toContain('正しいとは限りません');
+  });
+});
+
+describe("名前だけの依頼（「マルウェアチェックのサイト」「健康診断のやつ」）", () => {
+  const n = (name, note, extra = {}) => ({ name, note, github: { url: `https://github.com/kimito-link/${name}`, homepage: "", isArchived: false, ...extra } });
+  const led = {
+    repositories: [
+      n("malwarecheck.site", "マルウェアチェック.site"),
+      n("reviewcheck.jp", "口コミチェック.jp"),
+      n("ai-audit", "AIの健康診断（2026-09-08に改名）"),
+      n("web-health-check-lp", "WEBサイト健康診断。旧名web-health-check.link"),
+      n("web-health-check-app", "WEBサイト健康診断（アプリ本体）"),
+      n("rolex", "ロレックス応募補助アプリ"),
+      n("hp-maker", "ホームページ作成ツール"),
+      n("old-tool", "古い診断ツール診断", { isArchived: true }),
+    ],
+  };
+  const all = led.repositories.map((r) => `kimito-link/${r.name}`);
+  const go = (t, extra = {}) => resolveTargetRepos(t, { ledger: led, workableRepos: all, ...extra });
+
+  it("noteHead は製品名の部分だけを取り出す（ドメインの末尾は外す）", () => {
+    expect(noteHead("マルウェアチェック.site")).toBe("マルウェアチェック");
+    expect(noteHead("AIの健康診断（2026-09-08に改名）")).toBe("AIの健康診断");
+    expect(noteHead(undefined)).toBe("");
+  });
+  it("製品名がはっきり言われていれば、URL が無くても1件に決まる", () => {
+    expect(go("マルウェアチェックのサイトを直して")).toMatchObject({ status: "one", repo: "kimito-link/malwarecheck.site" });
+    expect(go("ロレックスの応募のやつ直して")).toMatchObject({ status: "one", repo: "kimito-link/rolex" });
+    expect(go("malwarecheck を直して")).toMatchObject({ status: "one", repo: "kimito-link/malwarecheck.site" });
+  });
+  it("【毒】ふわっとして複数に当てはまるなら決めない。候補を名前つきで返す", () => {
+    const r = go("健康診断のやつ直して");
+    expect(r.status).toBe("many");
+    expect(r.candidates.sort()).toEqual(["kimito-link/ai-audit", "kimito-link/web-health-check-app", "kimito-link/web-health-check-lp"]);
+    expect(r.labels.join("")).toContain("WEBサイト健康診断");
+    expect(go("チェックのサイト直して").status).toBe("many");
+  });
+  it("【毒】「サイト」「アプリ」など誰にでも付く言葉だけでは決めない", () => {
+    expect(go("このサイトが気になるから直して").status).toBe("no_host");
+    expect(go("アプリのサイトのページを直して").status).toBe("no_host");
+    expect(go("ホームページを直して").status).toBe("no_host");
+    expect(go("ホームページ作成ツールを直して")).toMatchObject({ status: "one", repo: "kimito-link/hp-maker" });
+  });
+  it("【毒】短い偶然の一致（3文字以下）では決めない", () => {
+    expect(go("ロレを直して").status).toBe("no_host");
+  });
+  it("アーカイブ済みのリポは名前でも対象にしない", () => {
+    expect(go("古い診断ツール診断を直して").status).toBe("no_host");
+  });
+  it("この PC で作業できないリポは、名前で当てても作業しない（理由を言う）", () => {
+    expect(go("マルウェアチェックを直して", { workableRepos: ["kimito-link/rolex"] })).toMatchObject({ status: "not_workable" });
+  });
+  it("聞き返しに答えて、リポ名を書き直せば1件に決まる", () => {
+    expect(go("web-health-check-app のほう").repo).toBe("kimito-link/web-health-check-app");
+    expect(go("WEBサイト健康診断のアプリ本体").candidates.length).toBeGreaterThan(0);
+  });
+  it("設定の別名表に日本語の呼び名を入れると、ふわっとした言い方が1件に固定される", () => {
+    expect(go("健康診断のやつ直して", { aliases: { 健康診断: "kimito-link/web-health-check-app" } })).toMatchObject({ status: "one", repo: "kimito-link/web-health-check-app" });
+  });
+  it("URL があるときは URL が優先。名前の照合は使わない", () => {
+    expect(go("https://unknown.example.com のマルウェアチェック").status).toBe("none");
+  });
+  it("聞き返しの文に、候補が名前つきで出る", () => {
+    const t = askText({ commentId: 1, result: go("健康診断のやつ直して") });
+    expect(t).toContain("WEBサイト健康診断");
+    expect(t).toContain("もう一度書いてください");
+  });
+  it("空・壊れた台帳で throw しない", () => {
+    expect(matchRepoByName("", led.repositories).candidates).toEqual([]);
+    expect(matchRepoByName("マルウェアチェック", [null, {}, { name: "x" }]).candidates).toEqual([]);
   });
 });
