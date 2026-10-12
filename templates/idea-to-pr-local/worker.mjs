@@ -53,7 +53,9 @@ import {
   ackText,
   askText,
   buildWorkIssue,
+  findPendingAsk,
   parseInboxMarker,
+  pickByOrdinal,
   reportText,
   resolveTargetRepos,
   selectNewInboxComments,
@@ -305,7 +307,23 @@ export function createPipeline(deps) {
       if (done >= cfg.maxIntakePerPass) { log('受付: 1周の上限に達したので残りは次回'); return; }
       done++;
       const commentUrl = `https://github.com/${b.repo}/issues/${b.issue}#issuecomment-${req.id}`;
-      const result = resolveTargetRepos(req.body, { ledger: loadLedger(), aliases: cfg.siteAliases, workableRepos: workable, defaultTarget: b.defaultTarget });
+      const resolveOpts = { ledger: loadLedger(), aliases: cfg.siteAliases, workableRepos: workable, defaultTarget: b.defaultTarget };
+      // 直前に worker が「どれですか」と聞き返していたなら、この依頼はその返事。元の依頼とつなげて読む（声で「1番」「アプリ本体のほう」とだけ答えられるように）
+      const pending = findPendingAsk(all, req.id);
+      let text = req.body;
+      let result = resolveTargetRepos(req.body, resolveOpts);
+      if (pending) {
+        text = `${pending.originBody}\n${req.body}`;
+        const picked = pickByOrdinal(req.body, pending.candidates);
+        if (picked) {
+          result = workable.some((r) => r.toLowerCase() === picked.toLowerCase())
+            ? { status: 'one', repo: picked, candidates: [picked], hosts: [] }
+            : { status: 'not_workable', candidates: [picked], hosts: [] };
+        } else if (result.status !== 'one') {
+          result = resolveTargetRepos(text, resolveOpts);
+        }
+        log('受付 ' + req.id + ': 聞き返し（コメント ' + pending.askCommentId + '）への返事として、元の依頼（' + pending.originId + '）とつなげて読んだ → ' + result.status);
+      }
       if (result.status !== 'one' || !result.repo) {
         log(`受付 ${req.id}: 対象が決まらない（${result.status}）→ 聞き返す`);
         saveInboxLastId(b, req.id);
@@ -313,7 +331,7 @@ export function createPipeline(deps) {
         appendRun({ kind: 'intake', repo: b.repo, issue: b.issue, outcome: `ask_${result.status}` });
         continue;
       }
-      const w = buildWorkIssue({ text: req.body, commentUrl, inbox: { repo: b.repo, issue: b.issue, commentId: req.id } });
+      const w = buildWorkIssue({ text, commentUrl, inbox: { repo: b.repo, issue: b.issue, commentId: req.id } });
       const created = ghWriteJson(['api', '-X', 'POST', `repos/${result.repo}/issues`, '-f', `title=${redact(w.title)}`, '-f', `body=${redact(w.body)}`, '-f', `labels[]=${LABELS.task}`]);
       if (dryRun) { log(`(dry-run) 受付 ${req.id} → ${result.repo} に作業用 Issue を作る予定`); continue; }
       if (!created || !Number.isInteger(created.number)) throw new Error('作業用 Issue の作成結果が読めなかった');

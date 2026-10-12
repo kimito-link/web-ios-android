@@ -5,7 +5,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// 1テストが node を何度も起動するので、PC が混んでいると既定の5秒を超える（超えたのは遅さであって失敗ではない）
+vi.setConfig({ testTimeout: 60000 });
 import { createPipeline, validateConfig } from './worker.mjs';
 import { LABELS, dailyCapReached, workRunsInLast24h } from './lib/pipeline-core.mjs';
 
@@ -247,6 +250,59 @@ describe('受付（Grok に普通に話した依頼をコメントで受け取�
   const setup = (existing = []) => {
     writeState({ issues: [inboxIssue()], comments: { [INBOX]: existing } });
   };
+
+  describe('ふわっとした依頼 → 聞き返し → 声の短い返事（URL を言わなくてよい）', () => {
+    const fuzzyLedger = {
+      repositories: [
+        { name: 'r', note: '健康診断（検査ロボ本体）', github: { url: `https://github.com/${REPO}`, homepage: '', isArchived: false } },
+        { name: 'other', note: '健康診断（紹介ホームページ）', github: { url: 'https://github.com/o/other', homepage: '', isArchived: false } },
+      ],
+    };
+    const fuzzyCfg = { ...inboxCfg, ledger: fuzzyLedger };
+    const askedOnce = () => {
+      setup();
+      pipeline(fuzzyCfg).runOnce();
+      addComment(10, '健康診断のやつ直して。説明を短く');
+      pipeline(fuzzyCfg).runOnce();
+    };
+
+    it('決まらなければ作業せず、候補に番号を付けて聞き返す。URL は要求しない', () => {
+      askedOnce();
+      expect(workIssues()).toEqual([]);
+      const t = inboxText();
+      expect(t).toContain('1番');
+      expect(t).toContain('2番');
+      expect(t).toContain('もう一度書いてください');
+      expect(t).not.toContain('https://…');
+    });
+    it('「1番」とだけ返せば、元の依頼とつながって、その候補の作業用 Issue ができる', () => {
+      askedOnce();
+      addComment(2000, '1番');
+      pipeline(fuzzyCfg).runOnce();
+      const created = workIssues();
+      expect(created.length).toBe(1);
+      expect(created[0].body).toContain('説明を短く');
+      expect(created[0].body).toContain('1番');
+    });
+    it('候補の名前の一部（「検査ロボ本体のほう」）でも、元の依頼とつながって決まる', () => {
+      askedOnce();
+      addComment(2000, '検査ロボ本体のほう');
+      pipeline(fuzzyCfg).runOnce();
+      expect(workIssues().length).toBe(1);
+      expect(workIssues()[0].body).toContain('説明を短く');
+    });
+    it('【毒】候補に無い番号（9番）や、聞き返しが無いのに「1番」だけでは、作業しない', () => {
+      askedOnce();
+      addComment(2000, '9番');
+      pipeline(fuzzyCfg).runOnce();
+      expect(workIssues()).toEqual([]);
+      setup();
+      pipeline(fuzzyCfg).runOnce();
+      addComment(3000, '1番');
+      pipeline(fuzzyCfg).runOnce();
+      expect(workIssues()).toEqual([]);
+    });
+  });
 
   it('【毒】初回は、受付に昔からあるコメントを依頼として実行しない（これ以降だけ処理する）', () => {
     setup([{ id: 5, body: 'https://site.example.com を直して', user: { login: 'me' }, author_association: 'OWNER' }]);

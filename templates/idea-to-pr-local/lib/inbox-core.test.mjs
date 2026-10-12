@@ -5,8 +5,11 @@ import {
   askText,
   buildWorkIssue,
   extractHosts,
+  findPendingAsk,
   inboxMarker,
+  parseAskMarker,
   parseInboxMarker,
+  pickByOrdinal,
   reportText,
   matchRepoByName,
   noteHead,
@@ -220,5 +223,47 @@ describe("名前だけの依頼（「マルウェアチェックのサイト」�
   it("空・壊れた台帳で throw しない", () => {
     expect(matchRepoByName("", led.repositories).candidates).toEqual([]);
     expect(matchRepoByName("マルウェアチェック", [null, {}, { name: "x" }]).candidates).toEqual([]);
+  });
+});
+
+describe("声で答える聞き返し（番号・短い返事・元の依頼とのつながり）", () => {
+  const C = ["o/a", "o/b", "o/c"];
+  it("聞き返しの目印は往復できる。候補が無い聞き返しは候補なし", () => {
+    const t = askText({ commentId: 7, result: { status: "many", candidates: ["o/a", "o/b"], labels: ["o/a（甲）", "o/b（乙）"], hosts: [] } });
+    expect(parseAskMarker(t)).toEqual({ commentId: 7, candidates: ["o/a", "o/b"] });
+    expect(t).toContain("1番: o/a（甲）");
+    const none = askText({ commentId: 8, result: { status: "no_host", candidates: [], hosts: [] } });
+    expect(parseAskMarker(none)).toEqual({ commentId: 8, candidates: [] });
+    expect(none).not.toContain("https://");
+    expect(parseAskMarker("目印なし")).toBeNull();
+  });
+  it("「1番」「二つ目の」「最初のほう」「最後」で候補を選べる", () => {
+    expect(pickByOrdinal("1番", C)).toBe("o/a");
+    expect(pickByOrdinal("２番です", C)).toBe("o/b");
+    expect(pickByOrdinal("三つ目の", C)).toBe("o/c");
+    expect(pickByOrdinal("最初のほう", C)).toBe("o/a");
+    expect(pickByOrdinal("最後", C)).toBe("o/c");
+    expect(pickByOrdinal("2", C)).toBe("o/b");
+  });
+  it("【毒】範囲外の番号・長い文・別の依頼の中の数字では選ばない", () => {
+    expect(pickByOrdinal("9番", C)).toBeNull();
+    expect(pickByOrdinal("0番", C)).toBeNull();
+    expect(pickByOrdinal("マルウェアチェックの1番上の文字を直して", C)).toBeNull();
+    expect(pickByOrdinal("1番と2番", C)).toBeNull();
+    expect(pickByOrdinal("1番", [])).toBeNull();
+    expect(pickByOrdinal(null, C)).toBeNull();
+  });
+  it("findPendingAsk: 直前の worker の発言が聞き返しなら、そのあとの依頼は返事。元の依頼と候補が付く", () => {
+    const ask = askText({ commentId: 10, result: { status: "many", candidates: ["o/a", "o/b"], hosts: [] } });
+    const cs = [{ id: 10, body: "健康診断のやつ" }, { id: 11, body: ask }];
+    expect(findPendingAsk(cs, 12)).toEqual({ askCommentId: 11, originId: 10, originBody: "健康診断のやつ", candidates: ["o/a", "o/b"] });
+  });
+  it("【毒】聞き返しのあとに受付の返事（作業が始まった）があれば、次の依頼は返事ではない。聞き返しより前の依頼にも付かない", () => {
+    const ask = askText({ commentId: 10, result: { status: "many", candidates: ["o/a"], hosts: [] } });
+    const ack = ackText({ commentId: 12, repo: "o/a", issueNumber: 3, issueUrl: "u" });
+    expect(findPendingAsk([{ id: 10, body: "x" }, { id: 11, body: ask }, { id: 12, body: "1番" }, { id: 13, body: ack }], 14)).toBeNull();
+    expect(findPendingAsk([{ id: 10, body: "x" }, { id: 11, body: ask }], 10)).toBeNull();
+    expect(findPendingAsk(null, 5)).toBeNull();
+    expect(findPendingAsk([{ id: 11, body: ask }], 12)).toBeNull();
   });
 });

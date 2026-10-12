@@ -28,6 +28,7 @@
 /** 受付 Issue に worker が書くコメントの目印。これが付いたコメントは依頼として拾わない。 */
 export const MARKERS = Object.freeze({
   ack: 'idea-pipeline:ack',
+  ask: 'idea-pipeline:ask',
   report: 'idea-pipeline:report',
   inbox: 'idea-pipeline:inbox',
 });
@@ -119,7 +120,8 @@ export function matchRepoByName(text, repos) {
     const full = repoFullNameOf(r.github.url);
     if (!full) continue;
     const head = noteHead(r.note);
-    const terms = [norm(r.name), strip(head)].filter(Boolean);
+    const paren = (/[（(]([^）)]+)[）)]/.exec(String(r.note ?? '')) || [])[1];
+    const terms = [norm(r.name), strip(head), paren ? strip(paren) : ''].filter(Boolean);
     const score = Math.max(0, ...terms.map((t) => longestCommonSubstring(req, t)));
     if (score >= MIN_NAME_MATCH) scored.push({ full, label: head ? `${full}（${head}）` : full, score });
   }
@@ -278,20 +280,96 @@ export function ackText(p) {
   return `${ackMarker(p.commentId)}\nわかりました。依頼を受け付けました。\n\n- 直す対象: ${p.repo}\n- 管理番号: #${p.issueNumber}（${p.issueUrl}）\n\nできたら、このスレッドに結果を書きます。`;
 }
 
+/** 聞き返しの目印。どの依頼への聞き返しか・候補は何か を持つ（次の返事をつなげるため） */
+export const askMarker = (commentId, candidates = []) => `<!-- ${MARKERS.ask} comment=${commentId}${candidates.length ? ` candidates=${candidates.join(',')}` : ''} -->`;
+
 /**
- * 対象が決まらなかったときの聞き返し。
+ * @param {unknown} body
+ * @returns {{commentId:number, candidates:string[]}|null}
+ */
+export function parseAskMarker(body) {
+  const m = new RegExp(`<!-- ${MARKERS.ask} comment=(\\d+)(?: candidates=([\\w./,-]+))? -->`).exec(String(body ?? ''));
+  return m ? { commentId: Number(m[1]), candidates: m[2] ? m[2].split(',') : [] } : null;
+}
+
+const KANJI_NUM = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+
+/**
+ * 聞き返しへの短い返事（「1番」「二つ目」「最初の」「最後の」）で、候補のどれかを選ぶ。声で答える人向け。
+ * 長い文章は対象にしない（別の依頼を、番号の言及と取り違えない）。曖昧なら null。
+ * @param {unknown} reply
+ * @param {string[]} candidates
+ * @returns {string|null}
+ */
+export function pickByOrdinal(reply, candidates) {
+  const t = norm(reply);
+  if (!t || [...t].length > 12 || candidates.length === 0) return null;
+  /** @type {number|null} */
+  let n = null;
+  let m = /^([1-9])(?:番|つ目|個目|番目)?(?:の|を|で|です|ほう|方)?$/.exec(t);
+  if (m) n = Number(m[1]);
+  if (n === null) {
+    m = /^([一二三四五六七八九])(?:番|つ目|個目|番目)(?:の|を|で|です|ほう|方)?$/.exec(t);
+    if (m) n = KANJI_NUM[m[1]];
+  }
+  if (n === null && /^(?:最初|はじめ|一番上|上)(?:の|を|で|です)?(?:ほう|方)?$/.test(t)) n = 1;
+  if (n === null && /^(?:最後|さいご|一番下|下)(?:の|を|で|です)?(?:ほう|方)?$/.test(t)) n = candidates.length;
+  return n !== null && n >= 1 && n <= candidates.length ? candidates[n - 1] : null;
+}
+
+/**
+ * 直前の worker の発言が「聞き返し」で、そのあとに来た依頼がその返事かを調べる。
+ * 受付の中で、依頼 reqId より前にある worker の発言（聞き返し／受付の返事）のうち一番新しいものが聞き返しなら、返事とみなす。
+ * @param {Array<{id?:number, body?:string|null}>} comments
+ * @param {number} reqId
+ * @returns {{askCommentId:number, originId:number, originBody:string, candidates:string[]}|null}
+ */
+export function findPendingAsk(comments, reqId) {
+  const list = (Array.isArray(comments) ? comments : []).filter((c) => c && Number.isFinite(Number(c.id)));
+  let last = null;
+  for (const c of list) {
+    const id = Number(c.id);
+    if (id >= reqId) continue;
+    const body = String(c.body ?? '');
+    if (body.includes(`<!-- ${MARKERS.ask} `) || body.includes(`<!-- ${MARKERS.ack} `)) {
+      if (!last || id > Number(last.id)) last = c;
+    }
+  }
+  if (!last) return null;
+  const ask = parseAskMarker(last.body);
+  if (!ask) return null;
+  const origin = list.find((c) => Number(c.id) === ask.commentId);
+  if (!origin) return null;
+  return { askCommentId: Number(last.id), originId: ask.commentId, originBody: String(origin.body ?? ''), candidates: ask.candidates };
+}
+
+/**
+ * 対象が決まらなかったときの聞き返し。声で読み上げられて、声で答えられる形にする
+ * （URL を言わせない。名前か「1番」のような番号で答えられる）。
  * @param {{commentId:number, result:ReturnType<typeof resolveTargetRepos>}} p
  */
 export function askText(p) {
   const r = p.result;
+  const list = r.labels || r.candidates;
+  const numbered = list.map((c, i) => `${i + 1}番: ${c}`).join('\n');
   const reason = {
     none: `「${r.hosts.join('、')}」に当てはまるリポジトリが見つかりませんでした。`,
-    no_host: 'どのサイトのことか分かりませんでした（サイトの URL も、名前らしい言葉も見つかりません）。',
-    many: `複数のリポジトリに当てはまりました: ${(r.labels || r.candidates).join('、')}。`,
-    not_workable: `当てはまるリポジトリ（${(r.labels || r.candidates).join('、')}）は、この PC で作業できる設定に入っていません。`,
+    no_host: 'どのサイトのことか分かりませんでした（サイトの名前らしい言葉が見つかりません）。',
+    many: `複数のリポジトリに当てはまりました。
+${numbered}`,
+    not_workable: `当てはまるリポジトリ（${list.join('、')}）は、この PC で作業できる設定に入っていません。`,
     one: '',
   }[r.status];
-  return `${ackMarker(p.commentId)}\n依頼は受け取りましたが、まだ作業を始められません。\n\n${reason}\n\nサイトの URL（例: https://…）か、サイトやアプリの名前（例: マルウェアチェック）を、もう一度書いてください。`;
+  const how = r.status === 'many'
+    ? '番号（例: 「1番」）か、サイトやアプリの名前で答えてください。もう一度書いてください。'
+    : 'サイトやアプリの名前（例: マルウェアチェック）を、もう一度書いてください。URL でも構いません。';
+  const cands = r.status === 'many' ? r.candidates : [];
+  return `${askMarker(p.commentId, cands)}
+依頼は受け取りましたが、まだ作業を始められません。
+
+${reason}
+
+${how}`;
 }
 
 /**
