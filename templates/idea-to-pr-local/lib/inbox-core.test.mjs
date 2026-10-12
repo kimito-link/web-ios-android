@@ -291,3 +291,12 @@ describe("番号を覚えていなくても答えられる（名前の一部で�
     expect(pickByName(null, C, led)).toBeNull();
   });
 });
+
+describe("作業できないリポの聞き返し", () => {
+  it("書き直しても変わらない旨を伝え、「もう一度書いてください」とは言わない", () => {
+    const t2 = askText({ commentId: 1, result: { status: "not_workable", candidates: ["o/a"], labels: ["マルウェアチェック"], hosts: [] } });
+    expect(t2).toContain("マルウェアチェック");
+    expect(t2).toContain("書き直しても変わりません");
+    expect(t2).not.toContain("もう一度書いてください");
+  });
+});
