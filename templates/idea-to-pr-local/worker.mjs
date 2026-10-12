@@ -55,6 +55,7 @@ import {
   buildWorkIssue,
   findPendingAsk,
   parseInboxMarker,
+  pickByName,
   pickByOrdinal,
   reportText,
   resolveTargetRepos,
@@ -314,7 +315,7 @@ export function createPipeline(deps) {
       let result = resolveTargetRepos(req.body, resolveOpts);
       if (pending) {
         text = `${pending.originBody}\n${req.body}`;
-        const picked = pickByOrdinal(req.body, pending.candidates);
+        const picked = pickByOrdinal(req.body, pending.candidates) || pickByName(req.body, pending.candidates, resolveOpts.ledger);
         if (picked) {
           result = workable.some((r) => r.toLowerCase() === picked.toLowerCase())
             ? { status: 'one', repo: picked, candidates: [picked], hosts: [] }

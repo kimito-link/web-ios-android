@@ -270,8 +270,9 @@ describe('受付（Grok に普通に話した依頼をコメントで受け取�
       askedOnce();
       expect(workIssues()).toEqual([]);
       const t = inboxText();
-      expect(t).toContain('1番');
-      expect(t).toContain('2番');
+      expect(t).toContain('・健康診断（検査ロボ本体）');
+      expect(t).toContain('・健康診断（紹介ホームページ）');
+      expect(t).not.toContain('1番');
       expect(t).toContain('もう一度書いてください');
       expect(t).not.toContain('https://…');
     });
@@ -284,7 +285,7 @@ describe('受付（Grok に普通に話した依頼をコメントで受け取�
       expect(created[0].body).toContain('説明を短く');
       expect(created[0].body).toContain('1番');
     });
-    it('候補の名前の一部（「検査ロボ本体のほう」）でも、元の依頼とつながって決まる', () => {
+    it('候補の名前の一部（「検査ロボ本体のほう」）でも、元の依頼とつながって決まる（番号を覚えていなくてよい）', () => {
       askedOnce();
       addComment(2000, '検査ロボ本体のほう');
       pipeline(fuzzyCfg).runOnce();

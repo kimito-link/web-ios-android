@@ -9,6 +9,7 @@ import {
   inboxMarker,
   parseAskMarker,
   parseInboxMarker,
+  pickByName,
   pickByOrdinal,
   reportText,
   matchRepoByName,
@@ -231,7 +232,8 @@ describe("声で答える聞き返し（番号・短い返事・元の依頼と�
   it("聞き返しの目印は往復できる。候補が無い聞き返しは候補なし", () => {
     const t = askText({ commentId: 7, result: { status: "many", candidates: ["o/a", "o/b"], labels: ["o/a（甲）", "o/b（乙）"], hosts: [] } });
     expect(parseAskMarker(t)).toEqual({ commentId: 7, candidates: ["o/a", "o/b"] });
-    expect(t).toContain("1番: o/a（甲）");
+    expect(t).toContain("・o/a（甲）");
+    expect(t).not.toContain("1番:");
     const none = askText({ commentId: 8, result: { status: "no_host", candidates: [], hosts: [] } });
     expect(parseAskMarker(none)).toEqual({ commentId: 8, candidates: [] });
     expect(none).not.toContain("https://");
@@ -265,5 +267,27 @@ describe("声で答える聞き返し（番号・短い返事・元の依頼と�
     expect(findPendingAsk([{ id: 10, body: "x" }, { id: 11, body: ask }], 10)).toBeNull();
     expect(findPendingAsk(null, 5)).toBeNull();
     expect(findPendingAsk([{ id: 11, body: ask }], 12)).toBeNull();
+  });
+});
+
+describe("番号を覚えていなくても答えられる（名前の一部で返事）", () => {
+  const n = (name, note) => ({ name, note, github: { url: "https://github.com/o/" + name, homepage: "", isArchived: false } });
+  const led = { repositories: [n("web-health-check-lp", "WEBサイト健康診断。旧名web-health-check.link"), n("web-health-check-app", "WEBサイト健康診断（アプリ本体）"), n("ai-audit", "AIの健康診断")] };
+  const C = ["o/web-health-check-lp", "o/web-health-check-app"];
+  it("候補の呼び名は、同じ製品名が複数あるときだけ括弧や名前で区別し、英字のリポ名を無用に読ませない", () => {
+    const r = matchRepoByName("健康診断のやつ", led.repositories);
+    expect(r.candidates.map((c) => c.label).sort()).toEqual(["AIの健康診断", "WEBサイト健康診断（web-health-check-lp）", "WEBサイト健康診断（アプリ本体）"].sort());
+    expect(matchRepoByName("AIの健康診断", led.repositories).candidates[0].label).toBe("AIの健康診断");
+  });
+  it("「アプリ本体のほう」で、候補の中から1件に決まる", () => {
+    expect(pickByName("アプリ本体のほう", C, led)).toBe("o/web-health-check-app");
+    expect(pickByName("lp のやつ", C, led)).toBe("o/web-health-check-lp");
+  });
+  it("【毒】どちらにも同じくらい当てはまる・何も当てはまらない・長い文なら選ばない", () => {
+    expect(pickByName("健康診断のほう", C, led)).toBeNull();
+    expect(pickByName("ぜんぜん関係ない言葉", C, led)).toBeNull();
+    expect(pickByName("アプリ本体のほうで、あと別件としてトップページの文言も全部見直して", C, led)).toBeNull();
+    expect(pickByName("アプリ本体", ["o/web-health-check-app"], led)).toBeNull();
+    expect(pickByName(null, C, led)).toBeNull();
   });
 });

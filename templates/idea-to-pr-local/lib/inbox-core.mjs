@@ -113,7 +113,7 @@ export function noteHead(note) {
 export function matchRepoByName(text, repos) {
   const strip = (t) => GENERIC_WORDS.reduce((acc, w) => acc.split(norm(w)).join(''), norm(t));
   const req = strip(text);
-  /** @type {Array<{full:string, label:string, score:number}>} */
+  /** @type {Array<{full:string, label:string, score:number, head:string, paren:string, short:string}>} */
   const scored = [];
   for (const r of repos) {
     if (!r || !r.github || r.github.isArchived) continue;
@@ -123,13 +123,31 @@ export function matchRepoByName(text, repos) {
     const paren = (/[（(]([^）)]+)[）)]/.exec(String(r.note ?? '')) || [])[1];
     const terms = [norm(r.name), strip(head), paren ? strip(paren) : ''].filter(Boolean);
     const score = Math.max(0, ...terms.map((t) => longestCommonSubstring(req, t)));
-    if (score >= MIN_NAME_MATCH) scored.push({ full, label: head ? `${full}（${head}）` : full, score });
+    if (score >= MIN_NAME_MATCH) scored.push({ full, label: '', score, head, paren: paren || '', short: full.split('/').pop() || full });
   }
   scored.sort((x, y) => y.score - x.score);
   if (scored.length === 0) return { score: 0, candidates: [] };
   const best = scored[0].score;
-  if (scored.length === 1 || best - scored[1].score >= NAME_MARGIN) return { score: best, candidates: [scored[0]] };
-  return { score: best, candidates: scored.filter((c) => best - c.score < NAME_MARGIN) };
+  if (scored.length === 1 || best - scored[1].score >= NAME_MARGIN) return { score: best, candidates: withSpokenLabels([scored[0]]) };
+  return { score: best, candidates: withSpokenLabels(scored.filter((c) => best - c.score < NAME_MARGIN)) };
+}
+
+/**
+ * 候補に、声で読み上げて聞き分けられる呼び名を付ける。製品名だけで区別できればそれ、同じ製品名が複数あれば括弧の中身（なければリポ名）を足す。
+ * リポ名（英字・ハイフン）は、読み上げに向かないので、区別に必要なときだけ使う。
+ * @template {{head:string, paren:string, short:string, label:string}} T
+ * @param {T[]} list
+ * @returns {T[]}
+ */
+function withSpokenLabels(list) {
+  const count = new Map();
+  for (const c of list) count.set(c.head, (count.get(c.head) || 0) + 1);
+  for (const c of list) {
+    if (!c.head) c.label = c.short;
+    else if ((count.get(c.head) || 0) > 1) c.label = `${c.head}（${c.paren || c.short}）`;
+    else c.label = c.head;
+  }
+  return list;
 }
 
 /**
@@ -318,6 +336,30 @@ export function pickByOrdinal(reply, candidates) {
 }
 
 /**
+ * 聞き返しの候補だけを相手に、短い返事（「アプリ本体のほう」「LP のやつ」）で1件を選ぶ。
+ * 候補は2〜3件しかないので、通常の照合より短い共通部分（2文字以上）を認める。ただし最有力が次点より長いときだけ決める（僅差・同点は null）。
+ * 長い文章は対象にしない（別の依頼の中の言葉を、返事と取り違えない）。
+ * @param {unknown} reply
+ * @param {string[]} candidates "owner/name"
+ * @param {any} ledger
+ * @returns {string|null}
+ */
+export function pickByName(reply, candidates, ledger) {
+  const t = norm(reply);
+  if (!t || [...t].length > 24 || candidates.length < 2) return null;
+  const repos = Array.isArray(ledger && ledger.repositories) ? ledger.repositories : [];
+  const scored = candidates.map((full) => {
+    const r = repos.find((x) => x && x.github && repoFullNameOf(x.github.url).toLowerCase() === full.toLowerCase());
+    if (!r) return { full, score: 0 };
+    const paren = (/[（(]([^）)]+)[）)]/.exec(String(r.note ?? '')) || [])[1];
+    const terms = [norm(r.name), norm(noteHead(r.note)), paren ? norm(paren) : ''].filter(Boolean);
+    return { full, score: Math.max(0, ...terms.map((x) => longestCommonSubstring(t, x))) };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0].score >= 2 && scored[0].score > scored[1].score ? scored[0].full : null;
+}
+
+/**
  * 直前の worker の発言が「聞き返し」で、そのあとに来た依頼がその返事かを調べる。
  * 受付の中で、依頼 reqId より前にある worker の発言（聞き返し／受付の返事）のうち一番新しいものが聞き返しなら、返事とみなす。
  * @param {Array<{id?:number, body?:string|null}>} comments
@@ -351,17 +393,17 @@ export function findPendingAsk(comments, reqId) {
 export function askText(p) {
   const r = p.result;
   const list = r.labels || r.candidates;
-  const numbered = list.map((c, i) => `${i + 1}番: ${c}`).join('\n');
+  const bullets = list.map((c) => `・${c}`).join('\n');
   const reason = {
     none: `「${r.hosts.join('、')}」に当てはまるリポジトリが見つかりませんでした。`,
     no_host: 'どのサイトのことか分かりませんでした（サイトの名前らしい言葉が見つかりません）。',
     many: `複数のリポジトリに当てはまりました。
-${numbered}`,
+${bullets}`,
     not_workable: `当てはまるリポジトリ（${list.join('、')}）は、この PC で作業できる設定に入っていません。`,
     one: '',
   }[r.status];
   const how = r.status === 'many'
-    ? '番号（例: 「1番」）か、サイトやアプリの名前で答えてください。もう一度書いてください。'
+    ? 'どれか、名前（一部でも構いません）で答えてください。「最初の」「二つ目の」「最後の」でも通じます。もう一度書いてください。'
     : 'サイトやアプリの名前（例: マルウェアチェック）を、もう一度書いてください。URL でも構いません。';
   const cands = r.status === 'many' ? r.candidates : [];
   return `${askMarker(p.commentId, cands)}
