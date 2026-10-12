@@ -368,6 +368,19 @@ describe('受付（Grok に普通に話した依頼をコメントで受け取�
     expect(t).toContain('まだ完了ではありません');
   });
 
+  it('チェック待ちの PR がある間は pendingVerify が正の数、結論が出たら 0（--settle が待つ根拠）', () => {
+    setup();
+    pipeline(inboxCfg).runOnce();
+    addComment(10, 'https://site.example.com を直して');
+    const first = pipeline(inboxCfg).runOnce();
+    expect(first.pendingVerify).toBe(0); // 作業の周回の後に確認はまだ走っていない（次の確認で数える）
+    expect(pipeline(inboxCfg).runOnce({ verifyOnly: true }).pendingVerify).toBe(1);
+    const st = readState();
+    st.repos[REPO].checkRuns = { deadbeefcafe: [{ name: 'ci', status: 'completed', conclusion: 'success' }] };
+    fs.writeFileSync(env.state, JSON.stringify(st));
+    expect(pipeline(inboxCfg).runOnce({ verifyOnly: true }).pendingVerify).toBe(0);
+  });
+
   it('事実確認で成功したら、受付に「自動チェックも全て成功・まだ公開されていない」と書く。失敗なら失敗と書く', () => {
     setup();
     pipeline(inboxCfg).runOnce();

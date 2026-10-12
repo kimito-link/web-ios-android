@@ -8,6 +8,7 @@
  *   node worker.mjs --once            # 1周だけ回して終わる（既定）
  *   node worker.mjs --dry-run         # 何も変更せず「何を拾うか・なぜ拾わないか」だけ表示
  *   node worker.mjs --verify-only     # 作業はせず、PR のチェック確認だけ行う
+ *   node worker.mjs --once --settle   # 1周したあと、PR のチェックが終わるのを待って結果まで書く（GitHub の通知で起動する運用向け）
  *   node worker.mjs --status          # 直近の実行回数・所要時間・結果の内訳
  *   node worker.mjs --selftest        # わざと壊した入力で赤になることを確かめる
  *   --config <path>                   # 設定ファイル（既定: ./idea-pipeline.config.json → ~/.idea-pipeline/config.json）
@@ -534,7 +535,10 @@ export function createPipeline(deps) {
 
   // ───────── 事実確認の周回 ─────────
   /** @param {string} repo @param {any} issue */
+  // verifyIssue が「結論を出した（または既に出ていた）」か。出ていなければ、チェックの終わりを待つ必要がある
+  let verifyDone = false;
   function verifyIssue(repo, issue) {
+    verifyDone = false;
     const n = issue.number;
     const prNum = findPrNumberForIssue(ghJson, repo, n);
     if (prNum === null) {
@@ -551,6 +555,7 @@ export function createPipeline(deps) {
       comment(repo, n, `⚠ PR #${prNum} はマージされずに閉じられました。この Issue の自動実装は未完了です。`);
       notifyInbox(issue, repo, 'pr_closed');
       appendRun({ kind: 'verify', repo, issue: n, outcome: 'pr_closed' });
+      verifyDone = true;
       return;
     }
     const v = computeVerdict({ state: pr.state, merged: pr.merged === true, headSha: sha }, facts.checkRuns, facts.status);
@@ -563,6 +568,7 @@ export function createPipeline(deps) {
       log(`#${n} PR #${prNum} の判定は ${v.verdict}（まだ確定しない）`);
       return;
     }
+    verifyDone = true;
     const c = ghJson(['api', `repos/${repo}/issues/${n}/comments?per_page=50`]);
     if (Array.isArray(c) && c.some((x) => String(x.body || '').includes(marker))) return; // 同じ事実は1回だけ書く
 
@@ -596,6 +602,7 @@ export function createPipeline(deps) {
       log('別の周回が動いている（ロックあり）。何もしない。');
       return { ok: true, locked: true };
     }
+    let pendingVerify = 0;
     try {
       // 0. 受付（Grok に普通に話した依頼を、作業用 Issue にして「わかりました」と返す）。claude は使わないので回数上限の対象外
       for (const b of cfg.inboxes) {
@@ -609,7 +616,8 @@ export function createPipeline(deps) {
           const open = ghJson(['api', `repos/${repo}/issues?state=open&labels=${LABELS.prOpen}&per_page=50`]);
           for (const issue of Array.isArray(open) ? open : []) {
             if (issue.pull_request) continue;
-            try { verifyIssue(repo, issue); } catch (e) { log(`#${issue.number} 確認で例外: ${e instanceof Error ? e.message : e}`); }
+            try { verifyIssue(repo, issue); } catch (e) { log(`#${issue.number} 確認で例外: ${e instanceof Error ? e.message : e}`); verifyDone = false; }
+            if (!verifyDone) pendingVerify++;
           }
         } catch (e) {
           log(`${repo} 確認パスで例外: ${e instanceof Error ? e.message : e}`);
@@ -639,7 +647,7 @@ export function createPipeline(deps) {
         currentIssue = candidates[0];
         try { processIssue(repo, rc, candidates[0]); } finally { currentIssue = null; }
       }
-      return { ok: true };
+      return { ok: true, pendingVerify };
     } finally {
       releaseLock();
     }
@@ -681,6 +689,25 @@ function selftest() {
   process.exit(0);
 }
 
+/**
+ * 頼まれたとき限定で動く運用（GitHub の通知で起動する）では、PR のチェックが終わるのを同じ起動の中で待って、結果まで受付に書く。
+ * チェック待ちの PR が無くなるか、上限の時間に達したら終わる（待ち続けない）。
+ * @param {() => {pendingVerify?:number}} verifyOnce 確認だけの1周を行う
+ * @param {{minutes:number, intervalSec:number, sleep:(ms:number)=>void, nowMs:()=>number, pendingNow:number}} o
+ * @returns {{rounds:number, pendingVerify:number}}
+ */
+export function settleLoop(verifyOnce, o) {
+  const deadline = o.nowMs() + o.minutes * 60 * 1000;
+  let pending = o.pendingNow;
+  let rounds = 0;
+  while (pending > 0 && o.nowMs() + o.intervalSec * 1000 <= deadline) {
+    o.sleep(o.intervalSec * 1000);
+    rounds++;
+    pending = Number(verifyOnce().pendingVerify) || 0;
+  }
+  return { rounds, pendingVerify: pending };
+}
+
 function main() {
   const argv = process.argv.slice(2);
   if (argv.includes('--selftest')) return selftest();
@@ -692,7 +719,17 @@ function main() {
     console.log(JSON.stringify({ ...s, cap: cfg.maxRunsPer24h, note: 'サブスク枠の残量は測れない。回数と所要時間だけ。' }, null, 2));
     return;
   }
-  p.runOnce({ verifyOnly: argv.includes('--verify-only') });
+  const first = p.runOnce({ verifyOnly: argv.includes('--verify-only') });
+  if (argv.includes('--settle') && !argv.includes('--dry-run')) {
+    const r = settleLoop(() => p.runOnce({ verifyOnly: true }), {
+      minutes: Number(cfg.settleMinutes) || 20,
+      intervalSec: Number(cfg.settleIntervalSec) || 45,
+      sleep: (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms),
+      nowMs: () => Date.now(),
+      pendingNow: Number(first && first.pendingVerify) || 0,
+    });
+    console.log(`[settle] ${r.rounds} 回待った。結論待ちの PR: ${r.pendingVerify}`);
+  }
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
