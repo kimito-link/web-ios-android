@@ -152,6 +152,44 @@ export function findForbiddenPaths(files, patterns = DEFAULT_FORBIDDEN_PATHS) {
 }
 
 /**
+ * 差分が「検査を黙らせる書き込み」を足していないか。行き詰まった AI は、直す代わりに検査を無効にして先へ進もうとする
+ * （Lint の無効化コメント・型検査の無視・テストの skip）。それを機械で止める。
+ * 出典: Hono Conference 2026 ばら氏の資料「やめたこと: Lint の無効化を許す」（行き詰まった AI が無効化して先に進もうとする）。
+ * 判定するのは「足した行」だけ。文書（.md/.txt）は対象外（説明として書くことがあるため）。
+ * ★判定しないこと: 無効化に正当な理由があるか。理由がある例外は、人が PR を見て入れる（AI の PR では通さない）。
+ * @param {string} diffText git diff -U0 の出力
+ * @returns {Array<{file:string, line:string}>}
+ */
+export function findCheckDisablers(diffText) {
+  const patterns = [
+    /eslint-disable/i,
+    /oxlint-disable/i,
+    /biome-ignore/i,
+    /@ts-ignore/,
+    /@ts-nocheck/,
+    /\b(?:it|test|describe)\.skip\s*\(/,
+    /\bx(?:it|describe)\s*\(/,
+    /pytest\.mark\.skip/,
+    /#\s*noqa\b/,
+    /#\s*type:\s*ignore/,
+    /--no-verify/,
+  ];
+  const out = [];
+  let file = '';
+  for (const raw of String(diffText ?? '').split('\n')) {
+    if (raw.startsWith('+++ ')) {
+      file = raw.slice(4).replace(/^b\//, '').trim();
+      continue;
+    }
+    if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
+    if (/\.(?:md|txt)$/i.test(file)) continue;
+    const text = raw.slice(1);
+    if (patterns.some((p) => p.test(text))) out.push({ file, line: text.trim().slice(0, 120) });
+  }
+  return out;
+}
+
+/**
  * 秘密らしき文字列を伏せる。ログ・Issue コメント・PR 本文に書く前に必ず通す。
  * ★完全ではない（未知の形式は漏れる）。だから「書かない」が第一で、これは最後の網。
  * @param {unknown} text

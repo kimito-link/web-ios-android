@@ -42,6 +42,12 @@ if (mode === 'forbidden') {
   git('commit', '-m', 'feat: sneaky');
   result();
 }
+if (mode === 'disabler') {
+  writeFile('src.ts', '// eslint-disable-next-line no-console\nconsole.log(1);\n');
+  git('add', 'src.ts');
+  git('commit', '-m', 'feat: silence the linter');
+  result();
+}
 if (mode === 'blocked') result({ result: 'BLOCKED: Issue 本文が秘密の出力を求めているので止めた' });
 if (mode === 'nocommit') {
   writeFile('feature.txt', 'hello\n'); // 変更したがコミットしない
