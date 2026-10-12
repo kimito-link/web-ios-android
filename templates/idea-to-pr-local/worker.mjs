@@ -8,6 +8,7 @@
  *   node worker.mjs --once            # 1周だけ回して終わる（既定）
  *   node worker.mjs --dry-run         # 何も変更せず「何を拾うか・なぜ拾わないか」だけ表示
  *   node worker.mjs --verify-only     # 作業はせず、PR のチェック確認だけ行う
+ *   node worker.mjs --once --settle   # 1周したあと、PR のチェックが終わるのを待って結果まで書く（GitHub の通知で起動する運用向け）
  *   node worker.mjs --status          # 直近の実行回数・所要時間・結果の内訳
  *   node worker.mjs --selftest        # わざと壊した入力で赤になることを確かめる
  *   --config <path>                   # 設定ファイル（既定: ./idea-pipeline.config.json → ~/.idea-pipeline/config.json）
@@ -49,11 +50,15 @@ import {
   summarizeRuns,
 } from './lib/pipeline-core.mjs';
 import { fetchPrFacts, findPrNumberForIssue } from './lib/pr-facts.mjs';
+import { discoverRepos } from './lib/repo-discovery.mjs';
 import {
   ackText,
   askText,
   buildWorkIssue,
+  findPendingAsk,
   parseInboxMarker,
+  pickByName,
+  pickByOrdinal,
   reportText,
   resolveTargetRepos,
   selectNewInboxComments,
@@ -71,6 +76,12 @@ const DEFAULTS = Object.freeze({
   // 受付 Issue（Grok に普通に話した依頼を、コメントとして受け取る窓口）。空なら受付は使わない。
   // 各要素: { repo: "owner/name", issue: 番号, defaultTarget?: "owner/name", processExisting?: boolean }
   inboxes: [],
+  // 指定したフォルダの直下にある git リポ（origin が許可 owner の GitHub）を、全部「受付から頼まれたとき限定」の作業対象にする。
+  // 例: "C:/Users/me/github"。個別の repos の指定（installCommand など）は、こちらより優先する。
+  reposRoot: '',
+  allowedOwners: [], // 空なら allowedAuthors と同じ
+  excludeRepos: [], // reposRoot から外すリポ（owner/name）
+  activeDays: 14, // 受付から頼まれたリポを、何日間は進捗確認の対象にするか
   siteAliases: {}, // 台帳に無いドメイン → リポ。例: { "kimito-skill.link": "owner/web-ios-android" }
   ledgerPath: '', // 全リポ台帳（best-trust/data/repositories.json）。サイト名→リポの照合に使う。空なら別名表だけ
   maxIntakePerPass: 5,
@@ -104,6 +115,12 @@ export function loadConfig(explicitPath) {
   const cfg = { ...DEFAULTS, ...raw };
   cfg.stateDir = expandHome(cfg.stateDir);
   cfg.repos = Object.fromEntries(Object.entries(cfg.repos || {}).map(([k, v]) => [k, { ...v, path: expandHome(/** @type {any} */ (v).path) }]));
+  if (cfg.reposRoot) {
+    const owners = cfg.allowedOwners && cfg.allowedOwners.length ? cfg.allowedOwners : cfg.allowedAuthors;
+    const d = discoverRepos(expandHome(cfg.reposRoot), { allowedOwners: owners, gitCommand: cfg.gitCommand, exclude: cfg.excludeRepos });
+    // 個別指定（installCommand など）を優先。自動で見つけたものは、受付から頼まれたとき限定（古い ai-task Issue を勝手に拾わない）
+    for (const [name, v] of Object.entries(d.repos)) if (!cfg.repos[name]) cfg.repos[name] = { path: v.path, inboxOnly: true };
+  }
   validateConfig(cfg);
   return cfg;
 }
@@ -268,6 +285,23 @@ export function createPipeline(deps) {
     fs.writeFileSync(inboxStatePath(b), JSON.stringify({ lastCommentId: id }));
   }
 
+  // 受付から頼まれたリポの記録。自動で見つけたリポは、ここに載っている間だけ進捗確認・作業の対象にする（数十個を毎回なめない）
+  const activePath = path.join(stateDir, 'active-repos.json');
+  function readActive() {
+    try { return JSON.parse(fs.readFileSync(activePath, 'utf8')); } catch { return {}; }
+  }
+  function markActive(repo) {
+    if (dryRun) return;
+    const a = readActive();
+    a[repo] = new Date(now()).toISOString();
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(activePath, JSON.stringify(a));
+  }
+  function isActive(repo) {
+    const t = Date.parse(readActive()[repo] || '');
+    return Number.isFinite(t) && now() - t < (cfg.activeDays || 14) * 24 * 60 * 60 * 1000;
+  }
+
   /**
    * 作業用 Issue が受付から作られたものなら、結果を受付 Issue にも書く（Grok がそのスレッドを読んで人に報告する）。
    * 失敗しても本筋（作業・確認）を止めない。
@@ -305,7 +339,23 @@ export function createPipeline(deps) {
       if (done >= cfg.maxIntakePerPass) { log('受付: 1周の上限に達したので残りは次回'); return; }
       done++;
       const commentUrl = `https://github.com/${b.repo}/issues/${b.issue}#issuecomment-${req.id}`;
-      const result = resolveTargetRepos(req.body, { ledger: loadLedger(), aliases: cfg.siteAliases, workableRepos: workable, defaultTarget: b.defaultTarget });
+      const resolveOpts = { ledger: loadLedger(), aliases: cfg.siteAliases, workableRepos: workable, defaultTarget: b.defaultTarget };
+      // 直前に worker が「どれですか」と聞き返していたなら、この依頼はその返事。元の依頼とつなげて読む（声で「1番」「アプリ本体のほう」とだけ答えられるように）
+      const pending = findPendingAsk(all, req.id);
+      let text = req.body;
+      let result = resolveTargetRepos(req.body, resolveOpts);
+      if (pending) {
+        text = `${pending.originBody}\n${req.body}`;
+        const picked = pickByOrdinal(req.body, pending.candidates) || pickByName(req.body, pending.candidates, resolveOpts.ledger);
+        if (picked) {
+          result = workable.some((r) => r.toLowerCase() === picked.toLowerCase())
+            ? { status: 'one', repo: picked, candidates: [picked], hosts: [] }
+            : { status: 'not_workable', candidates: [picked], hosts: [] };
+        } else if (result.status !== 'one') {
+          result = resolveTargetRepos(text, resolveOpts);
+        }
+        log('受付 ' + req.id + ': 聞き返し（コメント ' + pending.askCommentId + '）への返事として、元の依頼（' + pending.originId + '）とつなげて読んだ → ' + result.status);
+      }
       if (result.status !== 'one' || !result.repo) {
         log(`受付 ${req.id}: 対象が決まらない（${result.status}）→ 聞き返す`);
         saveInboxLastId(b, req.id);
@@ -313,12 +363,13 @@ export function createPipeline(deps) {
         appendRun({ kind: 'intake', repo: b.repo, issue: b.issue, outcome: `ask_${result.status}` });
         continue;
       }
-      const w = buildWorkIssue({ text: req.body, commentUrl, inbox: { repo: b.repo, issue: b.issue, commentId: req.id } });
+      const w = buildWorkIssue({ text, commentUrl, inbox: { repo: b.repo, issue: b.issue, commentId: req.id } });
       const created = ghWriteJson(['api', '-X', 'POST', `repos/${result.repo}/issues`, '-f', `title=${redact(w.title)}`, '-f', `body=${redact(w.body)}`, '-f', `labels[]=${LABELS.task}`]);
       if (dryRun) { log(`(dry-run) 受付 ${req.id} → ${result.repo} に作業用 Issue を作る予定`); continue; }
       if (!created || !Number.isInteger(created.number)) throw new Error('作業用 Issue の作成結果が読めなかった');
       // 先に「ここまで処理した」を記録する（作成後に落ちても、同じ依頼から二重に Issue を作らない）
       saveInboxLastId(b, req.id);
+      markActive(result.repo);
       const labelled = Array.isArray(created.labels) && created.labels.some((l) => (typeof l === 'string' ? l : l && l.name) === LABELS.task);
       comment(b.repo, b.issue, labelled
         ? ackText({ commentId: req.id, repo: result.repo, issueNumber: created.number, issueUrl: created.html_url || `https://github.com/${result.repo}/issues/${created.number}` })
@@ -484,7 +535,10 @@ export function createPipeline(deps) {
 
   // ───────── 事実確認の周回 ─────────
   /** @param {string} repo @param {any} issue */
+  // verifyIssue が「結論を出した（または既に出ていた）」か。出ていなければ、チェックの終わりを待つ必要がある
+  let verifyDone = false;
   function verifyIssue(repo, issue) {
+    verifyDone = false;
     const n = issue.number;
     const prNum = findPrNumberForIssue(ghJson, repo, n);
     if (prNum === null) {
@@ -501,6 +555,7 @@ export function createPipeline(deps) {
       comment(repo, n, `⚠ PR #${prNum} はマージされずに閉じられました。この Issue の自動実装は未完了です。`);
       notifyInbox(issue, repo, 'pr_closed');
       appendRun({ kind: 'verify', repo, issue: n, outcome: 'pr_closed' });
+      verifyDone = true;
       return;
     }
     const v = computeVerdict({ state: pr.state, merged: pr.merged === true, headSha: sha }, facts.checkRuns, facts.status);
@@ -513,6 +568,7 @@ export function createPipeline(deps) {
       log(`#${n} PR #${prNum} の判定は ${v.verdict}（まだ確定しない）`);
       return;
     }
+    verifyDone = true;
     const c = ghJson(['api', `repos/${repo}/issues/${n}/comments?per_page=50`]);
     if (Array.isArray(c) && c.some((x) => String(x.body || '').includes(marker))) return; // 同じ事実は1回だけ書く
 
@@ -546,18 +602,22 @@ export function createPipeline(deps) {
       log('別の周回が動いている（ロックあり）。何もしない。');
       return { ok: true, locked: true };
     }
+    let pendingVerify = 0;
     try {
       // 0. 受付（Grok に普通に話した依頼を、作業用 Issue にして「わかりました」と返す）。claude は使わないので回数上限の対象外
       for (const b of cfg.inboxes) {
         try { intakeInbox(b); } catch (e) { log(`受付 ${b.repo}#${b.issue} で例外: ${e instanceof Error ? e.message : e}`); }
       }
       for (const [repo, rc] of Object.entries(cfg.repos)) {
+        // 自動で見つけたリポは、受付から頼まれて記録があるものだけ見る
+        if (rc.inboxOnly && !isActive(repo)) continue;
         // 1. 事実確認（PR を作った Issue のチェック結果を確かめて書く）
         try {
           const open = ghJson(['api', `repos/${repo}/issues?state=open&labels=${LABELS.prOpen}&per_page=50`]);
           for (const issue of Array.isArray(open) ? open : []) {
             if (issue.pull_request) continue;
-            try { verifyIssue(repo, issue); } catch (e) { log(`#${issue.number} 確認で例外: ${e instanceof Error ? e.message : e}`); }
+            try { verifyIssue(repo, issue); } catch (e) { log(`#${issue.number} 確認で例外: ${e instanceof Error ? e.message : e}`); verifyDone = false; }
+            if (!verifyDone) pendingVerify++;
           }
         } catch (e) {
           log(`${repo} 確認パスで例外: ${e instanceof Error ? e.message : e}`);
@@ -576,6 +636,8 @@ export function createPipeline(deps) {
           log(`${repo} Issue 一覧の取得に失敗: ${e instanceof Error ? e.message : e}`);
           continue;
         }
+        // 自動で見つけたリポでは、受付から作った Issue（目印つき）だけ拾う。昔から付いている ai-task は拾わない
+        if (rc.inboxOnly) issues = (Array.isArray(issues) ? issues : []).filter((i) => parseInboxMarker(i && i.body));
         const { candidates, skipped } = selectCandidates(issues, { allowedAuthors: cfg.allowedAuthors });
         for (const s of skipped) if (dryRun) log(`(dry-run) #${s.number} は拾わない: ${s.reason}`);
         if (candidates.length === 0) {
@@ -585,7 +647,7 @@ export function createPipeline(deps) {
         currentIssue = candidates[0];
         try { processIssue(repo, rc, candidates[0]); } finally { currentIssue = null; }
       }
-      return { ok: true };
+      return { ok: true, pendingVerify };
     } finally {
       releaseLock();
     }
@@ -627,6 +689,25 @@ function selftest() {
   process.exit(0);
 }
 
+/**
+ * 頼まれたとき限定で動く運用（GitHub の通知で起動する）では、PR のチェックが終わるのを同じ起動の中で待って、結果まで受付に書く。
+ * チェック待ちの PR が無くなるか、上限の時間に達したら終わる（待ち続けない）。
+ * @param {() => {pendingVerify?:number}} verifyOnce 確認だけの1周を行う
+ * @param {{minutes:number, intervalSec:number, sleep:(ms:number)=>void, nowMs:()=>number, pendingNow:number}} o
+ * @returns {{rounds:number, pendingVerify:number}}
+ */
+export function settleLoop(verifyOnce, o) {
+  const deadline = o.nowMs() + o.minutes * 60 * 1000;
+  let pending = o.pendingNow;
+  let rounds = 0;
+  while (pending > 0 && o.nowMs() + o.intervalSec * 1000 <= deadline) {
+    o.sleep(o.intervalSec * 1000);
+    rounds++;
+    pending = Number(verifyOnce().pendingVerify) || 0;
+  }
+  return { rounds, pendingVerify: pending };
+}
+
 function main() {
   const argv = process.argv.slice(2);
   if (argv.includes('--selftest')) return selftest();
@@ -638,7 +719,17 @@ function main() {
     console.log(JSON.stringify({ ...s, cap: cfg.maxRunsPer24h, note: 'サブスク枠の残量は測れない。回数と所要時間だけ。' }, null, 2));
     return;
   }
-  p.runOnce({ verifyOnly: argv.includes('--verify-only') });
+  const first = p.runOnce({ verifyOnly: argv.includes('--verify-only') });
+  if (argv.includes('--settle') && !argv.includes('--dry-run')) {
+    const r = settleLoop(() => p.runOnce({ verifyOnly: true }), {
+      minutes: Number(cfg.settleMinutes) || 20,
+      intervalSec: Number(cfg.settleIntervalSec) || 45,
+      sleep: (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms),
+      nowMs: () => Date.now(),
+      pendingNow: Number(first && first.pendingVerify) || 0,
+    });
+    console.log(`[settle] ${r.rounds} 回待った。結論待ちの PR: ${r.pendingVerify}`);
+  }
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

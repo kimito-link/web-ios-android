@@ -28,6 +28,7 @@
 /** 受付 Issue に worker が書くコメントの目印。これが付いたコメントは依頼として拾わない。 */
 export const MARKERS = Object.freeze({
   ack: 'idea-pipeline:ack',
+  ask: 'idea-pipeline:ask',
   report: 'idea-pipeline:report',
   inbox: 'idea-pipeline:inbox',
 });
@@ -65,24 +66,109 @@ function repoFullNameOf(url) {
   return m ? `${m[1]}/${m[2]}` : '';
 }
 
+/** 名前での照合の前に依頼文から外す、どのサイトにも付く言葉（これだけで照合が成立しないように） */
+const GENERIC_WORDS = ['ウェブサイト', 'ホームページ', 'サイト', 'アプリ', 'ページ', '直して', 'なおして', '気になる', 'お願い', 'してほしい', 'ください'];
+/** 名前の一致とみなす最小の長さ（これ未満の共通部分は偶然の一致として無視） */
+const MIN_NAME_MATCH = 4;
+/** 最有力と次点の差がこれ未満なら、一意とみなさず聞き返す */
+const NAME_MARGIN = 2;
+
+/** @param {unknown} t */
+function norm(t) {
+  return String(t ?? '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+}
+
+/** 2つの文字列の最長共通部分文字列の長さ */
+function longestCommonSubstring(a, b) {
+  if (!a || !b) return 0;
+  let best = 0;
+  let prev = new Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = new Array(b.length + 1).fill(0);
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        cur[j] = prev[j - 1] + 1;
+        if (cur[j] > best) best = cur[j];
+      }
+    }
+    prev = cur;
+  }
+  return best;
+}
+
+/** 台帳の note の先頭（製品名の部分）。例: 'マルウェアチェック.site' → 'マルウェアチェック' */
+export function noteHead(note) {
+  const head = String(note ?? '').split(/[。（(、,/]/)[0] || '';
+  return head.replace(new RegExp(`\.(?:${TLDS})$`, 'i'), '').trim();
+}
+
 /**
- * 依頼文のサイトから、直す対象のリポを決める。
+ * URL が無い依頼（「マルウェアチェックのやつ」「健康診断のサイト」）を、リポ名と台帳の note（製品名）から探す。
+ * 日本語は単語に区切れないので、依頼文とリポ名・製品名との「最長の共通部分」の長さで比べる。
+ * 4文字未満の一致は偶然とみなす。最有力が次点より十分長いときだけ1件に決め、僅差なら全部を候補として返す。
+ * @param {string} text
+ * @param {any[]} repos 台帳の repositories
+ * @returns {{score:number, candidates:Array<{full:string, label:string, score:number}>}}
+ */
+export function matchRepoByName(text, repos) {
+  const strip = (t) => GENERIC_WORDS.reduce((acc, w) => acc.split(norm(w)).join(''), norm(t));
+  const req = strip(text);
+  /** @type {Array<{full:string, label:string, score:number, head:string, paren:string, short:string}>} */
+  const scored = [];
+  for (const r of repos) {
+    if (!r || !r.github || r.github.isArchived) continue;
+    const full = repoFullNameOf(r.github.url);
+    if (!full) continue;
+    const head = noteHead(r.note);
+    const paren = (/[（(]([^）)]+)[）)]/.exec(String(r.note ?? '')) || [])[1];
+    const terms = [norm(r.name), strip(head), paren ? strip(paren) : ''].filter(Boolean);
+    const score = Math.max(0, ...terms.map((t) => longestCommonSubstring(req, t)));
+    if (score >= MIN_NAME_MATCH) scored.push({ full, label: '', score, head, paren: paren || '', short: full.split('/').pop() || full });
+  }
+  scored.sort((x, y) => y.score - x.score);
+  if (scored.length === 0) return { score: 0, candidates: [] };
+  const best = scored[0].score;
+  if (scored.length === 1 || best - scored[1].score >= NAME_MARGIN) return { score: best, candidates: withSpokenLabels([scored[0]]) };
+  return { score: best, candidates: withSpokenLabels(scored.filter((c) => best - c.score < NAME_MARGIN)) };
+}
+
+/**
+ * 候補に、声で読み上げて聞き分けられる呼び名を付ける。製品名だけで区別できればそれ、同じ製品名が複数あれば括弧の中身（なければリポ名）を足す。
+ * リポ名（英字・ハイフン）は、読み上げに向かないので、区別に必要なときだけ使う。
+ * @template {{head:string, paren:string, short:string, label:string}} T
+ * @param {T[]} list
+ * @returns {T[]}
+ */
+function withSpokenLabels(list) {
+  const count = new Map();
+  for (const c of list) count.set(c.head, (count.get(c.head) || 0) + 1);
+  for (const c of list) {
+    if (!c.head) c.label = c.short;
+    else if ((count.get(c.head) || 0) > 1) c.label = `${c.head}（${c.paren || c.short}）`;
+    else c.label = c.head;
+  }
+  return list;
+}
+
+/**
+ * 依頼文から、直す対象のリポを決める。
  *
  * 照合の仕方（台帳 best-trust/data/repositories.json を実行時に読む。コピーを作らない）:
- *   1. 設定の別名表（例: "kimito-skill.link" → "owner/web-ios-android"）
+ *   1. 設定の別名表（例: 'kimito-skill.link' → 'owner/web-ios-android'、'健康診断' → 'owner/web-health-check-app'）
  *   2. リポ名がドメインそのもの（例: malwarecheck.site）
  *   3. 台帳の homepage のホスト
  *   4. Vercel 形式（例: surechigai-romi.link → surechigai-romi-link.vercel.app の先頭ラベル）
+ *   5. URL が無いとき: リポ名・製品名との共通部分（matchRepoByName。「マルウェアチェックのサイト」）
  * 一意に決まらなければ決めない（status で理由を返す）。
  *
  * @param {string} text
  * @param {{ledger?:any, aliases?:Record<string,string>, workableRepos:string[], defaultTarget?:string}} opts
- * @returns {{status:'one'|'none'|'many'|'not_workable'|'no_host', repo?:string, candidates:string[], hosts:string[]}}
+ * @returns {{status:'one'|'none'|'many'|'not_workable'|'no_host', repo?:string, candidates:string[], hosts:string[], labels?:string[]}}
  */
 export function resolveTargetRepos(text, opts) {
   const hosts = extractHosts(text);
   const workable = new Set((opts.workableRepos || []).map((r) => r.toLowerCase()));
-  const aliases = Object.fromEntries(Object.entries(opts.aliases || {}).map(([k, v]) => [k.toLowerCase().replace(/^www\./, ''), v]));
+  const aliases = Object.fromEntries(Object.entries(opts.aliases || {}).map(([k, v]) => [k.toLowerCase().replace(/^www./, ''), v]));
   /** @type {Set<string>} */
   const found = new Set();
   const repos = Array.isArray(opts.ledger && opts.ledger.repositories) ? opts.ledger.repositories : [];
@@ -91,7 +177,7 @@ export function resolveTargetRepos(text, opts) {
       found.add(aliases[host]);
       continue;
     }
-    const slug = host.replace(/\./g, '-');
+    const slug = host.replace(/./g, '-');
     for (const r of repos) {
       if (!r || !r.github || r.github.isArchived) continue;
       const full = repoFullNameOf(r.github.url);
@@ -103,16 +189,30 @@ export function resolveTargetRepos(text, opts) {
       if (byName || byHomepage || byVercel) found.add(full);
     }
   }
-  const candidates = [...found];
-  if (hosts.length === 0) {
+  // URL でない別名（日本語の呼び名など）が依頼文に入っていれば、それを使う
+  const normText = norm(text);
+  for (const [k, v] of Object.entries(opts.aliases || {})) {
+    if (extractHosts(k).length === 0 && norm(k).length > 0 && normText.includes(norm(k))) found.add(v);
+  }
+  let candidates = [...found];
+  /** @type {string[]|undefined} */
+  let labels;
+  if (candidates.length === 0 && hosts.length === 0) {
+    const byName = matchRepoByName(String(text ?? ''), repos);
+    if (byName.candidates.length > 0) {
+      candidates = byName.candidates.map((c) => c.full);
+      labels = byName.candidates.map((c) => c.label);
+    }
+  }
+  if (candidates.length === 0 && hosts.length === 0) {
     if (opts.defaultTarget && workable.has(opts.defaultTarget.toLowerCase())) return { status: 'one', repo: opts.defaultTarget, candidates: [opts.defaultTarget], hosts };
     return { status: 'no_host', candidates: [], hosts };
   }
   if (candidates.length === 0) return { status: 'none', candidates, hosts };
   const ok = candidates.filter((c) => workable.has(c.toLowerCase()));
   if (ok.length === 1 && candidates.length === 1) return { status: 'one', repo: ok[0], candidates, hosts };
-  if (ok.length === 0) return { status: 'not_workable', candidates, hosts };
-  return { status: 'many', candidates, hosts };
+  if (ok.length === 0) return { status: 'not_workable', candidates, hosts, ...(labels ? { labels } : {}) };
+  return { status: 'many', candidates, hosts, ...(labels ? { labels } : {}) };
 }
 
 /**
@@ -198,20 +298,122 @@ export function ackText(p) {
   return `${ackMarker(p.commentId)}\nわかりました。依頼を受け付けました。\n\n- 直す対象: ${p.repo}\n- 管理番号: #${p.issueNumber}（${p.issueUrl}）\n\nできたら、このスレッドに結果を書きます。`;
 }
 
+/** 聞き返しの目印。どの依頼への聞き返しか・候補は何か を持つ（次の返事をつなげるため） */
+export const askMarker = (commentId, candidates = []) => `<!-- ${MARKERS.ask} comment=${commentId}${candidates.length ? ` candidates=${candidates.join(',')}` : ''} -->`;
+
 /**
- * 対象が決まらなかったときの聞き返し。
+ * @param {unknown} body
+ * @returns {{commentId:number, candidates:string[]}|null}
+ */
+export function parseAskMarker(body) {
+  const m = new RegExp(`<!-- ${MARKERS.ask} comment=(\\d+)(?: candidates=([\\w./,-]+))? -->`).exec(String(body ?? ''));
+  return m ? { commentId: Number(m[1]), candidates: m[2] ? m[2].split(',') : [] } : null;
+}
+
+const KANJI_NUM = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+
+/**
+ * 聞き返しへの短い返事（「1番」「二つ目」「最初の」「最後の」）で、候補のどれかを選ぶ。声で答える人向け。
+ * 長い文章は対象にしない（別の依頼を、番号の言及と取り違えない）。曖昧なら null。
+ * @param {unknown} reply
+ * @param {string[]} candidates
+ * @returns {string|null}
+ */
+export function pickByOrdinal(reply, candidates) {
+  const t = norm(reply);
+  if (!t || [...t].length > 12 || candidates.length === 0) return null;
+  /** @type {number|null} */
+  let n = null;
+  let m = /^([1-9])(?:番|つ目|個目|番目)?(?:の|を|で|です|ほう|方)?$/.exec(t);
+  if (m) n = Number(m[1]);
+  if (n === null) {
+    m = /^([一二三四五六七八九])(?:番|つ目|個目|番目)(?:の|を|で|です|ほう|方)?$/.exec(t);
+    if (m) n = KANJI_NUM[m[1]];
+  }
+  if (n === null && /^(?:最初|はじめ|一番上|上)(?:の|を|で|です)?(?:ほう|方)?$/.test(t)) n = 1;
+  if (n === null && /^(?:最後|さいご|一番下|下)(?:の|を|で|です)?(?:ほう|方)?$/.test(t)) n = candidates.length;
+  return n !== null && n >= 1 && n <= candidates.length ? candidates[n - 1] : null;
+}
+
+/**
+ * 聞き返しの候補だけを相手に、短い返事（「アプリ本体のほう」「LP のやつ」）で1件を選ぶ。
+ * 候補は2〜3件しかないので、通常の照合より短い共通部分（2文字以上）を認める。ただし最有力が次点より長いときだけ決める（僅差・同点は null）。
+ * 長い文章は対象にしない（別の依頼の中の言葉を、返事と取り違えない）。
+ * @param {unknown} reply
+ * @param {string[]} candidates "owner/name"
+ * @param {any} ledger
+ * @returns {string|null}
+ */
+export function pickByName(reply, candidates, ledger) {
+  const t = norm(reply);
+  if (!t || [...t].length > 24 || candidates.length < 2) return null;
+  const repos = Array.isArray(ledger && ledger.repositories) ? ledger.repositories : [];
+  const scored = candidates.map((full) => {
+    const r = repos.find((x) => x && x.github && repoFullNameOf(x.github.url).toLowerCase() === full.toLowerCase());
+    if (!r) return { full, score: 0 };
+    const paren = (/[（(]([^）)]+)[）)]/.exec(String(r.note ?? '')) || [])[1];
+    const terms = [norm(r.name), norm(noteHead(r.note)), paren ? norm(paren) : ''].filter(Boolean);
+    return { full, score: Math.max(0, ...terms.map((x) => longestCommonSubstring(t, x))) };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0].score >= 2 && scored[0].score > scored[1].score ? scored[0].full : null;
+}
+
+/**
+ * 直前の worker の発言が「聞き返し」で、そのあとに来た依頼がその返事かを調べる。
+ * 受付の中で、依頼 reqId より前にある worker の発言（聞き返し／受付の返事）のうち一番新しいものが聞き返しなら、返事とみなす。
+ * @param {Array<{id?:number, body?:string|null}>} comments
+ * @param {number} reqId
+ * @returns {{askCommentId:number, originId:number, originBody:string, candidates:string[]}|null}
+ */
+export function findPendingAsk(comments, reqId) {
+  const list = (Array.isArray(comments) ? comments : []).filter((c) => c && Number.isFinite(Number(c.id)));
+  let last = null;
+  for (const c of list) {
+    const id = Number(c.id);
+    if (id >= reqId) continue;
+    const body = String(c.body ?? '');
+    if (body.includes(`<!-- ${MARKERS.ask} `) || body.includes(`<!-- ${MARKERS.ack} `)) {
+      if (!last || id > Number(last.id)) last = c;
+    }
+  }
+  if (!last) return null;
+  const ask = parseAskMarker(last.body);
+  if (!ask) return null;
+  const origin = list.find((c) => Number(c.id) === ask.commentId);
+  if (!origin) return null;
+  return { askCommentId: Number(last.id), originId: ask.commentId, originBody: String(origin.body ?? ''), candidates: ask.candidates };
+}
+
+/**
+ * 対象が決まらなかったときの聞き返し。声で読み上げられて、声で答えられる形にする
+ * （URL を言わせない。名前か「1番」のような番号で答えられる）。
  * @param {{commentId:number, result:ReturnType<typeof resolveTargetRepos>}} p
  */
 export function askText(p) {
   const r = p.result;
+  const list = r.labels || r.candidates;
+  const bullets = list.map((c) => `・${c}`).join('\n');
   const reason = {
     none: `「${r.hosts.join('、')}」に当てはまるリポジトリが見つかりませんでした。`,
-    no_host: 'どのサイトのことか分かりませんでした（サイトの URL が書かれていません）。',
-    many: `複数のリポジトリに当てはまりました: ${r.candidates.join('、')}。`,
-    not_workable: `当てはまるリポジトリ（${r.candidates.join('、')}）は、この PC で作業できる設定に入っていません。`,
+    no_host: 'どのサイトのことか分かりませんでした（サイトの名前らしい言葉が見つかりません）。',
+    many: `複数のリポジトリに当てはまりました。
+${bullets}`,
+    not_workable: `当てはまるリポジトリ（${list.join('、')}）は、この PC で作業できる設定に入っていません。`,
     one: '',
   }[r.status];
-  return `${ackMarker(p.commentId)}\n依頼は受け取りましたが、まだ作業を始められません。\n\n${reason}\n\nサイトの URL（例: https://…）か、リポジトリの名前を、もう一度書いてください。`;
+  const how = r.status === 'many'
+    ? 'どれか、名前（一部でも構いません）で答えてください。「最初の」「二つ目の」「最後の」でも通じます。もう一度書いてください。'
+    : r.status === 'not_workable'
+      ? '書き直しても変わりません。このリポジトリを作業の対象に加える設定が、人の手で必要です。別のサイトなら、その名前を書いてください。'
+      : 'サイトやアプリの名前（例: マルウェアチェック）を、もう一度書いてください。URL でも構いません。';
+  const cands = r.status === 'many' ? r.candidates : [];
+  return `${askMarker(p.commentId, cands)}
+依頼は受け取りましたが、まだ作業を始められません。
+
+${reason}
+
+${how}`;
 }
 
 /**
