@@ -43,6 +43,7 @@ import {
   buildPrompt,
   computeVerdict,
   dailyCapReached,
+  findCheckDisablers,
   findForbiddenPaths,
   isSafePushBranch,
   redact,
@@ -483,6 +484,10 @@ export function createPipeline(deps) {
       if (names.status !== 0 || files.length === 0) return failKeep('変更ファイルの一覧が取れなかった', meta);
       const forbidden = findForbiddenPaths(files, cfg.forbiddenPaths);
       if (forbidden.length) return failKeep(`触ってはいけない場所が差分に含まれていた（push しない）: ${forbidden.join(', ')}`, meta);
+      // 行き詰まった AI が、直す代わりに検査（Lint・型・テスト）を無効にして先へ進んでいないか
+      const full = git(wt, ['diff', '-U0', `origin/${base}...HEAD`]);
+      const disablers = full.status === 0 ? findCheckDisablers(full.stdout) : [];
+      if (disablers.length) return failKeep(`検査を無効にする書き込みが差分に含まれていた（push しない）: ${disablers.slice(0, 3).map((d) => `${d.file}「${d.line}」`).join(', ')}`, meta);
       if (files.length > cfg.maxChangedFiles) return failKeep(`差分が大きすぎる（${files.length} ファイル > ${cfg.maxChangedFiles}）`, meta);
       const dirtyAfter = git(wt, ['status', '--porcelain']).stdout.trim();
 
@@ -667,6 +672,8 @@ function selftest() {
   check('正当な Issue を拾えない（誤検知）', selectCandidates([issue()], { allowedAuthors: ['me'] }).candidates.length === 1);
   check('workflows の変更を見逃す（毒）', findForbiddenPaths(['.github/workflows/a.yml']).length === 1);
   check('普通のファイルを禁じる（誤検知）', findForbiddenPaths(['src/a.ts']).length === 0);
+  check('検査の無効化を見逃す（毒）', findCheckDisablers(['+++ b/src/a.ts', '+// eslint-disable-next-line'].join(String.fromCharCode(10))).length === 1);
+  check('普通の追加行を無効化と誤認する（誤検知）', findCheckDisablers(['+++ b/src/a.ts', '+const a = 1;'].join(String.fromCharCode(10))).length === 0);
   check('トークンを伏せない（毒）', !redact('ghp_' + 'a'.repeat(36)).includes('ghp_a'));
   check('main への push を許す（毒）', !isSafePushBranch('main'));
   check('チェック0件を成功にする（毒）', computeVerdict({ merged: false }, [], null).verdict !== 'success');

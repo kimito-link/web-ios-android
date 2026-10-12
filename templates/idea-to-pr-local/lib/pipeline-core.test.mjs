@@ -11,6 +11,7 @@ import {
   selectCandidates,
   summarizeRuns,
   workRunsInLast24h,
+  findCheckDisablers,
 } from './pipeline-core.mjs';
 
 const issue = (over = {}) => ({
@@ -249,5 +250,24 @@ describe('summarizeRuns', () => {
     expect(s.outcomes7d).toEqual({ pr_created: 1, failed: 1 });
     expect(s.totalMinutes7d).toBe(12);
     expect(s.totalTurns7d).toBe(25);
+  });
+});
+
+describe('findCheckDisablers（検査を黙らせる書き込みを止める）', () => {
+  const d = (file, ...lines) => ['diff --git a/' + file + ' b/' + file, '--- a/' + file, '+++ b/' + file, '@@ -0,0 +1 @@', ...lines.map((l) => '+' + l)].join(String.fromCharCode(10));
+  it('【毒】Lint の無効化・型の無視・テストの skip・hook 迂回を、足した行から見つける', () => {
+    for (const bad of ['// eslint-disable-next-line no-console', '/* eslint-disable */', '// oxlint-disable foo', '// biome-ignore lint: x', '// @ts-ignore', '// @ts-nocheck', "it.skip('a', () => {})", "describe.skip('a', () => {})", "xit('a', () => {})", 'x = 1  # noqa', 'x = 1  # type: ignore', 'git commit --no-verify -m a']) {
+      expect(findCheckDisablers(d('src/a.ts', bad)).length, bad).toBe(1);
+    }
+  });
+  it('普通のコード・文書の中の説明・消した行・前から有った行は、無効化とみなさない（誤検知しない）', () => {
+    expect(findCheckDisablers(d('src/a.ts', 'const skip = true;', "it('works', () => {})", 'const x = 1; // 説明')).length).toBe(0);
+    expect(findCheckDisablers(d('README.md', '// eslint-disable は使わないでください')).length).toBe(0);
+    expect(findCheckDisablers(['+++ b/a.ts', '-// eslint-disable-next-line', ' // @ts-ignore'].join(String.fromCharCode(10))).length).toBe(0);
+  });
+  it('どのファイルか・どの行かを返す。壊れた入力で throw しない', () => {
+    expect(findCheckDisablers(d('src/x.ts', '// @ts-ignore'))[0]).toEqual({ file: 'src/x.ts', line: '// @ts-ignore' });
+    expect(findCheckDisablers(null)).toEqual([]);
+    expect(findCheckDisablers('')).toEqual([]);
   });
 });

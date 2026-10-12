@@ -151,6 +151,15 @@ describe('作業の周回', () => {
     expect(readState().repos[REPO].pulls || []).toEqual([]);
   });
 
+  it('【毒】Lint を無効にする行を足した差分は push しない（直す代わりに黙らせる近道を止める）', () => {
+    process.env.FAKE_CLAUDE_MODE = 'disabler';
+    pipeline().runOnce();
+    expect(remoteBranches()).not.toContain('ai/issue-1');
+    expect(labelsOf(1)).toContain(LABELS.failed);
+    expect(commentsOf(1).join('\n')).toContain('検査を無効にする書き込み');
+    expect(readState().repos[REPO].pulls || []).toEqual([]);
+  });
+
   it('【毒】claude が BLOCKED と言ったら push しない', () => {
     process.env.FAKE_CLAUDE_MODE = 'blocked';
     pipeline().runOnce();
