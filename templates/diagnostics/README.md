@@ -25,6 +25,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-lockfile-sync.mjs` | package.jsonとpackage-lock.jsonの依存不一致（lockfile更新忘れ） | npm(lockfileVersion 2/3、packages形式)。yarn/pnpmはskip |
 | `check-secrets-not-tracked.mjs` | `.env`・鍵/証明書ファイル等の秘密情報が誤ってgit追跡されていないか | git管理下のみ |
 | `check-large-tracked-files.mjs` | 巨大ファイル（既定5MB超）の誤追跡 | git管理下のみ。閾値は第2引数で変更可 |
+| `check-deletion-coverage.mjs` | ★退会時の削除漏れ（ユーザー別の保存先が削除に入っているか）。`--mode redis`（キー接頭辞）/ `--mode sql`（drizzle のテーブル）| 要 `--deletion` と `--scan`。意図的に消さないものは `--exclude`（★削除ファイルに理由が書かれていることまで検査する）|
 | `check-selftest-coverage.mjs` | ★検査自身が「サボると赤くなるか」を確かめているか（メタ検査） | このキット自身を見る |
 | `check-symptom-index.mjs` | 症状の言葉から原因の索引を引けるか | `SYMPTOMS.md` 等。無ければskip |
 | `check-cross-checked.mjs` | ★**1つの手段だけで断定していないか**（別の手段でも確かめた回数を数える） | `--baseline <数>` で下限。減ったら赤 |
