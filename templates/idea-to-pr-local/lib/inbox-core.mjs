@@ -418,7 +418,7 @@ ${how}`;
 
 /**
  * 結果の報告。
- * @param {{kind:'pr_created'|'verified'|'check_failed'|'failed'|'unverified'|'pr_closed', title:string, workRef:string, prUrl?:string, detail?:string, sha?:string}} p
+ * @param {{kind:'pr_created'|'verified'|'check_failed'|'failed'|'unverified'|'pr_closed'|'review_clear'|'review_flagged'|'review_unavailable', title:string, workRef:string, prUrl?:string, detail?:string, sha?:string}} p
  */
 export function reportText(p) {
   const head = `<!-- ${MARKERS.report} ref=${p.workRef} kind=${p.kind}${p.sha ? ` sha=${p.sha}` : ''} -->`;
@@ -432,6 +432,10 @@ export function reportText(p) {
     failed: `${t}: 自動では直せませんでした。${p.detail ? `\n理由: ${p.detail}` : ''}\nあなたの確認が必要です。`,
     unverified: `${t}: 修正案は作りましたが、自動チェックが無い（または全て実行されていない）ため、成功とは確認できていません。${p.prUrl ? `\n修正案: ${p.prUrl}` : ''}`,
     pr_closed: `${t}: 修正案は取り込まれずに閉じられました。この依頼は未完了です。`,
+    // 書いた AI とは別の AI による読み。「問題なし」とは言わない（見落としが無いとは限らない）
+    review_clear: `${t}: 書いた AI とは別の AI が修正案を読みました。重大な指摘は見つかりませんでした。ただし、見落としが無いとは限りません。取り込む前に、あなたが確認してください。${p.detail ? `\n${p.detail}` : ''}`,
+    review_flagged: `${t}: 書いた AI とは別の AI が修正案を読み、重大な指摘がありました。取り込む前に、必ず確認してください。${p.detail ? `\n${p.detail}` : ''}${p.prUrl ? `\n修正案: ${p.prUrl}` : ''}`,
+    review_unavailable: `${t}: 別の AI による確認は、できませんでした（理由: ${p.detail || '不明'}）。取り込む前に、あなたが内容を確認してください。`,
   }[p.kind];
   return `${head}\n${body}`;
 }

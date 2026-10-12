@@ -131,7 +131,7 @@ describe('作業の周回', () => {
     expect(labelsOf(1)).not.toContain(LABELS.working);
     expect(readState().repos[REPO].pulls[0].body).toContain('Closes #1');
     expect(commentsOf(1).join('\n')).toContain('まだ「完了」ではありません');
-    expect(runLog().map((e) => e.outcome)).toEqual(['started', 'pr_created']);
+    expect(runLog().map((e) => e.outcome)).toEqual(['started', 'pr_created', 'clear']); // 最後は別の AI によるレビューの記録
     // ★worker 自身が実際に書く記録の形で、「1回の作業は1回」と数えられること（実機の通しで見つかったバグの再発防止）
     expect(workRunsInLast24h(runLog(), NOW)).toBe(1);
     expect(dailyCapReached(runLog(), NOW, 2)).toBe(false);
@@ -149,6 +149,58 @@ describe('作業の周回', () => {
     expect(labelsOf(1)).toContain(LABELS.failed);
     expect(commentsOf(1).join('\n')).toContain('.github/workflows/evil.yml');
     expect(readState().repos[REPO].pulls || []).toEqual([]);
+  });
+
+  describe('別の AI による独立レビュー', () => {
+    const reviewLog = () => fs.readFileSync(env.claudeLog, 'utf8').trim().split(String.fromCharCode(10)).map((l) => JSON.parse(l)).filter((e) => e.review);
+    afterEach(() => { delete process.env.FAKE_REVIEW_MODE; });
+
+    it('PR を作ったあと、道具なし・リポジトリの外の空の場所・キー無しで、差分だけを読ませる。指摘なしは「問題なし」と言わない', () => {
+      pipeline().runOnce();
+      const rv = reviewLog();
+      expect(rv.length).toBe(1);
+      expect(rv[0].argv).toContain('--tools');
+      expect(rv[0].argv[rv[0].argv.indexOf('--tools') + 1]).toBe('');
+      expect(rv[0].cwd).not.toBe(env.local);
+      expect(rv[0].hasApiKey).toBe(false);
+      expect(rv[0].hasGhToken).toBe(false);
+      expect(rv[0].promptHasDiff).toBe(true);
+      const t = commentsOf(1).join(String.fromCharCode(10));
+      expect(t).toContain('重大な指摘は見つかりませんでした');
+      expect(t).toContain('「指摘なし」は「問題なし」ではありません');
+      expect(t).not.toContain('問題ありません');
+    });
+    it('重大な指摘があれば、作業用 Issue に書き、PR はそのまま残す（止めない・勝手に閉じない）', () => {
+      process.env.FAKE_REVIEW_MODE = 'flag';
+      pipeline().runOnce();
+      expect(commentsOf(1).join(String.fromCharCode(10))).toContain('重大な指摘が 1 件');
+      expect(commentsOf(1).join(String.fromCharCode(10))).toContain('依頼と無関係な変更');
+      expect(runLog().map((e) => e.outcome)).toContain('flagged');
+      expect(readState().repos[REPO].pulls.length).toBe(1);
+      expect(labelsOf(1)).toContain(LABELS.prOpen);
+    });
+    it('【毒】レビューの出力が読めないときは「できなかった」と書き、「問題なし」にしない。PR は残る', () => {
+      process.env.FAKE_REVIEW_MODE = 'garbage';
+      pipeline().runOnce();
+      const t = commentsOf(1).join(String.fromCharCode(10));
+      expect(t).toContain('別の AI によるレビューは、できませんでした');
+      expect(t).not.toContain('重大な指摘は見つかりませんでした');
+      expect(runLog().map((e) => e.outcome)).toContain('unavailable');
+      expect(readState().repos[REPO].pulls.length).toBe(1);
+    });
+    it('【毒】レビューの実行が落ちたときは「できなかった」と書き、「問題なし」にしない。PR は残る', () => {
+      process.env.FAKE_REVIEW_MODE = 'crash';
+      pipeline().runOnce();
+      const t = commentsOf(1).join(String.fromCharCode(10));
+      expect(t).toContain('別の AI によるレビューは、できませんでした');
+      expect(t).not.toContain('重大な指摘は見つかりませんでした');
+      expect(runLog().map((e) => e.outcome)).toContain('unavailable');
+      expect(readState().repos[REPO].pulls.length).toBe(1);
+    });
+    it('review を false にすると、レビューの呼び出しをしない', () => {
+      pipeline({ review: false }).runOnce();
+      expect(reviewLog()).toEqual([]);
+    });
   });
 
   it('【毒】Lint を無効にする行を足した差分は push しない（直す代わりに黙らせる近道を止める）', () => {

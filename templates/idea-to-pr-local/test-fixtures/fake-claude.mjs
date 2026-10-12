@@ -19,6 +19,16 @@ if (process.env.FAKE_CLAUDE_LOG) {
     }) + '\n'
   );
 }
+// レビュー役としての呼び出し（プロンプトに REVIEW_RESULT の書式指定がある）。FAKE_REVIEW_MODE で結果を変える。
+if (prompt.includes('REVIEW_RESULT:')) {
+  if (process.env.FAKE_CLAUDE_LOG) fs.appendFileSync(process.env.FAKE_CLAUDE_LOG, JSON.stringify({ review: true, argv: process.argv.slice(2), cwd: process.cwd(), hasApiKey: 'ANTHROPIC_API_KEY' in process.env, hasGhToken: 'GH_TOKEN' in process.env || 'GITHUB_TOKEN' in process.env, promptHasDiff: prompt.includes('<diff>') }) + '\n');
+  const rm = process.env.FAKE_REVIEW_MODE || 'clear';
+  const reply = (text) => { process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: text, num_turns: 1, duration_ms: 10, permission_denials: [] })); process.exit(0); };
+  if (rm === 'crash') { console.error('review crashed'); process.exit(3); }
+  if (rm === 'garbage') reply('問題ありません。');
+  if (rm === 'flag') reply('一件あります。\nREVIEW_RESULT: {"findings":[{"severity":"serious","file":"feature.txt","summary":"依頼と無関係な変更が混ざっている"}]}');
+  reply('特に問題は見当たりません。\nREVIEW_RESULT: {"findings":[]}');
+}
 const git = (...a) => spawnSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', ...a], { cwd: process.cwd(), encoding: 'utf8' });
 const writeFile = (rel, text) => {
   fs.mkdirSync(path.dirname(path.join(process.cwd(), rel)), { recursive: true });

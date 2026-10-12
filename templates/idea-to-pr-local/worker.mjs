@@ -52,6 +52,7 @@ import {
 } from './lib/pipeline-core.mjs';
 import { fetchPrFacts, findPrNumberForIssue } from './lib/pr-facts.mjs';
 import { discoverRepos } from './lib/repo-discovery.mjs';
+import { buildReviewPrompt, clipDiff, parseReviewResult } from './lib/review-core.mjs';
 import {
   ackText,
   askText,
@@ -74,6 +75,10 @@ const DEFAULTS = Object.freeze({
   maxChangedFiles: 50,
   keepFailedWorktrees: true,
   verifyGraceMinutes: 15,
+  // 別の AI による独立レビュー（PR を作ったあと、差分だけを読ませる）。false で止める。reviewModel を指定すると、実装とは別のモデルで読ませられる。
+  review: true,
+  reviewModel: '',
+  reviewTimeoutMinutes: 5,
   // 受付 Issue（Grok に普通に話した依頼を、コメントとして受け取る窓口）。空なら受付は使わない。
   // 各要素: { repo: "owner/name", issue: 番号, defaultTarget?: "owner/name", processExisting?: boolean }
   inboxes: [],
@@ -530,11 +535,66 @@ export function createPipeline(deps) {
       appendRun({ kind: 'work', repo, issue: n, outcome: 'pr_created', durationMs: now() - t0, pr: prUrl, files: files.length, ...meta });
       notifyInbox(issue, repo, 'pr_created', { prUrl });
       log(`#${n} PR 作成: ${prUrl}`);
+      // 書いた AI とは別の AI に、差分だけを読ませる（本筋は終わっているので、失敗しても止めない）
+      reviewPr(repo, issue, wt, base, prUrl);
     } finally {
       if (!keep) {
         git(rc.path, ['worktree', 'remove', '--force', wt]);
         git(rc.path, ['branch', '-D', branch]);
       }
+    }
+  }
+
+  // ───────── 別の AI による独立レビュー（判断は lib/review-core.mjs） ─────────
+  /**
+   * 実装した claude とは別の claude 呼び出し（会話を共有しない・道具なし・リポジトリの外の空の場所）に、依頼と差分だけを読ませ、
+   * 結果を作業用 Issue と受付に書く。読めない・失敗したときは「できなかった」と書く（「問題なし」にしない）。
+   * @param {string} repo @param {any} issue @param {string} wt @param {string} base @param {string} prUrl
+   */
+  function reviewPr(repo, issue, wt, base, prUrl) {
+    if (cfg.review === false) return;
+    const n = issue.number;
+    /** @param {string} reason */
+    const unavailable = (reason) => {
+      comment(repo, n, `⚠ 別の AI によるレビューは、できませんでした（${reason}）。マージ前に人が差分を確認してください。`);
+      notifyInbox(issue, repo, 'review_unavailable', { prUrl, detail: reason });
+      appendRun({ kind: 'review', repo, issue: n, outcome: 'unavailable', reason });
+    };
+    let tmp = '';
+    try {
+      const d = git(wt, ['diff', '-U3', `origin/${base}...HEAD`]);
+      if (d.status !== 0 || !d.stdout.trim()) return unavailable('差分を取れなかった');
+      const clipped = clipDiff(redact(d.stdout));
+      const childEnv = { ...process.env };
+      for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'GH_TOKEN', 'GITHUB_TOKEN']) delete childEnv[k];
+      tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'idea-review-'));
+      const args = ['-p', '--output-format', 'json', '--max-turns', '1', '--tools', ''];
+      if (cfg.reviewModel) args.push('--model', String(cfg.reviewModel));
+      const prompt = buildReviewPrompt({ repo, number: n, title: issue.title || '', body: issue.body || '', diff: clipped.text, truncated: clipped.truncated });
+      const r = run(cfg.claudeCommand, args, { cwd: tmp, input: prompt, timeoutMs: (Number(cfg.reviewTimeoutMinutes) || 5) * 60 * 1000, env: childEnv });
+      if (r.timedOut) return unavailable('時間内に終わらなかった');
+      /** @type {any} */
+      let out = null;
+      try { out = JSON.parse(r.stdout); } catch { /* 下で扱う */ }
+      if (r.status !== 0 || !out || out.is_error) return unavailable('レビューの実行に失敗した');
+      const res = parseReviewResult(out.result);
+      if (res.status !== 'ok') return unavailable('レビューの結果を読めなかった');
+      const note = clipped.truncated ? '※差分が長いため、先頭の一部だけを読みました。' : '';
+      if (res.serious.length === 0) {
+        comment(repo, n, `🔎 別の AI のレビュー: 重大な指摘は見つかりませんでした（軽微な指摘 ${res.minorCount} 件）。${note}\n\n※「指摘なし」は「問題なし」ではありません。見落としが無いとは限らないので、マージ前に人が確認してください。`);
+        notifyInbox(issue, repo, 'review_clear', { prUrl, detail: note });
+        appendRun({ kind: 'review', repo, issue: n, outcome: 'clear', minor: res.minorCount, truncated: clipped.truncated });
+      } else {
+        const lines = res.serious.map((s) => `- ${s.file ? `${s.file}: ` : ''}${s.summary}`).join('\n');
+        comment(repo, n, `🔎 別の AI のレビュー: 重大な指摘が ${res.serious.length} 件あります。\n${lines}\n\n${note}マージ前に必ず確認してください。`);
+        notifyInbox(issue, repo, 'review_flagged', { prUrl, detail: `${res.serious.length} 件: ${res.serious.map((s) => s.summary).join('／').slice(0, 300)}` });
+        appendRun({ kind: 'review', repo, issue: n, outcome: 'flagged', serious: res.serious.length, truncated: clipped.truncated });
+      }
+    } catch (e) {
+      try { unavailable('レビュー中に例外'); } catch { /* 本筋は続ける */ }
+      log(`#${n} レビューで例外（本筋は続ける）: ${e instanceof Error ? e.message : e}`);
+    } finally {
+      if (tmp) fs.rmSync(tmp, { recursive: true, force: true });
     }
   }
 
