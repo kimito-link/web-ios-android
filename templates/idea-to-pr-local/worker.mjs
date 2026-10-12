@@ -49,6 +49,7 @@ import {
   summarizeRuns,
 } from './lib/pipeline-core.mjs';
 import { fetchPrFacts, findPrNumberForIssue } from './lib/pr-facts.mjs';
+import { discoverRepos } from './lib/repo-discovery.mjs';
 import {
   ackText,
   askText,
@@ -74,6 +75,12 @@ const DEFAULTS = Object.freeze({
   // 受付 Issue（Grok に普通に話した依頼を、コメントとして受け取る窓口）。空なら受付は使わない。
   // 各要素: { repo: "owner/name", issue: 番号, defaultTarget?: "owner/name", processExisting?: boolean }
   inboxes: [],
+  // 指定したフォルダの直下にある git リポ（origin が許可 owner の GitHub）を、全部「受付から頼まれたとき限定」の作業対象にする。
+  // 例: "C:/Users/me/github"。個別の repos の指定（installCommand など）は、こちらより優先する。
+  reposRoot: '',
+  allowedOwners: [], // 空なら allowedAuthors と同じ
+  excludeRepos: [], // reposRoot から外すリポ（owner/name）
+  activeDays: 14, // 受付から頼まれたリポを、何日間は進捗確認の対象にするか
   siteAliases: {}, // 台帳に無いドメイン → リポ。例: { "kimito-skill.link": "owner/web-ios-android" }
   ledgerPath: '', // 全リポ台帳（best-trust/data/repositories.json）。サイト名→リポの照合に使う。空なら別名表だけ
   maxIntakePerPass: 5,
@@ -107,6 +114,12 @@ export function loadConfig(explicitPath) {
   const cfg = { ...DEFAULTS, ...raw };
   cfg.stateDir = expandHome(cfg.stateDir);
   cfg.repos = Object.fromEntries(Object.entries(cfg.repos || {}).map(([k, v]) => [k, { ...v, path: expandHome(/** @type {any} */ (v).path) }]));
+  if (cfg.reposRoot) {
+    const owners = cfg.allowedOwners && cfg.allowedOwners.length ? cfg.allowedOwners : cfg.allowedAuthors;
+    const d = discoverRepos(expandHome(cfg.reposRoot), { allowedOwners: owners, gitCommand: cfg.gitCommand, exclude: cfg.excludeRepos });
+    // 個別指定（installCommand など）を優先。自動で見つけたものは、受付から頼まれたとき限定（古い ai-task Issue を勝手に拾わない）
+    for (const [name, v] of Object.entries(d.repos)) if (!cfg.repos[name]) cfg.repos[name] = { path: v.path, inboxOnly: true };
+  }
   validateConfig(cfg);
   return cfg;
 }
@@ -271,6 +284,23 @@ export function createPipeline(deps) {
     fs.writeFileSync(inboxStatePath(b), JSON.stringify({ lastCommentId: id }));
   }
 
+  // 受付から頼まれたリポの記録。自動で見つけたリポは、ここに載っている間だけ進捗確認・作業の対象にする（数十個を毎回なめない）
+  const activePath = path.join(stateDir, 'active-repos.json');
+  function readActive() {
+    try { return JSON.parse(fs.readFileSync(activePath, 'utf8')); } catch { return {}; }
+  }
+  function markActive(repo) {
+    if (dryRun) return;
+    const a = readActive();
+    a[repo] = new Date(now()).toISOString();
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(activePath, JSON.stringify(a));
+  }
+  function isActive(repo) {
+    const t = Date.parse(readActive()[repo] || '');
+    return Number.isFinite(t) && now() - t < (cfg.activeDays || 14) * 24 * 60 * 60 * 1000;
+  }
+
   /**
    * 作業用 Issue が受付から作られたものなら、結果を受付 Issue にも書く（Grok がそのスレッドを読んで人に報告する）。
    * 失敗しても本筋（作業・確認）を止めない。
@@ -338,6 +368,7 @@ export function createPipeline(deps) {
       if (!created || !Number.isInteger(created.number)) throw new Error('作業用 Issue の作成結果が読めなかった');
       // 先に「ここまで処理した」を記録する（作成後に落ちても、同じ依頼から二重に Issue を作らない）
       saveInboxLastId(b, req.id);
+      markActive(result.repo);
       const labelled = Array.isArray(created.labels) && created.labels.some((l) => (typeof l === 'string' ? l : l && l.name) === LABELS.task);
       comment(b.repo, b.issue, labelled
         ? ackText({ commentId: req.id, repo: result.repo, issueNumber: created.number, issueUrl: created.html_url || `https://github.com/${result.repo}/issues/${created.number}` })
@@ -571,6 +602,8 @@ export function createPipeline(deps) {
         try { intakeInbox(b); } catch (e) { log(`受付 ${b.repo}#${b.issue} で例外: ${e instanceof Error ? e.message : e}`); }
       }
       for (const [repo, rc] of Object.entries(cfg.repos)) {
+        // 自動で見つけたリポは、受付から頼まれて記録があるものだけ見る
+        if (rc.inboxOnly && !isActive(repo)) continue;
         // 1. 事実確認（PR を作った Issue のチェック結果を確かめて書く）
         try {
           const open = ghJson(['api', `repos/${repo}/issues?state=open&labels=${LABELS.prOpen}&per_page=50`]);
@@ -595,6 +628,8 @@ export function createPipeline(deps) {
           log(`${repo} Issue 一覧の取得に失敗: ${e instanceof Error ? e.message : e}`);
           continue;
         }
+        // 自動で見つけたリポでは、受付から作った Issue（目印つき）だけ拾う。昔から付いている ai-task は拾わない
+        if (rc.inboxOnly) issues = (Array.isArray(issues) ? issues : []).filter((i) => parseInboxMarker(i && i.body));
         const { candidates, skipped } = selectCandidates(issues, { allowedAuthors: cfg.allowedAuthors });
         for (const s of skipped) if (dryRun) log(`(dry-run) #${s.number} は拾わない: ${s.reason}`);
         if (candidates.length === 0) {

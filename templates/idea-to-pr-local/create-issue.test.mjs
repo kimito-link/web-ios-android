@@ -4,7 +4,10 @@ import { spawn, spawnSync } from 'node:child_process';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// 1テストが bash と node を起動するので、PC が混んでいると既定の5秒を超える（遅さであって失敗ではない）
+vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPT = path.join(here, 'create-issue.sh');
