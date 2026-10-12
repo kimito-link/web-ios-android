@@ -48,6 +48,12 @@ export const EXCLUDED = Object.freeze([
     name: 'check-runner-registers-all',
     why: '★この検査自身。run.mjs から呼ぶと自分を数えて再帰的になるため、'
        + 'verify から直接呼ぶ（npm script に配線済み）'
+  },
+  {
+    name: 'check-deletion-coverage',
+    why: '★配布先ごとの引数（--mode / --deletion / --scan）が要る道具で、このキット自身には退会削除が無い。'
+       + '引数なしで run.mjs から呼ぶと「測れていない」と出すだけで一度も意味のある判定をしない（check-symptom-index の実損と同型）。'
+       + '代わりに selftest（毒で赤くなるか）を npm script `deletion-coverage:selftest` に配線済みで、verify-all が毎回走らせる'
   }
 ]);
 
