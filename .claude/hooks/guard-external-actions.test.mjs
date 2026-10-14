@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { detectRisky, failingChecks, parsePrMerge, stripQuotedAndHeredocs } from "./guard-external-actions.mjs";
+import { detectRisky, failingChecks, parseLeadingCd, parsePrMerge, stripQuotedAndHeredocs } from "./guard-external-actions.mjs";
 
 const HOOK = resolve(fileURLToPath(new URL("./guard-external-actions.mjs", import.meta.url)));
 
@@ -50,8 +50,28 @@ describe("parsePrMerge / failingChecks", () => {
     expect(parsePrMerge("gh pr merge 74 -R kimito-link/surechigai-romi.link --squash")).toEqual({
       number: "74",
       repo: "kimito-link/surechigai-romi.link",
+      cd: null,
     });
-    expect(parsePrMerge("gh pr merge --squash")).toEqual({ number: null, repo: null });
+    expect(parsePrMerge("gh pr merge --squash")).toEqual({ number: null, repo: null, cd: null });
+  });
+
+  // ★2026-10-14 の実害: surechigai #79 をマージしようとしたら、
+  //   kimitolink-linktree #79(closed) の赤3件を報告された。
+  //   gh はリポ指定が無いと**カレントディレクトリ**で番号を解決するため。
+  //   ★逆向き（別リポの緑を見て赤い PR を通す）の方が危険。
+  it("★cd 先のリポを取り出す（別リポの同番号 PR を見ないため）", () => {
+    const cmd = 'cd "C:/Users/info/x/surechigai-romi.link" && gh pr merge 79 --squash';
+    expect(parsePrMerge(cmd).cd).toBe("C:/Users/info/x/surechigai-romi.link");
+    expect(parsePrMerge(cmd).number).toBe("79");
+    // -R があればそちらが優先される（cd より明示が強い）
+    expect(parsePrMerge('cd /a && gh pr merge 5 -R o/r').repo).toBe("o/r");
+  });
+
+  it("parseLeadingCd は引用符の有無を問わず取れる", () => {
+    expect(parseLeadingCd('cd /tmp/foo && gh pr merge 1')).toBe("/tmp/foo");
+    expect(parseLeadingCd('cd "a b/c" && gh pr merge 1')).toBe("a b/c");
+    expect(parseLeadingCd("cd 'a b/c' && gh pr merge 1")).toBe("a b/c");
+    expect(parseLeadingCd('gh pr merge 1')).toBe(null);
   });
   it("失敗しているチェックだけ返す", () => {
     expect(
