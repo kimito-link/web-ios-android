@@ -47,9 +47,10 @@
  *   exit 0 = 未登録なし(or 既知の残債内) / 1 = 未登録が上限超え / ★2 = 探せなかった
  */
 
-import { readdirSync, existsSync, statSync } from 'node:fs';
+import { readdirSync, existsSync, statSync, mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve, dirname, join, basename } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { tmpdir } from 'node:os';
 import { PAIRS } from './check-drift.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -341,10 +342,16 @@ if (isMain && process.argv.includes('--selftest')) {
       //   実測で malwarecheck.site の2ファイルが worktree 4つぶん重複し8件に膨らんでいた。
       name: '★worktree 内は未登録に数えない（本体は数える）',
       ok: () => {
-        const wt = resolve(GH_ROOT, 'malwarecheck.site-wt-03b/scripts/lib/asc-api.mjs');
-        const real = resolve(GH_ROOT, 'malwarecheck.site/scripts/lib/asc-api.mjs');
-        // worktree 側は除外に当たる / 本体は当たらない（＝登録の有無で判定される）
-        return EXCLUDED.some((e) => e.match(wt)) && !EXCLUDED.some((e) => e.match(real));
+        // ★実ファイルに依存しない（CI には兄弟リポが無い）。一時ディレクトリで作る。
+        const base = mkdtempSync(join(tmpdir(), "wt-"));
+        const wt = join(base, "repo-wt"); const real = join(base, "repo");
+        mkdirSync(join(wt, "scripts"), { recursive: true });
+        mkdirSync(join(real, "scripts"), { recursive: true });
+        writeFileSync(join(wt, ".git"), "gitdir: /x");   // worktree は .git が【ファイル】
+        mkdirSync(join(real, ".git"));                      // 通常リポは【ディレクトリ】
+        const a = join(wt, "scripts", "core.mjs");
+        const b = join(real, "scripts", "core.mjs");
+        return isInsideWorktree(a, base) === true && isInsideWorktree(b, base) === false;
       }
     },
     {
