@@ -75,6 +75,17 @@ export function detectRisky(cmd) {
 }
 
 /** gh pr merge の対象 PR 番号とリポ(-R)を取り出す。取れなければ null。 */
+/**
+ * コマンド先頭の `cd <dir> &&` を取り出す。
+ * ★gh はリポ指定が無いと**実行時のカレントディレクトリ**で PR 番号を解決するので、
+ *   `cd <別リポ> && gh pr merge 79` を hook の cwd で判定すると**別リポの PR を見る**。
+ */
+export function parseLeadingCd(cmd) {
+  const m = /^\s*cd\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*&&/.exec(String(cmd));
+  if (!m) return null;
+  return m[1] || m[2] || m[3] || null;
+}
+
 export function parsePrMerge(cmd) {
   const s = stripQuotedAndHeredocs(cmd);
   const m = /gh\s+pr\s+merge\b([^\n;&|]*)/.exec(s);
@@ -82,13 +93,34 @@ export function parsePrMerge(cmd) {
   const rest = m[1];
   const num = /(?:^|\s)(\d+)(?=\s|$)/.exec(rest);
   const repo = /(?:-R|--repo)[\s=]+([\w.-]+\/[\w.-]+)/.exec(rest);
-  return { number: num ? num[1] : null, repo: repo ? repo[1] : null };
+  // ★cd は引用符を剥がす前の原文から取る（stripQuotedAndHeredocs が中身を潰すため）。
+  return { number: num ? num[1] : null, repo: repo ? repo[1] : null, cd: parseLeadingCd(cmd) };
 }
 
 /** チェック結果(gh pr checks --json name,bucket)から、失敗している名前を返す。 */
 export function failingChecks(checks) {
   if (!Array.isArray(checks)) return [];
   return checks.filter((c) => c && (c.bucket === 'fail' || c.state === 'FAILURE')).map((c) => String(c.name || '(無名)'));
+}
+
+/**
+ * そのディレクトリの git リポが GitHub のどのリポかを返す（owner/repo）。
+ * ★取れなければ null。null は「分からない」であって「問題なし」ではない。
+ */
+function resolveRepoAt(dir) {
+  try {
+    const out = execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], {
+      cwd: dir || undefined,
+      encoding: 'utf8',
+      timeout: 8000,
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const name = String(out).trim();
+    return /^[\w.-]+\/[\w.-]+$/.test(name) ? name : null;
+  } catch {
+    return null;
+  }
 }
 
 function fetchChecks(pr) {
@@ -101,9 +133,16 @@ function fetchChecks(pr) {
     }
   }
   try {
+    // ★リポを必ず明示する。-R が無いと gh は**カレントディレクトリのリポ**で
+    //   PR 番号を解決し、別リポの同番号の PR を見てしまう（2026-10-14 に実際に起きた:
+    //   surechigai #79 をマージしようとしたら kimitolink-linktree #79(closed) の
+    //   赤を報告された）。★逆向き＝別リポの緑を見て赤い PR を通す事故も起こりうる。
+    const repo = pr.repo || resolveRepoAt(pr.cd);
+    // ★リポが確定しないなら「測れなかった」を返す（null＝緑にしない）。
+    if (pr.number && !repo) return null;
     const args = ['pr', 'checks'];
     if (pr.number) args.push(pr.number);
-    if (pr.repo) args.push('-R', pr.repo);
+    if (repo) args.push('-R', repo);
     args.push('--json', 'name,bucket,state');
     const out = execFileSync('gh', args, { encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     return JSON.parse(out);
