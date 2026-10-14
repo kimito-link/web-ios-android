@@ -384,7 +384,11 @@ export const PAIRS = [
      *   ★正本の行は残す（copies: [] ＝正本の存在確認と、coverage の監視名の供給は続ける）。
      *   除外の理由は check-drift-coverage.mjs の EXCLUDED にも書いた。
      */
-    copies: []
+    copies: [
+      
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/generate-shindan-version.mjs')
+    ]
   },
   {
     /*
@@ -411,9 +415,7 @@ export const PAIRS = [
       //   トップレベルのfindでは見つからなかった深い配置場所3件。
       resolve(GH_ROOT, 'henshin-hisho/ios-app/scripts/lib/asc-api.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/app/lib/asc-api.mjs'),
-      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/asc-api.mjs'),
-      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
-      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/generate-shindan-version.mjs')
+      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/asc-api.mjs')
     ]
   },
   {
