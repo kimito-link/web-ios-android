@@ -147,7 +147,10 @@ export const PAIRS = [
        *     これは安全の証拠ではなく★「次に正本が動いた瞬間に無言で割れる」形。
        *     best-trust.biz と同じ時限爆弾で、同じ理由で登録する。
        */
-      resolve(GH_ROOT, 'soushin-suggest.link/scripts/lib/instrument-core.mjs')
+      resolve(GH_ROOT, 'soushin-suggest.link/scripts/lib/instrument-core.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'best-trust/scripts/lib/instrument-core.mjs'),
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/instrument-core.mjs')
     ]
   },
   {
@@ -166,7 +169,9 @@ export const PAIRS = [
       // ★kimitolink-linktree は 2026-08-24 に採用（キット外で初の採用先）。
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/improvement-ledger.mjs'),
       // ★2026-08-28 追加（登録漏れ）。配っていたのに表に無かった。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-ledger.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-ledger.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/improvement-ledger.mjs')
       /*
        * ★soushin-suggest.link は 2026-09-04 に【登録から外した】。
        *   1日 放置・正本にしか無い行 70・コピーにしか無い行 178 と出ていたが、
@@ -188,7 +193,9 @@ export const PAIRS = [
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/lib/improvement-staleness.mjs'),
       // ★2026-08-28 追加（登録漏れ）。★キット自身のコピーが抜けていた。
       resolve(KIT_ROOT, 'scripts/lib/improvement-staleness.mjs'),
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-staleness.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/lib/improvement-staleness.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/improvement-staleness.mjs')
     ]
   },
   {
@@ -198,7 +205,9 @@ export const PAIRS = [
       resolve(KIT_ROOT, 'scripts/check-improvement.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/check-improvement.mjs'),
       // ★2026-08-28 追加（登録漏れ）。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-improvement.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-improvement.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/check-improvement.mjs')
       /*
        * ★2026-10-05 KEEP_SEPARATE: tsuioku-no-kirameki.com/scripts/check-improvement.mjs を外した。
        *   割れ(正本のみ97行/コピーのみ46行)の中身は設定値の差ではなく【依存する台帳ライブラリの世代差】:
@@ -222,7 +231,10 @@ export const PAIRS = [
       resolve(KIT_ROOT, 'scripts/record-improvement.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/record-improvement.mjs'),
       // ★2026-08-28 追加（登録漏れ）。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/record-improvement.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/record-improvement.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。Voice 側は 2026-09-04 版で金型(10-05)より古い＝
+      //   ここが赤くなるのは正しい。揃える作業は Voice 側で別途（隠さず見えるようにする）。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/record-improvement.mjs')
       /*
        * ★2026-10-05 KEEP_SEPARATE: tsuioku-no-kirameki.com/scripts/record-improvement.mjs を外した。
        *   台帳ライブラリが旧世代（src/lib/improvementLedger.js／improvementHistory.js を静的 import）で、
@@ -240,7 +252,9 @@ export const PAIRS = [
     copies: [
       resolve(KIT_ROOT, 'scripts/check-instrument-ran.mjs'),
       // ★2026-08-28 追加（登録漏れ）。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-instrument-ran.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-instrument-ran.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/check-instrument-ran.mjs')
     ]
   },
   {
@@ -285,7 +299,11 @@ export const PAIRS = [
       resolve(GH_ROOT, 'sakkino.link/scripts/check-tracked-imports.mjs'),
       // ★2026-08-28 追加（登録漏れ）。上のコメントが「surechigai は正しく走っている」と
       //   書いているのに、★実際には登録されていなかった＝見ていなかった。
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-tracked-imports.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-tracked-imports.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/check-tracked-imports.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。差はコメント文言6行のみ（check-drift はコメント差を見ない）。
+      resolve(GH_ROOT, 'doin-challenge.com/scripts/check-tracked-imports.mjs')
       /*
        * ★tsuioku-no-kirameki.com は【外した】（2026-08-29・実測して判断）。
        *
@@ -324,13 +342,23 @@ export const PAIRS = [
     label: '全文脈と判断の進化台帳（入口）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/context-engine.mjs'),
     // ★2026-08-28: 「コピー0件」ではなかった。実際には配られていたのに未登録だった。
-    copies: [resolve(GH_ROOT, 'surechigai-romi.link/scripts/context-engine.mjs')]
+    copies: [
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/context-engine.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。Voice 側は 2026-09-04 版で金型(10-05)より古い＝
+      //   ここが赤くなるのは正しい。揃える作業は Voice 側で別途（隠さず見えるようにする）。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/context-engine.mjs')
+    ]
   },
   {
     label: '完全版の計器（統合入口）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/run-instruments.mjs'),
     // ★2026-08-28: 同上。配っていたのに表が「0件」と言っていた。
-    copies: [resolve(GH_ROOT, 'surechigai-romi.link/scripts/run-instruments.mjs')]
+    copies: [
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/run-instruments.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。Voice 側は 2026-09-04 版で金型(10-05)より古い＝
+      //   ここが赤くなるのは正しい。揃える作業は Voice 側で別途（隠さず見えるようにする）。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/run-instruments.mjs')
+    ]
   },
   {
     label: '本体の診断・進化進捗ページ（生成器）',
@@ -379,7 +407,9 @@ export const PAIRS = [
       //   トップレベルのfindでは見つからなかった深い配置場所3件。
       resolve(GH_ROOT, 'henshin-hisho/ios-app/scripts/lib/asc-api.mjs'),
       resolve(GH_ROOT, 'kimitolink-linktree/scripts/app/lib/asc-api.mjs'),
-      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/asc-api.mjs')
+      resolve(GH_ROOT, 'resend.kimito-link.com-/app-shell/scripts/lib/asc-api.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/generate-shindan-version.mjs')
     ]
   },
   {
@@ -618,7 +648,12 @@ export const PAIRS = [
      */
     label: 'PWA起動画面の検査（check-pwa-splash）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-pwa-splash.mjs'),
-    copies: [resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-pwa-splash.mjs')]
+    copies: [
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-pwa-splash.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。Voice 側は 2026-09-04 版で金型(10-05)より古い＝
+      //   ここが赤くなるのは正しい。揃える作業は Voice 側で別途（隠さず見えるようにする）。
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/check-pwa-splash.mjs')
+    ]
   }
 ];
 

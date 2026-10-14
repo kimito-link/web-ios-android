@@ -47,9 +47,10 @@
  *   exit 0 = 未登録なし(or 既知の残債内) / 1 = 未登録が上限超え / ★2 = 探せなかった
  */
 
-import { readdirSync, existsSync, statSync } from 'node:fs';
+import { readdirSync, existsSync, statSync, mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve, dirname, join, basename } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { tmpdir } from 'node:os';
 import { PAIRS } from './check-drift.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -91,6 +92,29 @@ export function registeredPaths(pairs) {
  * ★名前で除外したうえで、さらに「数」でも縛る（下の KNOWN_UNREGISTERED_MAX）。
  *   名前だけの除外リストは増え続けて誰も読まなくなるため。
  */
+/**
+ * そのパスが git worktree の中にあるか。
+ *
+ * ★worktree は `.git` が**ファイル**（中身は `gitdir: …`）。
+ *   通常のリポは `.git` が**ディレクトリ**。この違いだけで見分ける。
+ * ★github/ 直下まで遡って探す（それより上は見ない）。
+ */
+export function isInsideWorktree(p, ghRoot = GH_ROOT) {
+  let dir = resolve(p);
+  const stop = resolve(ghRoot);
+  for (let i = 0; i < 12; i++) {
+    dir = dirname(dir);
+    if (!dir || dir.length <= stop.length) return false;
+    const g = join(dir, '.git');
+    try {
+      if (existsSync(g)) return statSync(g).isFile();
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export const EXCLUDED = Object.freeze([
   {
     // github/splash/ … 2026-08-24 で止まった git 管理外の作業ディレクトリ。
@@ -184,6 +208,30 @@ export const EXCLUDED = Object.freeze([
      */
     match: (p) => /soushin-suggest\.link[\\/]scripts[\\/]generate-shindan-version\.mjs$/.test(p),
     why: '★別責務（キット計器の進捗ではなく AutoHotkey 製品の公開・診断・出荷状態を測る）'
+  },
+  {
+    /*
+     * git worktree（`.git` が**ファイル**のもの）。
+     *
+     * ★走査は .git を「ディレクトリ」としてしか飛ばしていないので、worktree は
+     *   別リポとして数えられてしまう。実体は同じ git リポの別チェックアウトなので、
+     *   **本体を登録していれば足りる**（-deploy-<sha> と同じ判断）。
+     * ★実測（2026-10-14）: malwarecheck.site の asc-api.mjs / play-api.mjs が
+     *   worktree 4つぶん重複して8件に膨らんでいた。sha256 は本体と完全一致で、
+     *   本体 malwarecheck.site/scripts/lib/asc-api.mjs は**既に登録済み**。
+     *   登録すると worktree を作る/消すたびに件数が動き、意味の無い赤が出る。
+     */
+    match: (p) => isInsideWorktree(p),
+    why: '★git worktree（本体を登録済み。worktree の増減で件数が動くのを止める）'
+  },
+  {
+    /*
+     * 別リポが丸ごと入れ子になっている複製。
+     * ★実測（2026-10-14）: surechigai-romi.link/line-bot/… が github/line-bot/… と
+     *   **バイト一致**だった。line-bot 本体は既に登録済みなので、入れ子は数えない。
+     */
+    match: (p) => /surechigai-romi\.link[\\/]line-bot[\\/]/.test(p),
+    why: '★別リポ(line-bot)の入れ子複製（本体を登録済み・バイト一致を実測）'
   }
 ]);
 
@@ -288,6 +336,23 @@ if (isMain && process.argv.includes('--selftest')) {
     {
       name: '★監視するファイル名は PAIRS から作る（ハードコードしない）',
       ok: () => watchedFileNames(P).has('core.mjs') && watchedFileNames([]).size === 0
+    },
+    {
+      // ★2026-10-14: worktree は同じリポの別チェックアウトなので数えない。
+      //   実測で malwarecheck.site の2ファイルが worktree 4つぶん重複し8件に膨らんでいた。
+      name: '★worktree 内は未登録に数えない（本体は数える）',
+      ok: () => {
+        // ★実ファイルに依存しない（CI には兄弟リポが無い）。一時ディレクトリで作る。
+        const base = mkdtempSync(join(tmpdir(), "wt-"));
+        const wt = join(base, "repo-wt"); const real = join(base, "repo");
+        mkdirSync(join(wt, "scripts"), { recursive: true });
+        mkdirSync(join(real, "scripts"), { recursive: true });
+        writeFileSync(join(wt, ".git"), "gitdir: /x");   // worktree は .git が【ファイル】
+        mkdirSync(join(real, ".git"));                      // 通常リポは【ディレクトリ】
+        const a = join(wt, "scripts", "core.mjs");
+        const b = join(real, "scripts", "core.mjs");
+        return isInsideWorktree(a, base) === true && isInsideWorktree(b, base) === false;
+      }
     },
     {
       name: '★壊れた入力で throw しない',
