@@ -655,10 +655,9 @@ export const PAIRS = [
     label: 'PWA起動画面の検査（check-pwa-splash）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/check-pwa-splash.mjs'),
     copies: [
-      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-pwa-splash.mjs'),
-      // ★2026-10-14 追加（登録漏れ）。Voice 側は 2026-09-04 版で金型(10-05)より古い＝
-      //   ここが赤くなるのは正しい。揃える作業は Voice 側で別途（隠さず見えるようにする）。
-      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/check-pwa-splash.mjs')
+      resolve(GH_ROOT, 'surechigai-romi.link/scripts/check-pwa-splash.mjs')
+      // ★2026-10-14: Voice の copies は外した。#56「配線が無い check-pwa-splash.mjs を削除」で
+      //   ファイルごと消えており、登録したままだと ⚠ 未存在 が出続ける（配っていない実体）。
     ]
   }
 ];
