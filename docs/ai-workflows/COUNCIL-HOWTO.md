@@ -2,7 +2,7 @@
 
 > **この1枚が唯一の正本。** コピーは作らない（散らすと同期がずれて事故る）。
 > 別チャット/別ツールには、このファイルのフルパスを渡して「これを読んで手順どおり回して」と言う。
-> 正本の場所: `C:\Users\info\OneDrive\デスクトップ\Resilio\github\COUNCIL-HOWTO.md`
+> 正本の場所: `C:\Users\info\OneDrive\デスクトップ\Resilio\github\web-ios-android\docs\ai-workflows\COUNCIL-HOWTO.md`
 >
 > 仕組み: ローカル(Ollama・無料無制限) ＋ クラウド無料枠 に同じお題を並列投入し、
 > Claude が司令塔として統合・裏取りして1案にまとめる。
@@ -11,7 +11,7 @@
 
 ## まず貼る一言（これだけでOK）
 
-> 「`C:\Users\info\OneDrive\デスクトップ\Resilio\github\COUNCIL-HOWTO.md` を読んで、
+> 「`C:\Users\info\OneDrive\デスクトップ\Resilio\github\web-ios-android\docs\ai-workflows\COUNCIL-HOWTO.md` を読んで、
 >  その手順どおり会議ハーネスで回して。役割分担と『結論→根拠→反論→具体案』の型を
 >  効かせたまま実行し、結果はあなた（司令塔）が統合・裏取りして1案にまとめて。」
 
@@ -19,28 +19,44 @@
 
 ## 会議メンバー（役割は自動で付く）
 
-> **モデル現役性は 2026-06-25 に実機(API)で裏取り済み。** 会議のモデル名提案は幻覚が混じる（実例: `llama-3.3-70b-instant` は実在しない）。**採用前に必ず `/models` か実呼び出しで実在確認**すること。
+> **この表は 2026-10-14 に実コード（`tsuioku-no-kirameki.com/scripts/council-lineup.mjs` の `LINEUP`・`council-roles.mjs` の `roleOf`/`weightOf`）から機械的に書き直した。**
+> モデル名の追加・撤去は日々起きるので、**この表より実コードが正**。名簿を直すときは `council-lineup.mjs` を直し、ここは後追いで合わせる。
+> 会議のモデル名提案は幻覚が混じる（実例: `llama-3.3-70b-instant` は実在しない）。**採用前に必ず `/models` か実呼び出しで実在確認**すること。
+> weight は小さいほど先に選ばれる（1=主力、3=予備、4=最後の砦）。
 
-| メンバー | 種別 | 役割 |
+**クラウド（18体）**
+
+| メンバー | 役割 | weight | 備考 |
+|---|---|---|---|
+| groq/gpt-oss-120b | 批判 | 1 | 批判の主力。直近30日で181発言・失敗0 |
+| groq/qwen3.8-27b | 発散 | 1 | 直近30日で86発言・失敗1 |
+| groq/gpt-oss-20b | 別系統の発散 | 3 | |
+| cloudflare/gpt-oss-20b | 別系統の発散 | 3 | liveProbe（毎日実疎通） |
+| cloudflare/llama-3.3-70b | 速い視点 | 4 | liveProbe |
+| cloudflare/nemotron-120b | 汎用 | 4 | liveProbe。失敗率が高め |
+| cloudflare/glm-4.7-flash | 批判 | 4 | liveProbe |
+| cloudflare/qwen3-30b-a3b | 発散 | 4 | liveProbe |
+| cloudflare/qwen2.5-coder-32b | 実装レビュー | 4 | liveProbe |
+| nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
+| nvidia/deepseek-v4.1-flash | 批判 | 3 | liveProbe |
+| openrouter/nemotron-3-ultra-550b | 統括 | 3 | 無料枠で429が出やすい予備 |
+| sambanova/deepseek-v3.1 | 批判 | 4 | **キー失効で401（6日連続・2026-09-28〜）**。再発行で復活する枠なので外さない |
+| mistral/magistral-medium | 統括 | 3 | 429（容量上限）で落ちる日がある |
+| mistral/magistral-small | 批判 | 3 | 同上 |
+| mistral/codestral | 実装レビュー | 3 | |
+| gemini-2.5-flash | 汎用 | 1 | |
+| gemini-3.7-flash | 汎用 | 3 | |
+
+**ローカル（Ollama・無料無制限・オフライン保険）**: 12GB VRAM に収まる2体だけ置く（2026-10-12 実測で入れ替え）。VRAM からはみ出す大物は遅くなるだけなので置かない。
+
+| メンバー | 役割 | 備考 |
 |---|---|---|
-| gemma4:latest(8B) | ローカル | 総合・統括のローカル担当（最終統括はチャットのOpusが司令塔）。31b(19GB)は2026-06-24に削除済み |
-| qwen3:14b / qwen3.5:9b | ローカル | 発散アイデア（推論強）。旧 qwen2.5:14b は削除済み |
-| gpt-oss:20b | ローカル | 別系統の発散（OpenAI系） |
-| deepseek-r1:14b | ローカル | **批判・詰め**（重い・VRAM10GB。クラウド批判役が有るときは無理に使わない） |
-| qwen2.5-coder:14b | ローカル | 実装レビュー |
-| **groq/gpt-oss-120b** | クラウド無料枠 | 速い視点／批判の主力（無料の巨大モデル） |
-| ~~groq/llama-3.3-70b-versatile~~ | **廃止** | Groq側で提供終了（§トラブル表参照）。起動時の実在チェックが自動で除外するので放置で回るが、メンバー数は1体減る |
-| ~~groq/llama-3.1-8b-instant~~ | **廃止？** | 【観測】2026-08-25の実行で、分類器がこのIDを呼んで404 (`does not exist or you do not have access to it`)。分類は `category=general [FAILED]` に倒れ、会議自体は5体で成立した。【未確認】このIDが本当に廃止されたのか、フォールバックが働いていないだけなのかは切り分けていない。**2026-08-18に『分類器のモデルが死んだ』と誤診した前例がある（真因はフォールバック不動作。§対照実験）**ので、同じ結論に飛びつかず、`/models` の実在確認とフォールバック鎖の動作確認を両方やってから判断すること |
-| **groq/qwen3-32b** | クラウド無料枠 | **批判・詰め（thinking推論）**。重いローカル無しで鋭い批判＝固まり対策と両立（2026-06-22追加・実機確認） |
-| **groq/qwen3.6-27b** | クラウド無料枠 | **発散（Groq新世代thinking）**。2026-06-25追加・実機確認。`<think>` は `stripThinking()` で除去して本文だけ採用 |
-| **groq/llama-4-scout** | クラウド無料枠 | 爆速の視点の新顔（2026-06-22追加・実機確認） |
-| **groq/compound** | クラウド無料枠 | **fact裏取り（Web検索内蔵のエージェント型）**。会議内で最新情報を取りに行ける。factカテゴリの裏取り専任推奨（批判常用には向かない＝遅い）。2026-07-01 ライブAPIで実在確認 |
-| **groq/compound-mini** | クラウド無料枠 | 上の速い版。軽いfact確認向け。2026-07-01 実在確認 |
-| gemini-2.5-flash | クラウド無料枠 | 汎用・速い視点（無料枠が最安定）。**Gemini 3系(3-pro/3.5-flash)は429/503で常用不可・見送り（2026-06-25実機確認）** |
-| **cloudflare/nemotron-120b** | クラウド無料枠 | **汎用（どこにも無い大型の別頭脳）**。`@cf/nvidia/nemotron-3-120b-a12b`。2026-06-27追加・実機裏取り |
-| **cloudflare/glm-5.2** | クラウド無料枠 | **批判・詰め（強い推論）**。`@cf/zai-org/glm-5.2`。reasoning は別フィールドで content はクリーン。2026-06-27追加・実機裏取り |
-| **cloudflare/kimi-k2.7-code** | クラウド無料枠 | **実装レビュー（コード特化）**。`@cf/moonshotai/kimi-k2.7-code`。2026-06-27追加・実機裏取り |
-| **Claude/Opus 4.8（司令塔）** | — / クラウド | **会議の最強メンバー（統括lead/批判）**。既定はチャットのClaudeが手動で統括（無料）。`ANTHROPIC_API_KEY` を入れると `anthropic/claude-opus-4-8` が自動召集（従量課金） |
+| qwen2.5-coder-14b-8k:latest | 実装レビュー | 9.1秒・100% GPU |
+| wwhite/whiterabbitneo-v3-7b:q4_k_m | 汎用 | 7.5秒・100% GPU |
+
+**司令塔 Claude（Opus 5.5）**: 既定はチャットのClaudeが手動で統括（無料）。`ANTHROPIC_API_KEY` を入れると `anthropic/claude-opus-5-5`（`COUNCIL_CLAUDE_MODEL` で変更可）が統括として自動召集される（従量課金）。
+
+**撤去済み（再採用するときは実在確認から）**: groq の Llama 系（2026-08-18 一斉廃止）、ローカルの gemma4 / qwen3 / qwen3.5 / gpt-oss:20b / deepseek-r1 / qwen2.5-coder:14b（2026-10-12 に幽霊と判明）、cloudflare/glm-5.2・kimi-k2.7-code（会議の並列負荷で落ちる）、openrouter/ling（2026-10-12 有料化）。起動時の `[実在チェック]`（`COUNCIL_VERIFY_MODELS`）が、消えたモデルを自動で外す（Ollama も `/api/tags` と突合）。
 
 役割は `council-roles.mjs` がモデル名から自動判定。新モデルを足しても勝手に役が付く。
 
@@ -54,8 +70,8 @@
 | writing（文章・命名） | 統括＋発散＋汎用 |
 | general（その他） | 統括＋発散＋速い視点 |
 
-速度を考慮し、同じ役割なら軽いモデル（クラウド/小型ローカル）を優先。重いローカル（deepseek-r1・31b）は
-既定1体まで。不安定なクラウド（nvidia・実測でTO頻発）は同役割なら後回し。
+速度を考慮し、同じ役割なら軽いモデル（クラウド/小型ローカル）を優先。重いローカル（weight9以上）は
+既定1体まで（2026-10-12 以降ローカルは軽い2体のみで現状は該当なし）。不安定なクラウドは weight で後回しになる。
 
 ---
 
@@ -277,9 +293,9 @@ $env:COUNCIL_QUALITY=1; node scripts/meeting.mjs --q "ここに問いを書く"
 | ルーティングの分類が外れる | 重要なお題は `COUNCIL_FULL=1` で全員集合に。分類器は最速クラウド1体が担当 |
 | とにかく遅い | `COUNCIL_FAST=1`（批判役もクラウド化）。重いローカルが律速なので効く |
 | **会議後にPCが固まる・カクつく** | 多くは「会議の多重起動」or「Ollamaランナーのゾンビ化」。`npm run council:cleanup` で「ゾンビ会議停止＋モデルアンロード＋ゾンビ停止＋Temp掃除」。`ollama本体`とMCPの`node`には触れない安全設計 |
-| **複数指示・別チャットで並列に会議を回すと固まる** | 原因は重いローカル(deepseek-r1/31b≒VRAM10GB)を複数会議が奪い合いVRAM12GBでスワッシング。**会議は並列OK（拒否しない）**。重いローカルだけPC全体で同時1体までに制限し、2本目は重いローカルを**自動でクラウドに振り替え**て固まりを回避。`COUNCIL_MAX_HEAVY_SLOTS=N`(既定1・0で重いローカル全面禁止)。それでも固まったら `npm run council:cleanup` |
+| **（旧名簿の事例・現在ローカルは軽量2体のみ）複数指示・別チャットで並列に会議を回すと固まる** | 原因は重いローカル(deepseek-r1/31b≒VRAM10GB)を複数会議が奪い合いVRAM12GBでスワッシング。**会議は並列OK（拒否しない）**。重いローカルだけPC全体で同時1体までに制限し、2本目は重いローカルを**自動でクラウドに振り替え**て固まりを回避。`COUNCIL_MAX_HEAVY_SLOTS=N`(既定1・0で重いローカル全面禁止)。それでも固まったら `npm run council:cleanup` |
 | **Cloudflare の glm-5.2 / kimi-k2.7-code が会議で落ちる** | 2026-06-27 のQUALITY会議(`COUNCIL_FULL=1 COUNCIL_FAST=1 COUNCIL_QUALITY=1`)実機で、**glm-5.2・kimi-k2.7-code は2体とも FAILED(This operation was aborted)**、nemotron-120b のみ成功(ただし61秒と遅い)。単発プローブでは200が返っても、会議の並列負荷＋タイムアウト下では glm/kimi は脱落しやすい。**批判の主力は groq/qwen3-32b・gpt-oss-120b を当てにし、Cloudflare勢は予備票扱い**にするのが安全。実装役(kimi)が要るなら local/qwen2.5-coder を併用 |
-| **`COUNCIL_FAST=1` でも重いローカルが起きて律速** | 2026-06-27 実機で `COUNCIL_FULL=1`+`COUNCIL_FAST=1` でも **deepseek-r1 が critic 以外の枠で起動し360秒**かかり全体を律速。FULL は重いローカルも全員起こすため FAST の差し替えが効ききらない。重要お題で速度も要るなら **FULL を使わず動的ルーティング既定＋`COUNCIL_CRITICS=2`** で別頭脳のクラウド批判を増やす方が安定 |
+| **（旧名簿の事例）`COUNCIL_FAST=1` でも重いローカルが起きて律速** | 2026-06-27 実機で `COUNCIL_FULL=1`+`COUNCIL_FAST=1` でも **deepseek-r1 が critic 以外の枠で起動し360秒**かかり全体を律速。FULL は重いローカルも全員起こすため FAST の差し替えが効ききらない。重要お題で速度も要るなら **FULL を使わず動的ルーティング既定＋`COUNCIL_CRITICS=2`** で別頭脳のクラウド批判を増やす方が安定 |
 | **Geminiの回答が100〜130字程度で唐突に途切れる** | `design-council.mjs`（kimitolink-linktree版）の `maxOutputTokens=1800` が原因（2026-08-18実測）。お題を「実測事実を渡す」方針にすると前置きだけで枠を使い切り結論前に切れる。Groq側の`max_tokens`も同じ値だったため両方を4000に変更（コミット56677d4）。他リポの会議ハーネスでも同症状が出たらまずこの定数を疑う |
 | **Groqが `does not exist or you do not have access to it` で404** | 会議ハーネスの既定モデル `llama-3.3-70b-versatile` がGroq側で提供終了（2026-08-18確認。§22の「-instant版が実在しない」幻覚問題とは別件＝今回は versatile 版自体が廃止された）。`GROQ_MODEL=openai/gpt-oss-120b` 等、実在するモデルIDを明示指定して回避。**エラーを無視するとメンバーが1体欠けたまま会議が成立してしまう**ので、Groq関連の応答が落ちたら`/models`で実在確認してから使うこと |
 | 統合役が「後から追加された設定・オプトアウト機能」を見て「デフォルトで安全」と誤診する | 会議メンバー（groq/gpt-oss-120b等）は、公式CHANGELOGの「〜を無効化する設定を追加した」という行を見ると、**その設定の存在自体を「デフォルトで安全」の証拠として好意的に解釈しがち**。実際は逆で、後から止める設定を追加したのは「デフォルト動作が問題を起こしていたから」であることが多い。実例（2026-09-25, web-ios-android）: Claude Code公式CHANGELOGの `Added a "Workflow keyword trigger" setting in /config to stop the word "workflow" in a prompt from triggering a dynamic workflow` という行を、統合役が「Workflow keyword triggerが既にデフォルトで安全に実装されている」と真逆に解釈し、この誤った前提の上で標準採用を推奨する結論を組み立てた | 会議が引用する公式ドキュメント・設定名は、司令塔が原文を`WebFetch`等で実際に読み、「なぜその設定が後から追加される必要があったか」まで逆方向に裏取りしてから採否を決める。「オプトアウト設定が存在する」＝「デフォルトで安全」ではない |
@@ -301,9 +317,10 @@ node scripts/council-cleanup.mjs --dry-run   # 何が掃除されるか見るだ
 - 役割定義・出力フォーマット・批判強制を変えるときは、各スクリプトでなく `council-roles.mjs` を直す。**2リポに実体コピーがあるので両方同期**すること。
   - `kimitolink-linktree/scripts/council-roles.mjs`（UI/UX版・実装役がReact/Tailwind前提）
   - `tsuioku-no-kirameki.com/scripts/council-roles.mjs`（汎用版）
-- このHOWTO自体は**正本1つ**（github直下）。各リポには「正本はここ」という橋渡しの1行だけ置き、HOWTO本文のコピーは作らない。
+- このHOWTO自体は**正本1つ**（`web-ios-android/docs/ai-workflows/`）。各リポには「正本はここ」という橋渡しの1行だけ置き、HOWTO本文のコピーは作らない。
 
 ---
 *2026-07-01 ／ 会議で本HOWTO自身の最新化を審議し、司令塔が裏取りして**実装まで完了**。実装3点: (1) `groq/compound`/`compound-mini`(Web検索内蔵)をメンバー追加＝factカテゴリの汎用(実在確認済) (2) **回答dedup**（統合前に文字bigram Jaccard≥0.82の重複を畳む・`COUNCIL_DEDUP`） (3) **起動時ライブ実在チェック**（groq/geminiの`/models`と照合し幻覚/廃止モデルを自動除外・`COUNCIL_VERIFY_MODELS`）。実機smokeで4/4成功・compound応答・実在チェック稼働を確認。却下: Mistral-7B/Llama-3-8b(Groqに実在せず=幻覚)、Docker/Redis化(本ハーネスは純Node・重いローカルの奪い合いは既存heavy-slotセマフォで解決済み)。決定書=`council-upgrade-decision-2026-07-01.md`。役割定義は tsuioku/kimito 両 `council-roles.mjs` に同期済。*
-*最終更新: 2026-06-27 ／ Cloudflare Workers AI を5系統目として採用（nemotron-120b=汎用 / glm-5.2=批判 / kimi-k2.7-code=実装。トークン1つで無料・実機裏取り済み）。**会議の実負荷下では nemotron のみ安定、glm/kimi は落ちやすい（つまずき対策の表参照）。***
+*2026-10-14 ／ メンバー表を実名簿（LINEUP 18体＋ローカル2体）に合わせて書き直し。司令塔の既定を Opus 5.5 に更新。*
+*（旧）2026-06-27 ／ Cloudflare Workers AI を5系統目として採用（nemotron-120b=汎用 / glm-5.2=批判 / kimi-k2.7-code=実装。トークン1つで無料・実機裏取り済み）。**会議の実負荷下では nemotron のみ安定、glm/kimi は落ちやすい（つまずき対策の表参照）。***
 *2026-06-17 ／ 動的ルーティング導入（分類→必要メンバーだけ召集＋批判役1往復）。実機A/Bで総時間1/3・成功率1.6倍を確認*
