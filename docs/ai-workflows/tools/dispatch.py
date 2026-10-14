@@ -6,6 +6,8 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
   python dispatch.py --brain oc    --cwd <dir> "task"    # OpenCode + Alibaba qwen3.8-27b (direct)
   python dispatch.py --brain cf    --cwd <dir> "task"    # OpenCode + Cloudflare qwen3.8-27b (free daily quota)
+  python dispatch.py --brain nvidia --cwd <dir> "task"   # OpenCode + NVIDIA NIM DeepSeek V4.1 Flash (free, 80-model catalog)
+  python dispatch.py --brain mistral --cwd <dir> "task"  # OpenCode + Mistral Codestral (free monthly, coding-specialised)
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
 
@@ -29,13 +31,13 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # Full picture: MULTI-BRAIN-HOWTO.md §0. Grok Bot writes jobs into <repo>/_jobs/inbox; job-runner.py (Task
 # Scheduler, every 10 min) runs them through this dispatch. "The real Claude only plans/judges; hands are free brains."
 # Agent brains (can read/write files, run commands): auto tries them in this order.
-AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "glm", "local"]
+AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
               "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
               "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded"]
-TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "glm": 900, "local": 1800}
+TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -151,6 +153,17 @@ def build(brain, task, allowed, model=None):
         # in preference to local (free but slow + weak at agent tasks). Key: user env OPENROUTER_API_KEY.
         model = model or "openrouter/z-ai/glm-5.3-flash"
         cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "nvidia":
+        # OpenCode + NVIDIA NIM (free, 80-model catalog, ~40 rpm eval tier). DeepSeek V4.1 Flash is a
+        # strong free coding model with 128K context. Key: user env NVIDIA_API_KEY. In AUTO_CHAIN after
+        # the other free brains (grok/qwen/oc/cf), before the paid glm. Commercial use needs an NVIDIA license.
+        model = model or "nvidia/deepseek-ai/deepseek-v4.1-flash"
+        cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "mistral":
+        # OpenCode + Mistral Codestral (free monthly allowance; coding-specialised). Key: user env MISTRAL_API_KEY.
+        # After nvidia in AUTO_CHAIN. Free tier is non-commercial / monthly-capped; can 429 when the month's used up.
+        model = model or "mistral/codestral-latest"
+        cmd = ["opencode", "run", "-m", model, task]
     elif brain == "groq":
         # Groq free tier caps tokens per minute (8000 on gpt-oss-120b, similar on qwen3.8-27b), so an agent's
         # system prompt does not fit. Use it as a text-only brain: one chat completion, answer goes to the log.
@@ -248,7 +261,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
