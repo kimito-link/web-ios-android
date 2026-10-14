@@ -150,7 +150,11 @@ export const PAIRS = [
       resolve(GH_ROOT, 'soushin-suggest.link/scripts/lib/instrument-core.mjs'),
       // ★2026-10-14 追加（登録漏れ）。金型とバイト一致を実測して登録。
       resolve(GH_ROOT, 'best-trust/scripts/lib/instrument-core.mjs'),
-      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/instrument-core.mjs')
+      resolve(GH_ROOT, 'kimito-Link-Voice/scripts/lib/instrument-core.mjs'),
+      // ★2026-10-14 追加（登録漏れ）。差は【コメントのみ】で実コードは同一
+      //   （export 6個が一致・コメントを除いた diff が0行）。doin 側にだけ
+      //   実損の記録が書かれている＝金型の方が説明を取りこぼしている。
+      resolve(GH_ROOT, 'doin-challenge.com/scripts/lib/instrument-core.mjs')
     ]
   },
   {

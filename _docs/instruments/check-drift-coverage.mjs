@@ -232,6 +232,33 @@ export const EXCLUDED = Object.freeze([
      */
     match: (p) => /surechigai-romi\.link[\\/]line-bot[\\/]/.test(p),
     why: '★別リポ(line-bot)の入れ子複製（本体を登録済み・バイト一致を実測）'
+  },
+  {
+    /*
+     * andrej-karpathy-skills の SKILL.md
+     *
+     * ★ファイル名が同じだけの別物。走査は PAIRS の【ファイル名】で拾うので、
+     *   正本 .claude/skills/self-verification/SKILL.md と無関係な第三者のスキルまで
+     *   引っかかっていた。
+     * ★実測（2026-10-14）: name: karpathy-guidelines / license: MIT の外部スキルで、
+     *   self-verification とは内容がまったく違う（配った実体ではない）。
+     */
+    match: (p) => /andrej-karpathy-skills[\\/]/.test(p),
+    why: '★ファイル名(SKILL.md)が同じだけの第三者スキル（MIT・配った実体ではない）'
+  },
+  {
+    /*
+     * soushin-suggest.link/scripts/improvement-ledger.mjs
+     *
+     * ★名前は同じだが【独立に書かれた別実装】。金型(templates/scripts/lib/)は
+     *   export 6個のライブラリだが、soushin 版は export 0 個で、英語コメントに
+     *   独自の設計理由（BEST-EVER と比べる・このリポがなぜ台帳を断っていたか）が書かれている。
+     * ★配置も違う（金型は lib/ 配下、soushin は scripts/ 直下）。
+     *   登録すると常に全行が割れとして出る＝オオカミ少年になる。
+     * ★同じリポの generate-shindan-version.mjs を別責務として除外しているのと同じ判断。
+     */
+    match: (p) => /soushin-suggest\.link[\\/]scripts[\\/]improvement-ledger\.mjs$/.test(p),
+    why: '★名前が同じだけの独立実装（export 0 対 6・配置も別。登録すると常に割れる）'
   }
 ]);
 
