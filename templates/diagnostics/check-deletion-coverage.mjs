@@ -79,7 +79,7 @@ function walk(dir, out = []) {
     let st;
     try { st = statSync(p); } catch { continue; }
     if (st.isDirectory()) walk(p, out);
-    else if (/\.(ts|tsx|js|mjs)$/.test(p) && !/\.(test|spec)\.|\.d\.ts$/.test(p)) out.push(p);
+    else if (/.(ts|tsx|js|mjs)$/.test(p) && !/(?:.(test|spec).|.d.ts$)/.test(p)) out.push(p);
   }
   return out;
 }
@@ -91,7 +91,7 @@ function walk(dir, out = []) {
 export function collectRedisPrefixes(files, readFile, opts = {}) {
   const idNames = opts.idNames ?? DEFAULT_ID_NAMES;
   const nonKeys = new Set(opts.nonKeyPrefixes ?? DEFAULT_NON_KEY_PREFIXES);
-  const re = new RegExp('`([a-z][a-z0-9-]*):[^`]*\\$\\{\\s*(?:' + idNames.join('|') + ')\\b[^`]*`', 'g');
+  const re = new RegExp('`([a-z][a-z0-9-]*):[^`]*\\$\\{\\s*(?:' + idNames.map(escapeRe).join('|') + ')\\b[^`]*`', 'g');
   const found = new Map();
   for (const f of files) {
     let src;
@@ -113,7 +113,7 @@ export function collectRedisPrefixes(files, readFile, opts = {}) {
  */
 export function collectUserTables(files, readFile, opts = {}) {
   const idNames = opts.idNames ?? ['userId', 'senderId', 'reporterId', 'blockerId', 'ownerId', 'clerkUserId'];
-  const idRe = new RegExp('\\b(?:' + idNames.join('|') + ')\\b');
+  const idRe = new RegExp('\\b(?:' + idNames.map(escapeRe).join('|') + ')\\b');
   const found = new Map();
   for (const f of files) {
     let src;
@@ -146,10 +146,19 @@ export function collectUserTables(files, readFile, opts = {}) {
  *   `deleteFrom(x)`、`del(x)`）は許すが、**import だけでは通らない**。
  *   ★除外宣言（`--exclude`）は別経路で見るので、ここを緩める必要はない。
  */
+/**
+ * 正規表現に埋め込む前にメタ文字を無害化する。
+ * ★これが無いと、名前に . や ( を含むものが来たとき**判定が狂う**。
+ *   検査器が「漏れているのに緑」を出しうるので、ここは落とせない。
+ */
+export function escapeRe(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function isCovered(name, deletionSource, mode) {
   if (mode === 'redis') return deletionSource.includes(`${name}:`);
   // `delete(name)` / `deleteFrom(name)` / `del(name)`（空白は許す）
-  return new RegExp(`\\b(?:delete|deleteFrom|del)\\s*\\(\\s*${name}\\b`).test(deletionSource);
+  return new RegExp(`\\b(?:delete|deleteFrom|del)\\s*\\(\\s*${escapeRe(name)}\\b`).test(deletionSource);
 }
 
 /** 覆われておらず、除外宣言もされていないもの。 */
@@ -229,6 +238,12 @@ function runSelftest() {
   check('★コメントに名前があるだけでは通さない',
     isCovered('secrets', '// secrets は消さない', 'sql'), false);
 
+  // --- ★正規表現のメタ文字（名前に . や ( が入っても判定が狂わないこと）
+  check('★メタ文字を含む名前が別物に誤マッチしない',
+    isCovered('a.b', 'delete(axb)', 'sql'), false);
+  check('★メタ文字を含む名前そのものは一致する',
+    isCovered('a.b', 'delete(a.b)', 'sql'), true);
+
   // --- ★除外の理由
   check('★理由の無い除外を赤にする',
     findUndocumentedExclusions(DELETION, ['ouen:oshi']).length, 1);
@@ -240,7 +255,7 @@ function runSelftest() {
     for (const f of fails) console.error('  - ' + f);
     process.exit(EXIT.FAIL);
   }
-  console.log('[check-deletion-coverage] ✅ selftest 合格（13件: redis 3 / sql 8 / 除外の理由 2）');
+  console.log('[check-deletion-coverage] ✅ selftest 合格（15件: redis 3 / sql 8 / メタ文字 2 / 除外の理由 2）');
   process.exit(EXIT.PASS);
 }
 
