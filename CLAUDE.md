@@ -1007,6 +1007,14 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
      画面を毎回新しく書く」誘惑が強くなるからこそ、最初から共通置き場を決めておく価値が
      大きい**、という基準⑤⑥の生きた実例。
      ★機械検出: `templates/diagnostics/check-near-duplicates.mjs`（`npm run diagnostics`で走る。2026-09-07追加）。
+- **★公開前の最低4問（全プロジェクト共通の指針・2026-10-14採用）。** アプリ・API・拡張・LPを公開する前に、
+  AIが実コードと実リクエストで確かめて報告する: ①秘密（AIのAPIキー等）がアプリ/ブラウザに届くコードに
+  埋め込まれていないか ②認証・認可がサーバー/DB側にあり画面側の制御だけに頼っていないか
+  ③他人のデータを閲覧・変更・削除できる穴がないか ④大量リクエスト・不正利用で高額請求になる作りでないか。
+  詳細・確認のしかた・機械検査の有無は [`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) §5-1
+  （レビュー用チェックは `03_REVIEW_CHECKLIST.md`）。①だけ機械検査あり（`verify-no-secrets-in-dist.mjs`）、②③④は
+  意味判断が要るため「公開前にAIが実際に叩いて確かめる」運用（機械化できない理由は §5-1 に明記）。
+  出典: X投稿 2026-10-13（非エンジニアの個人開発者向けの公開前チェック）。
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
