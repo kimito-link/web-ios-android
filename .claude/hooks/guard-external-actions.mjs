@@ -300,10 +300,14 @@ function main() {
 
   // 4. git push: 保護ブランチへ直接押していないか（★PR を経ずに main が動く事故を止める）
   if (risky.includes('git push') && !/GATE_BYPASS_APPROVED_BY_USER\s*=/.test(cmd)) {
+    // ★どのリポのブランチを見るかは「コマンドが cd する先」で決める。
+    //   input.cwd（セッションの作業ディレクトリ）で読むと、
+    //   `cd <別リポ> && git push` のとき**別リポのブランチ名**を見てしまう。
+    //   2026-10-16、この実装自身がそれで誤判定した（gh pr checks の -R 問題と同じ型）。
     let cur = null;
     try {
       cur = execFileSync('git', ['branch', '--show-current'], {
-        cwd: repoRoot, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+        cwd: parseLeadingCd(cmd) || repoRoot, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
       }).trim();
     } catch {
       cur = null; // ★読めなければ「分からない」。分からないまま通さない方へ倒す

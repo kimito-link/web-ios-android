@@ -233,3 +233,19 @@ describe("parsePushTarget（★main 直 push を止める）", () => {
     expect(parsePushTarget("git status", "main").branch).toBe(null);
   });
 });
+
+describe("★cd 先のブランチを見る（セッションの cwd ではなく）", () => {
+  // ★2026-10-16、この実装自身が踏んだ:
+  //   フックは input.cwd（セッションの作業ディレクトリ）を見るので、
+  //   `cd <別リポ> && git push` のとき別リポのブランチ名で判定してしまい、
+  //   feature ブランチへの push を「main 直 push」と誤判定した。
+  //   gh pr checks の -R 問題（#46）と同じ型。
+  it("cd があればそちらのリポを見る", () => {
+    const cmd = 'cd "C:/x/other-repo" && git push -u origin HEAD';
+    expect(parseLeadingCd(cmd)).toBe("C:/x/other-repo");
+  });
+
+  it("cd が無ければ null（呼び出し側が repoRoot に倒す）", () => {
+    expect(parseLeadingCd("git push -u origin HEAD")).toBe(null);
+  });
+});
