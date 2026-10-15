@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { detectRisky, failingChecks, parseLeadingCd, parsePrMerge, stripQuotedAndHeredocs } from "./guard-external-actions.mjs";
+import { detectRisky, failingChecks, parseLeadingCd, parsePrMerge, parsePushTarget, PROTECTED_BRANCHES, stripQuotedAndHeredocs } from "./guard-external-actions.mjs";
 
 const HOOK = resolve(fileURLToPath(new URL("./guard-external-actions.mjs", import.meta.url)));
 
@@ -200,5 +200,36 @@ describe("実プロセス（毒テスト＝止まること／緑＝通ること�
     expect(r1.stdout).toBe("");
     const dir = mkdtempSync(join(tmpdir(), "norepo-"));
     expect(run(dir, "git push origin x", join(dir, "none.jsonl")).out).toBe("");
+  });
+});
+
+describe("parsePushTarget（★main 直 push を止める）", () => {
+  // ★2026-10-16 の実損: `git push -u origin HEAD` を main 上で実行し、
+  //   PR を経ずに main が更新された。既存ガードは push を検知していたが
+  //   「どのブランチへ押すか」を見ていなかった。
+  it("今回踏んだコマンドを main と判定する", () => {
+    expect(parsePushTarget("git push -u origin HEAD", "main").branch).toBe("main");
+    expect(parsePushTarget("git push -u origin HEAD", "main").explicit).toBe(false);
+  });
+
+  it("feature ブランチ上なら素通りする", () => {
+    const t = parsePushTarget("git push -u origin HEAD", "feat/x");
+    expect(t.branch).toBe("feat/x");
+    expect(PROTECTED_BRANCHES.includes(t.branch)).toBe(false);
+  });
+
+  it("明示した場合も拾う", () => {
+    expect(parsePushTarget("git push origin main", "feat/x").branch).toBe("main");
+    expect(parsePushTarget("git push origin HEAD:main", "feat/x").branch).toBe("main");
+    expect(parsePushTarget("git push origin refs/heads/master", "feat/x").branch).toBe("master");
+  });
+
+  it("★master も保護する（リポごとに既定ブランチ名が違う）", () => {
+    expect(PROTECTED_BRANCHES).toContain("main");
+    expect(PROTECTED_BRANCHES).toContain("master");
+  });
+
+  it("push でなければ何も言わない", () => {
+    expect(parsePushTarget("git status", "main").branch).toBe(null);
   });
 });

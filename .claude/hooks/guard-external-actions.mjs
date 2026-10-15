@@ -86,6 +86,50 @@ export function parseLeadingCd(cmd) {
   return m[1] || m[2] || m[3] || null;
 }
 
+/**
+ * `git push` が「保護すべきブランチ」へ直接押そうとしていないか読む。
+ *
+ * ★なぜ要るか（2026-10-16 に実際に踏んだ）:
+ *   `git push -u origin HEAD` を main 上で実行し、**PR を経ずに main が更新された**。
+ *   これまで全て PR 経由だったのに、1回で作法から外れた。
+ *   既存のガードは `git push` を検知していたが、**どのブランチへ押すかは見ていなかった**。
+ *
+ * ★リポ側のブランチ保護が本来の守りだが、実測（2026-10-16）では
+ *   kimito-link 配下4リポのうち保護されているのは1リポだけだった。
+ *   手元で止めるこの層にも意味がある（多層にする）。
+ *
+ * @returns {{ branch: string|null, explicit: boolean }}
+ *   branch … 押す先のブランチ名（分からなければ null）
+ *   explicit … 引数で明示していたか（HEAD や省略は false）
+ */
+export function parsePushTarget(cmd, currentBranch) {
+  const s = stripQuotedAndHeredocs(String(cmd || ''));
+  const m = /(^|[\s;&|(])git\s+(?:-C\s+\S+\s+)?push\b([^\n;&|]*)/.exec(s);
+  if (!m) return { branch: null, explicit: false };
+
+  const rest = (m[2] || '').trim();
+  // フラグを落として「位置引数」だけにする（-u origin HEAD → origin HEAD）
+  const args = rest
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((a) => !a.startsWith('-'));
+
+  // 形: git push [remote] [refspec]
+  const ref = args.length >= 2 ? args[1] : null;
+  if (!ref) return { branch: currentBranch || null, explicit: false };
+
+  // HEAD / HEAD:main / local:remote
+  if (/^HEAD$/i.test(ref)) return { branch: currentBranch || null, explicit: false };
+  const colon = ref.split(':');
+  const dst = colon.length > 1 ? colon[1] : colon[0];
+  if (/^HEAD$/i.test(dst)) return { branch: currentBranch || null, explicit: false };
+  return { branch: dst.replace(/^refs\/heads\//, ''), explicit: true };
+}
+
+/** 直接 push してはいけないブランチ。★リポごとに名前が違うので両方見る。 */
+export const PROTECTED_BRANCHES = Object.freeze(['main', 'master']);
+
+
 export function parsePrMerge(cmd) {
   const s = stripQuotedAndHeredocs(cmd);
   const m = /gh\s+pr\s+merge\b([^\n;&|]*)/.exec(s);
@@ -253,6 +297,31 @@ function main() {
       }
     }
   }
+
+  // 4. git push: 保護ブランチへ直接押していないか（★PR を経ずに main が動く事故を止める）
+  if (risky.includes('git push') && !/GATE_BYPASS_APPROVED_BY_USER\s*=/.test(cmd)) {
+    let cur = null;
+    try {
+      cur = execFileSync('git', ['branch', '--show-current'], {
+        cwd: repoRoot, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+    } catch {
+      cur = null; // ★読めなければ「分からない」。分からないまま通さない方へ倒す
+    }
+    const target = parsePushTarget(cmd, cur);
+    if (target.branch && PROTECTED_BRANCHES.includes(target.branch)) {
+      reasons.push(
+        `★${target.branch} へ直接 push しようとしています` +
+          (target.explicit ? '' : `（${cur ? `今いるのが ${cur} である` : 'ブランチ名を明示していない'}ため）`) +
+          '。PR を経ずに正本が動くと、レビューも CI の必須チェックも飛ばせてしまいます。' +
+          ' ブランチを切ってから push し、PR でマージしてください。' +
+          ' 2026-10-16 に `git push -u origin HEAD` を main 上で実行して実際に踏みました。' +
+          ' ★意図的に直接 push する場合に限り、ユーザーがチャットで承認したうえで' +
+          ' GATE_BYPASS_APPROVED_BY_USER="<承認の中身>" を付けてください（無断で付けるのは虚偽申告）。'
+      );
+    }
+  }
+
 
   if (reasons.length === 0) process.exit(0);
 
