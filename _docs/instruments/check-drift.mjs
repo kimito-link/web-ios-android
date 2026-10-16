@@ -191,6 +191,18 @@ export const PAIRS = [
     ]
   },
   {
+    // ★2026-10-16 追加。タイムライン（起きたこと→やったこと→数字の動き）の純ロジック。
+    //   他リポへはまだ配っていない（キット自身のコピーだけ）。配るときはここへ追記する。
+    label: '進化台帳（タイムライン・純ロジック）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/improvement-timeline.mjs'),
+    copies: [resolve(KIT_ROOT, 'scripts/lib/improvement-timeline.mjs')]
+  },
+  {
+    label: '進化台帳（タイムライン・CLI）',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/improvement-timeline.mjs'),
+    copies: [resolve(KIT_ROOT, 'scripts/improvement-timeline.mjs')]
+  },
+  {
     label: '進化台帳（鮮度）',
     canonical: resolve(KIT_ROOT, 'templates/scripts/lib/improvement-staleness.mjs'),
     copies: [
