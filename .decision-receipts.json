@@ -310,6 +310,27 @@
       "scopePaths": [
         "templates/idea-to-pr-local/lib/inbox-core.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-16T06:22:09.173Z",
+      "responsibility": "台帳の各行を最初に書き足したコミットを git から逆引きし、起きたこと・やったこと・前後の判定を時系列にする純ロジック。判定は improvement-ledger.mjs の judgeImprovement を再利用し、台帳スキーマは変えない(配布先のコピー更新を避けるため)。既存の submission-summary は『改善した行だけ』の1枚で、変更との紐付けは持たない",
+      "decision": "REUSE",
+      "canonicalSource": "templates/scripts/lib/improvement-ledger.mjs",
+      "scopePaths": [
+        "templates/scripts/lib/improvement-timeline.mjs",
+        "scripts/lib/improvement-timeline.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-16T06:22:09.295Z",
+      "responsibility": "improvement-timeline の CLI(台帳・指標の読込と git アダプタ)と純ロジックの単体テスト。実装と同じ場所に置く",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/improvement-timeline.mjs",
+        "scripts/improvement-timeline.mjs",
+        "templates/scripts/lib/improvement-timeline.test.mjs"
+      ]
     }
   ]
 }

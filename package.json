@@ -16,6 +16,8 @@
     "improvement": "node scripts/check-improvement.mjs",
     "improvement:record": "node scripts/record-improvement.mjs --auto",
     "improvement:submission": "node scripts/check-improvement.mjs --submission",
+    "improvement:timeline": "node scripts/improvement-timeline.mjs",
+    "improvement:timeline:selftest": "node scripts/improvement-timeline.mjs --selftest",
     "check:improvement:selftest": "node scripts/check-improvement.mjs --selftest",
     "check:ran": "node scripts/check-instrument-ran.mjs --check",
     "check:ran:selftest": "node scripts/check-instrument-ran.mjs --selftest",
