@@ -178,6 +178,12 @@ const CHECKS = [
   //   配線済みだがグローバル~/.claude/settings.jsonには未反映という2026-09-25の
   //   実損と同型のズレを検出する。
   { name: 'check-hooks-wired', path: join(__dirname, 'check-hooks-wired.mjs'), kitRoot: true },
+  // ★新しく追加したソースに「先頭コメント（役割・使い方・なぜ要るか）」があるか(2026-10-16追加)。
+  //   AIは別セッションに引き継がれるたび文脈なしでコードを読み直す。先頭コメントが無いと
+  //   探索し直しになり、「既存実装を検索する」も当たりにくくなる。設計の理由はコードから復元できない。
+  //   ★新規ファイルだけを赤くする（既存は触るときに足す。一括修正はコメントの質を落とす）。
+  //   ★コメントの中身の正しさは機械では見ない（意味判断。レビューに残す）。
+  { name: 'check-file-header-comment', path: join(__dirname, 'check-file-header-comment.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);
