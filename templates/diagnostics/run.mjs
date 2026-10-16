@@ -29,6 +29,10 @@ const TARGET_DIR = resolve(process.argv[2] || process.cwd());
 const CHECKS = [
   { name: 'check-tracked-imports', path: join(__dirname, '..', 'scripts', 'check-tracked-imports.mjs') },
   { name: 'check-lockfile-sync', path: join(__dirname, 'check-lockfile-sync.mjs') },
+  // ★ログインがアプリの外へ出ないか（2026-10-16 の実損）。allowNavigation に
+  //   認証プロバイダのドメインが欠けていると「押した瞬間に外部ブラウザ」になり、
+  //   App Store Guideline 4 の却下理由になる。Capacitor でないリポでは 2（測れず）。
+  { name: 'check-auth-domains-allowed', path: join(__dirname, 'check-auth-domains-allowed.mjs') },
   { name: 'check-secrets-not-tracked', path: join(__dirname, 'check-secrets-not-tracked.mjs') },
   { name: 'check-large-tracked-files', path: join(__dirname, 'check-large-tracked-files.mjs') },
   // ★メタ検査: 検査自身が「サボると赤くなるか」を確かめているかを数える。
