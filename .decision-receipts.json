@@ -312,6 +312,15 @@
       ]
     },
     {
+      "at": "2026-10-16T06:18:49.819Z",
+      "responsibility": "公開前に Claude Security(公式プラグイン)のスキャンを HEAD に対して走らせたかを、結果の刻印から読む。既存の verify-security-score は公開URLのヘッダ診断で責務が違う(判定しない)",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/check-security-scan-ran.mjs"
+      ]
+    },
+    {
       "at": "2026-10-16T06:22:09.173Z",
       "responsibility": "台帳の各行を最初に書き足したコミットを git から逆引きし、起きたこと・やったこと・前後の判定を時系列にする純ロジック。判定は improvement-ledger.mjs の judgeImprovement を再利用し、台帳スキーマは変えない(配布先のコピー更新を避けるため)。既存の submission-summary は『改善した行だけ』の1枚で、変更との紐付けは持たない",
       "decision": "REUSE",
