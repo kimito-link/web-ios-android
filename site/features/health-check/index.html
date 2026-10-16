@@ -337,6 +337,21 @@
           <td><code>check-hooks-wired</code></td>
           <td>★<b>Claude Codeのフック（<code>.claude/hooks/</code>）が「作ったのに設定から呼ばれていない」孤児</b>になっている数を数えます。<code>check-gates-are-wired</code>は<code>package.json</code>・CI・診断ランナーだけを見ており、<code>.claude/hooks/</code>は対象外でした。さらに、<b>プロジェクト内では配線したのに、このPC全体に効くグローバル設定には反映し忘れる</b>というズレも警告します（このキット自身が実際にこの取りこぼしを起こしました）。<b>グローバル未反映が意図的かどうかは判定しません</b>（プロジェクト固有のフックである可能性もあるため、警告に留めます）。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-external-constants-freshness.mjs（2026-10-12追加・kimito.link の X API 従量課金で、日次予算ガードが守っていたのは請求額でなく見積りの合計だった実損より） -->
+        <tr>
+          <td><code>check-external-constants-freshness</code></td>
+          <td>★<b>外の誰かが決めた数字（API単価・無料枠・審査要件など）をコードに写したまま古くなっている状態</b>を見張ります。請求APIや価格ページは読まず、<b>人が最後に確かめた日</b>だけを見て「そろそろ確かめて」と知らせます。設定ファイルが無ければ「測れなかった」で、緑にはしません。</td>
+        </tr>
+        <!-- 出典: templates/diagnostics/check-auth-domains-allowed.mjs（2026-10-16追加・ゆっくりエクソソームで「ログインを押した瞬間にアプリの外へ出る」実損、App Store の外部ブラウザ却下理由と同型） -->
+        <tr>
+          <td><code>check-auth-domains-allowed</code></td>
+          <td>★<b>アプリ内ログインが外部ブラウザへ飛ぶ設定</b>を数えます。Capacitor の <code>allowNavigation</code> に、<b>そのアプリが使っている</b>ログイン手段のドメインが入っているかを見ます（使っていない手段は要求しません）。iOS 固有で、設定ファイルを読むだけです。実機でログインが成功するかは見ません。</td>
+        </tr>
+        <!-- 出典: templates/diagnostics/check-file-header-comment.mjs（2026-10-16追加・コードコメントの書き方の全体指針の機械検査） -->
+        <tr>
+          <td><code>check-file-header-comment</code></td>
+          <td>★<b>新しく追加したソースファイルの先頭に、役割・使い方・なぜ要るかのコメントが無い状態</b>を数えます。<b>新規だけ</b>が対象で、既存ファイルは見ません。コメントの中身が正しいかは、機械では見られないので判定しません。</td>
+        </tr>
       </table>
 
       <div class="code-block">
