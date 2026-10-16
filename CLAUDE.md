@@ -1015,6 +1015,10 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   （レビュー用チェックは `03_REVIEW_CHECKLIST.md`）。①だけ機械検査あり（`verify-no-secrets-in-dist.mjs`）、②③④は
   意味判断が要るため「公開前にAIが実際に叩いて確かめる」運用（機械化できない理由は §5-1 に明記）。
   出典: X投稿 2026-10-13（非エンジニアの個人開発者向けの公開前チェック）。
+  ★**実行の第一手段は公式の Claude Security プラグイン（`/claude-security`）**（導入は
+  `/plugin install claude-security@claude-plugins-official`）。走らせたかどうかは
+  `templates/scripts/check-security-scan-ran.mjs`（HEAD に対するスキャンの有無と CRITICAL/HIGH を刻印から読む。走らせていなければ
+  exit 2＝測れていない）。0件は安全の証明ではない（非決定的・補完であって代替ではない）。詳細は同 §5-1a。
 - **★コードコメントの書き方（全プロジェクト共通の指針・2026-10-16採用）。** 新規ファイルは**先頭に「役割・使い方・なぜ要るか」を
   必ず書く**（機械検査: `templates/diagnostics/check-file-header-comment.mjs`。新規だけ赤）。責務のまとまりには「なぜ」を書き、
   **1行ごとの「何を」は書かない**（腐る）。コメントの中身の正しさは機械で見られない（意味判断）のでレビューに残す。
