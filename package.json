@@ -17,6 +17,8 @@
     "improvement:record": "node scripts/record-improvement.mjs --auto",
     "improvement:submission": "node scripts/check-improvement.mjs --submission",
     "check:improvement:selftest": "node scripts/check-improvement.mjs --selftest",
+    "security-scan:check": "node templates/scripts/check-security-scan-ran.mjs",
+    "security-scan:selftest": "node templates/scripts/check-security-scan-ran.mjs --selftest",
     "check:ran": "node scripts/check-instrument-ran.mjs --check",
     "check:ran:selftest": "node scripts/check-instrument-ran.mjs --selftest",
     "check:improvement": "node scripts/check-improvement.mjs --check && node scripts/check-instrument-ran.mjs --stamp improvement",

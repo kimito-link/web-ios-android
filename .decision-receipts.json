@@ -310,6 +310,15 @@
       "scopePaths": [
         "templates/idea-to-pr-local/lib/inbox-core.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-16T06:18:49.819Z",
+      "responsibility": "公開前に Claude Security(公式プラグイン)のスキャンを HEAD に対して走らせたかを、結果の刻印から読む。既存の verify-security-score は公開URLのヘッダ診断で責務が違う(判定しない)",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/check-security-scan-ran.mjs"
+      ]
     }
   ]
 }
