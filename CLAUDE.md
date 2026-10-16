@@ -1015,6 +1015,10 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   （レビュー用チェックは `03_REVIEW_CHECKLIST.md`）。①だけ機械検査あり（`verify-no-secrets-in-dist.mjs`）、②③④は
   意味判断が要るため「公開前にAIが実際に叩いて確かめる」運用（機械化できない理由は §5-1 に明記）。
   出典: X投稿 2026-10-13（非エンジニアの個人開発者向けの公開前チェック）。
+- **★コードコメントの書き方（全プロジェクト共通の指針・2026-10-16採用）。** 新規ファイルは**先頭に「役割・使い方・なぜ要るか」を
+  必ず書く**（機械検査: `templates/diagnostics/check-file-header-comment.mjs`。新規だけ赤）。責務のまとまりには「なぜ」を書き、
+  **1行ごとの「何を」は書かない**（腐る）。コメントの中身の正しさは機械で見られない（意味判断）のでレビューに残す。
+  詳細は [`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) §5-2。既存ファイルは一括修正せず、触るときに足す。
 - **作業開始時に全文脈を取る。** `npm run context` で `.instrument-context.md` を作り、指示書・現在の変更・過去の却下案の出典を確認してから直す。作業後は、証拠がある結果だけを `npm run context:record -- ...` で `confirmed` / `rejected` として戻し、まだ推測なら `pending` にする。秘密候補の本文は取らない。
 - **知見は書き戻す。** 却下対応や初見のエラーを解決したら、[`_docs/KNOWLEDGE-CARRYOVER-RULES.md`](_docs/KNOWLEDGE-CARRYOVER-RULES.md) に従って該当KBに追記する。読むだけで終わらせない。
 - アプリ固有の設定は必ず [`app.config.json`](app.config.json) から読む。ハードコードしない。
