@@ -36,6 +36,11 @@ import {
   checkNoSiblingNamesInCode,
   checkNoStaleCapacitorConfig,
 } from './lib/distinction-checks.mjs';
+import {
+  findCreativeAssetIssues,
+  findObfuscationSignals,
+  findRemoteCodeExecution,
+} from './lib/apple-guideline-checks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // LINT_ROOT: 別リポのつもりで検査する（キット側から S/D 等の実物に当てて毒テストするため）。既定は従来どおり。
@@ -1115,6 +1120,77 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
 
 function hasDistinctionObject(d) {
   return d != null && typeof d === 'object';
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 31・32 — 2026-10-16 App Review Guidelines 改訂への先取り点検
+//   31: 2.5.19 隠し・休眠・未申告機能（難読化・実行時コード実行の兆候）
+//   32: 2.3.14 クリエイティブアセット（商品ページのヘッダー・検索結果に出す画像/動画）の文言
+//
+// 【位置づけ】どちらも「兆候」を拾うだけ。審査メモに全機能が書いてあるか・主張が事実かは意味判断で、
+//   機械では決められない（判定は lib/apple-guideline-checks.mjs、テスト付き）。
+//   31 は誤検知があり得るので warn。32 の「特定・割引の価格」はガイドラインが名指しで禁じているので fail、
+//   「No.1 等の主張」は事実確認が要るので warn。画像の中の文字は読めないので、画像だけある場合は warn で人に渡す。
+//   環境変数 APP_CREATIVE_ASSET_DIRS（カンマ区切り、既定: store-assets/creative-assets）。
+// ----------------------------------------------------------------------------
+{
+  const SKIP_DIRS = /(^|[\\/])(node_modules|dist|build|vendor|\.next|Pods|android[\\/]app[\\/]build)([\\/]|$)/;
+  const scanTargets = new Set([...DISTINCTION_CODE_DIRS, 'apps/mobile']);
+  let scanned = 0;
+  const obf = [];
+  const rce = [];
+  for (const d of scanTargets) {
+    for (const f of walkDir(path.join(ROOT, d))) {
+      if (SKIP_DIRS.test(f) || /\.min\./.test(f) || !DISTINCTION_CODE_EXTS.includes(path.extname(f))) continue;
+      if (fs.statSync(f).size > 2 * 1024 * 1024) continue;
+      const text = blankOutComments(fs.readFileSync(f, 'utf8'));
+      scanned++;
+      const rel = path.relative(ROOT, f);
+      for (const s of findObfuscationSignals(text)) obf.push(`${rel}: ${s}`);
+      for (const s of findRemoteCodeExecution(text)) rce.push(`${rel}: ${s}`);
+    }
+  }
+  if (scanned === 0) {
+    skip('hidden-features-signals', 'ソースディレクトリが見つからない');
+  } else if (obf.length + rce.length === 0) {
+    ok('hidden-features-signals', `${scanned}ファイルに難読化・実行時コード実行の兆候なし`);
+  } else {
+    for (const m of [...obf, ...rce].slice(0, 10)) {
+      warn('hidden-features-signals', '2.5.19', `${m}。審査で見せていない機能を隠す形になっていないか確認し、全機能を審査メモに書く`);
+    }
+  }
+
+  const creativeDirs = (process.env.APP_CREATIVE_ASSET_DIRS || 'store-assets/creative-assets')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  let creativeSeen = false;
+  let creativeProblem = false;
+  for (const dir of creativeDirs) {
+    const abs = path.join(ROOT, dir);
+    if (!fs.existsSync(abs)) continue;
+    creativeSeen = true;
+    const files = [...walkDir(abs)];
+    const texts = files.filter((f) => /\.(txt|md|json)$/i.test(f) && !/(^|[\\/])README\.md$/i.test(f));
+    const images = files.filter((f) => /\.(png|jpe?g|webp|mp4|mov)$/i.test(f));
+    for (const f of texts) {
+      const { price, claim } = findCreativeAssetIssues(fs.readFileSync(f, 'utf8'));
+      const rel = path.relative(ROOT, f);
+      if (price.length) {
+        creativeProblem = true;
+        fail('creative-assets-pricing', '2.3.14', `${rel}: ${price.join(' / ')}。クリエイティブアセットに特定・割引の価格情報は載せられない`);
+      }
+      if (claim.length) {
+        creativeProblem = true;
+        warn('creative-assets-claims', '2.3.14', `${rel}: ${claim.join(' / ')}。検証できない主張は載せられない。出典を示せないなら外す`);
+      }
+    }
+    if (images.length > 0) {
+      warn('creative-assets-images', '2.3.14', `${images.length}点の画像/動画は文字を機械で読めない。価格・割引・他アプリへの言及・全年齢に不適切な内容が無いか、目視で確認する`);
+    }
+  }
+  if (!creativeSeen) skip('creative-assets', `クリエイティブアセットのディレクトリが無い (${creativeDirs.join(', ')})`);
+  else if (!creativeProblem) ok('creative-assets', '文言に価格・検証できない主張の兆候なし（画像の中身は未検査）');
 }
 
 // ----------------------------------------------------------------------------

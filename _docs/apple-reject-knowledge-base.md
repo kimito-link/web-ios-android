@@ -158,6 +158,26 @@ Resolution Center notes でこのパターンを先に説明すれば reviewer �
 
 ---
 
+## 2026-10-16 App Review Guidelines 改訂（2.5.19 / 2.3.14 ほか）
+
+> 出典: https://developer.apple.com/news/ （2026-10-16「Updated App Review Guidelines」「Strengthening App Review Guidelines …」を実読）、
+> 条文は https://developer.apple.com/app-store/review/guidelines/ の 2.3.14 / 2.5.19 を実読。きっかけはX投稿（@kedytcom）だが、**条文は公式で確認した**
+> （投稿の「アカウント終了が増えている」は、Apple 自身が「昨年19.3万件超の開発者アカウントを終了」と述べた数字の範囲で裏が取れる。「増えている」という傾向までは未確認）。
+> 方針の正本は [`docs/ai-rules/01_CORE_RULES.md`](../docs/ai-rules/01_CORE_RULES.md) §5-3。ここは却下・警告を受けたときの対応メモ。
+
+- **2.5.19（隠し・休眠・未申告機能）**: 旧 2.3.1 の同趣旨が独立。審査で見せた版と違う機能を後から有効にする、難読化で隠す、は
+  **削除＋開発者アカウント終了**。下の表の「2.3.1(a)」はこの条文に移った。
+  対応: 審査メモに全機能を列挙／server.url 型は「サーバー配信で機能が決まる」旨と提出時点の全機能を明記／審査後に新しい種類の機能をサーバーだけで足さない。
+  機械検査: lint CHECK 31（兆候のみ・warn）。
+- **2.3.14（クリエイティブアセット）**: 商品ページのヘッダーや検索結果に出せる新しい素材。アプリの中身・ブランドに関係し、全年齢向け。
+  **他アプリへの誤解を招く言及・検証できない主張・特定/割引の価格は不可**。素材づくりのガイドは Apple の「App Store asset best practices」。
+  機械検査: lint CHECK 32（`store-assets/creative-assets/` の文言。画像の中身は読めないので目視）。★このキットの `generate-store-assets` / `asc-*` はまだクリエイティブアセットを扱わない（未実装）。
+- **1.2**: UGC を持つアプリは、AI生成を含む同意のない性的画像を事前に防ぎ・削除する。怠ると Developer Code of Conduct 違反＝削除の対象。
+- **3.1.1(a)**: 外部購入リンクは「許可された行き先」へなら可。CHECK 18 の対象。
+- **Before You Submit / After You Submit**: 追加ドキュメントへのリンクが付いた（内容は未精読）。
+
+---
+
 ## §2.3 Accurate Metadata
 
 > Verbatim ([Apple §2.3.10](https://developer.apple.com/app-store/review/guidelines/#accurate-metadata)):
@@ -172,7 +192,7 @@ Resolution Center notes でこのパターンを先に説明すれば reviewer �
 | **2.3.7** | 汎用/キーワード詰め込みの名前(>30字 or 商標) | ≤30字・他社名なし |
 | **2.3.8** | 4+レーティングでない素材 | 全表示素材を4+準拠に |
 | **2.3.10** | "Android" "Google Play" "Material Design" 等 | iOS限定の表現に find/replace |
-| **2.3.1(a)** | reviewer notes に無い隠し機能 | 全機能を notes に列挙 |
+| **2.3.1(a) → 2026-10-16から 2.5.19** | reviewer notes に無い隠し機能 | 全機能を notes に列挙（下の「2026-10-16 改訂」節） |
 
 ### 概要欄の機械的な保存拒否(doin-challenge.com 2026-09-14実損)＋keywords上限の先取りチェック
 
