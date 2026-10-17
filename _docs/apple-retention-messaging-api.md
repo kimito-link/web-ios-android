@@ -22,6 +22,7 @@
 ## このキット配下での適用候補（実在を確認したもの）
 - **malwarecheck.site**: 監視サブスク（App Store Server Library 利用・通知受け `apps/web/app/api/apple/notifications/route.ts`）。**唯一、サーバー側で Apple と会話する土台がある**＝最有力。
 - **resend.kimito-link.com-**（末尾のハイフンまでがフォルダ名）: PHP の `app/services/apple_client.php`。サブスクの有無は未確認。
+- **kimito-link-reply-suggest**: `server/license-worker/src/license-store.ts`・`webhook.ts` に Apple 関連の語（`signedTransactionInfo` 等）が出る（2026-10-18 grep）。ライセンス管理の Worker で、Apple のサブスクを扱っているかは**未確認**（中身は読んでいない）。
 - 上記以外で自動更新サブスクを出しているアプリは**未確認**（先に台帳で洗う）。
 
 ## 進め方（CVR/LTV と100年設計で決めた順序）
