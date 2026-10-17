@@ -350,6 +350,17 @@
         "templates/scripts/lib/apple-guideline-checks.mjs",
         "templates/scripts/lib/apple-guideline-checks.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-17T20:38:54.349Z",
+      "responsibility": "symptom-card-allowlist-validation",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/symptom-card-core.mjs",
+        "templates/scripts/check-symptom-card.mjs",
+        "templates/scripts/lib/symptom-card-core.test.mjs"
+      ]
     }
   ]
 }

@@ -62,3 +62,6 @@ site/hub/revenue/
 # （LINEハーネスの複数アカウント生死監視と同じ発想、scripts/status/配下）の収集成果物。
 .service-status-snapshot.json
 site/hub/status/
+
+# 自己改善ループの実データ置き場（症状カード・提案書・承認台帳）。実データが混ざりうるのでコミットしない
+_loop/
