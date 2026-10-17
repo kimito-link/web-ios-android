@@ -340,6 +340,16 @@
         "scripts/improvement-timeline.mjs",
         "templates/scripts/lib/improvement-timeline.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-17T19:46:01.755Z",
+      "responsibility": "apple-guideline-2.5.19-2.3.14-signal-checks",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/apple-guideline-checks.mjs",
+        "templates/scripts/lib/apple-guideline-checks.test.mjs"
+      ]
     }
   ]
 }
