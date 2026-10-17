@@ -361,6 +361,28 @@
         "templates/scripts/check-symptom-card.mjs",
         "templates/scripts/lib/symptom-card-core.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-17T20:51:08.424Z",
+      "responsibility": "loop-ledger-and-proposal-format-validation",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/loop-ledger-core.mjs",
+        "templates/scripts/lib/proposal-format-core.mjs",
+        "templates/scripts/record-loop-decision.mjs",
+        "templates/scripts/check-proposal.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-17T20:51:29.191Z",
+      "responsibility": "loop-ledger-and-proposal-format-tests",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/loop-ledger-core.test.mjs",
+        "templates/scripts/lib/proposal-format-core.test.mjs"
+      ]
     }
   ]
 }

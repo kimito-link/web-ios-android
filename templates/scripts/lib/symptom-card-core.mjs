@@ -45,7 +45,7 @@ export function lastWord(k) {
   return (parts[parts.length - 1] || '').toLowerCase();
 }
 /** 識別子や文字列の値に現れてはいけない「秘密・個人情報らしき形」。 */
-const SECRET_LIKE = /** @type {Array<[RegExp, string]>} */ ([
+export const SECRET_LIKE = /** @type {Array<[RegExp, string]>} */ ([
   [/sk-[A-Za-z0-9]{8,}/, 'secret-like(sk-)'],
   [/\bBearer\s+\S+/i, 'secret-like(bearer)'],
   [/[A-Za-z0-9+/=_-]{32,}/, 'long-opaque-string'],
