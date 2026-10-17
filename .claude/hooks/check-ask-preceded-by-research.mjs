@@ -30,6 +30,17 @@ const DESIGN_PRINCIPLE_KEYWORDS = [
   '100年', 'CVR', 'LTV', 'メンテナンスフリー', 'メンテナンスのいらない',
 ];
 
+// ★2026-10-18追加: 「理由タグ」必須（拒否）。本人の指摘「100年後安心できる設計・CVR/LTV・ユーザーにとって一番いい
+//   選択肢を自動で選ぶ、と言っているのに選択肢を尋ねられることが多い」への対処。上の警告（非ブロッキング）は
+//   読まれても行動に繋がらなかった（CLAUDE.md「非ブロッキングの警告は読まれなければ形だけ」節と同型）ので、
+//   質問に「確認が必要な理由」の分類タグが無ければ**拒否**する。タグは3種だけ許す:
+//     事実不在 … 調べても存在しない情報（本人だけが知る事業判断・未記入の設定値）
+//     取り消せない操作 … 課金・公開・削除・本番反映など対外的で戻せない操作
+//     好みのみ … 複数の正しい選択肢のうち、どれを採るかが純粋な好みの問題
+//   判定するのは「タグの有無」という形だけ（タグの中身が本当か＝意味判断は検出できない）。タグ無しで来たら
+//   「基準で自分が決めて実行→報告」へ戻す、または理由を書いて聞き直す、の二択を強いる＝自己分類が記録に残る。
+//   fail-open（このhookが壊れても質問は止めない）。無効化: 環境変数 ASK_REASON_TAG_OFF=1。
+
 import { readFileSync, existsSync } from 'node:fs';
 
 const RESEARCH_TOOLS = new Set(['Grep', 'Glob', 'WebFetch', 'WebSearch', 'Agent', 'Task']);
@@ -113,6 +124,14 @@ function findDesignPrincipleKeyword(texts) {
   return null;
 }
 
+export const REASON_TAGS = ['事実不在', '取り消せない操作', '好みのみ'];
+const REASON_TAG_RE = new RegExp('確認が必要な理由[:：]\\s*(' + REASON_TAGS.join('|') + ')');
+
+/** 質問群のどこかに「確認が必要な理由: <許可タグ>」があるか。 */
+export function hasReasonTag(texts) {
+  return texts.some((t) => REASON_TAG_RE.test(t));
+}
+
 function main() {
   const stdin = readStdin();
   let input;
@@ -123,6 +142,23 @@ function main() {
   }
 
   if (input.tool_name !== 'AskUserQuestion') {
+    process.exit(0);
+  }
+
+  // 検査0（拒否）: 理由タグが無い質問は通さない。判定基準を自分で適用して決める方へ戻す。
+  if (process.env.ASK_REASON_TAG_OFF !== '1' && !hasReasonTag(extractQuestionTexts(input.tool_input))) {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason:
+          '質問を止めました。CLAUDE.md「選択肢を出して止まらない」: 人間がやる必要のない判断は、' +
+          'CVR/LTV最大化と100年メンテナンスのいらない設計の2基準で**自分が1つに決めて実行し、決めた内容と理由を報告**する。' +
+          'それでも本当に聞く必要があるなら、質問文のどこかに「確認が必要な理由: ' + REASON_TAGS.join(' / ') + '」のいずれか1つを書いて聞き直す' +
+          '（事実不在=調べても存在しない情報／取り消せない操作=課金・公開・削除など／好みのみ=複数の正しい選択肢の好み）。' +
+          '調べれば分かること・基準で決められることは、これに当たらない。',
+      },
+    }));
     process.exit(0);
   }
 
@@ -171,4 +207,4 @@ function main() {
   process.exit(0);
 }
 
-main();
+if (import.meta.url === new URL(process.argv[1], 'file:').href || process.argv[1]?.endsWith('check-ask-preceded-by-research.mjs')) main();
