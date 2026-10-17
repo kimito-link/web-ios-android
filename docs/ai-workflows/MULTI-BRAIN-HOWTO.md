@@ -24,7 +24,7 @@
 Grok Bot（常駐アプリ・SpaceXAI製）      … 進行役。ファイル読み書きはするが自分でコマンドは打てない
         │  _jobs/inbox/<n>.md を書く（cwd/brain/timeout＋本文）
         ▼
-実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し done に結果を返す
+実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し、本当に済んだものだけ done・それ以外は failed に結果を返す
         ▼
 dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は grok→qwen→oc→cf→local を自動フォールバック
         ▼
@@ -36,7 +36,11 @@ grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を�
 書くだけ**にし、実際の実行は Task Scheduler の実行係（`job-runner.py`）が `dispatch.py` 経由で行う。
 
 **ジョブ方式の要点**:
-- ジョブ置き場は各リポ直下の `_jobs/inbox|running|done/`（git 管理外）。1ファイル＝1タスク。先頭に `cwd:` `brain:` `timeout:`、空行、本文
+- ジョブ置き場は各リポ直下の `_jobs/inbox|running|done|failed/`（git 管理外）。1ファイル＝1タスク。先頭に `cwd:` `brain:` `timeout:`（任意で `expect: commit|no-commit`）、空行、本文
+- ★**done は「本当に済んだ」だけ**（2026-10-18）。dispatch が 0 で終わり、かつ commit を求めるジョブ（本文に "commit" があれば既定でそう扱う）なら cwd のリポのどれかのブランチが実行中に動いたときだけ done。それ以外は `failed/`、result.md の先頭行 `- status:` に理由が出る。
+  以前は全部 done に入れており、2026-10-17 にジョブ10〜24の15件が**コミット0件のまま done に並んだ**（opencode が cwd 外の worktree を自動拒否しても rc=0・Grok/Qwen は残高切れ）
+- ★全頭脳が失敗したら `_jobs/paused.md` を置いて列を止める（1回の枠切れで inbox が全部 failed に流れないように）。枠を直してジョブを inbox に戻し、paused.md を消すと再開
+- ★opencode（oc/cf/nvidia/mistral/zen/glm）は **cwd ではなく環境変数 PWD を作業場所に使う**。dispatch は PWD を cwd に揃える（Git Bash から手で呼ぶと別リポで commit した実損あり）。cwd 外の worktree（`github/<repo>-wt-<id>`）だけは `~/.config/opencode/opencode.jsonc` の `permission.external_directory` で許可済み（PC ローカル設定・git 外。新しい PC では手で足す）
 - 実行係のタスクは `%LOCALAPPDATA%\llm-proxy\run-*-jobs.py`（パス直書きの Python ラッパー）を短い `.cmd` から呼ぶ。schtasks の /TR は261字上限・日本語パスと8.3変換は壊れるのでこの形が正解
 - 実運用中の係: `OuenJobRunner`（ouenmovie）/ `LinebotJobRunner`（line-bot）。10分毎に1ジョブ
 - 実例の常駐 Bot: 「動画制作係」（教科書動画を週1本→限定公開）「マルウェア導線係」（診断導線の実装進行）「無料LLM調査係」（毎朝6:30に無料枠の変化を調べる）
