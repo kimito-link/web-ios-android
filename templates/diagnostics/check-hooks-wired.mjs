@@ -72,6 +72,17 @@ export function extractReferencedHookFiles(hooksJsonText) {
   return Array.from(referenced);
 }
 
+/**
+ * hooks/ 直下の mjs のうち「hook本体」だけを通す。
+ * ★`*.test.mjs` は hook ではなくテスト（settings.json から呼ばれないのが正しい）。
+ *   実損(2026-10-16): guard-external-actions.test.mjs が「孤児hook」と誤判定され、
+ *   診断全体が赤のままだった。テストを settings に配線して黙らせるのは誤り（hook でないものを hook にする）。
+ * @param {string} name @returns {boolean}
+ */
+export function isHookFile(name) {
+  return /\.mjs$/.test(name) && !/\.(test|spec)\.mjs$/.test(name);
+}
+
 /** @param {string[]} hookFiles 実在するhookファイル名一覧 @param {string[]} referenced 参照されているファイル名一覧 @returns {string[]} 孤児(未参照)のファイル名一覧 */
 export function findOrphanHooks(hookFiles, referenced) {
   const referencedSet = new Set(referenced);
@@ -94,7 +105,12 @@ function runSelftest() {
   const orphans = findOrphanHooks(['foo.mjs', 'bar.mjs'], referenced);
   const globalGaps = findGlobalGaps(['foo.mjs', 'bar.mjs'], ['foo.mjs']);
 
+  // ★毒: テストファイルを hook として数えると、配線されないので孤児と判定してしまう（実損の再現）。
+  const hookNames = ['foo.mjs', 'foo.test.mjs', 'bar.spec.mjs', 'baz.js'].filter(isHookFile);
+
   const ok =
+    hookNames.length === 1 &&
+    hookNames[0] === 'foo.mjs' &&
     referenced.length === 1 &&
     referenced[0] === 'foo.mjs' &&
     orphans.length === 1 &&
@@ -103,7 +119,7 @@ function runSelftest() {
     globalGaps[0] === 'bar.mjs';
 
   if (!ok) {
-    console.error('[check-hooks-wired] --selftest 失敗:', { referenced, orphans, globalGaps });
+    console.error('[check-hooks-wired] --selftest 失敗:', { referenced, orphans, globalGaps, hookNames });
     process.exit(1);
   }
   console.log('[check-hooks-wired] --selftest OK。');
@@ -121,7 +137,7 @@ if (isMain) {
       process.exit(0);
     }
 
-    const hookFiles = readdirSync(hooksDir).filter((f) => f.endsWith('.mjs'));
+    const hookFiles = readdirSync(hooksDir).filter(isHookFile);
     if (hookFiles.length === 0) {
       console.log('[check-hooks-wired] .claude/hooks/ にmjsファイルが無い(skip)。');
       process.exit(0);

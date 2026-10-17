@@ -45,6 +45,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-doc-rot.mjs` | ★AI向け指示書（CLAUDE.md）が指す実体が消えていないか（**文書→実体**の向き。上の1本は**コード→文書**で向きが逆・補完関係） | `CLAUDE.md`。無ければ skip |
 | `check-decision-receipt.mjs` | ★新規source fileがある変更にDecision Receiptがあるか（`_docs/DESIGN-canonical-boundary-rules.md`） | `.decision-receipts.json`。無ければ新規ファイル0件でも記録不要 |
 | `check-file-header-comment.mjs` | ★新しく追加したソースファイルの先頭に、役割・使い方・なぜ要るかのコメントがあるか（**新規だけ**赤。既存は対象外・`--all` で現状を数えるだけ。コメントの中身の正しさは見ない） | git リポジトリ。比較元(origin/main等)が無ければ skip |
+| `check-auth-domains-allowed.mjs` | ★アプリ内ログインが外部ブラウザへ飛ばない設定か（Capacitor の `server.allowNavigation` に、そのアプリが**使っている**ログイン手段のドメインが入っているか。iOS 固有・設定を読むだけで実機は測らない。使っていない手段は要求しない） | `--config capacitor.config.ts --scan <ソースdir>`。引数が無ければ測れず exit 2 |
 | `check-gate-bypass.mjs` | ★Gateを無効化・迂回して成功扱いにしていないか（`continue-on-error: true`、コメントアウトされた検証ステップ） | `.github/workflows/*.yml`。無ければskip |
 | `check-hooks-wired.mjs` | ★`.claude/hooks/`のフックが孤児（settings.jsonから未参照）でないか。プロジェクト内では配線済みだがグローバル`~/.claude/settings.json`には未反映のズレも警告 | キット自身（対象リポ）を見る。`.claude/hooks/`が無ければskip |
 

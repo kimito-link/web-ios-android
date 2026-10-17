@@ -52,7 +52,10 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-docs-match-code` | 説明とコードのズレ（**この案内文と実体のズレも含む**） |
 | `check-decision-receipt` | **新規ファイルを作ったのにCANONICAL CHECKの記録が無い**もの（既存を再発明していないかの記録） |
 | `check-gate-bypass` | **Gateを無効化・迂回して成功扱いにしている**もの（`continue-on-error: true`、コメントアウトされた検証ステップ） |
-| `check-hooks-wired` | **Claude Codeのフックが孤児（settings.jsonから未参照）**、またはプロジェクト内では配線済みだがグローバル設定には未反映のもの |
+| `check-hooks-wired` | **Claude Codeのフックが孤児（settings.jsonから未参照）**、またはプロジェクト内では配線済みだがグローバル設定には未反映のもの（テストファイルはフックではないので数えない） |
+| `check-external-constants-freshness` | **外の誰かが決めた数字（API単価・無料枠・審査要件など）をコードに写したまま古くなっている**もの（人が最後に確かめた日だけを見張る。請求APIは読まない） |
+| `check-auth-domains-allowed` | **アプリ内ログインが外部ブラウザへ飛ぶ設定**（Capacitor の `allowNavigation` に、使っているログイン手段のドメインが無い。iOS で「ログインを押した瞬間にアプリの外へ出る」）。使っていない手段は要求しない |
+| `check-file-header-comment` | **新しく追加したソースの先頭に、役割・使い方・なぜ要るかのコメントが無い**もの（新規だけ。既存は対象外。コメントの中身の正しさは見ない） |
 
 ## いちばん大事な設計：3値で答えます
 
