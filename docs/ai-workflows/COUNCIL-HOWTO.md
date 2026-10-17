@@ -34,7 +34,7 @@
 | cloudflare/gpt-oss-20b | 別系統の発散 | 3 | liveProbe（毎日実疎通） |
 | cloudflare/llama-3.3-70b | 速い視点 | 4 | liveProbe |
 | cloudflare/nemotron-120b | 汎用 | 4 | liveProbe。失敗率が高め |
-| cloudflare/glm-4.7-flash | 批判 | 4 | liveProbe |
+| cloudflare/deepseek-v4-pro | 批判 | 4 | liveProbe。推論を切る設定(`enable_thinking=false`)で完走。2026-10-17 に glm-4.7-flash（推論の独白を出していた）から入れ替え。新規予備なので昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | cloudflare/qwen3-30b-a3b | 発散 | 4 | liveProbe |
 | cloudflare/qwen2.5-coder-32b | 実装レビュー | 4 | liveProbe |
 | nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
@@ -284,6 +284,7 @@ $env:COUNCIL_QUALITY=1; node scripts/meeting.mjs --q "ここに問いを書く"
 
 | 症状 | 対処 |
 |---|---|
+| **回答が「We need answer in Japanese…」「1. **Analyze the Request:**」で始まる／統合が肥大する／日報で失敗0%なのに回答が薄い** | 推論モデルが上限(max_tokens 1600)を推論で使い切り、**最終回答に至る前の独白が回答として採用**されていた（2026-10-17、実会議で cloudflare/gpt-oss-20b 4787字・glm-4.7-flash 5975字・nvidia/deepseek-v4.1-flash 5898字）。meeting.mjs は `finish_reason=length` で本文が空の reasoning を**採用せず失敗として数える**ようになった（tsuioku-no-kirameki.com PR #382）。対処は名簿(council-lineup.mjs)の opts で推論を抑える: gpt-oss は `reasoning_effort:'low'`、qwen3 は `reasoning_effort:'low'`+`max_tokens`、DeepSeek 系は `chat_template_kwargs:{enable_thinking:false}`。**新しい推論モデルは「200が返る・速い」だけで採らず、本番の上限(1600)で finish=stop かつ本文が空でないことを実会議で確かめる** |
 | ローカルが0体・参加できない | Ollama が起動しているか確認（`http://127.0.0.1:11434`）。停止していてもクラウドのみで回るので続行してよい |
 | クラウド勢が出ない | キー未設定か、User scopeのキーがプロセスに流れていない。**キーはPowerShellでUser scopeから流し込む**（下の「キーの流し込み」参照）。**必要なenvの一覧をここに書かないこと** — 腐る。実際に要るキー名は `grep -oE "process\.env\.[A-Z0-9_]+" scripts/meeting.mjs | sort -u` で機械的に出す |
 | OpenRouter が 429 | 無料枠の混雑。予備の1票なので無視してよい（他は止まらない） |
