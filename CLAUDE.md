@@ -64,6 +64,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 | 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
 | 事故と教訓（実証知見） | [`site/learnings/`](site/learnings/index.html) | 公開 |
 | ★同じ画面を別の面にも出すときの掟（鏡写し） | [`_docs/DESIGN-ui-mirror-to-another-surface.md`](_docs/DESIGN-ui-mirror-to-another-surface.md) | 公開 |
+| 自己改善ループ（症状→ローカルAIの提案→人間が承認→いつもの出荷手順。全プログラム共通・設計のみ） | [`_docs/DESIGN-self-improvement-loop-2026-10-18.md`](_docs/DESIGN-self-improvement-loop-2026-10-18.md) | 公開 |
 | 横断資産カタログ・個別プロジェクトの固有知見 | `../ai-hub/`（URL窓口は非公開ダッシュボード `/hub/`） | 非公開 |
 | 会議ログ・改修履歴 | `../ai-hub/history/` | 非公開 |
 
