@@ -209,6 +209,8 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     # opencode は subprocess の cwd より環境変数 PWD を作業場所に使う（2026-10-18 実測）。Git Bash から呼ぶと
     # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
     env["PWD"] = os.path.abspath(cwd)
+    if not ALLOW_OUTWARD:
+        block_outward(env)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     log = os.path.join(RUNS, f"{stamp}-{brain}.log")
     t0 = time.time()
@@ -225,6 +227,27 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     out = open(log, encoding="utf-8", errors="replace").read()
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
+
+
+ALLOW_OUTWARD = False
+
+
+def block_outward(env):
+    """頭脳のプロセスから外向きの書き込み（git push・gh・デプロイ）を通さない。手元の commit と fetch は通る。
+    なぜ: 2026-10-18 ジョブ10で mistral が別作業のブランチへ push し、その PR にコメント・ラベル作成までした。
+    push・PR 操作・デプロイは司令塔（本物の Claude）が差分を見てから行う（CLAUDE.md「外向き操作の前は止める」）。
+    - git push: pushInsteadOf で送り先を存在しないスキームに差し替える（fetch は insteadOf ではないので無傷）
+    - gh / wrangler / vercel: 無効なトークンを環境変数で渡す（保存済みのログインより環境変数が優先される）
+    外したいときだけ --allow-outward。"""
+    pairs = [("url.no-push-from-dispatch://blocked/.pushInsteadOf", p) for p in ("https://", "http://", "git@", "ssh://")]
+    base = int(env.get("GIT_CONFIG_COUNT") or 0)
+    for i, (k, v) in enumerate(pairs):
+        env["GIT_CONFIG_KEY_%d" % (base + i)] = k
+        env["GIT_CONFIG_VALUE_%d" % (base + i)] = v
+    env["GIT_CONFIG_COUNT"] = str(base + len(pairs))
+    for k in ("GH_TOKEN", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "VERCEL_TOKEN"):
+        env[k] = "blocked-by-dispatch"
+    env["GH_PROMPT_DISABLED"] = "1"
 
 
 def groq_chat(model, task):
@@ -274,8 +297,11 @@ def main():
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
     ap.add_argument("--timeout", type=int, default=0, help="seconds per brain (0 = per-brain default)")
     ap.add_argument("--text", action="store_true", help="text-only task (translation, summary, drafting): gemini -> groq -> qwen")
+    ap.add_argument("--allow-outward", action="store_true", help="let the brain git push / use gh / deploy (blocked by default)")
     ap.add_argument("task")
     a = ap.parse_args()
+    global ALLOW_OUTWARD
+    ALLOW_OUTWARD = a.allow_outward
     chain = (TEXT_CHAIN if a.text else AUTO_CHAIN) if a.brain == "auto" else [a.brain]
     for brain in chain:
         ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)

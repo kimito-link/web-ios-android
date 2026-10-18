@@ -39,6 +39,10 @@ grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を�
 - ジョブ置き場は各リポ直下の `_jobs/inbox|running|done|failed/`（git 管理外）。1ファイル＝1タスク。先頭に `cwd:` `brain:` `timeout:`（任意で `expect: commit|no-commit`）、空行、本文
 - ★**done は「本当に済んだ」だけ**（2026-10-18）。dispatch が 0 で終わり、かつ commit を求めるジョブ（本文に "commit" があれば既定でそう扱う）なら cwd のリポのどれかのブランチが実行中に動いたときだけ done。それ以外は `failed/`、result.md の先頭行 `- status:` に理由が出る。
   以前は全部 done に入れており、2026-10-17 にジョブ10〜24の15件が**コミット0件のまま done に並んだ**（opencode が cwd 外の worktree を自動拒否しても rc=0・Grok/Qwen は残高切れ）
+- ★**ジョブは専用の worktree で動く**（2026-10-18）。cwd が git リポなら、job-runner が `origin/main` から `<repo>-wt-job-<ジョブ名>` を作り、頭脳はそこで作業する（本体のチェックアウトには触れない）。何も残らなければ自動で消し、残れば result に場所を書く。既存のブランチが動いたら「他の作業を触った」として failed。`isolate: no` / `base:` で変更可。
+  きっかけ: ジョブ10で mistral が、別作業のブランチに居た本体チェックアウトでコミットし、その PR に push・コメント・ラベル作成までした
+- ★**頭脳は外向きの操作ができない**。dispatch が git push（pushInsteadOf で送り先を潰す）・gh・wrangler・vercel のトークンを無効化して起動する。push・PR は司令塔が差分を見てから行う。手で外したいときだけ `--allow-outward`
+- ★commit を求めるジョブの判定は本文の「commit」「コミット」で行う（日本語だけのジョブが「不要」と誤判定された）
 - ★全頭脳が失敗したら `_jobs/paused.md` を置いて列を止める（1回の枠切れで inbox が全部 failed に流れないように）。枠を直してジョブを inbox に戻し、paused.md を消すと再開
 - ★opencode（oc/cf/nvidia/mistral/zen/glm）は **cwd ではなく環境変数 PWD を作業場所に使う**。dispatch は PWD を cwd に揃える（Git Bash から手で呼ぶと別リポで commit した実損あり）。cwd 外の worktree（`github/<repo>-wt-<id>`）だけは `~/.config/opencode/opencode.jsonc` の `permission.external_directory` で許可済み（PC ローカル設定・git 外。新しい PC では手で足す）
 - 実行係のタスクは `%LOCALAPPDATA%\llm-proxy\run-*-jobs.py`（パス直書きの Python ラッパー）を短い `.cmd` から呼ぶ。schtasks の /TR は261字上限・日本語パスと8.3変換は壊れるのでこの形が正解
