@@ -10,6 +10,21 @@
  *   最終的にキット正本の許可リスト検査（symptom-card-core）を通ったカードだけを書く。
  */
 
+/**
+ * このアダプタが出すカードの id（固定のもの）と metrics の意味。用語集（loop-glossary-diagnostics）の元。
+ * 出す指標・固定idを増やしたら、ここにも足す（足し忘れは loop-glossary-diagnostics-core.test.mjs が赤にする）。検査名のidの意味は、各検査の先頭コメントから作る。
+ */
+export const CARD_GLOSSARY = Object.freeze({
+  'diagnostics-summary': '診断全体の健全性カード。fail=失敗した検査がある／unmeasured=測れなかった検査がある（異常なしの意味ではない）／ok=全検査が緑',
+  failCount: '失敗(fail)した検査の数。検査名のカードでは、その検査が失敗なら1',
+  unmeasuredCount: '測れなかった(unmeasured)検査の数。測れなかった＝異常なし、ではない',
+  checksTotal: '診断が走らせた検査の総数',
+  passCount: '合格(pass)した検査の数',
+  skipCount: '前提が無くて飛ばした(skip)検査の数。skipが多いと、ほとんど測れていない',
+  unparsedCount: '診断のまとめで読み取れなかった行の数（0でなければ、診断の出力の形が変わった）',
+  'check-*-scripts': '検査名の末尾の -scripts は、同名の検査を scripts/ 側にも当てたもの',
+});
+
 /** 診断のまとめ行: `✓ check-xxx: pass` / `✗ …: fail` / `? …: unmeasured` / `- …: skip`。 */
 const LINE_RE = /^([✓✗?-])\s+(check-[a-z0-9-]+(?:\([a-z]+\))?):\s+(pass|fail|unmeasured|skip)\s*$/;
 const SUMMARY_MARK = '--- 診断結果まとめ ---';
