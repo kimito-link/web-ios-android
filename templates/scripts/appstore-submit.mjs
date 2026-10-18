@@ -38,6 +38,7 @@ import { loadAppConfig, productionUrl, isPlaceholder } from './lib/app-config.mj
 import { uploadIPhoneScreenshots } from './lib/asc-screenshot-upload.mjs';
 import { ensureFreePricing } from './lib/asc-pricing.mjs';
 import { ensureAllTerritoriesAvailable } from './lib/asc-availability.mjs';
+import { resolveLocalizationAttrs } from './lib/asc-localization-attrs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..');
@@ -315,20 +316,14 @@ async function ensureLocalization(api, versionId, sourceLocId, whatsNew) {
   const fallbackDescription = readAppstoreMetaFile('description-ja.txt');
   const fallbackKeywords = readAppstoreMetaFile('keywords-ja.txt');
   const fallbackPromotionalText = readAppstoreMetaFile('promotional-text-ja.txt');
-  const attrs = {
-    description:
-      copy?.attributes?.description || ja?.attributes?.description || fallbackDescription,
-    keywords: copy?.attributes?.keywords || ja?.attributes?.keywords || fallbackKeywords,
-    marketingUrl:
-      copy?.attributes?.marketingUrl || ja?.attributes?.marketingUrl || STORE_MARKETING_URL,
-    supportUrl: copy?.attributes?.supportUrl || ja?.attributes?.supportUrl || STORE_SUPPORT_URL,
-    promotionalText:
-      copy?.attributes?.promotionalText ||
-      ja?.attributes?.promotionalText ||
-      fallbackPromotionalText ||
-      undefined,
-    ...(includeWhatsNew ? { whatsNew } : {}),
-  };
+  const attrs = resolveLocalizationAttrs({
+    copy,
+    ja,
+    files: { description: fallbackDescription, keywords: fallbackKeywords, promotionalText: fallbackPromotionalText },
+    urls: { marketingUrl: STORE_MARKETING_URL, supportUrl: STORE_SUPPORT_URL },
+    whatsNew,
+    includeWhatsNew,
+  });
   const patchWithRetry = async (id, body) => {
     try {
       return await api('PATCH', `/v1/appStoreVersionLocalizations/${id}`, body);
