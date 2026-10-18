@@ -39,6 +39,7 @@ import { uploadIPhoneScreenshots } from './lib/asc-screenshot-upload.mjs';
 import { ensureFreePricing } from './lib/asc-pricing.mjs';
 import { ensureAllTerritoriesAvailable } from './lib/asc-availability.mjs';
 import { resolveLocalizationAttrs } from './lib/asc-localization-attrs.mjs';
+import { MISSING, clampReviewNotes, describeDiffs, diffListing } from './lib/asc-listing-diff.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..');
@@ -359,6 +360,17 @@ async function ensureLocalization(api, versionId, sourceLocId, whatsNew) {
   return ja;
 }
 
+// subtitle はファイル → env → app.config.json のビジネス概要(JA)から。書く側と、提出直前の突き合わせ側で同じ式を使う。
+function resolveSubtitle() {
+  return (
+    readAppstoreMetaFile('subtitle-ja.txt') ||
+    process.env.ASC_APP_SUBTITLE_JA ||
+    (!isPlaceholder(APP_CONFIG.businessModel?.summaryJa) && APP_CONFIG.businessModel.summaryJa) ||
+    APP_CONFIG.identity?.displayName ||
+    undefined
+  );
+}
+
 async function ensureAppInfoLocalization(api, appId) {
   console.log('  sync App Info localization (name / subtitle / privacy URLs)');
   let appInfo = null;
@@ -377,13 +389,7 @@ async function ensureAppInfoLocalization(api, appId) {
     return;
   }
 
-  // subtitle はファイル → env → app.config.json のビジネス概要(JA)から。
-  const subtitle =
-    readAppstoreMetaFile('subtitle-ja.txt') ||
-    process.env.ASC_APP_SUBTITLE_JA ||
-    (!isPlaceholder(APP_CONFIG.businessModel?.summaryJa) && APP_CONFIG.businessModel.summaryJa) ||
-    APP_CONFIG.identity?.displayName ||
-    undefined;
+  const subtitle = resolveSubtitle();
   const attrs = {
     locale: APP_INFO_LOCALE,
     name: APP_CONFIG.identity?.displayName,
@@ -426,13 +432,10 @@ async function ensureAppInfoLocalization(api, appId) {
       console.log(`  appInfoLocalization created id=${r.data?.id || '(unknown)'} privacy=${STORE_PRIVACY_URL}`);
     }
   } catch (e) {
-    // privacyPolicyUrl 等はここが失敗すると submit 時に
-    // ENTITY_ERROR.ATTRIBUTE.REQUIRED で再度落ちる。WARN で握り潰さず、
-    // どのフィールドが未反映になりうるか分かるようにログを厚くする。
-    console.log(
-      `  WARN: appInfoLocalization write failed (privacyPolicyUrl/subtitle/name may remain unset; ` +
-        `submit will likely fail with ENTITY_ERROR.ATTRIBUTE.REQUIRED). ` +
-        `Fix manually in ASC UI if this recurs: ${e.message.slice(0, 400)}`,
+    // name / subtitle / privacyPolicyUrl は公開される項目。書けないまま進むと旧値(旧名称など)が
+    // そのまま審査に出る(2026-10-18 の改名で旧名称・旧サブタイトルが残った)ので、握り潰さず止める。
+    throw new Error(
+      `appInfoLocalization の書き込みに失敗(name/subtitle/privacyPolicyUrl が旧値のまま公開される恐れ): ${e.message.slice(0, 400)}`,
     );
   }
 }
@@ -535,7 +538,7 @@ async function ensureReviewDetail(api, versionId, sourceVersionId) {
     console.warn(
       `  WARN: review notes ${attrs.notes.length} chars exceeds Apple's 4000 limit; truncating to fit.`,
     );
-    attrs.notes = attrs.notes.slice(0, 3988) + '\n[truncated]';
+    attrs.notes = clampReviewNotes(attrs.notes);
   }
   if (target) {
     console.log(`  patch review detail id=${target.id}`);
@@ -1039,6 +1042,53 @@ async function ensureCategory(api, appId) {
   console.log('  ✓ category 設定完了');
 }
 
+// 提出(submitted=true)の直前に、公開される項目を ASC から読み戻し、リポの正本と等値で突き合わせる。
+// 1つでも違えば提出しない。ここが「取り消せない1手」の直前の最後の関所。
+async function assertListingMatchesRepo(api, appId, versionId, { includeWhatsNew, whatsNew }) {
+  const files = {
+    description: readAppstoreMetaFile('description-ja.txt'),
+    keywords: readAppstoreMetaFile('keywords-ja.txt'),
+    promotionalText: readAppstoreMetaFile('promotional-text-ja.txt'),
+  };
+  const subtitle = resolveSubtitle();
+  const expected = {
+    'appInfo.name': APP_CONFIG.identity?.displayName || MISSING,
+    'appInfo.subtitle': subtitle || MISSING,
+    'appInfo.privacyPolicyUrl': STORE_PRIVACY_URL || MISSING,
+    'version.description': files.description || MISSING,
+    'version.keywords': files.keywords || MISSING,
+    'review.notes': clampReviewNotes(REVIEW_CONTACT_DEFAULTS.notes) || MISSING,
+  };
+  // 任意項目: リポにファイルがあるときだけ比べる(無ければ ASC の既存値を許す)。
+  if (files.promotionalText) expected['version.promotionalText'] = files.promotionalText;
+  if (includeWhatsNew && whatsNew) expected['version.whatsNew'] = whatsNew;
+
+  const actual = {};
+  const appInfos = await api('GET', `/v1/apps/${appId}/appInfos?limit=10&fields[appInfos]=appStoreState`);
+  const appInfo =
+    (appInfos.data || []).find((ai) => ai.attributes?.appStoreState === 'PREPARE_FOR_SUBMISSION') ||
+    (appInfos.data || [])[0];
+  if (!appInfo) throw new Error('提出中止: appInfo が見つからず、公開される名前・サブタイトルを確認できません');
+  const infoLocs = await api('GET', `/v1/appInfos/${appInfo.id}/appInfoLocalizations`);
+  const infoLoc = (infoLocs.data || []).find((l) => l.attributes?.locale === APP_INFO_LOCALE);
+  actual['appInfo.name'] = infoLoc?.attributes?.name;
+  actual['appInfo.subtitle'] = infoLoc?.attributes?.subtitle;
+  actual['appInfo.privacyPolicyUrl'] = infoLoc?.attributes?.privacyPolicyUrl;
+  const verLocs = await getLocalizations(api, versionId);
+  const verLoc = verLocs.find((l) => l.attributes?.locale === 'ja');
+  for (const k of ['description', 'keywords', 'promotionalText', 'whatsNew']) actual[`version.${k}`] = verLoc?.attributes?.[k];
+  const detail = await getReviewDetail(api, versionId);
+  actual['review.notes'] = detail?.attributes?.notes;
+
+  const diffs = diffListing(expected, actual);
+  if (diffs.length) {
+    throw new Error(
+      `提出中止: ASC の公開項目がリポの正本と ${diffs.length} 件ずれています(旧版の値の持ち越しなど)。\n${describeDiffs(diffs).join('\n')}`,
+    );
+  }
+  console.log(`  OK: 公開項目 ${Object.keys(expected).length} 件がすべてリポの正本と一致`);
+}
+
 async function submitForReview(api, appId, versionId) {
   console.log(`  fetch existing review submissions...`);
   const existing = await api(
@@ -1288,6 +1338,9 @@ async function submitForReview(api, appId, versionId) {
 
   console.log('\n[7f] Ensure App Store category...');
   await ensureCategory(api, app.id);
+
+  console.log('\n[7g] Assert ASC listing matches repo (last gate before submit)...');
+  await assertListingMatchesRepo(api, app.id, version.id, { includeWhatsNew: !!liveVersionAfter?.id, whatsNew });
 
   console.log('\n[8] Submit for review...');
   await submitForReview(api, app.id, version.id);
