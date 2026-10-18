@@ -21,12 +21,23 @@ const HEADER_KEYS = Object.freeze(['schema', 'proposal', 'project', 'cards', 'wr
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$/;
 const WRITER_RE = /^(human|ai):[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 /** 提案書で見るのは秘密とメールだけ（長い不透明文字列は、パスやsha短縮と区別できないので見ない）。 */
+/**
+ * 提案書の雛形（loop-propose-core の buildPrompt）の穴埋め部分。モデルが置き換えず**そのまま残した**ら、中身が無い提案書なので拒否する
+ * （実測: 7B が「触るファイル候補: (ファイルやモジュール名)」を6回中3回そのまま出した）。雛形はこの一覧から作る＝ずれない。
+ */
+export const SKELETON_PLACEHOLDERS = Object.freeze([
+  '何が起きているかを1〜2文', 'カードの数字だけを使って事実を書く', '原因の仮説', 'この実験で違うと分かる', 'カードの数値で直接言えること',
+  '1つだけ', 'ファイルやモジュール名', '今回触らない範囲', '直ったかを、どの実測で確かめるか', '…',
+]);
+
+/** ファイル名らしき語（拡張子つき）。日本語の文や「v1.2」のような数字は拾わない。 */
+const FILE_TOKEN_RE = /[A-Za-z0-9_@.\/-]*[A-Za-z0-9_-]\.(?:mjs|cjs|js|jsx|ts|tsx|json|md|html|css|py|sh|yml|yaml|txt)(?![A-Za-z0-9])/g;
 const BODY_BAD = SECRET_LIKE.filter(([, name]) => ['secret-like(sk-)', 'secret-like(bearer)', 'secret-variable-name', 'email-like'].includes(name));
 
 /**
  * @param {string} text 提案書の本文
- * @param {{ cards?: Array<Record<string, any>>, ledger?: Array<Record<string, any>> }} [opts]
- *   cards: 参照カード（渡すと観測の数字を照合）／ledger: 台帳（渡すと「却下済み:」の参照先を照合）
+ * @param {{ cards?: Array<Record<string, any>>, ledger?: Array<Record<string, any>>, knownFiles?: string[] }} [opts]
+ *   cards: 参照カード（渡すと観測の数字を照合）／ledger: 台帳（渡すと「却下済み:」の参照先を照合）／knownFiles: リポのファイル一覧（渡すと触るファイル候補の実在を照合）
  * @returns {{ ok: boolean, violations: Array<{ where: string, rule: string }> }}
  */
 export function validateProposal(text, opts = {}) {
@@ -57,6 +68,11 @@ export function validateProposal(text, opts = {}) {
   const cardIds = (header.cards || '').split(',').map((s) => s.trim()).filter(Boolean);
   if (cardIds.length === 0) bad('header.cards', 'at-least-one-card');
   for (const id of cardIds) if (!ID_RE.test(id)) bad('header.cards', 'id-format');
+
+  // 雛形の穴埋めが残っていないか（全角・半角の括弧の両方）
+  for (const ph of SKELETON_PLACEHOLDERS) {
+    if (text.includes('（' + ph + '）') || text.includes('(' + ph + ')')) bad('body', 'placeholder-not-replaced(' + ph + ')');
+  }
 
   // 見出し（ちょうど5つ・この順）
   const h2 = lines.filter((l) => /^## /.test(l)).map((l) => l.slice(3).trim());
@@ -97,6 +113,15 @@ export function validateProposal(text, opts = {}) {
     const changes = ver.split('\n').filter((l) => /^\s*-?\s*変更[:：]\s*\S+/.test(l));
     if (changes.length !== 1) bad('## 版の提案', `must-have-exactly-one-変更(found ${changes.length})`);
     if (!/触るファイル候補[:：]\s*\S+/.test(ver)) bad('## 版の提案', 'needs-触るファイル候補');
+    if (opts.knownFiles) {
+      // 触るファイル候補に書かれたファイル名（拡張子つきの語）が、リポに実在するか。小さいモデルは存在しないファイル名を創作する（実測）。
+      const line = ver.split('\n').find((l) => /触るファイル候補[:：]/.test(l)) ?? '';
+      for (const tok of new Set(line.match(FILE_TOKEN_RE) || [])) {
+        const base = tok.split('/').pop();
+        const exists = opts.knownFiles.some((f) => f === tok || f.endsWith('/' + tok) || (!tok.includes('/') && f.split('/').pop() === base));
+        if (!exists) bad('## 版の提案', `file-not-found(${tok})`);
+      }
+    }
     if (!/やらないこと[:：]\s*\S+/.test(ver)) bad('## 版の提案', 'needs-やらないこと');
   }
 
