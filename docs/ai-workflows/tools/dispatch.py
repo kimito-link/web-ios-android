@@ -36,7 +36,11 @@ AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
               "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
-              "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded"]
+              "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded",
+              # 2026-10-18: opencode は headless で権限を自動拒否しても rc=0 で終わる（何もせず「DONE」扱いだった）。
+              # Grok Build の残高切れは "API error (status 402 ..." で、上の "API Error" と大文字小文字が違い拾えなかった。
+              "auto-rejecting", "rejected permission to use this specific tool call", "Payment Required",
+              "usage balance exhausted"]
 TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
@@ -202,6 +206,9 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         if not model:
             return None, "all Gemini free quotas exhausted for today", "", None
     cmd, env, model = build(brain, task, allowed, model)
+    # opencode は subprocess の cwd より環境変数 PWD を作業場所に使う（2026-10-18 実測）。Git Bash から呼ぶと
+    # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
+    env["PWD"] = os.path.abspath(cwd)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     log = os.path.join(RUNS, f"{stamp}-{brain}.log")
     t0 = time.time()
