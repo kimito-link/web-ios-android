@@ -117,7 +117,32 @@ def make_worktree(cwd, name, base):
     rc, out = git(cwd, "worktree", "add", "--detach", path, base, timeout=300)
     if rc != 0:
         return None, "git worktree add failed: %s" % out.strip()[-300:]
+    copy_context_docs(top, path)
     return path, None
+
+
+CONTEXT_DIR = ".job-context"
+
+
+def copy_context_docs(main_checkout, worktree):
+    """本体チェックアウトの _docs/ を、作業場所の .job-context/_docs/ に読むだけの写しとして置く。
+    なぜ: 2026-10-18、ジョブ10〜24が「必読」とする設計書が origin/main に無く（別作業の PR と本体の未コミット変更にだけ
+    あった）、origin/main から作った作業場所では読めなかった。写しは git の除外設定に入れ、コミットに混ざらないようにする。"""
+    src = os.path.join(main_checkout, "_docs")
+    if not os.path.isdir(src):
+        return
+    shutil.copytree(src, os.path.join(worktree, CONTEXT_DIR, "_docs"), dirs_exist_ok=True)
+    rc, common = git(worktree, "rev-parse", "--git-common-dir")
+    if rc != 0:
+        return
+    common = common.strip().splitlines()[-1]
+    if not os.path.isabs(common):
+        common = os.path.join(worktree, common)
+    exclude = os.path.join(common, "info", "exclude")
+    os.makedirs(os.path.dirname(exclude), exist_ok=True)
+    lines = open(exclude, encoding="utf-8").read().splitlines() if os.path.exists(exclude) else []
+    if "/%s/" % CONTEXT_DIR not in lines:
+        open(exclude, "a", encoding="utf-8").write("\n/%s/\n" % CONTEXT_DIR)
 
 
 def drop_worktree_if_empty(cwd, path, base_sha):
@@ -125,6 +150,7 @@ def drop_worktree_if_empty(cwd, path, base_sha):
     rc, status = git(path, "status", "--porcelain")
     rc2, head = git(path, "rev-parse", "HEAD")
     if rc == 0 and rc2 == 0 and not status.strip() and head.strip() == base_sha:
+        shutil.rmtree(os.path.join(path, CONTEXT_DIR), ignore_errors=True)
         git(cwd, "worktree", "remove", path)
         return True
     return False
@@ -172,6 +198,7 @@ def main():
                     "- いまのフォルダ（%s）は %s から作った、このジョブ専用の git worktree。上の作業はすべてここで行う。\n"
                     "- 「main から作る」「worktree を作る」と書いてあっても、ここで `git checkout -b <ブランチ名>` するだけでよい。\n"
                     "- ほかのフォルダ・既存のブランチには触れない。push・PR・デプロイはこの環境では通らないので試さない。\n"
+                    "- 上で `_docs/...` を読めと書いてあってここに無いときは `.job-context/_docs/...` を読む（本体の最新の写し。読むだけで、書き換えない・コミットしない）。\n"
                     % (task, workdir, base))
     if workdir:
         cmd = [sys.executable, DISPATCH, "--brain", brain, "--timeout", str(timeout), "--cwd", workdir, task]
