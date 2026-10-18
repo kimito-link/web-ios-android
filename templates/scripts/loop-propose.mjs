@@ -3,12 +3,13 @@
  * loop-propose.mjs — 自己改善ループ第5歩: ローカルの Ollama に、症状カードから提案書を書かせる。
  *
  * 使い方: node scripts/loop-propose.mjs --project <名前> --cards <カードのディレクトリ> --model <Ollamaのモデル名>
- *           [--glossary <用語集.txt>] [--out <提案書の置き場>] [--ledger <decisions.jsonl>] [--ollama http://127.0.0.1:11434]
+ *           [--glossary <用語集.txt>] [--repo <対象リポのディレクトリ>] [--out <提案書の置き場>] [--ledger <decisions.jsonl>] [--ollama http://127.0.0.1:11434]
  *   既定の置き場: _loop/<project>/proposals/ と _loop/<project>/decisions.jsonl
  * 守ること（設計 §3・§5）:
  *   - 送り先はローカルだけ（assertLocalUrl）。dispatch.py は使わない（道具つきエージェントで、外部へ落ちる経路もあるため）。Ollama の /api/chat を
  *     道具なし・1回だけ呼ぶ。外部AIへは自動で落ちない。落ちたら止まる。
  *   - AIに渡すのは、症状カード検査（symptom-card-core）を**通ったカードだけ**。1枚でも違反したら何も送らない。
+ *   - --repo を渡すと、提案書の「触るファイル候補」に書かれたファイル名が git ls-files に実在するかも照合する（創作の防止）。
  *   - 提案書のヘッダーは機械が付け、最後に proposal-format-core で全体を検査。通った提案書だけを proposals/ に置き、台帳に proposed（ai:）を追記する。
  *     通らなかった出力は proposals/_invalid/ に違反の一覧と一緒に置く（台帳には書かない。台帳は人間の決定の記録）。人間には渡さない。
  * 終了コード: 0=提案書を置いた / 1=提案書が形式検査に通らない or カードが検査に通らない / 2=測れていない（Ollama に届かない・引数不足・タイムアウト）
@@ -145,7 +146,17 @@ const head = String(cards[0].id).replace(/[^A-Za-z0-9_.-]/g, '-').slice(0, 40);
 const proposalId = `P${String(n).padStart(4, '0')}-${head}`;
 const text = assembleProposal({ proposalId, project: a.project, cardIds: cards.map((c) => c.id), writer: writerOf(a.model), body: extractBody(raw) });
 const ledgerEntries = existsSync(ledger) ? readFileSync(ledger, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : [];
-const res = validateProposal(text, { cards, ledger: ledgerEntries });
+/** @type {string[]|undefined} */
+let knownFiles;
+if (a.repo) {
+  const g = spawnSync('git', ['-C', a.repo, 'ls-files'], { encoding: 'utf8' });
+  if (g.status !== 0) {
+    console.error('[loop-propose] --repo の git ls-files に失敗（測れていない）');
+    process.exit(EXIT.INCONCLUSIVE);
+  }
+  knownFiles = g.stdout.split('\n').map((x) => x.trim()).filter(Boolean);
+}
+const res = validateProposal(text, { cards, ledger: ledgerEntries, knownFiles });
 if (!res.ok) {
   const inv = join(proposalsDir, '_invalid');
   mkdirSync(inv, { recursive: true });

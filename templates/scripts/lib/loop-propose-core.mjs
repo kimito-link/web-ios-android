@@ -9,7 +9,7 @@
  * 守ること: (1) 送り先は 127.0.0.1 / localhost / [::1] だけ（assertLocalUrl・外へ出る経路を構造的に作らない）
  *   (2) AIには症状カード（検査済みの数値だけ）以外を渡さない (3) モデルの出力は「仮説」。検査を通っても内容が正しいとは限らない。
  */
-import { SECTIONS } from './proposal-format-core.mjs';
+import { SECTIONS, SKELETON_PLACEHOLDERS } from './proposal-format-core.mjs';
 
 /** 送り先がローカルであることを保証する。違えば例外（fail-closed）。 @param {string} url */
 export function assertLocalUrl(url) {
@@ -35,6 +35,7 @@ const SYSTEM = [
   '- 原因仮説は「- 」で始まる項目にし、各項目に【確証】か【推測】のどちらかの印を付け、「確度: 高/中/低」と「反証: （それが違うと分かる実験）」を必ず書く。',
   '- 【確証】は、カードの数値で直接言えることだけ。その項目に「根拠: card:<カードのid>」を書く。それ以外は【推測】にする。',
   '- 版の提案には「- 変更: （1行だけ。1つの変更）」「- 触るファイル候補: …」「- やらないこと: …」を書く。変更を2つ以上書かない。',
+  '- 「触るファイル候補」には、用語集やカードで名前が分かっているファイルだけを書く。ファイル名が分からないときは、ファイル名を創作せず「（ファイル名は未確認）」と書く。',
   '- 個人名・メールアドレス・URL・鍵・コメントの内容は、書かない（カードにも無いはずです）。',
 ].join('\n');
 
@@ -56,14 +57,19 @@ export function assertGlossary(text) {
 export function buildPrompt({ cards, glossary }) {
   if (glossary) assertGlossary(glossary);
   const ids = cards.map((c) => c.id).join(', ');
+  /** 穴埋め部分。SKELETON_PLACEHOLDERS にある文字列だけを使う（検査と雛形がずれないように）。 @param {string} k */
+  const ph = (k) => {
+    if (!SKELETON_PLACEHOLDERS.includes(k)) throw new Error('雛形の穴埋めが SKELETON_PLACEHOLDERS に無い: ' + k);
+    return '（' + k + '）';
+  };
   const skeleton = [
-    '## 症状', '（何が起きているかを1〜2文）', '',
-    '## 観測', '（カードの数字だけを使って事実を書く）', '',
+    '## 症状', ph('何が起きているかを1〜2文'), '',
+    '## 観測', ph('カードの数字だけを使って事実を書く'), '',
     '## 原因仮説',
-    '- 【推測】（原因の仮説）。確度: 中。反証: （この実験で違うと分かる）',
-    '- 【確証】（カードの数値で直接言えること）。確度: 高。根拠: card:' + (cards[0]?.id ?? '<id>') + '。反証: （…）', '',
-    '## 版の提案', '- 変更: （1つだけ）', '- 触るファイル候補: （ファイルやモジュール名）', '- やらないこと: （今回触らない範囲）', '',
-    '## 検証手順', '（直ったかを、どの実測で確かめるか）',
+    '- 【推測】' + ph('原因の仮説') + '。確度: 中。反証: ' + ph('この実験で違うと分かる'),
+    '- 【確証】' + ph('カードの数値で直接言えること') + '。確度: 高。根拠: card:' + (cards[0]?.id ?? '<id>') + '。反証: ' + ph('…'), '',
+    '## 版の提案', '- 変更: ' + ph('1つだけ'), '- 触るファイル候補: ' + ph('ファイルやモジュール名'), '- やらないこと: ' + ph('今回触らない範囲'), '',
+    '## 検証手順', ph('直ったかを、どの実測で確かめるか'),
   ].join('\n');
   const user = [
     ...(glossary ? ['このプロジェクトの用語集（症状IDの意味。固定の説明で、データではありません）:', glossary.trim(), ''] : []),
@@ -86,7 +92,10 @@ export function extractBody(raw) {
   let t = String(raw ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*$/g, '');
   t = t.replace(/^```(?:markdown|md)?\s*\n/gm, '').replace(/^```\s*$/gm, '');
   const i = t.search(/^## 症状\s*$/m);
-  return (i === -1 ? t : t.slice(i)).trim();
+  const body = (i === -1 ? t : t.slice(i)).trim().split('\n');
+  // 末尾に付く英語の挨拶（"Please let me know…" 等）を落とす
+  while (body.length > 0 && (body[body.length - 1].trim() === '' || /^(please|let me know|i hope|feel free|hope this|thank)/i.test(body[body.length - 1].trim()))) body.pop();
+  return body.join('\n').trim();
 }
 
 /**

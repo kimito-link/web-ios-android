@@ -394,6 +394,15 @@
         "templates/scripts/lib/loop-propose-core.test.mjs",
         "templates/scripts/loop-propose.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T01:41:56.048Z",
+      "responsibility": "loop-propose-known-files-and-placeholder-guards",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/known-files.test.mjs"
+      ]
     }
   ]
 }
