@@ -12,7 +12,7 @@
 | 3 | 君斗りんくのすれ違ひ通信（S） | com.kimito.link.surechigai | 6796909175 | 1.0.0 **却下（REJECTED）** | surechigai-romi.link |
 | 4 | Kimito Link Voice | com.kimito.link.voice | 6809058070 | 1.0.0 **提出準備中（未提出）** | kimito-Link-Voice |
 | 5 | リバースハック WEB健康診断 | com.reversehack.webhealth | 6780161483 | 1.1.1 販売中 | web-health-check-app（`app.config.reverse-hack.json`） |
-| 6 | マルウェアチェック.site | com.reversehack.malwarecheck | 6785846826 | 0.1.1 販売中 | malwarecheck.site |
+| 6 | マルウェアチェック.site | com.reversehack.malwarecheck | 6785846826 | 0.1.1（API上は販売中の版）／**App Store の画面では「App Storeから削除済み」** | malwarecheck.site |
 | 7 | kimito.link | com.kimito.link.linktree | 6782380276 | 0.1.5 販売中 | kimitolink-linktree |
 | 8 | CC/BCC再送信 - 君斗りんくのAI返信サジェスト | com.kimito.link.resend | 6786996042 | 1.0.1 販売中 | resend.kimito-link.com-（末尾ハイフンまでがフォルダ名） |
 | 9 | 君斗りんくのWEBサイト健康診断 | com.kimito.link.webhealthcheck | 6779860644 | 1.0.2 販売中 | web-health-check-app |
@@ -20,7 +20,9 @@
 | 11 | リバースハック | com.reversehack.partner | 6769407908 | 1.0.17 販売中 | partnership_program_website |
 | 12 | 富士山コンパス | com.kimito.link.fujisancompass | 6760695314 | 2.4.16 販売中 | compass |
 
-（販売中 = `READY_FOR_SALE`。表のバージョンは各アプリの最新の1件。直近3件の状態は、すべて販売中のものは販売中だった。）
+（販売中 = `READY_FOR_SALE`。表のバージョンは各アプリの最新の1件。**注意: API の `appStoreState` は「版の状態」で、アプリ自体が App Store から削除されているかは映らない**。#6 は API 上は販売中の版だが、App Store Connect の画面では「App Storeから削除済み」。削除済みのアプリが他にもないかは、画面で確認が要る。）
+
+**警告（App Store Connect の画面・2026-10-18）: 「Apple Developer Program の使用許諾契約が更新されました。既存アプリの更新と、App Store への新規アプリ提出には、Account Holder がアカウントにサインインして、更新された契約に同意する必要があります」**。同意していないと、更新・新規提出ができない。Account Holder（本人）の操作。
 
 ## 分かったこと
 1. **12本すべてが、1つの ASC アカウントに載っている**（1つの API キーが12本を見られる）。記録上の開発チームIDは `8922HQ842P`（`app.config.json` 6本で確認。Voice と partner は config にチームIDの記載なし）。→ [終了リスク](apple-account-termination-risk.md)の**影響範囲は12本全部**。
@@ -30,7 +32,7 @@
 5. **ASC にあってリポの走査（`app.config.json`）では見えなかったもの**（#8 resend・#10 henshinhisho・#12 compass）は、別の場所（`resend.kimito-link.com-`・`henshin-hisho/ios-app`・`compass`）にソースがあった。「リポに config が無い＝アプリが無い」ではない。逆に、`sakkino.link` は config に bundleId があるが **ASC には無い**（未作成）。
 
 ## 未確認・やっていないこと
-- **アカウントの種別（個人／組織）と、登録名義は未確認**（ASC API からは取れない。GitHub 側の `kimito-link` が User アカウントであることは記録済みだが、Apple 側は別）。
+- ~~アカウントの種別（個人／組織）は未確認~~ → **確定: 組織（BEST TRUST K.K.、チームID 8922HQ842P）**。Apple Developer のフォームの「組織」欄で確認（2026-10-18・サインイン済みの Chrome）。GitHub 側の `kimito-link` が User アカウントであることとは別の話。
 - 各アプリの**実際のダウンロード数・収益・直近の更新日**は未取得（棚卸しの材料にはなるが、今回は状態と所在までに留めた）。
 - **どのアプリを残す／止めるかは決めていない**（事業判断）。判断材料として足りないのは、上のダウンロード数・収益と、各アプリの事業上の位置づけ。
 - 「12本」は、この日の ASC の API の返答。ASC に出ない（削除済み・別アカウントの）アプリは含まない。

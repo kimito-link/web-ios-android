@@ -1,6 +1,6 @@
 # Apple Retention Messaging API（解約しようとした人に、画面上で引き止めのメッセージを出す）
 
-> **今の到達点: 調査完了・未導入（アクセス申請が要る＝本人の操作）。** 実装した/申請した事実はまだ無い。
+> **今の到達点: 調査完了・申請は出せない（2026-10-18・前提が2つ欠けている）。** 実装した/申請した事実はまだ無い。
 > 出典: Apple 公式ドキュメント https://developer.apple.com/documentation/retentionmessaging （2026-10-18 実読。変更履歴は最新が 1.5・2026/04/27、初版は 2025/07/16「Initial pre-release」）。
 > きっかけ: X投稿（@ChadAppDev）。投稿は「アクセスをより広く開放し、今すぐ申請できる」と言うが、**申請ページ（https://developer.apple.com/contact/request/retention-messaging-api/）は Apple ID でのサインインが要り、開放の範囲は確認できていない**。公式ドキュメントの冒頭は今も「pre-release・利用希望の申請が必要」と書いている。
 > 関連: 課金の実装の型は [`CLAUDE.md`](../CLAUDE.md)「アプリ内課金(IAP・サブスク)」節、審査の規則は [`docs/ai-rules/01_CORE_RULES.md`](../docs/ai-rules/01_CORE_RULES.md) §5-3。
@@ -18,6 +18,13 @@
 - まずサンドボックスのURLを登録 → **性能テスト（Initiate Performance Test）に合格** → 本番URLを登録。
 - 承認済み（APPROVED）のメッセージ・画像だけが表示される。「**誤解を招く・不正確な内容はアップロードしない**」と公式に明記。
 - 新ドメイン推奨: api.storekit.apple.com（旧 …itunes.apple.com も当面使える）。
+
+## 申請フォームの実物と、今は出せない理由（2026-10-18・サインイン済みの Chrome で実読）
+フォームの必須項目: 開発者情報（名前・メール・組織は自動入力。**組織＝BEST TRUST K.K. / 8922HQ842P**）・**アプリ名**・**Apple ID（アプリの数字ID）**・**「私のアプリは現在、App Storeで定期購入制となっています」のチェック**・**Get Retention Message エンドポイントの完全なURL**。「リクエストはアプリごとに処理される」「利用には App Store での有効なサブスクリプションが必要」。
+- **欠けている前提①: 定期購読を売っているアプリが1本もない。** ASC の読み取り（`subscriptionGroups`・12本全部）で、自動更新サブスクリプションのグループがあるアプリは0本。チェックを入れると事実と違う申告になるので、**出さない**。（以前の候補 malwarecheck.site は、App Store の画面で「App Storeから削除済み」。サブスクのコードがあっても、いま売っていない。）
+- **欠けている前提②: エンドポイントのURLが無い。** 申請時点で、動く Get Retention Message エンドポイント（HTTPS・TLS1.2・700ms 以内）の URL が要る。実装がまだ無い。
+- **出せる条件**: ①定期購読を App Store で実際に売る（商品を ASC に作り、審査を通し、販売中にする）②エンドポイントを実装して公開する（Cloudflare Workers なら 700ms は余裕）。その後に、アプリごとに申請。
+- 結論: **今は申請しない。** 先にサブスク商品を売る企画が決まってから（事業判断）。それまでは、この文書が調査の記録。
 
 ## このキット配下での適用候補（実在を確認したもの）
 - **malwarecheck.site**: 監視サブスク（App Store Server Library 利用・通知受け `apps/web/app/api/apple/notifications/route.ts`）。**唯一、サーバー側で Apple と会話する土台がある**＝最有力。
