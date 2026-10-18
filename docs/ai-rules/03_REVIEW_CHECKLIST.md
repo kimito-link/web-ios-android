@@ -1,5 +1,8 @@
 # 03_REVIEW_CHECKLIST
 
+> 開発・運用の198項目（認可・DB・キャッシュ・非同期・可用性・可観測性など）を「いつ気にするか」で並べた表は
+> [06_ENGINEERING_CHECKLIST.md](06_ENGINEERING_CHECKLIST.md)。公開前は、ここに加えてその §1 を見る。
+
 ## 実装品質
 
 - [ ] 要件を満たしている
