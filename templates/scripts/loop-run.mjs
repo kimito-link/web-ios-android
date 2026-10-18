@@ -83,9 +83,11 @@ const root = resolve(cwd, String(opt('root') || join('_loop', String(project))))
 const force = Boolean(flags.force || cfg.force);
 const now = new Date();
 const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-const runDir = join(root, 'runs', stamp);
+// 実行ごとに一意のフォルダ（秒だけだと、同じ秒に2回走ったとき同じフォルダを共有し、前のカードが混ざって署名が変わる。実際に起きた）
+const runDir = join(root, 'runs', `${stamp}-${process.pid}`);
 const symptomsDir = join(runDir, 'symptoms');
 mkdirSync(symptomsDir, { recursive: true });
+if (readdirSync(symptomsDir).length > 0) die('症状カードの作業フォルダが空でない（前の実行のカードが混ざる）。先へ進まない', EXIT.FAIL);
 
 /** @param {string} cmd @param {string[]} args @param {import('node:child_process').SpawnSyncOptionsWithStringEncoding} o */
 const run = (cmd, args, o) => spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...o });

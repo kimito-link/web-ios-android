@@ -35,7 +35,8 @@ const SYSTEM = [
   '- 原因仮説は「- 」で始まる項目にし、各項目に【確証】か【推測】のどちらかの印を付け、「確度: 高/中/低」と「反証: （それが違うと分かる実験）」を必ず書く。',
   '- 【確証】は、カードの数値で直接言えることだけ。その項目に「根拠: card:<カードのid>」を書く。それ以外は【推測】にする。',
   '- 版の提案には「- 変更: （1行だけ。1つの変更）」「- 触るファイル候補: …」「- やらないこと: …」を書く。変更を2つ以上書かない。',
-  '- 「触るファイル候補」には、用語集やカードで名前が分かっているファイルだけを書く。ファイル名が分からないときは、ファイル名を創作せず「（ファイル名は未確認）」と書く。',
+  '- 「触るファイル候補」は、「実在するファイル」の一覧（ユーザーが示した場合）から選ぶ。一覧が無い・合うものが無いときは、ファイル名を創作せず「（ファイル名は未確認）」と書く。',
+  '- verdict が unmeasured のカードは「測れなかった」だけで、不具合とは限らない。直す対象（変更）は、verdict が fail のカードを優先して選ぶ。unmeasured は、測れるようにする話として別に扱う。',
   '- 個人名・メールアドレス・URL・鍵・コメントの内容は、書かない（カードにも無いはずです）。',
 ].join('\n');
 
@@ -51,10 +52,10 @@ export function assertGlossary(text) {
 }
 
 /**
- * @param {{ cards: Array<Record<string, any>>, glossary?: string }} p
+ * @param {{ cards: Array<Record<string, any>>, glossary?: string, candidateFiles?: string[] }} p
  * @returns {{ system: string, user: string }}
  */
-export function buildPrompt({ cards, glossary }) {
+export function buildPrompt({ cards, glossary, candidateFiles }) {
   if (glossary) assertGlossary(glossary);
   const ids = cards.map((c) => c.id).join(', ');
   /** 穴埋め部分。SKELETON_PLACEHOLDERS にある文字列だけを使う（検査と雛形がずれないように）。 @param {string} k */
@@ -73,6 +74,7 @@ export function buildPrompt({ cards, glossary }) {
   ].join('\n');
   const user = [
     ...(glossary ? ['このプロジェクトの用語集（症状IDの意味。固定の説明で、データではありません）:', glossary.trim(), ''] : []),
+    ...(candidateFiles && candidateFiles.length > 0 ? ['実在するファイル（「触るファイル候補」はこの一覧から選ぶ。合うものが無ければ（ファイル名は未確認）と書く）:', ...candidateFiles.map((f) => '- ' + f), ''] : []),
     `症状カード（id: ${ids}）:`,
     '```json',
     JSON.stringify(cards, null, 2),
@@ -109,4 +111,45 @@ export function assembleProposal({ proposalId, project, cardIds, writer, body })
 /** モデル名を writer 欄に載せられる形にする（`ai:` + 英数と . _ -）。 @param {string} model */
 export function writerOf(model) {
   return 'ai:' + String(model).replace(/[^A-Za-z0-9_.-]/g, '-').replace(/^-+/, '').slice(0, 63);
+}
+
+/** 内容を読んで調べる対象の拡張子（コードと設定。大きいファイルは呼び出し側で除く）。 */
+const CODE_EXT = /\.(mjs|cjs|js|jsx|ts|tsx|py|sh|ps1|json|yml|yaml)$/;
+const MAIN_CODE_EXT = /\.(mjs|cjs|js|jsx|ts|tsx|py|sh|ps1)$/;
+
+/**
+ * カードの症状IDや検査名に関係する、実在するファイルの候補を選ぶ（提案書の「触るファイル候補」に創作させないため）。
+ * 関連の見つけ方（強い順）: ①ファイル名（拡張子なし）がカードIDと一致 or IDを含む ②コードの中にカードIDの文字列がある。テストファイルは後回し。
+ * ok のカードは対象にしない。ファイルの**名前だけ**を返す（中身は返さない）。
+ * @param {{ files: string[], cards: Array<Record<string, any>>, readText: (path: string) => string | null, perId?: number, max?: number }} p
+ * @returns {string[]}
+ */
+/** 症状ではなく土台の健全性を表すカード（アダプタが固定で出す）。ファイル探しの手がかりにしない（どのアダプタも自分のファイルに書いているため、道具が候補に入ってしまう）。 */
+export const META_CARD_IDS = Object.freeze(['status-snapshot', 'diagnostics-summary']);
+/** ループ自身の部品（直す対象の製品ではない）。候補に入れない。 */
+const LOOP_MACHINERY = /(^|\/)(_loop\/|loop-[a-z0-9-]+(\.[a-z]+)*\.(mjs|js|json|md)$|loop\.config\.json)/;
+
+export function pickCandidateFiles({ files, cards, readText, perId = 4, max = 12 }) {
+  const isTest = (/** @type {string} */ f) => /\.(test|spec)\./.test(f) || /(^|\/)(tests?|__tests__)\//.test(f);
+  /** @type {string[]} */
+  const out = [];
+  const seen = new Set();
+  const ids = cards.filter((c) => c.verdict !== 'ok' && !META_CARD_IDS.includes(String(c.id))).map((c) => String(c.id));
+  files = files.filter((f) => !LOOP_MACHINERY.test(f));
+  for (const id of ids) {
+    const base = id.replace(/-[a-z]+$/, (m) => (/^-(scripts)$/.test(m) ? '' : m)); // check-xxx-scripts → check-xxx
+    const stem = (/** @type {string} */ f) => (f.split('/').pop() ?? '').replace(/\.[^.]+$/, '');
+    const byName = files.filter((f) => !isTest(f) && (stem(f) === id || stem(f) === base || stem(f).includes(base)));
+    const byContent = files.filter((f) => !byName.includes(f) && !isTest(f) && MAIN_CODE_EXT.test(f) && (readText(f) ?? '').includes(id));
+    const tests = files.filter((f) => !byName.includes(f) && !byContent.includes(f) && isTest(f) && CODE_EXT.test(f) && (stem(f).includes(base) || (readText(f) ?? '').includes(id)));
+    let n = 0;
+    for (const f of [...byName, ...byContent, ...tests]) {
+      if (n >= perId || out.length >= max) break;
+      if (seen.has(f)) continue;
+      seen.add(f);
+      out.push(f);
+      n++;
+    }
+  }
+  return out;
 }

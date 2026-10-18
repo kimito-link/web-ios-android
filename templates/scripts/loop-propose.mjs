@@ -9,17 +9,17 @@
  *   - 送り先はローカルだけ（assertLocalUrl）。dispatch.py は使わない（道具つきエージェントで、外部へ落ちる経路もあるため）。Ollama の /api/chat を
  *     道具なし・1回だけ呼ぶ。外部AIへは自動で落ちない。落ちたら止まる。
  *   - AIに渡すのは、症状カード検査（symptom-card-core）を**通ったカードだけ**。1枚でも違反したら何も送らない。
- *   - --repo を渡すと、提案書の「触るファイル候補」に書かれたファイル名が git ls-files に実在するかも照合する（創作の防止）。
+ *   - --repo を渡すと、①カードの症状IDに関係する実在ファイルの名前を候補としてAIに渡し ②提案書の「触るファイル候補」のファイル名が git ls-files に実在するかを照合する（創作の防止。名前だけで中身は渡さない）。
  *   - 提案書のヘッダーは機械が付け、最後に proposal-format-core で全体を検査。通った提案書だけを proposals/ に置き、台帳に proposed（ai:）を追記する。
  *     通らなかった出力は proposals/_invalid/ に違反の一覧と一緒に置く（台帳には書かない。台帳は人間の決定の記録）。人間には渡さない。
  * 終了コード: 0=提案書を置いた / 1=提案書が形式検査に通らない or カードが検査に通らない / 2=測れていない（Ollama に届かない・引数不足・タイムアウト）
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EXIT } from './lib/instrument-core.mjs';
-import { assembleProposal, assertLocalUrl, buildPrompt, extractBody, writerOf } from './lib/loop-propose-core.mjs';
+import { assembleProposal, assertLocalUrl, buildPrompt, extractBody, pickCandidateFiles, writerOf } from './lib/loop-propose-core.mjs';
 import { validateProposal } from './lib/proposal-format-core.mjs';
 import { validateSymptomCard } from './lib/symptom-card-core.mjs';
 
@@ -76,6 +76,31 @@ if (cards.length === 0) {
 }
 
 // 2) ローカルの Ollama を1回呼ぶ（道具なし）
+// --repo: 対象リポの追跡ファイル一覧。①AIへ「実在するファイル」の候補を渡す ②提案書のファイル名が実在するか照合する（どちらも名前だけ。中身は渡さない）
+/** @type {string[]|undefined} */
+let knownFiles;
+/** @type {string[]} */
+let candidateFiles = [];
+if (a.repo) {
+  const g = spawnSync('git', ['-C', a.repo, 'ls-files'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (g.status !== 0) {
+    console.error('[loop-propose] --repo の git ls-files に失敗（測れていない）');
+    process.exit(EXIT.INCONCLUSIVE);
+  }
+  knownFiles = g.stdout.split('\n').map((x) => x.trim()).filter(Boolean);
+  candidateFiles = pickCandidateFiles({
+    files: knownFiles,
+    cards,
+    readText: (f) => {
+      try {
+        const full = join(String(a.repo), f);
+        return statSync(full).size > 512 * 1024 ? null : readFileSync(full, 'utf8');
+      } catch {
+        return null;
+      }
+    },
+  });
+}
 let glossary;
 if (a.glossary) {
   try {
@@ -87,7 +112,7 @@ if (a.glossary) {
 }
 let prompt;
 try {
-  prompt = buildPrompt({ cards, glossary });
+  prompt = buildPrompt({ cards, glossary, candidateFiles });
 } catch (e) {
   console.error('[loop-propose] 拒否: ' + (e instanceof Error ? e.message : String(e)));
   process.exit(EXIT.FAIL);
@@ -146,16 +171,6 @@ const head = String(cards[0].id).replace(/[^A-Za-z0-9_.-]/g, '-').slice(0, 40);
 const proposalId = `P${String(n).padStart(4, '0')}-${head}`;
 const text = assembleProposal({ proposalId, project: a.project, cardIds: cards.map((c) => c.id), writer: writerOf(a.model), body: extractBody(raw) });
 const ledgerEntries = existsSync(ledger) ? readFileSync(ledger, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : [];
-/** @type {string[]|undefined} */
-let knownFiles;
-if (a.repo) {
-  const g = spawnSync('git', ['-C', a.repo, 'ls-files'], { encoding: 'utf8' });
-  if (g.status !== 0) {
-    console.error('[loop-propose] --repo の git ls-files に失敗（測れていない）');
-    process.exit(EXIT.INCONCLUSIVE);
-  }
-  knownFiles = g.stdout.split('\n').map((x) => x.trim()).filter(Boolean);
-}
 const res = validateProposal(text, { cards, ledger: ledgerEntries, knownFiles });
 if (!res.ok) {
   const inv = join(proposalsDir, '_invalid');

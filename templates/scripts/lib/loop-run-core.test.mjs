@@ -7,6 +7,9 @@ describe("symptomSignature", () => {
   it("fail と warn の症状IDをソートして連結する（ok と unmeasured は含めない）", () => {
     expect(symptomSignature([card("b", "fail"), card("a", "warn"), card("c", "ok"), card("d", "unmeasured")])).toBe("a+b");
   });
+  it("同じIDのカードが重複していても、署名は変わらない（前の実行のカードが混ざった事故の再発防止）", () => {
+    expect(symptomSignature([card("a", "fail"), card("a", "fail"), card("b", "fail")])).toBe(symptomSignature([card("a", "fail"), card("b", "fail")]));
+  });
   it("症状が無ければ空文字", () => {
     expect(symptomSignature([card("a", "ok"), card("b", "unmeasured")])).toBe("");
     expect(symptomSignature([])).toBe("");

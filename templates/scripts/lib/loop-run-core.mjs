@@ -19,7 +19,7 @@ export const SYMPTOM_VERDICTS = Object.freeze(['fail', 'warn']);
  * @param {Array<Record<string, any>>} cards
  */
 export function symptomSignature(cards) {
-  return cards.filter((c) => SYMPTOM_VERDICTS.includes(c.verdict)).map((c) => String(c.id)).sort().join('+');
+  return [...new Set(cards.filter((c) => SYMPTOM_VERDICTS.includes(c.verdict)).map((c) => String(c.id)))].sort().join('+'); // 同じIDが重複して来ても署名は変えない
 }
 
 /**
