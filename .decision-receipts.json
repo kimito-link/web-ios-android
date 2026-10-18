@@ -439,6 +439,15 @@
         "templates/scripts/lib/loop-glossary-diagnostics-core.mjs",
         "templates/scripts/lib/loop-glossary-diagnostics-core.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T03:43:12.016Z",
+      "responsibility": "loop-propose-candidate-files-and-run-dir-fix",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/candidate-files.test.mjs"
+      ]
     }
   ]
 }
