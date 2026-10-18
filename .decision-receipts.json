@@ -383,6 +383,17 @@
         "templates/scripts/lib/loop-ledger-core.test.mjs",
         "templates/scripts/lib/proposal-format-core.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T01:25:41.959Z",
+      "responsibility": "loop-propose-local-ollama-runner",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/loop-propose-core.mjs",
+        "templates/scripts/lib/loop-propose-core.test.mjs",
+        "templates/scripts/loop-propose.mjs"
+      ]
     }
   ]
 }
