@@ -89,6 +89,13 @@ describe("文字列フィールドは短い・形が決まったものだけ", (
     expect(rules({ ...good(), id: "sk-abcdefgh12345" }).some((r) => r.includes("secret-like(sk-)"))).toBe(true);
     expect(rules({ ...good(), source: "OPENAI_API_KEY" }).some((r) => r.includes("secret-variable-name"))).toBe(true);
   });
+  it("区切りで読める長い名前（検査名など）は秘密と誤検知しない", () => {
+    expect(validateSymptomCard({ ...good(), id: "check-external-constants-freshness" }).ok).toBe(true);
+    expect(validateSymptomCard({ ...good(), id: "check-selftest-coverage-scripts-and-other-things".slice(0, 40) }).ok).toBe(true);
+  });
+  it("大小文字+数字が混ざった長い文字列は、ハイフンで区切られていても拒否", () => {
+    expect(rules({ ...good(), buildId: "Ab3-Cd4_Ef5-Gh6_Ij7-Kl8_Mn9-Op0_Qr1-St2_Uv3-Wx" }).some((r) => r.includes("long-mixed-opaque-string"))).toBe(true);
+  });
   it("時刻は ISO8601 だけ", () => {
     expect(rules({ ...good(), at: "昨日" })).toContain("$.at:format");
     expect(validateSymptomCard({ ...good(), at: "2026-10-18T05:30:00Z" }).ok).toBe(true);

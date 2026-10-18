@@ -403,6 +403,18 @@
       "scopePaths": [
         "templates/scripts/lib/known-files.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T02:04:19.959Z",
+      "responsibility": "loop-adapter-diagnostics-and-pipeline-e2e",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/loop-adapter-diagnostics-core.mjs",
+        "templates/scripts/lib/loop-adapter-diagnostics-core.test.mjs",
+        "templates/scripts/loop-adapter-diagnostics.mjs",
+        "templates/scripts/lib/loop-pipeline.e2e.test.mjs"
+      ]
     }
   ]
 }

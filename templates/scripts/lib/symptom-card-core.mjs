@@ -48,7 +48,10 @@ export function lastWord(k) {
 export const SECRET_LIKE = /** @type {Array<[RegExp, string]>} */ ([
   [/sk-[A-Za-z0-9]{8,}/, 'secret-like(sk-)'],
   [/\bBearer\s+\S+/i, 'secret-like(bearer)'],
-  [/[A-Za-z0-9+/=_-]{32,}/, 'long-opaque-string'],
+  // ハイフン・アンダースコアで区切れない長い連続（base64・hex・sha 等）。区切りで読める名前（check-external-constants-freshness）は誤検知しない
+  [/[A-Za-z0-9+/=]{32,}/, 'long-opaque-string'],
+  // 大文字・小文字・数字が全部混ざった長い文字列（URL-safe base64 等で - _ が入っても拾う）。英小文字とハイフンだけの名前は拾わない
+  [/(?=[A-Za-z0-9+/=_-]*[A-Z])(?=[A-Za-z0-9+/=_-]*[a-z])(?=[A-Za-z0-9+/=_-]*\d)[A-Za-z0-9+/=_-]{32,}/, 'long-mixed-opaque-string'],
   [/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*_(KEY|TOKEN|SECRET|PASSWORD)\b/, 'secret-variable-name'],
   [/[^\s@]+@[^\s@]+\.[^\s@]+/, 'email-like'],
   [/https?:\/\//i, 'url-like'],

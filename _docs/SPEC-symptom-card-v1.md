@@ -36,7 +36,7 @@
 - ファイル全体 8KiB まで。
 - 数値は絶対値 1e9 まで（数値のIDや電話番号の混入を粗く防ぐ。ヒューリスティック）。
 - `metrics` のキー名が、個人・秘密を指す語で**終わる**ものは不可: `id name mail email phone tel address url uri token key secret password passwd auth cookie session avatar icon text body message comment ip device card`（camelCase / snake_case の最後の語で判定）。`userId`・`displayName`・`avatarUrl` は不可、`commentCount`・`userCount`・`p95Ms` は可。
-- 文字列の値に、秘密らしき形（`sk-…`・32字以上の不透明な文字列・`…_API_KEY` のような鍵の変数名・`Bearer …`・メール・URL）は不可。
+- 文字列の値に、秘密らしき形（`sk-…`・`…_API_KEY` のような鍵の変数名・`Bearer …`・メール・URL）は不可。長い文字列は2種を別々に見る: ①`-` `_` で区切れない32字以上の連続（base64・hex・sha）②大文字・小文字・数字が全部混ざった32字以上（`-` `_` が入っても拾う）。**英小文字とハイフンだけの読める名前（`check-external-constants-freshness`）は誤検知しない**（第6歩で実データから発覚して直した）。
 - 違反の出力には**値を載せない**（パスと規則名だけ。検査のログから漏れないため）。
 
 ## なぜこの形か（設計の理由）
