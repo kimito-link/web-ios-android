@@ -191,6 +191,13 @@ export const PAIRS = [
     ]
   },
   {
+    // ★2026-10-18 追加。App Store 版ローカライズの属性決定(ファイル優先)。malwarecheck の改名提出事故の修正で配った。
+    //   コピー先は malwarecheck.site の PR 未マージの間は存在しないため、非 strict では飛ばされる。
+    label: 'ASC ローカライズ属性決定',
+    canonical: resolve(KIT_ROOT, 'templates/scripts/lib/asc-localization-attrs.mjs'),
+    copies: [resolve(GH_ROOT, 'malwarecheck.site/scripts/lib/asc-localization-attrs.mjs')]
+  },
+  {
     // ★2026-10-16 追加。タイムライン（起きたこと→やったこと→数字の動き）の純ロジック。
     //   他リポへはまだ配っていない（キット自身のコピーだけ）。配るときはここへ追記する。
     label: '進化台帳（タイムライン・純ロジック）',
