@@ -428,6 +428,17 @@
         "templates/scripts/lib/loop-run.e2e.test.mjs",
         "templates/scripts/lib/loop-test-fixtures.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T02:31:21.329Z",
+      "responsibility": "loop-glossary-diagnostics",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/loop-glossary-diagnostics.mjs",
+        "templates/scripts/lib/loop-glossary-diagnostics-core.mjs",
+        "templates/scripts/lib/loop-glossary-diagnostics-core.test.mjs"
+      ]
     }
   ]
 }
