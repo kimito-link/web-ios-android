@@ -10,17 +10,25 @@ Job file: <root>/_jobs/inbox/<name>.md   (UTF-8 Markdown; the whole file is the 
     cwd: C:\path\to\work\folder        (default: <root>)
     brain: grok|qwen|oc|cf|local|auto  (default: grok)
     timeout: 3600                      (seconds, default 3600)
-    expect: commit|no-commit           (default: commit when the task text mentions "commit", else no-commit)
+    expect: commit|no-commit           (default: commit when the task text says "commit" / "コミット", else no-commit)
+    isolate: yes|no                    (default: yes when cwd is a git repo)
+    base: origin/main                  (what the isolated worktree starts from; default origin/main)
 Result: <root>/_jobs/done/<name>.md   + <name>.result.md   when the job really did its work
-        <root>/_jobs/failed/<name>.md + <name>.result.md   otherwise (first line of the result says why)
+        <root>/_jobs/failed/<name>.md + <name>.result.md   otherwise (the "- status:" line says why)
 Running marker: <root>/_jobs/running/<name>.md while it executes (so a second runner instance skips it).
 Pause marker:   <root>/_jobs/paused.md is written when every brain failed (quota/billing). While it exists the
                 runner does nothing, so one outage does not drain the whole inbox into failed/. Delete it to resume.
 
 "Did its work" (2026-10-18): the old runner moved every job to done/ whatever happened. 15 jobs (10-24, 2026-10-17)
-landed in done/ with no commit at all: opencode auto-rejected file access outside cwd and still exited 0, and Grok/Qwen
-were out of credit. Now a job is done only when dispatch exits 0 AND, for a job that expects a commit, some branch
-of the git repo at cwd moved during the run (refs/heads are shared by all worktrees, so a commit in a new worktree counts).
+landed in done/ with no commit at all (opencode auto-rejected paths outside cwd and still exited 0; Grok/Qwen were
+out of credit). A job is done only when dispatch exits 0 AND, for a job that expects a commit, a NEW branch appeared.
+A branch that already existed and moved means the brain touched someone else's work -> failed.
+
+Isolation (2026-10-18): job 10 ran in the repo's main checkout, which was sitting on another task's branch. The brain
+(mistral) committed there, pushed it into that task's open PR, commented and created a label. Now, when cwd is a git
+repo, the runner makes a fresh worktree <repo>-wt-job-<name> from origin/main and runs the brain THERE (the brain
+never sees the main checkout). dispatch.py blocks git push / gh / deploys for the brain by default.
+The worktree is removed afterwards if the brain left nothing in it; otherwise it stays and the result names it.
 
 Usage: python job-runner.py --root "C:\...\ouenmovie"
 """
@@ -46,41 +54,80 @@ def expects_commit(meta, task):
     exp = (meta.get("expect") or "").lower()
     if exp in ("commit", "no-commit"):
         return exp == "commit"
-    return re.search(r"commit", task, re.I) is not None
+    # ジョブ10は「コミットは feat/... にだけする」と日本語だけで書いていて、英語の commit しか見ない判定をすり抜けた。
+    return re.search(r"commit|コミット", task, re.I) is not None
+
+
+def git(cwd, *args, timeout=120):
+    try:
+        r = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return 1, str(e)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 def branch_heads(cwd):
     """{refname: sha} of local branches of the repo at cwd, or None when cwd is not a git repo."""
-    try:
-        r = subprocess.run(["git", "-C", cwd, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads"],
-                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
-    except (OSError, subprocess.TimeoutExpired):
+    rc, out = git(cwd, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads", timeout=60)
+    if rc != 0:
         return None
-    if r.returncode != 0:
-        return None
-    return dict(ln.split(" ", 1) for ln in r.stdout.splitlines() if " " in ln)
+    return dict(ln.split(" ", 1) for ln in out.splitlines() if " " in ln)
 
 
-def moved_branches(before, after):
+def branch_changes(before, after):
+    """(new_branches, moved_existing_branches) as short names."""
     if before is None or after is None:
-        return []
-    return sorted(ref for ref, sha in after.items() if before.get(ref) != sha)
+        return [], []
+    short = lambda r: r.replace("refs/heads/", "")
+    new = sorted(short(r) for r in after if r not in before)
+    moved = sorted(short(r) for r, sha in after.items() if r in before and before[r] != sha)
+    return new, moved
 
 
 def classify(rc, out, needs_commit, before, after):
     """Returns (ok, reason). Pure so it can be tested without running a brain."""
     if ALL_FAILED in out:
         return False, "all brains failed (quota / billing / auth) - see dispatch output"
+    new, moved = branch_changes(before, after)
+    if moved:
+        return False, "touched branches that existed before the job: " + ", ".join(moved)
     if rc != 0:
         return False, "dispatch exit %s" % rc
     if needs_commit:
         if before is None or after is None:
             return False, "job expects a commit but cwd is not a git repo (set 'expect: no-commit' if that is intended)"
-        moved = moved_branches(before, after)
-        if not moved:
-            return False, "job expects a commit but no branch moved during the run"
-        return True, "commit on " + ", ".join(m.replace("refs/heads/", "") for m in moved)
+        if not new:
+            return False, "job expects a commit but no new branch was created"
+        return True, "commit on " + ", ".join(new)
     return True, "dispatch exit 0 (no commit expected)"
+
+
+def make_worktree(cwd, name, base):
+    """Fresh detached worktree <repo>-wt-job-<stem> from base. Returns (path, error)."""
+    rc, top = git(cwd, "rev-parse", "--show-toplevel")
+    if rc != 0:
+        return None, "not a git repo"
+    top = os.path.normpath(top.strip().splitlines()[-1])
+    stem = re.sub(r"[^A-Za-z0-9._-]", "-", name[:-3])
+    path = "%s-wt-job-%s" % (top, stem)
+    if os.path.exists(path):
+        return None, "worktree folder already exists: %s (remove it or rename the job)" % path
+    git(cwd, "fetch", "-q", "origin", timeout=300)
+    rc, out = git(cwd, "worktree", "add", "--detach", path, base, timeout=300)
+    if rc != 0:
+        return None, "git worktree add failed: %s" % out.strip()[-300:]
+    return path, None
+
+
+def drop_worktree_if_empty(cwd, path, base_sha):
+    """Remove the job worktree when the brain left no commit and no file change in it."""
+    rc, status = git(path, "status", "--porcelain")
+    rc2, head = git(path, "rev-parse", "HEAD")
+    if rc == 0 and rc2 == 0 and not status.strip() and head.strip() == base_sha:
+        git(cwd, "worktree", "remove", path)
+        return True
+    return False
 
 
 def main():
@@ -112,15 +159,32 @@ def main():
     needs_commit = expects_commit(meta, task)
     before = branch_heads(cwd)
     t0 = time.time()
-    cmd = [sys.executable, DISPATCH, "--brain", brain, "--timeout", str(timeout), "--cwd", cwd, task]
-    env = dict(os.environ, PYTHONIOENCODING="utf-8")
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=timeout + 120)
-        rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
-    except subprocess.TimeoutExpired as e:
-        rc, out = -1, "runner timeout after %ss\n%s" % (timeout + 120, e.stdout if isinstance(e.stdout, str) else "")
+    workdir, wt_note, base_sha = cwd, "", ""
+    if before is not None and (meta.get("isolate") or "yes").lower() != "no":
+        base = meta.get("base") or "origin/main"
+        workdir, err = make_worktree(cwd, name, base)
+        if err:
+            rc, out, workdir = -2, "runner could not prepare an isolated worktree: %s" % err, None
+        else:
+            base_sha = git(workdir, "rev-parse", "HEAD")[1].strip()
+            # 注意書きは本文の後ろに置く（先頭に置くと cf が「これが依頼の全部」と受け取り、作業せずに聞き返した。2026-10-18 実測）
+            task = ("%s\n\n## 作業場所について（job-runner が付けた注意）\n"
+                    "- いまのフォルダ（%s）は %s から作った、このジョブ専用の git worktree。上の作業はすべてここで行う。\n"
+                    "- 「main から作る」「worktree を作る」と書いてあっても、ここで `git checkout -b <ブランチ名>` するだけでよい。\n"
+                    "- ほかのフォルダ・既存のブランチには触れない。push・PR・デプロイはこの環境では通らないので試さない。\n"
+                    % (task, workdir, base))
+    if workdir:
+        cmd = [sys.executable, DISPATCH, "--brain", brain, "--timeout", str(timeout), "--cwd", workdir, task]
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=timeout + 120)
+            rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
+        except subprocess.TimeoutExpired as e:
+            rc, out = -1, "runner timeout after %ss\n%s" % (timeout + 120, e.stdout if isinstance(e.stdout, str) else "")
     sec = time.time() - t0
     ok, reason = classify(rc, out, needs_commit, before, branch_heads(cwd))
+    if workdir and workdir != cwd:
+        wt_note = "removed (nothing left in it)" if drop_worktree_if_empty(cwd, workdir, base_sha) else "kept: %s" % workdir
     log_path = ""
     for ln in out.splitlines():
         if "log=" in ln:
@@ -131,7 +195,8 @@ def main():
     status = "done" if ok else "failed"
     result = ["# result: %s" % name, "", "- status: %s (%s)" % (status, reason),
               "- finished: %s" % time.strftime("%Y-%m-%d %H:%M"), "- elapsed: %.0fs" % sec,
-              "- brain: %s  cwd: %s" % (brain, cwd), "- dispatch exit: %s" % rc, "- expects commit: %s" % needs_commit,
+              "- brain: %s  cwd: %s" % (brain, cwd), "- worktree: %s" % (wt_note or "not isolated"),
+              "- dispatch exit: %s" % rc, "- expects commit: %s" % needs_commit,
               "", "## dispatch output", "```", out.strip(), "```",
               "", "## run log (last 80 lines)", "```", tail, "```"]
     dest = done if ok else failed
