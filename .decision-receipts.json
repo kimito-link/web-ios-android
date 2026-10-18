@@ -415,6 +415,19 @@
         "templates/scripts/loop-adapter-diagnostics.mjs",
         "templates/scripts/lib/loop-pipeline.e2e.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-18T02:17:30.750Z",
+      "responsibility": "loop-runner-orchestration",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/loop-run.mjs",
+        "templates/scripts/lib/loop-run-core.mjs",
+        "templates/scripts/lib/loop-run-core.test.mjs",
+        "templates/scripts/lib/loop-run.e2e.test.mjs",
+        "templates/scripts/lib/loop-test-fixtures.mjs"
+      ]
     }
   ]
 }

@@ -3,6 +3,7 @@
  * loop-adapter-diagnostics.mjs — 自己改善ループの第2のアダプタ: 汎用診断の出力 → 症状カード（どのプロジェクトでも使える）。
  *
  * 使い方: node scripts/diagnostics/run.mjs . 2>&1 | node scripts/loop-adapter-diagnostics.mjs --project <プロジェクト名> [--out <カードの置き場>]
+ *   出力先は --out > 環境変数 LOOP_OUT_DIR（ランナーが渡す）> 既定、の順
  *   （run.mjs は異常があると exit 1/2 だが、ここは標準入力を読むだけなので、パイプの上流の終了コードは見ない）
  *   既定の置き場: _loop/<project>/symptoms/（git 管理外）
  * 守ること: 判定は lib/loop-adapter-diagnostics-core.mjs（検査名の形の語と状態だけを読む）。書く前に症状カード検査（symptom-card-core）を全カードに通し、
@@ -49,7 +50,7 @@ if (bad.length > 0) {
   for (const b of bad) console.error('    ' + b);
   process.exit(EXIT.FAIL);
 }
-const dir = a.out || join('_loop', safeToken(a.project, 'project'), 'symptoms');
+const dir = a.out || process.env.LOOP_OUT_DIR || join('_loop', safeToken(a.project, 'project'), 'symptoms'); // LOOP_OUT_DIR: ランナー(loop-run.mjs)が全アダプタ共通で渡す出力先
 mkdirSync(dir, { recursive: true });
 const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
 for (const c of cards) {

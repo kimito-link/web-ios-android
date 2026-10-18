@@ -1,6 +1,6 @@
 # 自己改善ループ — 全プログラム共通の設計（ローカル専用・100年読める形）
 
-> **今の到達点: 設計完了・MVP 第1・3・4歩（症状カード・提案書の形式検査・承認台帳）まで実装済み。** 2026-10-18。アダプタ（第2歩・拡張側 tsuioku に実装済み）・ローカルAIの提案書づくり（第5歩・動くが質は未達。実測は [`SPEC-loop-propose-v1.md`](SPEC-loop-propose-v1.md)）・第6歩（2つ目の入口＝汎用診断アダプタ。結合テストで通し確認済み）まで。**MVP の6歩は完了**。残りはランナー（一続きに回すもの）と、ローカルAIの質（モデルの選定）。仕様: [`SPEC-symptom-card-v1.md`](SPEC-symptom-card-v1.md)・[`SPEC-loop-ledger-and-proposal-v1.md`](SPEC-loop-ledger-and-proposal-v1.md)。
+> **今の到達点: 設計完了・MVP 第1・3・4歩（症状カード・提案書の形式検査・承認台帳）まで実装済み。** 2026-10-18。アダプタ（第2歩・拡張側 tsuioku に実装済み）・ローカルAIの提案書づくり（第5歩・動くが質は未達。実測は [`SPEC-loop-propose-v1.md`](SPEC-loop-propose-v1.md)）・第6歩（2つ目の入口＝汎用診断アダプタ。結合テストで通し確認済み）まで。**MVP の6歩は完了**。ランナー（一続きに回すもの。[`SPEC-loop-run-v1.md`](SPEC-loop-run-v1.md)）も実装済み。残りは、定期実行の登録と、ローカルAIの質（モデルの選定）。仕様: [`SPEC-symptom-card-v1.md`](SPEC-symptom-card-v1.md)・[`SPEC-loop-ledger-and-proposal-v1.md`](SPEC-loop-ledger-and-proposal-v1.md)。
 > 出どころ: 君斗りんくの追憶のきらめき（Chrome拡張）のセッションで作られた設計案を、本人が貼り付けたもの。横断の仕様は web-ios-android に置く、という設計自身の方針に従い、ここを正本にする。
 > 対象: github/ 配下のすべてのプログラム（Web・iOS・Android・Chrome・Bot・スクリプト）。個別プロジェクトの事情は「アダプタ」に閉じ込め、ループ本体には入れない。
 > 関連: 数値の推移は既存の改善台帳（`templates/scripts/record-improvement.mjs` ほか・`docs/ai-rules/01_CORE_RULES.md`）、頭脳の使い分けは [`MULTI-BRAIN-HOWTO.md`](../docs/ai-workflows/MULTI-BRAIN-HOWTO.md)。

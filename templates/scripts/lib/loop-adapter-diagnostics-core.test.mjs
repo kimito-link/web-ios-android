@@ -1,22 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildCardsFromDiagnostics, idOfCheck, parseDiagnosticsSummary, safeToken } from "./loop-adapter-diagnostics-core.mjs";
+import { SAMPLE } from "./loop-test-fixtures.mjs";
 import { validateSymptomCard } from "./symptom-card-core.mjs";
 
-// run.mjs の実際の出力の形（検査名は実在のもの）。まとめの前後に、本文や診断メッセージが付く。
-export const SAMPLE = `[diagnostics] 対象: C:\\repo
-
-[check-foo] 何かの本文。ファイル名 secret-file.txt や yamada@example.com が出ることもある。
-
---- 診断結果まとめ ---
-✓ check-tracked-imports: pass
-✓ check-lockfile-sync: pass
-✗ check-foo: fail
-? check-bar-baz: unmeasured
-- check-symptom-index: skip
-✓ check-selftest-coverage(scripts): pass
-
-[diagnostics] 1件のチェックで問題を検出。上記の対処を確認してください。
-`;
 const ctx = { project: "demo", version: "1.2.3", now: new Date("2026-10-18T06:00:00Z") };
 
 describe("parseDiagnosticsSummary", () => {

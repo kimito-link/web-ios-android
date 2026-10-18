@@ -1,0 +1,10 @@
+{
+  "project": "your-project",
+  "model": "qwen2.5:7b-instruct",
+  "cwd": ".",
+  "adapter": ["node", "scripts/loop-adapter-diagnostics.mjs", "--project", "your-project"],
+  "source": ["node", "scripts/diagnostics/run.mjs", "."],
+  "glossary": "_loop/your-project/glossary.txt",
+  "repo": ".",
+  "ollama": "http://127.0.0.1:11434"
+}
