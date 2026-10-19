@@ -36,6 +36,7 @@ import {
   checkNoSiblingNamesInCode,
   checkNoStaleCapacitorConfig,
 } from './lib/distinction-checks.mjs';
+import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
   findObfuscationSignals,
@@ -1116,6 +1117,26 @@ if (marketingVersion && /^\d+\.\d+\.\d+$/.test(String(marketingVersion))) {
   }
   report(checkConfigMatchesPlayListing({ playAppId: appConfig?.stores?.playAppId, playStatus, controlStatus }));
   report(checkConfigMatchesIosPublished({ iosPublished: appConfig?.stores?.iosPublished, resultCount }));
+
+  // 33: 改名の取り残し(identity.formerNames に宣言した面に旧名称が残っていないか。宣言が無ければ skip)
+  const formerNames = appConfig?.identity?.formerNames;
+  const formerFiles = [];
+  if (Array.isArray(formerNames)) {
+    const wanted = pathsForSurfaces([...new Set(formerNames.flatMap((e) => (Array.isArray(e?.surfaces) ? e.surfaces : [])))].filter((x) => x in SURFACE_PATHS));
+    const TEXT_EXT = new Set(['.txt', '.md', '.json', '.html', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.plist', '.xml', '.strings']);
+    for (const p of wanted) {
+      const abs = path.join(ROOT, p);
+      if (!fs.existsSync(abs)) continue;
+      const list = fs.statSync(abs).isDirectory() ? walkDir(abs) : [abs];
+      for (const f of list) {
+        const parts = f.split(path.sep);
+        if (parts.includes('node_modules') || parts.includes('.next') || parts.includes('Pods')) continue;
+        if (!TEXT_EXT.has(path.extname(f))) continue;
+        formerFiles.push({ path: path.relative(ROOT, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') });
+      }
+    }
+  }
+  report(checkNoFormerNames({ formerNames, files: formerFiles, displayName: appConfig?.identity?.displayName }));
 }
 
 function hasDistinctionObject(d) {

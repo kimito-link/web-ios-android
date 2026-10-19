@@ -48,7 +48,20 @@
         "appleSiwaServiceId": { "type": ["string", "null"], "description": "Apple Sign in with Apple Service ID, or null if SIWA not configured" },
         "productionDomain": { "type": "string", "format": "hostname" },
         "stagingDomain": { "type": ["string", "null"] },
-        "shortDescription": { "type": "string", "description": "短い説明（ストア掲載・メタ用の1文）" }
+        "shortDescription": { "type": "string", "description": "短い説明（ストア掲載・メタ用の1文）" },
+        "formerNames": {
+          "type": "array",
+          "description": "改名の台帳（2026-10-18）。旧名称と、それを消すべき面。lint-pre-submission の CHECK 33 が、宣言した面に旧名称が残っていないかを調べる。宣言していない面（Web・拡張が旧名のまま意図的に残るなど）は検査しない",
+          "items": {
+            "type": "object",
+            "required": ["name", "surfaces"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "description": "旧名称" },
+              "surfaces": { "type": "array", "minItems": 1, "items": { "enum": ["ios", "android", "web"] }, "description": "旧名称を消すべき面" }
+            }
+          }
+        }
       }
     },
 
