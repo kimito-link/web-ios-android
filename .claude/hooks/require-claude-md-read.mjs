@@ -17,11 +17,11 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
-  findFullReadHash,
+  describeCoverageGap,
+  findReadCoverage,
   findRepoRoot,
   normalizeWindowsPath,
   readStdin,
-  sha256,
 } from './lib/transcript-reads.mjs';
 
 // ★判定部品（transcript の走査・全文Readの組み立て・ハッシュ）は lib/transcript-reads.mjs に1つだけ置く。
@@ -71,19 +71,16 @@ function main() {
   } catch {
     process.exit(0);
   }
-  const currentHash = sha256(currentContent);
-
   const target = resolve(join(repoRoot, 'CLAUDE.md'));
-  const lastReadHash = findFullReadHash(input.transcript_path, target);
-
-  if (lastReadHash === currentHash) {
+  // 行ごとに「今の内容のまま読んだか」を見る。読む順番に左右されず、足りない範囲だけを案内できる。
+  const coverage = findReadCoverage(input.transcript_path, target, currentContent);
+  if (coverage.complete) {
     process.exit(0);
   }
 
-  const reason =
-    lastReadHash === null
-      ? 'このセッションでCLAUDE.mdをまだReadしていません。'
-      : 'CLAUDE.mdが前回Readした時点から更新されています(古い内容のまま作業しようとしています)。';
+  const reason = coverage.readAny
+    ? 'CLAUDE.mdの一部が、未読、または前回Readした後に更新されています(古い内容のまま作業しようとしています)。'
+    : 'このセッションでCLAUDE.mdをまだReadしていません。';
 
   const output = {
     hookSpecificOutput: {
@@ -93,7 +90,8 @@ function main() {
         reason +
         ' 実装系ツールを使う前に、まず ' +
         claudeMdPath +
-        ' をReadしてください（プロジェクトの設計の心臓部）。',
+        ' をReadしてください（プロジェクトの設計の心臓部）。' +
+        describeCoverageGap(coverage),
     },
   };
   process.stdout.write(JSON.stringify(output));

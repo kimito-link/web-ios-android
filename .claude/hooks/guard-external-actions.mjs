@@ -38,11 +38,11 @@ import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  findFullReadHash,
+  describeCoverageGap,
+  findReadCoverage,
   findRepoRoot,
   normalizeWindowsPath,
   readStdin,
-  sha256,
   transcriptTouchedPath,
 } from './lib/transcript-reads.mjs';
 
@@ -255,20 +255,20 @@ function main() {
   // 1. CLAUDE.md を現在の内容のまま全文 Read したか
   const claudeMdPath = join(repoRoot, 'CLAUDE.md');
   if (existsSync(claudeMdPath)) {
-    let currentHash = null;
+    let currentText = null;
     try {
-      currentHash = sha256(readFileSync(claudeMdPath, 'utf8'));
+      currentText = readFileSync(claudeMdPath, 'utf8');
     } catch {
-      currentHash = null;
+      currentText = null;
     }
-    if (currentHash) {
-      const lastReadHash = findFullReadHash(input.transcript_path, resolve(claudeMdPath));
-      if (lastReadHash !== currentHash) {
+    if (currentText !== null) {
+      const coverage = findReadCoverage(input.transcript_path, resolve(claudeMdPath), currentText);
+      if (!coverage.complete) {
         reasons.push(
-          (lastReadHash === null
-            ? 'このセッションで CLAUDE.md を全文 Read していません。'
-            : 'CLAUDE.md が、このセッションで最後に Read した後に更新されています。') +
-            ` ${claudeMdPath} を Read してください（長い場合は offset/limit で分けて全行を）。`
+          (coverage.readAny
+            ? 'CLAUDE.md の一部が、未読、または最後に Read した後に更新されています。'
+            : 'このセッションで CLAUDE.md を Read していません。') +
+            ` ${claudeMdPath} — ${describeCoverageGap(coverage)}`
         );
       }
     }
