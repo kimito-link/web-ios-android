@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Claude 使用量</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#fff; --ink:#14213d; --sub:#5b6b86; --line:#e3e8f1;
+    --track:#e8edf6; --safe:#1f9d6b; --watch:#d98a00; --danger:#d6455d; --accent:#2f6fed; --pace:#14213d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0e1626; --card:#16213a; --ink:#e8eefc; --sub:#9db0d3; --line:#25334f; --track:#22304d; --safe:#3cc38f; --watch:#f0b440; --danger:#ff6b81; --accent:#6c9bff; --pace:#e8eefc; }
+  }
+  :root[data-theme="dark"]{ --bg:#0e1626; --card:#16213a; --ink:#e8eefc; --sub:#9db0d3; --line:#25334f; --track:#22304d; --safe:#3cc38f; --watch:#f0b440; --danger:#ff6b81; --accent:#6c9bff; --pace:#e8eefc; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Yu Gothic UI","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:980px;margin:0 auto;padding:24px 16px 64px}
+  h1{font-size:26px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:14px;margin-bottom:20px}
+  .stale{display:none;background:rgba(214,69,93,.12);border:1px solid var(--danger);color:var(--danger);padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .card h2{font-size:15px;margin:0;color:var(--sub);font-weight:600}
+  .big{font-size:44px;font-weight:800;line-height:1.1;margin:6px 0 2px}
+  .big small{font-size:18px;font-weight:600;color:var(--sub)}
+  .chip{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;vertical-align:middle;margin-left:8px}
+  .chip.safe{background:var(--safe)} .chip.watch{background:var(--watch)} .chip.danger{background:var(--danger)} .chip.unknown{background:var(--sub)}
+  .bar{position:relative;height:18px;background:var(--track);border-radius:9px;margin:14px 0 8px}
+  .bar .fill{height:100%;border-radius:9px;background:var(--safe)}
+  .bar.watch .fill{background:var(--watch)} .bar.danger .fill{background:var(--danger)} .bar.unknown .fill{background:var(--sub)}
+  .bar .pace{position:absolute;top:-5px;bottom:-5px;width:3px;background:var(--pace);border-radius:2px}
+  .legend{font-size:12px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .row{margin-top:10px;font-size:14px}
+  .row b{font-weight:700}
+  .note{color:var(--sub);font-size:13px;margin-top:6px}
+  .chart{margin-top:24px}
+  svg{width:100%;height:auto;display:block}
+  .axis{stroke:var(--line)} .tick{fill:var(--sub);font-size:11px}
+  .help{margin-top:24px;color:var(--sub);font-size:13px}
+  .err{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Claude 使用量</h1>
+  <div class="meta" id="meta">読み込み中…</div>
+  <div class="stale" id="stale"></div>
+  <div class="grid" id="cards"></div>
+  <div class="card chart" id="chartCard" style="display:none">
+    <h2>この1週間の推移（週間・全モデル／Fable／5時間）</h2>
+    <div id="chart"></div>
+    <div class="legend" id="chartLegend"></div>
+  </div>
+  <div class="grid" style="margin-top:16px" id="extra"></div>
+  <p class="help">
+    <b>見方:</b> 色のついた帯が「使った割合」、黒い縦線が「時間がどれだけ過ぎたか」の目安です。
+    帯が縦線より右に出ていると、時間の割に使いすぎ（このままだと枠の終わりより前に上限に達します）。
+    数字は、Claude の会話が動いたときに記録されます。会話が止まっている間は使用量が増えないので、最終更新が古くても、残り時間は今の時刻から計算し直しています。
+  </p>
+</div>
+<script type="module">
+import { WINDOW_MS, paceOf, statusOf } from './usage-history.mjs';
+
+// 使用量データは専用ブランチ(usage-data)の usage.json から読む。ページを作り直さずに更新できる。
+const DATA_URLS = [
+  'https://raw.githubusercontent.com/kimito-link/web-ios-android/usage-data/usage.json',
+  './usage-data.json',
+];
+const LABELS = { five: '5時間の枠', weekly: '週間（全モデル）', fable: '週間（Fable）' };
+const COLORS = { weekly: 'var(--accent)', fable: '#c06bff', five: 'var(--watch)' };
+const $ = (id) => document.getElementById(id);
+
+async function load() {
+  for (const u of DATA_URLS) {
+    try {
+      const r = await fetch(u + (u.startsWith('http') ? '?t=' + Date.now() : ''), { cache: 'no-store' });
+      if (r.ok) return await r.json();
+    } catch { /* 次の取得先へ */ }
+  }
+  return null;
+}
+const fmtDur = (ms) => {
+  if (ms <= 0) return 'まもなく';
+  const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+  return d > 0 ? `${d}日${h}時間` : h > 0 ? `${h}時間${mm}分` : `${mm}分`;
+};
+// resetsAt は 06:59:59.685Z のように1秒手前で来るので、30秒足して分に丸める(15:59 ではなく 16:00 と表示する)
+const fmtAt = (iso) => new Date(new Date(iso).getTime() + 30000).toLocaleString('ja-JP', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+const STATUS_TEXT = { safe: '余裕あり', watch: '注意', danger: '危険', unknown: '不明' };
+
+function card(key, w, now) {
+  const ms = WINDOW_MS[key];
+  const pace = paceOf(w, ms, now);
+  const st = statusOf(w, ms, now);
+  const used = Math.max(0, Math.min(100, w.percentUsed));
+  const resetMs = new Date(w.resetsAt).getTime() - now;
+  const proj = pace.projectedHitAt
+    ? `このペースだと <b>${fmtAt(pace.projectedHitAt)}</b> に上限に達します`
+    : st === 'safe' ? 'このペースなら、枠の終わりまで足ります' : '';
+  const el = Math.max(0, Math.min(100, pace.elapsedPct));
+  return `<div class="card"><h2>${LABELS[key]}</h2>
+    <div class="big">${used}<small>% 使用済み</small><span class="chip ${st}">${STATUS_TEXT[st]}</span></div>
+    <div class="bar ${st}"><div class="fill" style="width:${used}%"></div><div class="pace" style="left:calc(${el}% - 1px)"></div></div>
+    <div class="legend"><span><i style="background:var(--safe)"></i>使った割合</span><span><i style="background:var(--pace)"></i>時間の経過（${Math.round(el)}%）</span></div>
+    <div class="row">回復まで <b>${fmtDur(resetMs)}</b>（${fmtAt(w.resetsAt)}）</div>
+    <div class="row">${proj}</div></div>`;
+}
+
+function chart(history, now) {
+  if (!history || history.length < 2) return '';
+  const W = 900, H = 260, pad = { l: 40, r: 12, t: 12, b: 28 };
+  const t0 = new Date(history[0].t).getTime();
+  const t1 = Math.max(now, new Date(history[history.length - 1].t).getTime());
+  const x = (t) => pad.l + ((t - t0) / Math.max(1, t1 - t0)) * (W - pad.l - pad.r);
+  const y = (v) => pad.t + (1 - v / 100) * (H - pad.t - pad.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="使用量の推移">`;
+  for (const g of [0, 25, 50, 75, 100]) s += `<line class="axis" x1="${pad.l}" x2="${W - pad.r}" y1="${y(g)}" y2="${y(g)}"/><text class="tick" x="${pad.l - 6}" y="${y(g) + 4}" text-anchor="end">${g}%</text>`;
+  const days = Math.ceil((t1 - t0) / 86400000);
+  for (let i = 0; i <= days; i++) {
+    const t = t0 + i * 86400000;
+    if (t > t1) break;
+    s += `<text class="tick" x="${x(t)}" y="${H - 8}" text-anchor="middle">${new Date(t).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}</text>`;
+  }
+  for (const k of ['five', 'fable', 'weekly']) {
+    const pts = history.filter((h) => typeof h[k] === 'number');
+    if (pts.length < 2) continue;
+    // 値が下がった所は枠が回復(リセット)した所。線をつながず、そこで切る。
+    let d = '';
+    pts.forEach((p, i) => {
+      const cmd = i === 0 || p[k] < pts[i - 1][k] - 0.5 ? 'M' : 'L';
+      d += `${cmd}${x(new Date(p.t).getTime()).toFixed(1)},${y(p[k]).toFixed(1)} `;
+    });
+    s += `<path d="${d}" fill="none" stroke="${COLORS[k]}" stroke-width="${k === 'weekly' ? 3 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  return s + '</svg>';
+}
+
+function render(data) {
+  const now = Date.now();
+  const cur = data.current || {};
+  const upd = new Date(data.updatedAt).getTime();
+  const age = now - upd;
+  $('meta').textContent = `${cur.plan || ''} プラン ・ 最終更新 ${fmtDur(age)}前（${new Date(upd).toLocaleString('ja-JP')}）`;
+  if (age > 6 * 3600000) {
+    const el = $('stale');
+    el.style.display = 'block';
+    el.textContent = `記録が ${fmtDur(age)} 止まっています。数字は古い可能性があります（会話が動いていなければ使用量は増えていません）。回復までの時間は今の時刻から計算し直しています。`;
+  }
+  let html = '';
+  for (const k of ['weekly', 'five', 'fable']) if (cur.windows?.[k]) html += card(k, cur.windows[k], now);
+  $('cards').innerHTML = html || '<div class="card err">使用量のデータがありません。</div>';
+  const svg = chart(data.history, now);
+  if (svg) {
+    $('chartCard').style.display = 'block';
+    $('chart').innerHTML = svg;
+    $('chartLegend').innerHTML = ['weekly', 'fable', 'five'].map((k) => `<span><i style="background:${COLORS[k]}"></i>${LABELS[k]}</span>`).join('') + '<span>線が下がる所＝枠が回復した所</span>';
+  }
+  let ex = '';
+  if (cur.context) ex += `<div class="card"><h2>いまの会話の大きさ</h2><div class="big">${cur.context.percentUsed}<small>%</small></div><div class="bar"><div class="fill" style="width:${cur.context.percentUsed}%"></div></div><div class="note">${Number(cur.context.tokensUsed).toLocaleString()} / ${Number(cur.context.contextWindow).toLocaleString()} トークン。大きいほど、1回ごとの処理が重くなります。</div></div>`;
+  if (cur.extra) ex += `<div class="card"><h2>追加使用量</h2><div class="big">${cur.extra.enabled ? '有効' : '無効'}</div><div class="note">使用済み ${cur.extra.spent} ${cur.extra.currency} / 月の上限 ${cur.extra.monthlyLimit} ${cur.extra.currency}</div></div>`;
+  $('extra').innerHTML = ex;
+}
+
+const data = await load();
+if (!data) $('meta').innerHTML = '<span class="err">使用量のデータを読めませんでした。</span>';
+else { render(data); setInterval(() => render(data), 60000); }
+</script>
+</body>
+</html>
