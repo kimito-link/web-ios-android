@@ -91,7 +91,7 @@
     #recent-updates, #north-star, #ios-appstore, #android-play, #chrome-webstore,
     #cant-submit-3times, #multi-session, #parallel-work, #ai-maze, #didnt-change,
     #shared-identity, #header-footer, #secrets-list, #three-agents,
-    #human-work-reduced, #no-need-to-check, #multi-pc-shared-folder, #walkthrough-guide { scroll-margin-top: 72px; }
+    #human-work-reduced, #no-need-to-check, #multi-pc-shared-folder, #stale-carryover, #read-order-hook, #free-llm-paid-plan, #stale-showcase-name, #walkthrough-guide { scroll-margin-top: 72px; }
     @media (max-width: 640px) {
       .page-map ul { grid-template-columns: 1fr; }
     }
@@ -116,6 +116,10 @@
     <section class="recent-updates" id="recent-updates" aria-label="最近の更新">
       <div class="page-map-title">📅 最近の更新</div>
       <ul>
+        <li><time datetime="2026-10-19">2026-10-19</time> <a href="#stale-showcase-name">公開ページの名前が、改名前のままだった話</a> を追加</li>
+        <li><time datetime="2026-10-19">2026-10-19</time> <a href="#free-llm-paid-plan">「無料」のはずの頭脳が、有料契約では課金されると分かった話</a> を追加</li>
+        <li><time datetime="2026-10-18">2026-10-18</time> <a href="#read-order-hook">1300行の指示書を「全部読んだか」で止める門番が、読む順番で結果を変えた話</a> を追加</li>
+        <li><time datetime="2026-10-18">2026-10-18</time> <a href="#stale-carryover">提出の直前、旧い名前とキーワードが審査に出る寸前だった話</a> を追加</li>
         <li><time datetime="2026-09-16">2026-09-16</time> <a href="#multi-pc-shared-folder">「フォルダ名にOneDriveと付いている」だけで同期方式を決めつけた話</a> を追加</li>
         <li><time datetime="2026-09-07">2026-09-07</time> <a href="#near-duplicates">「これ、前にも同じような画面を作った気がする」を機械で見つける話</a> を追加</li>
         <li><time datetime="2026-09-02">2026-09-02</time> <a href="#preflight-proof">証拠が無ければ完了扱いにできない仕組みにした話</a> を追加</li>
@@ -147,6 +151,10 @@
         <li><a href="#human-work-reduced">人がやることが、かなり減った話</a><span>自動化前後で人間の作業がどう変わったか</span></li>
         <li><a href="#no-need-to-check">「見てきて」と頼まなくて済むようにした話</a><span>製品自身が状態を申告する診断計器の実例</span></li>
         <li><a href="#multi-pc-shared-folder">「フォルダ名にOneDriveと付いている」だけで同期方式を決めつけた話</a><span>複数PC共有の実体を実機確認せず2回決めつけた失敗の記録</span></li>
+        <li><a href="#stale-carryover">提出の直前、旧い名前とキーワードが審査に出る寸前だった話</a><span>前の版の値の持ち越しと、提出直前の突き合わせ</span></li>
+        <li><a href="#read-order-hook">1300行の指示書を全部読んだかで止める門番の話</a><span>読む順番で結果が変わった判定と、必読の核</span></li>
+        <li><a href="#free-llm-paid-plan">「無料」のはずの頭脳が有料契約で課金される話</a><span>Cloudflare の無料枠超過と、残量の見える化</span></li>
+        <li><a href="#stale-showcase-name">公開ページの名前が改名前のままだった話</a><span>手書きの一覧は古くなる。計り直して出す</span></li>
         <li><a href="#walkthrough-guide">追体験ガイド</a><span>ストアごとの実画面を追体験できるページへの導線</span></li>
       </ul>
     </nav>
@@ -735,6 +743,72 @@
         ——ノートPC側もZドライブ経由で同じファイルシステムの実体を見ているためです。
         変わったのは「なぜ両PCに伝わるのか」という前提の理解だけでした。
       </p>
+    </div>
+
+    <h2 id="stale-carryover">🧾 提出の直前、旧い名前とキーワードが審査に出る寸前だった話</h2>
+    <div class="card">
+      <!-- 出典: 2026-10-18 malwarecheck の改名提出（App Store Connect を読み取りで確認）。修正は kimito-link/web-ios-android の #83・#84・#85・#90 -->
+      <p>
+        アプリの名前を「マルウェアチェック.site」から「サイト侵害チェック」へ変えて審査に出す直前、
+        <b>App Store Connect（ASC）には旧いキーワード（マルウェア・感染・スキャン）・旧い名前・旧いサブタイトルが
+        残ったまま</b>でした。提出スクリプトが「前の版の値」を「リポのファイルの値」より優先して引き継ぐ作りで、
+        ファイルをどう直しても反映されなかったからです。<b>機械は何も止めず、人が提出の直前に ASC を読み戻して初めて気づきました。</b>
+      </p>
+      <ul>
+        <li>教訓①: <b>正本はリポのファイル。外部サービスの現在値を上に置かない。</b>
+          「前の値を引き継ぐ」は、改名や訴求の変更が原理的に伝わらない</li>
+        <li>教訓②: <b>取り消せない1手（審査への提出）の直前に、意図（リポ）と実態（ASC）を等値で突き合わせる。</b>
+          名前・サブタイトル・説明・キーワード・審査メモ・プライバシーURLが1つでもずれたら、提出しない（<code>appstore-submit.mjs</code> の <code>[7g]</code>）</li>
+        <li>教訓③: 書き込みの失敗を警告で流さない（旧い名前が公開される）。改名の取り残しは台帳（<code>identity.formerNames</code>）で検査し、
+          掲載文の正本ファイルが無いことは IPA を作る<b>前</b>に止める</li>
+        <li>確認のしかた: 実際の ASC に当てて、旧キーワード・旧名・旧サブタイトルが3件の不一致として赤になることを確かめた（毒テスト）</li>
+      </ul>
+    </div>
+
+    <h2 id="read-order-hook">📖 1300行の指示書を「全部読んだか」で止める門番が、読む順番で結果を変えた話</h2>
+    <div class="card">
+      <!-- 出典: 2026-10-18 の作業ログ（guard-external-actions が同じ CLAUDE.md の読み直しを繰り返し要求）。修正は #86（行ごとの判定）・#89（核の切り出し。核 431 行／全体 1337 行） -->
+      <p>
+        取り消せない操作（push・マージ・デプロイ）の前に「CLAUDE.md を現在の内容のまま全文読んだか」を確かめる門番を作りました。
+        ところが指示書は1300行を超え、1回では読めません。分けて読むのですが、<b>1行目から読み直すとそれ以前の読みを捨てる</b>作りで、
+        後半を先に読むと後半が消え、同じ巨大ファイルを何度も読み直す羽目になりました。
+      </p>
+      <ul>
+        <li>対処①: 判定を「行ごとに、最後に読んだ版が今の内容と一致するか」に変え、読む順番に左右されないようにした。拒否文には、足りない行範囲を <code>offset</code>／<code>limit</code> の形で出す</li>
+        <li>対処②: 指示書に <code>core:end</code> マーカーを置き、<b>必読の核（431行）</b>だけを判定対象にした。核が太らないよう、上限450行を機械で見張る</li>
+        <li>教訓: <b>守らせる仕組みのコストは「文書の長さ × 読み直しの回数」。</b>文章のルールを増やすほど、仕組みそのものが「読まない理由」になる。核を小さく保つことも検査の対象にする</li>
+      </ul>
+    </div>
+
+    <h2 id="free-llm-paid-plan">💸 「無料」のはずの頭脳が、有料契約では課金されると分かった話</h2>
+    <div class="card">
+      <!-- 出典: 2026-10-19 Cloudflare 公式 MCP の GraphQL（aiInferenceAdaptiveGroups）と、請求画面のサブスクリプション（Workers Paid・次回更新 10/24）を本人が確認 -->
+      <p>
+        使用量ダッシュボードに各頭脳の残量を出したところ、<b>Grok Build の残高切れ（402）・Alibaba の全6モデルの無料枠切れ・OpenRouter の残高切れが同時に起きて</b>いました。
+        自動の切り替えは Cloudflare まで落ちていました。Cloudflare の公式 MCP で今日（UTC）の使用量を取ると、
+        <b>約72,000 ニューロンで、無料枠 10,000 の約7倍</b>でした。
+      </p>
+      <ul>
+        <li>思い込み: 運用の文書に「超えたら止まる（課金されない）」と書いてあった</li>
+        <li>実際: 請求画面で <b>Workers Paid（有料）契約</b>。超えても止まらず、<b>超過分は従量課金</b>になる</li>
+        <li>対処: 文書を訂正し、<code>dispatch</code> に「今日の無料枠を超えていたら、自動では Cloudflare を飛ばす」ガードを入れた（明示指定は止めない・記録が読めなければ止めない）</li>
+        <li>教訓①: <b>「無料」という言葉を、契約で確かめずに信じない。</b>重い作業は1回で無料枠を超える</li>
+        <li>教訓②: 無料枠は頭脳ごとに別々に切れる。<b>残量を目に見える形にしておかないと、気づいた時には全部切れている</b></li>
+      </ul>
+    </div>
+
+    <h2 id="stale-showcase-name">🏷️ 公開ページの名前が、改名前のままだった話</h2>
+    <div class="card">
+      <!-- 出典: 2026-10-19 site/assets/data/showcase.json（修正は #97）。公開中アプリの稼働は record-site-stats（iTunes 公開 API とサイトへの実アクセス） -->
+      <p>
+        トップページの「実際に使った例」に、改名前の名前「マルウェアチェック.site」と、
+        「マルウェア感染疑いを簡易診断」という<b>旧い説明</b>が残っていました。審査に出した新しい説明（端末のウイルススキャンはしない）と食い違う、
+        公開ページの記載でした。手で書く一覧は、名前も状態も古くなります。
+      </p>
+      <ul>
+        <li>対処: 名前と説明を直し、トップに<b>いま計った数字</b>（公開アプリの稼働・App Store の最新版と最終更新日・今週の実測）を自動で出すようにした</li>
+        <li>教訓: <b>公開してよい状態の記載は、手で書かず、毎回計り直す。</b>文章の主張より、実際にアクセスして確かめた数字のほうが強い証拠になる</li>
+      </ul>
     </div>
 
     <h2 id="walkthrough-guide">追体験ガイド</h2>
