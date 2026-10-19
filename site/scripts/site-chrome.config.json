@@ -20,6 +20,7 @@
     { "href": "/check-shindan-version/", "label": "✅ 更新・動作状況" },
     { "href": "/ai-guide/", "label": "🤖 AI向けガイド" },
     { "href": "/sitemap/", "label": "🗺️ その他の説明" },
+    { "href": "/hub/usage/", "label": "📊 AI運用の状況" },
     { "href": "/hub/", "label": "🔒 作業台（本人専用）" }
   ]
 }

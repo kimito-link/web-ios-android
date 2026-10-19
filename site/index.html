@@ -887,6 +887,9 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 
 </div><!-- /bottom-wrap -->
 
+<!-- いまの AI 運用の状況（使用量・使える頭脳）。中身は scripts/ops-status.js が usage-data ブランチの公開データを読んで描く。読めなければ欄ごと出ない -->
+<div id="ops-status"></div>
+
 <!-- ショーケース（実際に使った例）。中身は showcase.js が assets/data/showcase.json を読んで実行時に描画する（HTML側に個別のカードは書かない） -->
 <div class="showcase-wrap" id="showcase">
   <div class="showcase-title">📱 実際に使った例</div>
@@ -959,6 +962,7 @@ document.addEventListener('click', function (event) {
 <script src="scripts/more-links.js"></script>
 <script src="scripts/auto-list.js"></script>
 <script src="scripts/showcase.js"></script>
+<script src="scripts/ops-status.js"></script>
 <script src="check-shindan-version/summary.js" defer></script>
 
 </body>
