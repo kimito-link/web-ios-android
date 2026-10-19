@@ -199,6 +199,12 @@ jobs:
         with:
           node-version: "22"
 
+      # ★IPA を作る前に、提出前 lint を通す(2026-10-19)。掲載文の正本ファイルが無い・旧名称の取り残し・
+      #   他アプリ名義の混入などを、アップロードや審査提出の後ではなく【前】に止める。lint は依存ゼロ(node のみ)。
+      #   ASC への読み取り検査は LINT_NETWORK 等の設定が要るため、ここでは走らせない(ios-pre-submission-lint.yml が担当)。
+      - name: Pre-submission lint (before building)
+        run: node scripts/lint-pre-submission.mjs
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         # Version inferred from package.json `packageManager`. Do not set

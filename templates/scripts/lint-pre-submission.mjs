@@ -35,7 +35,9 @@ import {
   checkNoMarketingPageScreenshot,
   checkNoSiblingNamesInCode,
   checkNoStaleCapacitorConfig,
+  isUnsetStoreId,
 } from './lib/distinction-checks.mjs';
+import { checkListingSourceFiles, REQUIRED_LISTING_FILES } from './lib/listing-source-files.mjs';
 import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creative-asset-specs.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
@@ -1228,6 +1230,20 @@ function hasDistinctionObject(d) {
   }
   if (!creativeSeen) warn('creative-assets-missing', '2.3.14', `ヘッダー・検索結果の素材の置き場が無い (${creativeDirs.join(', ')})。任意だが商品ページの見え方が上がる。ASC の「ヘッダと検索結果」へ、版が編集できる間(提出前)に上げる(仕様: _docs/creative-assets-header-search.md)`);
   else if (!creativeProblem) ok('creative-assets', '文言に価格・検証できない主張の兆候なし（画像の中身は未検査）');
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 34 — 掲載文の正本ファイル(store-assets/appstore/*.txt)が揃っているか。
+//   提出スクリプトは掲載文をここから読む。無いと前の版の値を引き継ぐか空で公開される(2026-10-18 に旧キーワードが残った事故)。
+//   提出の直前(IPAアップロード後)に止まるのは遅いので、IPA を作る前にここで止める。見るのは「ある・空でない・キーワード100字以内」まで。
+// ----------------------------------------------------------------------------
+{
+  const files = {};
+  for (const [f] of REQUIRED_LISTING_FILES) files[f] = readFile(`store-assets/appstore/${f}`) ?? undefined;
+  const r = checkListingSourceFiles({ files, iosTargeted: !isUnsetStoreId(appConfig?.stores?.ascAppId) });
+  if (r.status === 'ok') ok(r.name, r.detail);
+  else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
+  else skip(r.name, r.detail);
 }
 
 // ----------------------------------------------------------------------------
