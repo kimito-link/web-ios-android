@@ -56,8 +56,8 @@
     },
     {
       "id": "malwarecheck-site",
-      "name": "マルウェアチェック.site",
-      "description": "WebサイトのURLを入れるだけで、マルウェア感染疑いや不審なリダイレクトを簡易診断するサービス。",
+      "name": "サイト侵害チェック",
+      "description": "WebサイトのURLを入れるだけで、セキュリティ設定や公開状態を「外部から」点検するサービス。端末のウイルススキャンはしません。",
       "icon": null,
       "iconEmoji": "🛡️",
       "status": "in_review",
