@@ -187,8 +187,45 @@ def build(brain, task, allowed, model=None):
     return cmd, env, model
 
 
+# Cloudflare Workers AI は、このアカウントでは Workers Paid 契約(2026-10-19 請求画面で確認)。1日 10,000 ニューロンの無料枠を
+# 超えると止まらず従量課金になる。重い作業(1回で無料枠の数倍)を auto が自動で Cloudflare に流すと、気づかず課金が積み上がる。
+# ダッシュボードの記録(使用量を4時間ごとに保存)で、今日(UTC)すでに超えていれば auto では飛ばす。明示的な --brain cf は止めない(警告のみ)。
+# 読めない・古い・日をまたいだ場合は止めない(ダッシュボードの故障で作業を止めない)。環境変数 CF_ALLOW_OVERAGE=1 で常に通す。
+BRAINS_JSON_URL = "https://raw.githubusercontent.com/kimito-link/web-ios-android/usage-data/brains.json"
+CF_RECORD_MAX_AGE_SEC = 12 * 3600
+
+
+def cf_over_budget(now=None, fetch=None):
+    """今日(UTC)の Cloudflare 使用量が無料枠を超えていれば、その理由の文字列。そうでなければ None。"""
+    if os.environ.get("CF_ALLOW_OVERAGE"):
+        return None
+    import datetime
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        raw = (fetch or (lambda u: urllib.request.urlopen(u, timeout=5).read().decode("utf-8")))(BRAINS_JSON_URL)
+        data = json.loads(raw)
+        updated = datetime.datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00"))
+        if updated.date() != now.date() or (now - updated).total_seconds() > CF_RECORD_MAX_AGE_SEC:
+            return None  # 古い・日をまたいだ記録(ニューロンは UTC 0:00 にリセット)は信用しない
+        cf = next(b for b in data["brains"] if b.get("id") == "cf")
+        over = max([g.get("over") or 0 for g in cf.get("gauges", [])] or [0])
+        if over > 0:
+            used = max([g.get("used") or 0 for g in cf.get("gauges", [])] or [0])
+            return f"Cloudflare の今日の無料枠(10,000)を超えている(使用 {used:,}・超過 {over:,})。Workers Paid なので超過分は従量課金。CF_ALLOW_OVERAGE=1 か --brain cf で通せる"
+    except Exception:
+        return None
+    return None
+
+
+ALLOW_CF = False
+
+
 def run_one(brain, task, cwd, allowed, timeout, model=None):
     """Returns (ok, info, output, model). ok is None when the brain was skipped before running."""
+    if brain == "cf" and not ALLOW_CF:
+        reason = cf_over_budget()
+        if reason:
+            return None, reason, "", None
     if brain == "qwen":
         if not ensure_relay():
             return None, "relay down", "", None
@@ -300,8 +337,13 @@ def main():
     ap.add_argument("--allow-outward", action="store_true", help="let the brain git push / use gh / deploy (blocked by default)")
     ap.add_argument("task")
     a = ap.parse_args()
-    global ALLOW_OUTWARD
+    global ALLOW_OUTWARD, ALLOW_CF
     ALLOW_OUTWARD = a.allow_outward
+    ALLOW_CF = a.brain == "cf"  # 明示された cf は止めない(警告だけ)
+    if ALLOW_CF:
+        warn = cf_over_budget()
+        if warn:
+            say(f"[dispatch] WARNING: {warn}")
     chain = (TEXT_CHAIN if a.text else AUTO_CHAIN) if a.brain == "auto" else [a.brain]
     for brain in chain:
         ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)
