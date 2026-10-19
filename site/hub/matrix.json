@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T02:42:05.010Z",
+  "generatedAt": "2026-10-19T10:38:46.753Z",
   "scannedFrom": "github/ 直下ディレクトリの実ファイルスキャン",
   "available": true,
   "gates": [
@@ -135,7 +135,7 @@
     {
       "name": "doin-challenge.com",
       "profile": {
-        "hasCapacitor": true,
+        "hasCapacitor": false,
         "hasExpo": true,
         "hasTwa": false,
         "hasIosDir": false,
@@ -145,11 +145,11 @@
       },
       "cells": {
         "ios-splash": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "android-splash": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "android-signing": {
@@ -157,7 +157,7 @@
           "provenance": "scan"
         },
         "webdir": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "signing-path": {
@@ -195,9 +195,9 @@
       },
       "score": {
         "ok": 3,
-        "applicable": 12
+        "applicable": 9
       },
-      "rowNote": null
+      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
     {
       "name": "kimito-Link-Voice",
@@ -468,6 +468,73 @@
       "rowNote": null
     },
     {
+      "name": "partnership-wt-revit-relay",
+      "profile": {
+        "hasCapacitor": true,
+        "hasExpo": false,
+        "hasTwa": false,
+        "hasIosDir": false,
+        "hasAndroidDir": false,
+        "hasAppConfig": true,
+        "isKitTarget": true
+      },
+      "cells": {
+        "ios-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-splash": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "android-signing": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "webdir": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "signing-path": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "tracked-imports": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "app-config-schema": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "assetlinks": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "instrument-core": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "no-secrets-in-dist": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "missing",
+          "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "missing",
+          "provenance": "scan"
+        }
+      },
+      "score": {
+        "ok": 0,
+        "applicable": 9
+      },
+      "rowNote": null
+    },
+    {
       "name": "resend.kimito-link.com-",
       "profile": {
         "hasCapacitor": true,
@@ -604,7 +671,7 @@
     {
       "name": "surechigai-romi.link",
       "profile": {
-        "hasCapacitor": true,
+        "hasCapacitor": false,
         "hasExpo": true,
         "hasTwa": false,
         "hasIosDir": false,
@@ -614,11 +681,11 @@
       },
       "cells": {
         "ios-splash": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "android-splash": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "android-signing": {
@@ -626,7 +693,7 @@
           "provenance": "scan"
         },
         "webdir": {
-          "state": "missing",
+          "state": "na",
           "provenance": "scan"
         },
         "signing-path": {
@@ -664,9 +731,9 @@
       },
       "score": {
         "ok": 6,
-        "applicable": 12
+        "applicable": 9
       },
-      "rowNote": null
+      "rowNote": "Expo/React Native構成（Capacitor/TWA未使用）"
     },
     {
       "name": "web-health-check-app",
@@ -732,6 +799,73 @@
       "score": {
         "ok": 0,
         "applicable": 12
+      },
+      "rowNote": null
+    },
+    {
+      "name": "web-ios-android-wt-runner",
+      "profile": {
+        "hasCapacitor": false,
+        "hasExpo": false,
+        "hasTwa": false,
+        "hasIosDir": false,
+        "hasAndroidDir": false,
+        "hasAppConfig": true,
+        "isKitTarget": true
+      },
+      "cells": {
+        "ios-splash": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "android-splash": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "android-signing": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "webdir": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "signing-path": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "tracked-imports": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "app-config-schema": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "assetlinks": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "instrument-core": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "no-secrets-in-dist": {
+          "state": "ok",
+          "provenance": "scan"
+        },
+        "hermes-unsafe-imports": {
+          "state": "na",
+          "provenance": "scan"
+        },
+        "root-cause-claim": {
+          "state": "ok",
+          "provenance": "scan"
+        }
+      },
+      "score": {
+        "ok": 5,
+        "applicable": 5
       },
       "rowNote": null
     },
@@ -806,11 +940,11 @@
   "totals": {
     "ios-splash": {
       "ok": 3,
-      "applicable": 9
+      "applicable": 8
     },
     "android-splash": {
       "ok": 2,
-      "applicable": 9
+      "applicable": 8
     },
     "android-signing": {
       "ok": 5,
@@ -818,39 +952,39 @@
     },
     "webdir": {
       "ok": 1,
-      "applicable": 9
+      "applicable": 8
     },
     "signing-path": {
       "ok": 1,
       "applicable": 6
     },
     "tracked-imports": {
-      "ok": 5,
-      "applicable": 11
+      "ok": 6,
+      "applicable": 13
     },
     "app-config-schema": {
-      "ok": 1,
-      "applicable": 11
+      "ok": 2,
+      "applicable": 13
     },
     "assetlinks": {
       "ok": 1,
       "applicable": 6
     },
     "instrument-core": {
-      "ok": 4,
-      "applicable": 11
+      "ok": 5,
+      "applicable": 13
     },
     "no-secrets-in-dist": {
-      "ok": 2,
-      "applicable": 11
+      "ok": 3,
+      "applicable": 13
     },
     "hermes-unsafe-imports": {
       "ok": 2,
-      "applicable": 9
+      "applicable": 10
     },
     "root-cause-claim": {
-      "ok": 2,
-      "applicable": 11
+      "ok": 3,
+      "applicable": 13
     }
   },
   "scan": {
@@ -870,18 +1004,25 @@
       "best-trust.biz",
       "characterlive",
       "docs",
+      "Exosome",
       "gmail-secretary-extension",
+      "hackllm",
       "henshin-hisho",
       "kimito-link-reply-suggest",
       "line-bot",
+      "line-bot-wt-funnel",
       "manus",
+      "Openclaw",
       "Orca",
       "ouenmovie",
       "parterprogram",
       "patents",
       "removal",
+      "reverse-re-birth-hack.com",
       "reviewcheck.jp",
       "soushin-suggest.link",
+      "surechigai-nico",
+      "T3MP3ST",
       "tegiwai-video",
       "works",
       "x-block-checker",
