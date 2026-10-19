@@ -170,7 +170,7 @@ function build(runs, P) {
   const nz = readCfNeurons();
   const cfGauges = nz ? [gauge('今日の無料枠(ニューロン)', Math.max(0, CF_FREE_NEURONS_PER_DAY - nz.totalNeurons), CF_FREE_NEURONS_PER_DAY, '', { over: Math.max(0, Math.round(nz.totalNeurons - CF_FREE_NEURONS_PER_DAY)), used: Math.round(nz.totalNeurons), resetNote: '毎日 日本時間 9:00 にリセット(UTC 0:00)' })] : [];
   if (nz && nz.totalNeurons > CF_FREE_NEURONS_PER_DAY && cfSt.status === 'ok') cfSt.label = '使えるが、今日は無料枠を超えて使っている';
-  brains.push({ id: 'cf', label: 'Cloudflare Workers AI', kind: 'free', role: 'agent', ...S(cfSt), gauges: cfGauges, note: nz ? `今日(UTC)の合計 ${Math.round(nz.totalNeurons).toLocaleString()} ニューロン(最大のモデル: ${nz.topModel || '?'})。無料枠は1日 10,000 で、超えた分は従量課金になる契約の場合があります(契約は権限が無く確認できません)。` : '1日 10,000 ニューロンの無料枠。今日の使用量はまだ取得できていません(予約タスクが Cloudflare の MCP で取得します)。使えるかどうかだけ確認しています。', lastRun: lastRunOf('cf') });
+  brains.push({ id: 'cf', label: 'Cloudflare Workers AI', kind: 'free', role: 'agent', ...S(cfSt), gauges: cfGauges, note: nz ? `今日(UTC)の合計 ${Math.round(nz.totalNeurons).toLocaleString()} ニューロン(最大のモデル: ${nz.topModel || '?'})。無料枠は1日 10,000 で、契約は Workers Paid(2026-10-19 に請求画面で確認。次回更新 10/24)なので、超えた分は従量課金です。` : '1日 10,000 ニューロンの無料枠。今日の使用量はまだ取得できていません(予約タスクが Cloudflare の MCP で取得します)。使えるかどうかだけ確認しています。', lastRun: lastRunOf('cf') });
 
   // NVIDIA / Mistral
   for (const [id, label, p, note] of [['nvidia', 'NVIDIA NIM', P.nvidia, '無料の評価枠(毎分40回ほど)。残量は取得できません。'], ['mistral', 'Mistral Codestral', P.mistral, '毎月の無料枠。残量は取得できません。']]) {
