@@ -36,6 +36,7 @@ import {
   checkNoSiblingNamesInCode,
   checkNoStaleCapacitorConfig,
 } from './lib/distinction-checks.mjs';
+import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creative-asset-specs.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
@@ -1206,11 +1207,26 @@ function hasDistinctionObject(d) {
         warn('creative-assets-claims', '2.3.14', `${rel}: ${claim.join(' / ')}。検証できない主張は載せられない。出典を示せないなら外す`);
       }
     }
+    // ヘッダー(header.*)・検索結果(search-results.* / search.*)の画像は、寸法・形式・透明度を Apple の仕様と照らす。
+    const seenKinds = new Set();
+    for (const f of images) {
+      const kind = kindFromFileName(path.basename(f));
+      if (!kind || !/\.(png|jpe?g)$/i.test(f)) continue;
+      seenKinds.add(kind);
+      const problems = checkCreativeImage(kind, readImageInfo(fs.readFileSync(f)));
+      for (const m of problems) {
+        creativeProblem = true;
+        fail('creative-assets-spec', '2.3.14', `${path.relative(ROOT, f)}: ${m}`);
+      }
+    }
+    for (const [kind, label] of [['header', '商品ページヘッダー(header.png/.jpg)'], ['search', '検索結果(search-results.png/.jpg)']]) {
+      if (!seenKinds.has(kind)) warn('creative-assets-missing', '2.3.14', `${label}が ${dir} に無い。任意だが商品ページの見え方が上がる。ASC の「ヘッダと検索結果」へ、版が編集できる間(提出前)に上げる(仕様: _docs/creative-assets-header-search.md)`);
+    }
     if (images.length > 0) {
       warn('creative-assets-images', '2.3.14', `${images.length}点の画像/動画は文字を機械で読めない。価格・割引・他アプリへの言及・全年齢に不適切な内容が無いか、目視で確認する`);
     }
   }
-  if (!creativeSeen) skip('creative-assets', `クリエイティブアセットのディレクトリが無い (${creativeDirs.join(', ')})`);
+  if (!creativeSeen) warn('creative-assets-missing', '2.3.14', `ヘッダー・検索結果の素材の置き場が無い (${creativeDirs.join(', ')})。任意だが商品ページの見え方が上がる。ASC の「ヘッダと検索結果」へ、版が編集できる間(提出前)に上げる(仕様: _docs/creative-assets-header-search.md)`);
   else if (!creativeProblem) ok('creative-assets', '文言に価格・検証できない主張の兆候なし（画像の中身は未検査）');
 }
 
