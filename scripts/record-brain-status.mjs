@@ -14,26 +14,15 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { initBranch, writeFile } from './lib/data-branch.mjs';
-import { classifyHttp, logLooksFailed, parseRunLogName, statusOfBrain, summarizeRuns } from './lib/brain-status-core.mjs';
+import { classifyHttp, statusOfBrain, summarizeRuns } from './lib/brain-status-core.mjs';
+import { readDispatchConfig, readRunLogs } from './lib/dispatch-runs.mjs';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const E = process.env;
 const TIMEOUT = 20000;
 
-// ---- dispatch.py から設定を読む(正本は dispatch.py。ここに複製しない) -------------------------------
-const py = fs.readFileSync(path.join(ROOT, 'docs/ai-workflows/tools/dispatch.py'), 'utf8');
-const pyList = (name) => {
-  const m = new RegExp(`^${name} = \\[([\\s\\S]*?)\\]`, 'm').exec(py);
-  return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
-};
-const QWEN_CHAIN = pyList('QWEN_CHAIN');
-const GEMINI_CHAIN = pyList('GEMINI_CHAIN');
-const AUTO_CHAIN = pyList('AUTO_CHAIN');
-const TEXT_CHAIN = pyList('TEXT_CHAIN');
-const FAIL_MARKS = pyList('FAIL_MARKS');
-const ALIBABA_BASE = /^ALIBABA_OPENAI = "([^"]+)"/m.exec(py)?.[1];
+// ---- dispatch.py から設定を読む(正本は dispatch.py。lib/dispatch-runs.mjs が読む。ここに複製しない) ----
+const { QWEN_CHAIN, GEMINI_CHAIN, AUTO_CHAIN, TEXT_CHAIN, FAIL_MARKS, ALIBABA_BASE } = readDispatchConfig();
 
 // ---- 小道具 ------------------------------------------------------------------------------------
 async function http(url, opts = {}) {
@@ -50,29 +39,8 @@ const bearer = (k) => ({ authorization: `Bearer ${k}` });
 const S = (o) => ({ status: o.status, statusLabel: o.label });
 const gauge = (label, remaining, total, unit, extra = {}) => ({ label, remaining, total, unit, pct: total > 0 ? Math.max(0, Math.min(100, Math.round((remaining / total) * 100))) : null, ...extra });
 
-// ---- 実行ログ(dispatch.py が書く)から、頭脳ごとの直近の成否を出す -----------------------------------
-function recentRuns() {
-  const dir = path.join(E.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'llm-proxy', 'runs');
-  const by = {};
-  if (!fs.existsSync(dir)) return by;
-  const files = fs.readdirSync(dir).map((n) => ({ n, p: parseRunLogName(n) })).filter((x) => x.p).sort((a, b) => (a.p.at < b.p.at ? 1 : -1)).slice(0, 400);
-  for (const { n, p } of files) {
-    const list = (by[p.brain] ||= []);
-    if (list.length >= 12) continue;
-    let text = '';
-    try {
-      const fd = fs.openSync(path.join(dir, n), 'r');
-      const size = fs.fstatSync(fd).size;
-      const buf = Buffer.alloc(Math.min(size, 6000));
-      fs.readSync(fd, buf, 0, buf.length, Math.max(0, size - buf.length));
-      fs.closeSync(fd);
-      text = buf.toString('utf8');
-    } catch { /* 読めないログは数えない */ }
-    const mark = FAIL_MARKS.find((m) => text.includes(m));
-    list.push({ at: p.at, ok: !logLooksFailed(text, FAIL_MARKS), reason: mark || null });
-  }
-  return by;
-}
+// ---- 実行ログ(dispatch.py が書く)から、頭脳ごとの直近の成否を出す ----
+const recentRuns = () => readRunLogs({ failMarks: FAIL_MARKS });
 
 // ---- 確認(1トークン以下) -----------------------------------------------------------------------
 async function probeAlibaba() {
