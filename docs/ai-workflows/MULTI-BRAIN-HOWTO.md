@@ -129,6 +129,9 @@ Qwen / Cloudflare / ローカルへ振り分ける**前**に、まずこの段�
 - データは専用ブランチ `usage-data` の `usage.json`（ページとは別。再デプロイ不要で更新できる）。ページは公開・`noindex`（載せるのは割合と回復時刻だけ。鍵・会話内容は載せない）
 - 記録のしかた: `get_usage` の出力を `node scripts/record-usage-snapshot.mjs < usage.json` に渡す（初回は `--init`）。Claude の会話が動いたときだけ使用量は増えるので、**区切りで1回記録すれば足りる**
 - 「危険」は、今のペースが続くと枠の終わりより前に100%へ届く場合（時間の割に使いすぎ）。Claude 自身の「木曜の夜に上限」の警告と一致することを確認済み
+- **頭脳の状況（無料API・従量API・ローカルLLM）も同じページに出す**（2026-10-19）。`node scripts/record-brain-status.mjs` が、Alibaba（モデルごと）・Gemini（モデルごと）・Cloudflare・Groq（応答ヘッダの残量）・OpenRouter（残高 $）・NVIDIA・Mistral・ローカル（Ollama・GPUメモリ）を1トークン以下で確認して `brains.json` に保存する。Grok Build は確認の口が無いので実行ログの最新結果で判定。
+  残量をゲージにできるのは、Groq（今日のリクエスト・1分のトークン）、OpenRouter（残高）、Alibaba/Gemini（使えるモデルの数）、ローカル（GPUメモリの空き）。Cloudflare・NVIDIA・Mistral・Grok は残量の数字を取得できない（権限や口が無い）ので、使えるかどうかだけ。
+  ★2026-10-19 の実測: Grok Build 残高切れ(402)・Alibaba 全6モデルの無料枠切れ・OpenRouter 残高切れ($30 を使い切り)が重なり、`--brain auto` は Cloudflare まで落ちていた。順序・モデル鎖・失敗の合図は `dispatch.py` を読む（複製しない）
 - 判定の中身は `site/hub/usage/usage-history.mjs`（純関数・テスト20件）。★この関数群は無料LLM（Cloudflare Qwen3.8-27B）に仕様書を渡して書かせ、テストが通ることで合格にした（§1b の運用の最初の実例）。
   複数行のタスクを引数に直接渡すと最初の1行しか届かない（実測）ので、**仕様はファイルに書き、「このファイルを読んで実装して」と1行で渡す**
 
