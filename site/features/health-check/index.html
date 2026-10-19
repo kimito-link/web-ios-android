@@ -352,6 +352,11 @@
           <td><code>check-file-header-comment</code></td>
           <td>★<b>新しく追加したソースファイルの先頭に、役割・使い方・なぜ要るかのコメントが無い状態</b>を数えます。<b>新規だけ</b>が対象で、既存ファイルは見ません。コメントの中身が正しいかは、機械では見られないので判定しません。</td>
         </tr>
+        <!-- 出典: templates/diagnostics/check-claude-md-budget.mjs（2026-10-19追加・指示書の核の肥大化の機械検査。1300行超を全文読ませる判定が高コストだった実損から） -->
+        <tr>
+          <td><code>check-claude-md-budget</code></td>
+          <td>★<b>指示書(CLAUDE.md)の「必ず読む核」が太りすぎている状態</b>を数えます。<code>core:end</code> マーカーまでの行数が上限(450行)を超えると赤。マーカーが無いプロジェクトは対象外です。核に入れる内容の良し悪しは見ません。</td>
+        </tr>
       </table>
 
       <div class="code-block">

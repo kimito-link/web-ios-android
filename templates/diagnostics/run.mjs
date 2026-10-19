@@ -188,6 +188,9 @@ const CHECKS = [
   //   ★新規ファイルだけを赤くする（既存は触るときに足す。一括修正はコメントの質を落とす）。
   //   ★コメントの中身の正しさは機械では見ない（意味判断。レビューに残す）。
   { name: 'check-file-header-comment', path: join(__dirname, 'check-file-header-comment.mjs') },
+  // ★指示書(CLAUDE.md)の「必読の核」が肥大化していないか(2026-10-19追加)。核の宣言(<!-- core:end)が無いリポは対象外。
+  //   1300行超の指示書を全文読ませる判定が高コストだった実損から、核を小さく保つ上限(既定450行)を機械で守る。
+  { name: 'check-claude-md-budget', path: join(__dirname, 'check-claude-md-budget.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);

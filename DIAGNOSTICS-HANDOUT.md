@@ -56,6 +56,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-external-constants-freshness` | **外の誰かが決めた数字（API単価・無料枠・審査要件など）をコードに写したまま古くなっている**もの（人が最後に確かめた日だけを見張る。請求APIは読まない） |
 | `check-auth-domains-allowed` | **アプリ内ログインが外部ブラウザへ飛ぶ設定**（Capacitor の `allowNavigation` に、使っているログイン手段のドメインが無い。iOS で「ログインを押した瞬間にアプリの外へ出る」）。使っていない手段は要求しない |
 | `check-file-header-comment` | **新しく追加したソースの先頭に、役割・使い方・なぜ要るかのコメントが無い**もの（新規だけ。既存は対象外。コメントの中身の正しさは見ない） |
+| `check-claude-md-budget` | **指示書(CLAUDE.md)の「必読の核」が太りすぎ**ているもの(`<!-- core:end` までの行数が上限450行を超える。核の宣言が無いリポは対象外。内容の良し悪しは見ない) |
 
 ## いちばん大事な設計：3値で答えます
 

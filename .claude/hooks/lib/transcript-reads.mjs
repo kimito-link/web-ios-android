@@ -158,10 +158,20 @@ function latestLinesByNumber(chunks) {
 //   complete … 今のファイルの全行について、このセッションで読んだ最新の版が今の内容と一致している。
 //   staleOrUnread … 読んでいない行、または読んだ後に書き換わった行の範囲(Read の offset/limit にそのまま使える)。
 // ★判定するのは「その行の中身を、今の内容のまま目にした」まで。理解したか・従うかは検出できない。
-export function findReadCoverage(transcriptPathRaw, targetPath, currentText) {
+// 指示書の「必読の核」の範囲。行頭が `<!-- core:end` の行(マーカー)までを核とし、それ以降は判定対象にしない。
+// マーカーが無いファイル(他プロジェクトの CLAUDE.md など)は、従来どおり全行が対象。
+// なぜ: 1300行超の指示書を全文読ませる判定は、1行足すたびに全員が大量に読み直す高コストになる(2026-10-18 実測)。
+//   必ず読む核を小さく保ち、残りはその作業のときだけ読む、という運用を hook が支える。
+export function coreLinesOf(text) {
+  const lines = normalizeNewlines(text).split('\n');
+  const at = lines.findIndex((l) => /^<!--\s*core:end\b/.test(l));
+  return at < 0 ? lines : lines.slice(0, at + 1);
+}
+
+export function findReadCoverage(transcriptPathRaw, targetPath, currentText, { coreOnly = true } = {}) {
   const chunks = collectReadChunks(transcriptPathRaw, targetPath);
   const byNumber = latestLinesByNumber(chunks);
-  const currentLines = normalizeNewlines(currentText).split('\n');
+  const currentLines = coreOnly ? coreLinesOf(currentText) : normalizeNewlines(currentText).split('\n');
   const ranges = [];
   let open = null;
   for (let i = 0; i < currentLines.length; i++) {

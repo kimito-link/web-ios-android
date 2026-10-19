@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { describeCoverageGap, findReadCoverage } from "./transcript-reads.mjs";
+import { coreLinesOf, describeCoverageGap, findReadCoverage } from "./transcript-reads.mjs";
 
 // 合成した会話ログ: Read の tool_use と tool_result(行番号付き)を並べる。
 const TARGET = resolve(join(tmpdir(), "CLAUDE.md"));
@@ -72,5 +72,29 @@ describe("describeCoverageGap（拒否文に出す案内）", () => {
     expect(msg).toContain("offset=800");
     expect(msg).toContain("全文を読み直す必要はありません");
     expect(msg).toContain("計 500 行");
+  });
+});
+
+describe("核マーカー(core:end)", () => {
+  const withMarker = [...lines(6), "<!-- core:end — ここまでが核 -->", ...lines(4, (i) => `核の外${i}`)].join("\n");
+  const head = (k) => withMarker.split("\n").slice(0, k);
+  it("マーカーが無ければ全行が対象(他プロジェクトの CLAUDE.md は従来どおり)", () => {
+    expect(coreLinesOf(lines(10).join("\n"))).toHaveLength(10);
+  });
+  it("マーカーの行までが核。それ以降は対象外", () => {
+    expect(coreLinesOf(withMarker)).toHaveLength(7);
+  });
+  it("核だけ読めば complete(核の外を読んでいなくてよい)", () => {
+    expect(findReadCoverage(transcript([{ start: 1, lines: head(7) }]), TARGET, withMarker).complete).toBe(true);
+  });
+  it("核の中が未読なら、核の範囲だけを案内する(核の外は含めない)", () => {
+    expect(findReadCoverage(transcript([{ start: 1, lines: head(3) }]), TARGET, withMarker).staleOrUnread).toEqual([[4, 7]]);
+  });
+  it("核の外が書き換わっても、核を読んでいれば通る(巨大な後半を読み直させない)", () => {
+    const t = transcript([{ start: 1, lines: head(7) }]);
+    expect(findReadCoverage(t, TARGET, withMarker.replace("核の外2", "核の外・書き換え")).complete).toBe(true);
+  });
+  it("coreOnly:false なら全行を要求する", () => {
+    expect(findReadCoverage(transcript([{ start: 1, lines: head(7) }]), TARGET, withMarker, { coreOnly: false }).complete).toBe(false);
   });
 });
