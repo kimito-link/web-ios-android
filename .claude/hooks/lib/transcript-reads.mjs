@@ -109,7 +109,9 @@ export function collectReadChunks(transcriptPathRaw, targetPath) {
         const rawContent = typeof block.content === 'string' ? block.content : null;
         if (!rawContent) continue;
         const startLine = rawFirstLineNumber(rawContent);
-        if (startLine === 1) chunks = []; // 先頭から読み直した＝それ以前の分は古い
+        // 以前は「1行目から読み直したら過去の分を捨てる」としていたが、読む順番で結果が変わり
+        // (後半を先に読んでから前半を読むと後半が消える)、巨大ファイルを何度も読み直す羽目になった(2026-10-18)。
+        // 古さは行ごとに判定する(findReadCoverage)。ここでは読んだ順に全部残す。
         chunks.push({ startLine, stripped: stripLineNumbers(rawContent) });
       }
     }
@@ -122,13 +124,9 @@ export function collectReadChunks(transcriptPathRaw, targetPath) {
 export function assembleFullText(chunks) {
   if (chunks.length === 0) return null;
   if (chunks.length === 1 && chunks[0].startLine === 1) return chunks[0].stripped;
-  const sorted = chunks.slice().sort((a, b) => (a.startLine || 0) - (b.startLine || 0));
-  if (sorted[0].startLine !== 1) return null;
-  const linesByNumber = new Map();
-  for (const chunk of sorted) {
-    if (chunk.startLine === null) return null;
-    chunk.stripped.split('\n').forEach((lineText, idx) => linesByNumber.set(chunk.startLine + idx, lineText));
-  }
+  if (chunks.some((c) => c.startLine === null)) return null;
+  const linesByNumber = latestLinesByNumber(chunks);
+  if (!linesByNumber.has(1)) return null;
   const maxLine = Math.max(...linesByNumber.keys());
   const assembled = [];
   for (let i = 1; i <= maxLine; i++) {
@@ -142,6 +140,57 @@ export function assembleFullText(chunks) {
 export function findFullReadHash(transcriptPathRaw, targetPath) {
   const fullText = assembleFullText(collectReadChunks(transcriptPathRaw, targetPath));
   return fullText === null ? null : sha256(fullText);
+}
+
+// 読んだ行の「最新の版」を行番号ごとに持つ。同じ行を複数回読んでいれば、あとから読んだ方が勝つ。
+// 巨大ファイルを複数回に分けて読む運用(25000 トークン上限)で、読む順番に結果が左右されないようにする。
+function latestLinesByNumber(chunks) {
+  const byNumber = new Map();
+  for (const chunk of chunks) {
+    if (chunk.startLine === null || chunk.startLine === undefined) continue;
+    chunk.stripped.split('\n').forEach((lineText, idx) => byNumber.set(chunk.startLine + idx, lineText));
+  }
+  return byNumber;
+}
+
+// 現在のファイル内容に対して、「読んだ行が今の内容と一致している」行の被覆を調べる。
+// 返り値: { complete, readAny, staleOrUnread: [[開始行, 終了行], ...] }。
+//   complete … 今のファイルの全行について、このセッションで読んだ最新の版が今の内容と一致している。
+//   staleOrUnread … 読んでいない行、または読んだ後に書き換わった行の範囲(Read の offset/limit にそのまま使える)。
+// ★判定するのは「その行の中身を、今の内容のまま目にした」まで。理解したか・従うかは検出できない。
+export function findReadCoverage(transcriptPathRaw, targetPath, currentText) {
+  const chunks = collectReadChunks(transcriptPathRaw, targetPath);
+  const byNumber = latestLinesByNumber(chunks);
+  const currentLines = normalizeNewlines(currentText).split('\n');
+  const ranges = [];
+  let open = null;
+  for (let i = 0; i < currentLines.length; i++) {
+    const lineNo = i + 1;
+    const fresh = byNumber.has(lineNo) && byNumber.get(lineNo) === currentLines[i];
+    if (fresh) {
+      if (open) {
+        ranges.push([open, lineNo - 1]);
+        open = null;
+      }
+    } else if (!open) {
+      open = lineNo;
+    }
+  }
+  if (open) ranges.push([open, currentLines.length]);
+  return { complete: ranges.length === 0, readAny: byNumber.size > 0, staleOrUnread: ranges };
+}
+
+// 拒否文に入れる「あと何行・どこを読めばよいか」。長い範囲は Read の1回上限に収まるよう分けて示す。
+export function describeCoverageGap(coverage, chunkLines = 400) {
+  const total = coverage.staleOrUnread.reduce((acc, [x, y]) => acc + (y - x + 1), 0);
+  const parts = [];
+  for (const [first, last] of coverage.staleOrUnread) {
+    for (let from = first; from <= last; from += chunkLines) {
+      parts.push(`offset=${from - 1}（${from}〜${Math.min(last, from + chunkLines - 1)}行）`);
+    }
+  }
+  const shown = parts.slice(0, 6).join(' / ');
+  return `未読または読んだ後に書き換わった行が計 ${total} 行あります。その範囲だけ Read してください: ${shown}${parts.length > 6 ? ' ほか' : ''}（limit=${chunkLines}）。全文を読み直す必要はありません。`;
 }
 
 // 「このセッションで、その文字列に触れたか」の事実だけを見る（tool_use の入力に含まれるか）。
