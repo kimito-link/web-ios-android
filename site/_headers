@@ -1,2 +1,6 @@
 /hub/*
   X-Robots-Tag: noindex, nofollow
+
+# トップの『AI運用の状況』欄。更新が早く反映されるよう、短くキャッシュする(他の scripts は既定の4時間)
+/scripts/ops-status.js
+  Cache-Control: public, max-age=300, must-revalidate
