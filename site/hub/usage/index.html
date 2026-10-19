@@ -211,7 +211,11 @@ function gaugeHtml(g) {
   const tone = pct >= 50 ? 'good' : pct >= 20 ? 'mid' : 'low';
   const fmt = (n) => (g.decimals != null ? Number(n).toFixed(g.decimals) : Number(n).toLocaleString());
   const items = g.items ? `<div class="items">${g.items.map((i) => `<span class="${i.state}">${esc(i.name)}</span>`).join('')}</div>` : '';
-  return `<div class="g"><div class="gl"><span>${esc(g.label)}</span><b>残り ${fmt(g.remaining)} / ${fmt(g.total)} ${esc(g.unit)}（${pct}%）</b></div><div class="bar"><div class="fill ${tone}" style="width:${pct}%"></div></div>${items}</div>`;
+  if (g.over > 0) {
+    // 無料枠を超えて使っている。帯は満杯の赤で、超えた量を出す。
+    return `<div class="g"><div class="gl"><span>${esc(g.label)}</span><b style="color:var(--danger)">無料枠 ${fmt(g.total)} を ${fmt(g.over)} 超過（使用 ${fmt(g.used)}）</b></div><div class="bar"><div class="fill low" style="width:100%"></div></div><div class="note">${esc(g.resetNote || '')}</div></div>`;
+  }
+  return `<div class="g"><div class="gl"><span>${esc(g.label)}</span><b>残り ${fmt(g.remaining)} / ${fmt(g.total)} ${esc(g.unit)}（${pct}%）</b></div><div class="bar"><div class="fill ${tone}" style="width:${pct}%"></div></div>${items}${g.resetNote ? `<div class="note">${esc(g.resetNote)}</div>` : ''}</div>`;
 }
 function brainCard(b) {
   const last = b.lastRun;

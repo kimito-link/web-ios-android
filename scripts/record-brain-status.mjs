@@ -132,6 +132,18 @@ async function probeLocal() {
   return out;
 }
 
+// Cloudflare の「今日使ったニューロン」は、スクリプトからは取れない(トークンに分析の権限が無い)ので、
+// Cloudflare 公式 MCP を使える Claude の予約タスクが取得して、このファイルに書く。古ければ使わない。
+const CF_FREE_NEURONS_PER_DAY = 10000;
+function readCfNeurons() {
+  const p = process.env.CF_NEURONS_FILE || path.join(os.tmpdir(), 'cf-neurons.json');
+  try {
+    const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!Number.isFinite(d.totalNeurons) || Date.now() - Date.parse(d.fetchedAt) > 8 * 3600000) return null;
+    return d;
+  } catch { return null; }
+}
+
 // ---- まとめる ----------------------------------------------------------------------------------
 const REASON_LABEL = { 'usage balance exhausted': '残高切れ(402)', 'Payment Required': '残高切れ(402)', 'Free quota exhausted': '無料枠切れ', insufficient_quota: '無料枠切れ', 'rate limit': '混み合い', RESOURCE_EXHAUSTED: '枠切れ', 'quota exceeded': '枠切れ', 'auto-rejecting': '権限で止まった' };
 
@@ -155,7 +167,10 @@ function build(runs, P) {
 
   // Cloudflare
   const cfSt = !P.cloudflare.hasKey ? statusOfBrain({ hasKey: false }) : statusOfBrain({ hasKey: true, probe: P.cloudflare.state });
-  brains.push({ id: 'cf', label: 'Cloudflare Workers AI', kind: 'free', role: 'agent', ...S(cfSt), gauges: [], note: '1日 10,000 ニューロンの無料枠。残量は取得できません(アカウント分析の権限が無い)。使えるかどうかだけ確認しています。', lastRun: lastRunOf('cf') });
+  const nz = readCfNeurons();
+  const cfGauges = nz ? [gauge('今日の無料枠(ニューロン)', Math.max(0, CF_FREE_NEURONS_PER_DAY - nz.totalNeurons), CF_FREE_NEURONS_PER_DAY, '', { over: Math.max(0, Math.round(nz.totalNeurons - CF_FREE_NEURONS_PER_DAY)), used: Math.round(nz.totalNeurons), resetNote: '毎日 日本時間 9:00 にリセット(UTC 0:00)' })] : [];
+  if (nz && nz.totalNeurons > CF_FREE_NEURONS_PER_DAY && cfSt.status === 'ok') cfSt.label = '使えるが、今日は無料枠を超えて使っている';
+  brains.push({ id: 'cf', label: 'Cloudflare Workers AI', kind: 'free', role: 'agent', ...S(cfSt), gauges: cfGauges, note: nz ? `今日(UTC)の合計 ${Math.round(nz.totalNeurons).toLocaleString()} ニューロン(最大のモデル: ${nz.topModel || '?'})。無料枠は1日 10,000 で、超えた分は従量課金になる契約の場合があります(契約は権限が無く確認できません)。` : '1日 10,000 ニューロンの無料枠。今日の使用量はまだ取得できていません(予約タスクが Cloudflare の MCP で取得します)。使えるかどうかだけ確認しています。', lastRun: lastRunOf('cf') });
 
   // NVIDIA / Mistral
   for (const [id, label, p, note] of [['nvidia', 'NVIDIA NIM', P.nvidia, '無料の評価枠(毎分40回ほど)。残量は取得できません。'], ['mistral', 'Mistral Codestral', P.mistral, '毎月の無料枠。残量は取得できません。']]) {
