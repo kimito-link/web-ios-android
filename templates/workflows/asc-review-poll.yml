@@ -22,7 +22,8 @@
 # ── このテンプレの使い方 ──────────────────────────────────────────
 # 1. このファイルをアプリリポの `.github/workflows/asc-review-poll.yml` にコピー。
 # 2. 下の <APP_BUNDLE_ID> を app.config.json identity.bundleId で置換。
-# 3. scripts/asc-review-check.mjs を partnership からコピー。
+# 3. scripts/asc-review-check.mjs と scripts/lib/asc-status-transition.mjs(審査の進み具合の通知。P5)をコピー。
+#    審査中・承認・公開は『[ASC status] <bundleId>』という1つの issue へのコメントで通知する(状態は issue 本文の目印に保存。追加 secret 不要)。
 #
 # ── 必要な GitHub Secrets ────────────────────────────────────────
 #   APPSTORE_CONNECT_KEY_ID             ASC API Key ID
@@ -185,3 +186,46 @@ jobs:
                 }
               }
             }
+
+      # 審査の進み具合(審査中 / 承認 / 公開)を、前回の状態との差分で通知する。
+      # 状態は『[ASC status] <bundleId>』issue の本文に目印ブロックで保存する(外部の保存先・追加 secret 不要)。
+      # 却下系は上の step が扱うので、ここでは通知しない。初回は基準を記録するだけで通知しない。
+      - name: Notify review progress (in review / approved / live)
+        if: ${{ success() }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const { diffStates, isSettled, parseStateBlock, renderStateBlock } =
+              await import(`${process.env.GITHUB_WORKSPACE}/scripts/lib/asc-status-transition.mjs`);
+            const report = JSON.parse(fs.readFileSync('rejection-report.json', 'utf8'));
+            if (!report.appId || !Array.isArray(report.currentStates) || report.currentStates.length === 0) {
+              core.info('No states to track.');
+              return;
+            }
+            const title = `[ASC status] ${report.bundleId}`;
+            const { owner, repo } = context.repo;
+            const found = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue in:title "${title}"`,
+            });
+            const existing = found.data.items.find((i) => i.title === title);
+            const block = renderStateBlock(report.currentStates);
+            const link = `https://appstoreconnect.apple.com/apps/${report.appId}/distribution/reviewsubmissions`;
+            const bodyOf = (note) => [`審査の進み具合の自動記録です(\`${report.bundleId}\`)。`, `ASC: ${link}`, '', note, '', block].join('\n');
+
+            if (!existing) {
+              await github.rest.issues.create({ owner, repo, title, labels: ['asc-status'], body: bodyOf('初回の基準を記録しました。以後、状態が変わるとコメントします。') });
+              core.info('Created baseline status issue (no notification).');
+              return;
+            }
+            const events = diffStates(parseStateBlock(existing.body), report.currentStates);
+            for (const e of events) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.number,
+                body: `${e.kind === 'live' ? '🎉' : e.kind === 'approved' ? '✅' : '🔎'} **${e.versionString}** (${e.platform}): ${e.label}\n\n\`${e.from ?? '(新規)'}\` → \`${e.to}\`\n${link}`,
+              });
+              core.info(`Commented: ${e.versionString} ${e.from} -> ${e.to}`);
+            }
+            const settled = isSettled(report.currentStates);
+            const noteLine = settled ? '全ての版が公開済みです。この監視は終了しました。' : '状態が変わるとコメントします。';
+            await github.rest.issues.update({ owner, repo, issue_number: existing.number, body: bodyOf(noteLine), state: settled ? 'closed' : 'open' });

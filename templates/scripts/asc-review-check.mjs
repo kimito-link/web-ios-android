@@ -16,7 +16,7 @@
 //   env APP_BUNDLE_ID (省略時は app.config.json の identity.bundleId)
 //
 // Outputs (stdout):
-//   {"appId":"...","bundleId":"...","rejections":[{...}],"timestamp":"..."}
+//   {"appId":"...","bundleId":"...","rejections":[{...}],"currentStates":[{versionString,state,platform}],"timestamp":"..."}
 //
 // Exit codes:
 //   0 = ran successfully (rejections list may be empty)
@@ -28,6 +28,9 @@ import { loadAppConfig } from './lib/app-config.mjs';
 
 const APP_CONFIG = loadAppConfig();
 const BUNDLE_ID = process.env.APP_BUNDLE_ID || APP_CONFIG.identity.bundleId;
+
+// 役目を終えた版(置き換え済み・販売停止)。状態の監視からは外す。
+const INACTIVE_STATES = new Set(['REPLACED_WITH_NEW_VERSION', 'REMOVED_FROM_SALE', 'DEVELOPER_REMOVED_FROM_SALE']);
 
 const REJECT_STATES = new Set([
   'REJECTED',
@@ -70,6 +73,7 @@ function emit(report) {
       bundleId: BUNDLE_ID,
       appId: null,
       rejections: [],
+      currentStates: [],
       timestamp: new Date().toISOString(),
       note: 'no_app_record_yet',
     });
@@ -97,6 +101,10 @@ function emit(report) {
     appId: app.id,
     appName: app.attributes?.name || null,
     rejections,
+    // 審査の進み具合(審査中・承認・公開)の通知用。却下系は rejections 側で扱う。
+    currentStates: versions
+      .filter((v) => !INACTIVE_STATES.has(v.appStoreState))
+      .map((v) => ({ versionString: v.versionString, state: v.appStoreState, platform: v.platform })),
     timestamp: new Date().toISOString(),
   });
 })().catch((e) => {
