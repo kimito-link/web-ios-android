@@ -1,5 +1,5 @@
 // 役割: トップページに「いまの AI 運用の状況」を小さく出す(使用量のゲージ・使える頭脳の数・いま最初に使われる頭脳)と、
-//   「実測の証拠」(今週の開発の数字・公開アプリの稼働と最新版)。
+//   「実測の証拠」(今週の開発の数字・公開アプリの稼働と最新版)と、「最新の事故と教訓」(/learnings/ の『最近の更新』から自動)。
 // なぜ要るか: 詳しいダッシュボード(/hub/usage/)はあるが、トップページから辿れず「情報がまったく無いように見える」状態だった(2026-10-19 本人の指摘)。
 //   入口と要点だけをここに置き、くわしくは /hub/usage/ へ送る。
 // 使い方: index.html に <div id="ops-status"></div> を置き、このスクリプトを読み込む。データは専用ブランチ usage-data の
@@ -24,12 +24,23 @@
     '.ops-tile{background:#f5f7fb;border-radius:10px;padding:8px 10px}.ops-tile b{display:block;font-size:20px;line-height:1.2}.ops-tile span{font-size:11px;color:#5b6b86}' +
     '.ops-apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 12px;font-size:12px}' +
     '.ops-app{display:flex;gap:6px;align-items:baseline}.ops-dot{width:8px;height:8px;border-radius:50%;background:#1f9d6b;flex:none;transform:translateY(-1px)}.ops-dot.ng{background:#d6455d}' +
-    '.ops-app small{color:#5b6b86}';
+    '.ops-app small{color:#5b6b86}' +
+    '.ops-news{list-style:none;margin:0;padding:0;font-size:13px}.ops-news li{margin:4px 0}.ops-news time{color:#888;font-size:11px;margin-right:6px}';
   function get(name) {
     return fetch(BASE + name + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
-  Promise.all([get('usage.json'), get('brains.json'), import('/hub/usage/usage-history.mjs'), get('stats.json')]).then(function (res) {
-    var usage = res[0], brains = res[1], lib = res[2], stats = res[3];
+  // 最新の事故と教訓: /learnings/ の『最近の更新』(機械検査される正本)の先頭3件を、そのまま読む。手で二重管理しない。
+  function getNews() {
+    return fetch('/learnings/', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      return Array.prototype.slice.call(doc.querySelectorAll('#recent-updates li')).slice(0, 3).map(function (li) {
+        var a = li.querySelector('a'), t = li.querySelector('time');
+        return a && t ? { date: t.getAttribute('datetime'), title: a.textContent, href: '/learnings/' + a.getAttribute('href') } : null;
+      }).filter(Boolean);
+    }).catch(function () { return []; });
+  }
+  Promise.all([get('usage.json'), get('brains.json'), import('/hub/usage/usage-history.mjs'), get('stats.json'), getNews()]).then(function (res) {
+    var usage = res[0], brains = res[1], lib = res[2], stats = res[3], news = res[4];
     if (!usage || !usage.current || !usage.current.windows) return;
     var now = Date.now(), w = usage.current.windows;
     var TXT = { safe: '余裕あり', watch: '注意', danger: '危険' };
@@ -67,6 +78,11 @@
         var store = a.store ? '　<small>App Store v' + a.store.version + '・' + fmtDate(a.store.updatedAt) + ' 更新</small>' : '';
         return '<div class="ops-app"><i class="ops-dot' + (ok ? '' : ' ng') + '"></i><span>' + a.name.replace(/</g, '&lt;') + (ok ? '' : '（応答なし）') + store + '</span></div>';
       }).join('') + '</div>';
+    }
+    if (news && news.length) {
+      proof += '<div class="ops-h">📚 最新の事故と教訓（失敗を、検査に変えた記録）</div><ul class="ops-news">' + news.map(function (n) {
+        return '<li><time>' + n.date + '</time><a href="' + n.href + '">' + n.title.replace(/</g, '&lt;') + '</a></li>';
+      }).join('') + '</ul><a class="ops-more" href="/learnings/">事故と教訓をすべて見る →</a><br>';
     }
     var style = document.createElement('style');
     style.textContent = css;
