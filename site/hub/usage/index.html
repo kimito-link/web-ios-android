@@ -41,6 +41,28 @@
   .axis{stroke:var(--line)} .tick{fill:var(--sub);font-size:11px}
   .help{margin-top:24px;color:var(--sub);font-size:13px}
   .err{color:var(--danger)}
+  h2.sec{font-size:20px;margin:36px 0 6px}
+  .secsub{color:var(--sub);font-size:13px;margin:0 0 14px}
+  .next{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:14px;font-size:15px}
+  .next b{font-weight:800}
+  .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:12px}
+  .chain .c{padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--bg)}
+  .chain .c.ok{border-color:var(--safe);color:var(--safe);font-weight:700}
+  .chain .c.next{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:800}
+  .kind{font-size:11px;font-weight:700;padding:1px 8px;border-radius:6px;background:var(--track);color:var(--sub);margin-left:6px;vertical-align:middle}
+  .chip.ok{background:var(--safe)}
+  .chip.quota,.chip.badkey,.chip.down,.chip.nokey{background:var(--danger)}
+  .chip.rate,.chip.degraded{background:var(--watch)}
+  .g{margin-top:12px}
+  .g .gl{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 10px;font-size:13px;margin-bottom:4px}
+  .g .gl b{font-weight:700}
+  .g .bar{height:14px;margin:0}
+  .g .bar .fill.good{background:var(--safe)} .g .bar .fill.mid{background:var(--watch)} .g .bar .fill.low{background:var(--danger)}
+  .dots{display:inline-flex;gap:3px;vertical-align:middle;margin-left:6px}
+  .dots i{width:9px;height:9px;border-radius:50%;background:var(--safe)} .dots i.f{background:var(--danger)}
+  .items{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .items span{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--track);color:var(--sub)}
+  .items span.ok{background:rgba(31,157,107,.18);color:var(--safe)} .items span.quota{background:rgba(214,69,93,.18);color:var(--danger)}
 </style>
 </head>
 <body>
@@ -55,6 +77,10 @@
     <div class="legend" id="chartLegend"></div>
   </div>
   <div class="grid" style="margin-top:16px" id="extra"></div>
+  <h2 class="sec">頭脳の状況（無料API・従量API・ローカルLLM）</h2>
+  <p class="secsub" id="brainsMeta">読み込み中…</p>
+  <div class="next" id="brainsNext" style="display:none"></div>
+  <div class="grid" id="brains"></div>
   <p class="help">
     <b>見方:</b> 色のついた帯が「使った割合」、黒い縦線が「時間がどれだけ過ぎたか」の目安です。
     帯が縦線より右に出ていると、時間の割に使いすぎ（このままだと枠の終わりより前に上限に達します）。
@@ -72,6 +98,19 @@ const DATA_URLS = [
 const LABELS = { five: '5時間の枠', weekly: '週間（全モデル）', fable: '週間（Fable）' };
 const COLORS = { weekly: 'var(--accent)', fable: '#c06bff', five: 'var(--watch)' };
 const $ = (id) => document.getElementById(id);
+const BRAINS_URLS = [
+  'https://raw.githubusercontent.com/kimito-link/web-ios-android/usage-data/brains.json',
+  './brains-data.json',
+];
+async function loadBrains() {
+  for (const u of BRAINS_URLS) {
+    try {
+      const r = await fetch(u + (u.startsWith('http') ? '?t=' + Date.now() : ''), { cache: 'no-store' });
+      if (r.ok) return await r.json();
+    } catch { /* 次の取得先へ */ }
+  }
+  return null;
+}
 
 async function load() {
   for (const u of DATA_URLS) {
@@ -164,7 +203,40 @@ function render(data) {
   $('extra').innerHTML = ex;
 }
 
+const KIND_TEXT = { free: '無料', paid: '従量', local: 'ローカル', subscription: '契約' };
+const ST_TEXT = { ok: '使える', quota: '枠切れ', rate: '混雑', badkey: '鍵エラー', down: '停止', nokey: '鍵なし', degraded: '直近失敗', unknown: '不明' };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function gaugeHtml(g) {
+  const pct = g.pct ?? 0;
+  const tone = pct >= 50 ? 'good' : pct >= 20 ? 'mid' : 'low';
+  const fmt = (n) => (g.decimals != null ? Number(n).toFixed(g.decimals) : Number(n).toLocaleString());
+  const items = g.items ? `<div class="items">${g.items.map((i) => `<span class="${i.state}">${esc(i.name)}</span>`).join('')}</div>` : '';
+  return `<div class="g"><div class="gl"><span>${esc(g.label)}</span><b>残り ${fmt(g.remaining)} / ${fmt(g.total)} ${esc(g.unit)}（${pct}%）</b></div><div class="bar"><div class="fill ${tone}" style="width:${pct}%"></div></div>${items}</div>`;
+}
+function brainCard(b) {
+  const last = b.lastRun;
+  const dots = last?.recent?.length ? `<span class="dots" title="直近の実行（左が新しい）">${last.recent.map((ok) => `<i class="${ok ? '' : 'f'}"></i>`).join('')}</span>` : '';
+  const lastTxt = last ? `<div class="row note">直近の実行: ${last.ok ? '成功' : '失敗' + (last.reason ? '（' + esc(last.reason) + '）' : '')}（${fmtDur(Date.now() - new Date(last.at).getTime())}前）${dots}</div>` : '';
+  const gs = (b.gauges || []).map(gaugeHtml).join('') || '<div class="note">残量の数字は取得できません。</div>';
+  return `<div class="card"><h2>${esc(b.label)}<span class="kind">${KIND_TEXT[b.kind] || ''}${b.role === 'text' ? '・文章専用' : ''}</span></h2>
+    <div style="margin-top:6px"><span class="chip ${b.status}" style="margin-left:0">${ST_TEXT[b.status] || ''}</span> <span style="font-size:14px">${esc(b.statusLabel && b.statusLabel !== ST_TEXT[b.status] && b.statusLabel !== '使える' ? b.statusLabel : '')}</span></div>
+    ${gs}${lastTxt}<div class="note">${esc(b.note)}</div></div>`;
+}
+function renderBrains(d) {
+  if (!d) { $('brainsMeta').innerHTML = '<span class="err">頭脳の状況を読めませんでした。</span>'; return; }
+  const age = Date.now() - new Date(d.updatedAt).getTime();
+  $('brainsMeta').textContent = `最終確認 ${fmtDur(age)}前（${new Date(d.updatedAt).toLocaleString('ja-JP')}）。ゲージは「あとどれくらい使えるか」です。`;
+  const byId = Object.fromEntries(d.brains.map((b) => [b.id, b]));
+  const chip = (id) => `<span class="c ${id === d.next.agent ? 'next' : byId[id]?.status === 'ok' ? 'ok' : ''}">${esc(byId[id]?.label || id)}</span>`;
+  const nx = $('brainsNext');
+  nx.style.display = 'block';
+  nx.innerHTML = `いま、仕事を任せると最初に使われる頭脳: <b>${esc(d.nextLabels.agent || '（使える頭脳がありません）')}</b>　／　文章だけなら <b>${esc(d.nextLabels.text || '（なし）')}</b>
+    <div class="chain">自動の順番: ${d.chain.agent.map(chip).join(' → ')}</div>`;
+  $('brains').innerHTML = d.brains.map(brainCard).join('');
+}
+
 const data = await load();
+renderBrains(await loadBrains());
 if (!data) $('meta').innerHTML = '<span class="err">使用量のデータを読めませんでした。</span>';
 else { render(data); setInterval(() => render(data), 60000); }
 </script>
