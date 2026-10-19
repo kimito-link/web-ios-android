@@ -38,6 +38,10 @@ window.SITE_CHROME_CONFIG = {
       "label": "🗺️ その他の説明"
     },
     {
+      "href": "/hub/usage/",
+      "label": "📊 AI運用の状況"
+    },
+    {
       "href": "/hub/",
       "label": "🔒 作業台（本人専用）"
     }
