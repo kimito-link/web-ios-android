@@ -629,6 +629,15 @@ call-before-ask heuristic（AskUserQuestion呼び出し前に調査系ツール�
 ★これは新しい文書フォーマットを増やす話ではない。既存の`-DESIGN.md`／
 `-IMPLEMENTATION-HANDOFF.md`の型に、この5点を必ず含める、という運用の締め付けにすぎない。
 
+## ★有料APIを使う機能は「使われるほど黒字」の式を先に書く（2026-10-19確立）
+
+正本: `ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md`（ここにコピーしない）。
+きっかけ: バズった診断サイトが1日1万円を溶かした実例。全製品を監査したら9製品に同じ穴があった（正本 §7）。
+
+- **攻め（§A）**: 1回の原価 c・1人あたりの固定の無料枠 F・有料パック P/N を数字で決め、損益分岐の課金率 `r* = F×c ÷ 粗利` を書く。人数が増えるほど利益が比例して増える形にする。無料枠は「人」（ログイン）に付け、匿名には原価ゼロのもの（保存済みの結果・キャッシュ）か、全体で1日固定の予算だけを出す。
+- **守り（§3）**: 提供元の物理上限（鍵ごと）→ キルスイッチ → 呼ぶ前の日次予算の予約（fail-closed。見本 `kimitolink-linktree/lib/server/ouen/budget.ts`）→ 永続キャッシュと存在確認を先に → 1人あたり上限 → 止まったら正直に表示（未取得を良好と言わない）。
+- **機械検査**: `node ai-hub/bin/cost-scan.mjs`（守りの無い有料呼び出しを数える。`--list` で file:line、`--fail-over 0` で CI）。予約を別ファイルで行う場合はリポ直下の `.cost-guard.json` に場所を書く。
+
 ## このリポの2つの役割（2026-08-26追記）
 ①アプリ提出自動化キット（本項以下、このファイルの主題）②kimito-skill.linkの玄関——`site/hub/`が`../ai-hub/index.json`を読んで生成する横断知見ダッシュボード（`npm run hub:page`）。横断知見の正本は常に`../ai-hub`。このリポはai-hubを動かさず窓口を被せるだけ（設計: `_docs/DESIGN-ai-hub-consolidation-2026-08-26.md`）。
 
