@@ -146,6 +146,7 @@ AGY_PREAMBLE = ("Headless run. Create and edit files only with your file-editing
 AGY_OK_STATUS = "SUCCESS"
 # Antigravity の枠は「Claude・GPT」と「Gemini」で別（各5時間＋週）。2026-10-21 実測で Claude 側が週の上限に達し
 # RESOURCE_EXHAUSTED(429, 残り81時間)になった。そのときは Gemini 側の一番賢いモデルで1回だけやり直す。
+# ★同日 gemini-3.8-flash も同じ残り時間で 429 だった＝枠が共通の可能性あり。やり直しは数秒で失敗するだけなので残す。
 AGY_FALLBACK_MODEL = "gemini-4-argon-medium"
 
 
