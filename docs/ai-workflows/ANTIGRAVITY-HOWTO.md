@@ -101,6 +101,7 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 - 他の頭脳と同じ `block_outward`（`pushInsteadOf` で push 先を潰す・gh 等のトークンを無効化）が掛かる。
 - 終了コード0だけでは成功にしない。JSON の最後の `status` が `SUCCESS` のときだけ成功（opencode が何もせず0で終わった前例）。
 - `auto` の順番には入れない（有料の Google 枠・allow は PC ごと）。明示の `--brain agy` のときだけ動く。
+- Claude・GPT 側の枠が尽きて `RESOURCE_EXHAUSTED`（429）なら、Gemini 側の `gemini-4-argon-medium` で1回だけやり直す（2026-10-21 実測: 週の上限に達し、残り81時間と出た）。
 
 使う前の確認:
 

@@ -143,7 +143,15 @@ AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTI
 # （https://antigravity.google/docs/permissions?tab=cli）。ファイルは編集ツールで、コマンドは1つずつ出させる。
 AGY_PREAMBLE = ("Headless run. Create and edit files only with your file-editing tools, never with shell commands or redirects. "
                 "Run shell commands one per tool call; never chain them with ; && || or pipes.\n\n")
-AGY_OK_STATUS = "SUCCESS"  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
+AGY_OK_STATUS = "SUCCESS"
+# Antigravity の枠は「Claude・GPT」と「Gemini」で別（各5時間＋週）。2026-10-21 実測で Claude 側が週の上限に達し
+# RESOURCE_EXHAUSTED(429, 残り81時間)になった。そのときは Gemini 側の一番賢いモデルで1回だけやり直す。
+AGY_FALLBACK_MODEL = "gemini-4-argon-medium"
+
+
+def agy_pool_exhausted(out, model):
+    """Claude/GPT pool hit its limit, so the Gemini pool may still have room."""
+    return "RESOURCE_EXHAUSTED" in out and not (model or "").startswith("gemini-")  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
 
 
 def agy_exe():
@@ -390,6 +398,9 @@ def main():
     chain = (TEXT_CHAIN if a.text else AUTO_CHAIN) if a.brain == "auto" else [a.brain]
     for brain in chain:
         ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)
+        if brain == "agy" and ok is False and agy_pool_exhausted(out, model):
+            say(f"[dispatch] agy {model}: quota exhausted ({info}); retrying on the Gemini pool with {AGY_FALLBACK_MODEL}")
+            ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], AGY_FALLBACK_MODEL)
         if ok is None:
             say(f"[dispatch] {brain}: skipped ({info})")
             continue

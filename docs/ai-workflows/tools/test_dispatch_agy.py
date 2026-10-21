@@ -59,6 +59,13 @@ class AgyStatus(unittest.TestCase):
     def test_empty_denied_list_is_fine(self):
         self.assertFalse(dispatch.agy_denied('{"status":"SUCCESS","denied_actions":[]}'))
 
+    def test_claude_pool_exhaustion_falls_back_to_gemini(self):
+        out = 'AGY_ERROR: {"status":"RESOURCE_EXHAUSTED","error_code":429}'  # 2026-10-21 PC 実測の形
+        self.assertTrue(dispatch.agy_pool_exhausted(out, "claude-opus-5-5-medium"))
+        self.assertFalse(dispatch.agy_pool_exhausted(out, "gemini-4-argon-medium"))  # Gemini 側も尽きたらやり直さない
+        self.assertFalse(dispatch.agy_pool_exhausted('{"status":"ERROR"}', "claude-opus-5-5-medium"))
+        self.assertTrue(dispatch.AGY_FALLBACK_MODEL.startswith("gemini-"))
+
     def test_no_json_is_none(self):
         self.assertIsNone(dispatch.agy_status("plain text, rc 0"))
 
