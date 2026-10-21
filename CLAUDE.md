@@ -61,7 +61,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 |---|---|---|
 | 非交渉ルール・4基準・5類型 | このファイル（`CLAUDE.md`） | 公開 |
 | 規則本文 | [`docs/ai-rules/`](docs/ai-rules/) | 公開 |
-| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
+| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14 ／ **デザイン名前の翻訳**＝曖昧な見た目依頼を定着したデザイン用語に翻訳し3方向を出す・[`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md)） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
 | 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
