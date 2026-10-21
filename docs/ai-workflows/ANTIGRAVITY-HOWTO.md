@@ -1,6 +1,6 @@
 # Antigravity 活用HOWTO — 正本
 
-**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡し・鍵は完了／段階2=`agy` 自動呼び出しは PC で未確認）。**
+**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡し・鍵は完了、PC 実測済み（agy 1.2.14）／段階2=`agy` 自動呼び出しは未実装）。**
 今後Antigravityに実装作業を委ねるときはこの1枚を読み、書式を流用する。コピーは作らない（散らすと同期がずれて事故る）。
 
 - 設計: 司令塔。日付: 2026-09-08
@@ -25,12 +25,12 @@
 
 | 項目 | 事実 |
 |---|---|
-| コマンドライン版 | `agy` がある。`agy -p "..."` で1回実行して終わる（headless）。`--model <slug>`・`--output-format json`（`status`/`response`/`usage`）・失敗時は非0終了。slug は `agy models` で見る（[headless](https://antigravity.google/docs/cli/headless/)） |
+| コマンドライン版 | `agy` がある。`agy -p "..."` で1回実行して終わる（headless）。`--model <slug>`・`--output-format json`（`status`/`response`/`usage`）・失敗時は非0終了。slug は `agy models` で見る（[headless](https://antigravity.google/docs/cli/headless/)）。★PC 実測（2026-10-21・agy 1.2.14）: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-{…}`・`gemini-4-argon-{…}`・`gemini-3.8-flash-{…}`・`gpt-oss-120b-medium` |
 | 読むルール | `AGENTS.md`・`GEMINI.md`・`.agents/rules/*.md` だけ。**CLAUDE.md は読まない**。触るファイルの階層からワークスペースのルートまで遡って読む。全体用は `~/.gemini/AGENTS.md`。1ファイル24KB・常時ルール合計2万トークンまで（[rules](https://antigravity.google/docs/rules/)） |
 | モデル（Pro・有料・トライアル以外） | Claude Opus 5.5 / Sonnet 5.5（Thinking）、Gemini 4 Argon（**IDE では使えず、アプリと CLI のみ**）、Gemini 3.8 Flash。**Opus 4.6・Sonnet 4.6・GPT-OSS 120B は 2026-11-02 に廃止**（[models](https://antigravity.google/docs/models/)） |
 | 使用枠 | 「Gemini」と「Claude・GPT」の2つの財布。それぞれ5時間ごと＋週ごとの上限。**Claude Code の週間上限とは別**。超過は「AI Credit Overages」（Never/Always）で AI クレジット払い（[plans](https://antigravity.google/docs/plans/)）。残りは `/usage` |
 | Turbo | モデルではなく**権限の設定**。サンドボックス無し・コマンド無制限・全ファイル書き込み可（[permissions](https://antigravity.google/docs/permissions/)） |
-| 権限 | `~/.gemini/antigravity-cli/settings.json` の `permissions.allow/ask/deny`（書式 `command(...)` 等、優先は Deny > Ask > Allow）。headless では Ask は自動で拒否され、終了コードは0のまま（[permissions](https://antigravity.google/docs/permissions/)・[headless](https://antigravity.google/docs/cli/headless/)） |
+| 権限 | 公式ドキュメントは `~/.gemini/antigravity-cli/settings.json` の `permissions.allow/ask/deny` と書く（書式 `command(...)` 等、優先は Deny > Ask > Allow）。★**PC 実測ではそのファイルは無く、実際の置き場は `~/.gemini/config/config.json` の `userSettings.globalPermissionGrants.allow/deny`**（agy 1.2.14。下の「鍵」）。headless では Ask は自動で拒否され、終了コードは0のまま（[permissions](https://antigravity.google/docs/permissions/)・[headless](https://antigravity.google/docs/cli/headless/)） |
 | 検証向け機能 | `/browser <task>`（ブラウザ担当の子エージェントで画面確認）、`/planning`、`/goal`（[CLI reference](https://antigravity.google/docs/cli/reference/)） |
 
 ## 役割分担（2026-10-21 りんくさん承認・段階導入）
@@ -61,13 +61,16 @@ Claude の週間上限は「判断・検品・外へ出す操作」だけに使�
 Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。Turbo のままだと Antigravity は**キットのルールを知らず、`git push` もデプロイも止まらない**。次の2つで塞ぐ。
 
 1. **ルールの橋渡し**: リポ直下の [`AGENTS.md`](../../AGENTS.md)（CLAUDE.md を core:end まで読め・外向き操作禁止・ハンドオフ契約・handoff.md へ報告、の入口だけ）。
-   ほかのリポにも効かせるため、**PC の `~/.gemini/AGENTS.md` にも同じ内容を置く**（パスは `../web-ios-android/CLAUDE.md` に読み替える）。PC ローカルで git に載らないので、新しい PC では手で足す。
-2. **鍵（拒否リスト）**: `~/.gemini/antigravity-cli/settings.json` に次を入れる（Deny は Allow より優先＝Turbo でも止まる想定）。
+   ほかのリポにも効かせるため、**PC の `~/.gemini/AGENTS.md` にも同じ内容を置く**（CLAUDE.md 等のパスは絶対パスに読み替える）。PC ローカルで git に載らないので、新しい PC では手で足す。
+   ★PC 実測（2026-10-21）: 置いた `~/.gemini/AGENTS.md` は **headless でも自動で読まれた**。`agy -p` に push を頼むと、AGENTS.md の「絶対にしないこと」を引用して自分で断った（ツール呼び出し0回）。
+2. **鍵（拒否リスト）**: `~/.gemini/config/config.json` の `userSettings.globalPermissionGrants.deny` に次を足す（先にバックアップ。既存の allow/deny は残す）。
+   ★公式ドキュメントの `~/.gemini/antigravity-cli/settings.json` は agy 1.2.14 の PC には存在しなかった。新しい PC では、まず `config.json` 側を見る。
 
 ```json
 {
-  "permissions": {
-    "deny": [
+  "userSettings": {
+    "globalPermissionGrants": {
+      "deny": [
       "command(git push)",
       "command(gh pr merge)",
       "command(gh secret)",
@@ -77,21 +80,23 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
       "command(wrangler deploy)",
       "command(npm run deploy:site)",
       "command(npm publish)"
-    ]
+      ]
+    }
   }
 }
 ```
 
-- ★公式ドキュメントには `git push` を**拒否**する例が無い（許可の例 `command(git push)` / `unsandboxed(git push)` はある）。書式どおりなので効くはずだが、**PC で実際に `git push` させて弾かれるのを確かめるまでは「未確認」**。IDE・アプリの Turbo にこの CLI 設定が効くかも未確認。
-- 「AI Credit Overages」は **Never** のままにする（自動で呼ぶ以上、枠切れで止まる方が安全。`ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md` と同じ考え方）。
+- ★**鍵そのものが効くかは未確認**（2026-10-21 PC 実測）。使い捨てリポで AGENTS.md を外して push を頼んだが、止まった理由は「headless では許可を聞けないので自動拒否」で、deny ルールではなかった。Turbo（`--dangerously-skip-permissions` 相当）で deny だけが効くかは、本人の手元で1回試すまで分からない。**それまでは AGENTS.md と headless の自動拒否が実際の守り**。
+- ★その PC の初期設定は `artifactReviewMode=TURBO`・自動実行 `EAGER`・terminal sandbox off で、allow に過去の `git push origin <ブランチ>` が1行残っていた。新しい PC でも同じ形になりやすいので、allow に残った push 系は見直す。
+- 「AI Credit Overages」は **Never** のままにする（自動で呼ぶ以上、枠切れで止まる方が安全。`ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md` と同じ考え方）。★設定ファイル（config.json・user_settings.pb）には見当たらず、値は画面か `/usage` で確かめる。
 
-## 段階2: Claude Code から自動で呼ぶ（PC で未確認・未実装）
+## 段階2: Claude Code から自動で呼ぶ（未実装）
 
-PC で次の3点を確かめてから、`tools/dispatch.py` に `--brain agy` を足す（headless・`--output-format json`・`--model`）。
+`tools/dispatch.py` に `--brain agy` を足す（headless・`--output-format json`・`--model`）前の確認:
 
-1. `agy` が入っているか（`agy --version`）、`agy models` に Claude Opus 5.5 / Sonnet 5.5 の slug があるか
-2. 上の拒否リストで `git push` が実際に弾かれるか
-3. headless で書き込みとテスト実行を許すための `permissions.allow`（例: `write_file(src/)`・`command(regex:npm run (build|lint|test))`）がジョブ方式の worktree で通るか
+1. ✅ `agy` が入っているか・slug（2026-10-21 PC 実測。agy 1.2.14 は `%LOCALAPPDATA%\agy\bin\agy.exe`。slug は上の表）
+2. ⬜ 上の拒否リストで `git push` が Turbo でも弾かれるか（上記のとおり未確認。headless の自動拒否と AGENTS.md では止まった）
+3. ⬜ headless で読み書き・テスト実行を許す allow を決める。★**allow が無いと headless では `read_file` すら自動拒否され、空の応答で終わる**（実測）。ジョブ方式の worktree に絞った `read_file(...)`・`write_file(...)`・`command(regex:npm run (build|lint|test))` を、`--dangerously-skip-permissions` を使わずに足す
 
 通ったら、[`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1c と `CLAUDE.md`「セッション開始時の必須アクション」5番の「本人の確認を待ってから本人が手動で投げる」を「司令塔が `--brain agy` で投げる」に改める。
 
