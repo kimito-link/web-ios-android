@@ -104,7 +104,7 @@
 
 | # | 項目 | レンズ | 可逆 | 機械検査 | 工数 |
 |---|---|---|---|---|---|
-| **P0** | **ratchet budget hook**（`judge()` を import・Edit/Write 境界・増なら deny/減なら warn・マーカー移動 gaming 検知込み・selftest＋vitest） | harness+context | 可(配線1行外す) | 可 | S(半日) |
+| **P0** ✅ | **ratchet budget hook**（`judge()` を import・Edit/Write 境界・増なら deny/減なら warn・マーカー移動 gaming 検知込み）。**完了 2026-10-21**: `.claude/hooks/check-claude-md-budget-ratchet.mjs`＋`.test.mjs`(14緑)、settings.json 配線、実 CLAUDE.md で E2E 確認(431→461増は deny) | harness+context | 可(配線1行外す) | 可 | S(半日) |
 | P1 | 核の relocation（日付実損を `site/learnings/`・`_docs/` へ移設、核に RULE/CHECK/EVIDENCE 行だけ残す）。P0 後に行い痩せた核を ratchet で固定 | context | 可(git) | 可(budget判定) | M |
 | P2 | manifest-dispatcher（`hooks/manifest.json`・settings.json を event毎1行・relay 実体をリポへ・致命/退行可 tier 宣言） | harness+loop | 可 | 可 | M |
 | P3 | 結末台帳（既定パス採用・ブロッキング3本＋ratchet のみ・冪等キー・schema） | loop | 可 | 可 | M |
