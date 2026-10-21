@@ -10,6 +10,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain mistral --cwd <dir> "task"  # OpenCode + Mistral Codestral (free monthly, coding-specialised)
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
+  python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
 
 Why fallback exists: free quotas die without warning (Alibaba flash and max each ran out within about 1.5 days on
 2026-09-15/16), and a headless brain that blocks on a permission prompt looks like a hang. A failed brain must never
@@ -41,7 +42,7 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # Grok Build の残高切れは "API error (status 402 ..." で、上の "API Error" と大文字小文字が違い拾えなかった。
               "auto-rejecting", "rejected permission to use this specific tool call", "Payment Required",
               "usage balance exhausted"]
-TIMEOUTS = {"grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
+TIMEOUTS = {"agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -134,6 +135,23 @@ def spool_task(task, brain):
     return "Read the file %s (UTF-8) and carry out the task written in it exactly." % path
 
 
+AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTIGRAVITY-HOWTO.md role table)
+AGY_OK_STATUS = "SUCCESS"  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
+
+
+def agy_exe():
+    p = os.path.join(os.environ.get("LOCALAPPDATA", ""), "agy", "bin", "agy.exe")
+    return p if os.path.exists(p) else "agy"
+
+
+def agy_status(out):
+    """Last "status" value in agy --output-format json output, or None when there is none.
+    rc=0 alone is not trusted: opencode taught us a headless brain can exit 0 after doing nothing (2026-10-18)."""
+    import re
+    found = re.findall(r'"status"\s*:\s*"([A-Z_]+)"', out)
+    return found[-1] if found else None
+
+
 def build(brain, task, allowed, model=None):
     env = dict(os.environ)
     task = spool_task(task, brain)
@@ -173,6 +191,15 @@ def build(brain, task, allowed, model=None):
         # system prompt does not fit. Use it as a text-only brain: one chat completion, answer goes to the log.
         model = model or "qwen/qwen3.8-27b"
         cmd = [sys.executable, os.path.abspath(__file__), "--groq-chat", model, task]
+    elif brain == "agy":
+        # Antigravity CLI headless (PC-measured 2026-10-21, agy 1.2.14). Uses the Google "Claude/GPT" or "Gemini" quota,
+        # separate from the Claude Code weekly limit. Model slugs: claude-opus-5-5-{low,medium,high}, claude-sonnet-5-5-*,
+        # gemini-4-argon-*, gemini-3.8-flash-*. Rules reach it through AGENTS.md (it does not read CLAUDE.md).
+        # NEVER add --dangerously-skip-permissions: measured that it ignores the deny list and pushed (ANTIGRAVITY-HOWTO.md).
+        # Headless auto-denies anything not in userSettings.globalPermissionGrants.allow (~/.gemini/config/config.json),
+        # so the allow list must be set on the PC first. Not in AUTO_CHAIN: paid quota, and the allow list is per-PC.
+        model = model or AGY_DEFAULT_MODEL
+        cmd = [agy_exe(), "-p", task, "--model", model, "--output-format", "json"]
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
@@ -263,6 +290,8 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
             f.write("\n# TIMEOUT\n")
     out = open(log, encoding="utf-8", errors="replace").read()
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
+    if brain == "agy" and agy_status(out) != AGY_OK_STATUS:
+        failed = True
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
 
@@ -328,7 +357,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "grok", "gemini", "groq", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")

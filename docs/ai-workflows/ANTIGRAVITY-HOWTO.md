@@ -1,6 +1,6 @@
 # Antigravity 活用HOWTO — 正本
 
-**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡しは完了、PC 実測済み（agy 1.2.14）。★拒否リストは `--dangerously-skip-permissions` では効かないと実測／段階2=`agy` 自動呼び出しは未実装）。**
+**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡しは完了、PC 実測済み（agy 1.2.14）。★拒否リストは `--dangerously-skip-permissions` では効かないと実測／段階2=`dispatch.py --brain agy` は実装済み・PC の allow 設定と実走は未了）。**
 今後Antigravityに実装作業を委ねるときはこの1枚を読み、書式を流用する。コピーは作らない（散らすと同期がずれて事故る）。
 
 - 設計: 司令塔。日付: 2026-09-08
@@ -93,15 +93,24 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 - ★その PC の初期設定は `artifactReviewMode=TURBO`・自動実行 `EAGER`・terminal sandbox off で、allow に過去の `git push origin <ブランチ>` が1行残っていた。新しい PC でも同じ形になりやすいので、allow に残った push 系は見直す。
 - 「AI Credit Overages」は **Never** のままにする（自動で呼ぶ以上、枠切れで止まる方が安全。`ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md` と同じ考え方）。★設定ファイル（config.json・user_settings.pb）には見当たらず、値は画面か `/usage` で確かめる。
 
-## 段階2: Claude Code から自動で呼ぶ（未実装）
+## 段階2: Claude Code から自動で呼ぶ（dispatch 側は実装済み・PC の allow と実走が残り）
 
-`tools/dispatch.py` に `--brain agy` を足す（headless・`--output-format json`・`--model`）前の確認:
+`tools/dispatch.py --brain agy [--model <slug>]` を足した（2026-10-21）。中身:
+- `agy -p "<task>" --model <slug> --output-format json`。既定 slug は `claude-opus-5-5-medium`（重い実装の役）。
+- `--dangerously-skip-permissions` は**付けない**。付いたらテスト（`tools/test_dispatch_agy.py`）が落ちる。
+- 他の頭脳と同じ `block_outward`（`pushInsteadOf` で push 先を潰す・gh 等のトークンを無効化）が掛かる。
+- 終了コード0だけでは成功にしない。JSON の最後の `status` が `SUCCESS` のときだけ成功（opencode が何もせず0で終わった前例）。
+- `auto` の順番には入れない（有料の Google 枠・allow は PC ごと）。明示の `--brain agy` のときだけ動く。
+
+使う前の確認:
 
 1. ✅ `agy` が入っているか・slug（2026-10-21 PC 実測。agy 1.2.14 は `%LOCALAPPDATA%\agy\bin\agy.exe`。slug は上の表）
 2. ✅ 拒否リストの効き目（`--dangerously-skip-permissions` では**効かない**と実測。dispatch では付けず、`pushInsteadOf` で送り先を潰す既存の方式を agy にも使う）
 3. ⬜ headless で読み書き・テスト実行を許す allow を決める。★**allow が無いと headless では `read_file` すら自動拒否され、空の応答で終わる**（実測）。ジョブ方式の worktree に絞った `read_file(...)`・`write_file(...)`・`command(regex:npm run (build|lint|test))` を、`--dangerously-skip-permissions` を使わずに足す
 
-通ったら、[`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1c と `CLAUDE.md`「セッション開始時の必須アクション」5番の「本人の確認を待ってから本人が手動で投げる」を「司令塔が `--brain agy` で投げる」に改める。
+4. ⬜ 3 の allow を入れた PC で `python dispatch.py --brain agy --cwd <worktree> "<小さな作業>"` を1回走らせ、DONE になり commit まで進み push は通らないことを確かめる
+
+3・4 が通ったら、[`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1c と `CLAUDE.md`「セッション開始時の必須アクション」5番の「本人の確認を待ってから本人が手動で投げる」を「司令塔が `--brain agy` で投げる」に改める。
 
 ## Antigravityを使う場面（次チャット/別モデルとの使い分け）
 
