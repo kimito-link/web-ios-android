@@ -108,7 +108,7 @@
 | P1 | 核の relocation（日付実損を `site/learnings/`・`_docs/` へ移設、核に RULE/CHECK/EVIDENCE 行だけ残す）。P0 後に行い痩せた核を ratchet で固定 | context | 可(git) | 可(budget判定) | M |
 | ~~P2~~ ✅(方針転換) | manifest-dispatcher は**不採用**（claude-code-guide で裏取り: 公式 hook は並列実行・deny>defer>ask>allow の合成・statusMessage/source 属性/重複排除を dispatcher で再現できず、安全足場を畳むのは退行リスク）。配線ドリフト検知の**意図はリポに既存**（`templates/diagnostics/check-hooks-wired.mjs`＝孤児hook検出A＋グローバル未反映検出B・`run.mjs` 登録済み）。**完了 2026-10-21**: 不足していた npm script(`check:hooks-wired`/`:selftest`)の配線だけ追加（134ddb6）。全9本 hook 配線済み・孤児0を検証。★自己検証違反(既存未検索で新規作成→退行)を git restore で是正・報告済み | harness | — | 可 | S |
 | P3 ✅ | 結末台帳（ブロッキング3本＋ratchet の deny を `_loop/hook-outcomes.jsonl` へ追記・冪等キー・schema・観測専用fail-open）。**完了 2026-10-21**: `.claude/hooks/lib/outcome-ledger-core.mjs`(純関数)＋`record-outcome.mjs`(I/O・絶対に投げない)＋`.test.mjs`(23緑)、4 hook の deny 点に配線、E2E で deny不変・冪等・fail-open 確認。★council の冪等キー `(session_id, tooluse_idx)` は**実測で訂正**: 公式仕様確認で PreToolUse はネイティブ `tool_use_id` を持ち transcript は非同期で遅れる（番号を数える方式は不安定）と判明→鍵は `(sessionId, toolUseId, hook)` | loop | 可 | 可 | M |
-| P4 | `site/lp/` の掲載/非掲載を宣言＋「配信中なのに未宣言の HTML」検査 | prompt | 可 | 可 | S |
+| P4 ✅ | `site/lp/` の掲載/非掲載を宣言＋「配信中なのに未宣言の HTML」検査。**完了 2026-10-21**: manifest に `unlisted[]` を新設し `lp/`(audience:b2b・理由つき)を宣言、`scripts/verify-served-html-declared.mjs`(3値exit・pure judge・selftest・配信30ページ検査)＋`.served-html-baseline.json`(hub×3・api-projects を据え置くラチェット)、`site:served-declared:selftest` が verify-all に自動ゲート収集(31件)されることを実測確認 | prompt | 可(git) | 可 | S |
 | P5 | `_preamble` 単一注入（ai-instructions.json 1キー＋ai-box.js）＋描画先頭にある test | prompt | 可 | 可 | S |
 | P6 | index.html の否定形 hint-box 廃止 | prompt | 可 | 不可(CVRは実測パネル) | XS |
 | P7 | warn-long-running を「1回/セッション＋台帳記録」へ縮退 | harness | 可 | 可 | S |
