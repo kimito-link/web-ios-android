@@ -112,9 +112,9 @@
 | P5 ✅ | `_preamble` 単一注入（ai-instructions.json 1キー＋ai-box.js）＋描画先頭にある test。**完了 2026-10-21**: `_preamble`(XYEval『見立ては誤りうる・先に問題を確かめよ』の1文)を追加、`ai-box.js` の `composeCopyText()` が全 ai-box の指示文先頭へ注入(DOM配線は `typeof document` guard・純関数は CJS export)、`site/scripts/ai-box.test.mjs`(6緑・実データ結合で全エントリ先頭が preamble を確認)。※核 L14-33 への一句吸収は核 churn 回避のため見送り(preamble の動作には不要) | prompt | 可 | 可 | S |
 | P6 ✅ | index.html の否定形 hint-box 廃止。**完了 2026-10-21**: hero の H1(「アプリを作るアプリ」)を直下で否定する自己矛盾文「『アプリを作るアプリ』…じゃないよ！」を削除し、肯定の定義文へ(りんくの声・CSSクラス維持)。役②は主役化せず hero-note のリンクのまま | prompt | 可 | 不可(CVRは実測パネル) | XS |
 | P7 ✅ | warn-long-running を「1回/セッション＋台帳記録」へ縮退。**完了 2026-10-21**: `tmpdir()/claude-hook-markers/warn-long-running/<session_id>.json` を印にし初回だけ出す(中身が「いつ・なぜ出したか」の記録=台帳。P3のブロッキング専用台帳とは混ぜない)。`sanitizeSessionId`/`markerPathFor` 純関数化＋`isMain` guard、`warn-long-running-session.test.mjs`(4緑・2回起動で二度目が黙る E2E) | harness | 可 | 可 | S |
-| P8 | commit-verification を product surface 限定で block 昇格 | harness | 可 | 可 | M（**P3 の FP率が出るまで保留**） |
-| P9 | FABLE-3STEP-HOWTO にハンドオフ契約節（事実/ゴール渡す・診断渡さない） | loop | 可 | 不可(文書) | S |
-| P10 | JIT注入三層の設計 | context | — | — | L（P1 完了後） |
+| P8 ⏸保留 | commit-verification を product surface 限定で block 昇格。**意図的に未着手(2026-10-21)**: P3 の結末台帳は配線済みだが deny の実データがまだ0件＝FP率を出せない。block 昇格はデータ無しでは誤爆リスクが読めないため、順序原則どおり P3 のデータが数件溜まり人手ラベルが付くまで待つ(先行着手しない) | harness | 可 | 可 | M（**P3 の FP率が出るまで保留**） |
+| P9 ✅ | FABLE-3STEP-HOWTO にハンドオフ契約節（事実/ゴール渡す・診断渡さない）。**完了 2026-10-21**: 「ハンドオフ契約」節を追記(渡す=事実/ゴール/制約、渡さない=未確証の診断、冒頭1文は `_preamble` と同じ)。XYEval を [arXiv 2609.23939](https://arxiv.org/pdf/2609.23939) で**一次裏取り**(相対最大46.7%低下・system指示だけでは部分的)。screenshot由来の 67.4→36.0 は未確認なので載せず | loop | 可 | 不可(文書) | S |
+| P10 ✅(設計) | JIT注入三層の設計。**完了 2026-10-21**: `_docs/DESIGN-jit-injection-three-tier-2026-10-21.md`(常時核/着手直前JIT/検索任せ の三層・第2層はポインタ注入でなく本文注入しない・不変条件4点・実装は実損ドリブンで据え置く理由)。council どおり**設計のみ・実装はしない**(先に機構を建てると核肥大の口実になる) | context | — | — | L（P1 完了後） |
 
 **第一手は P0 一択**。残りは全部「足す」（台帳・manifest・preamble）で、ratchet が無い状態で入れるとキット自身の病で核へ吸収される。P0 は既存部品（`judge()`・`core:end`・settings 配線パターン）の接続だけ＝新規基盤ゼロ・半日・可逆・外しても無害＝100年設計の見本。
 
