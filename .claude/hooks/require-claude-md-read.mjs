@@ -23,6 +23,7 @@ import {
   normalizeWindowsPath,
   readStdin,
 } from './lib/transcript-reads.mjs';
+import { recordOutcome } from './lib/record-outcome.mjs';
 
 // ★判定部品（transcript の走査・全文Readの組み立て・ハッシュ）は lib/transcript-reads.mjs に1つだけ置く。
 //   guard-external-actions.mjs（push・マージ・デプロイ等の前）と共有するため（複製すると片方だけ直して食い違う）。
@@ -81,6 +82,9 @@ function main() {
   const reason = coverage.readAny
     ? 'CLAUDE.mdの一部が、未読、または前回Readした後に更新されています(古い内容のまま作業しようとしています)。'
     : 'このセッションでCLAUDE.mdをまだReadしていません。';
+
+  // 結末台帳へ(観測・冪等・fail-open)。council §7 / P3。
+  recordOutcome(input, { hook: 'require-claude-md-read', reasonCategory: coverage.readAny ? 'stale' : 'unread' });
 
   const output = {
     hookSpecificOutput: {

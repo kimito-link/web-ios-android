@@ -1,0 +1,9 @@
+{
+  "$comment": "verify-served-html-declared.mjs のラチェット基準線。ここに載るのは『配信されるが、まだナビにも unlisted 宣言にも入れていない既存ページ』の据え置き分。新たに増えた未宣言ページだけを赤にし、既存分は一斉赤にしない(.shared-parts-baseline.json と同じ流儀)。★新しいページの逃げ道にしない: 新規ページは sitemap-manifest.json の sections か unlisted で宣言する。ここは既存の棚卸し待ちを減らす方向にだけ動かす。lp/ は unlisted で正式宣言済みなのでここには無い。",
+  "grandfathered": [
+    "api-projects/index.html",
+    "hub/architecture-map/index.html",
+    "hub/index.html",
+    "hub/usage/index.html"
+  ]
+}
