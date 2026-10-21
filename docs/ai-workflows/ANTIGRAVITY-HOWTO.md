@@ -1,6 +1,6 @@
 # Antigravity 活用HOWTO — 正本
 
-**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡し・鍵は完了、PC 実測済み（agy 1.2.14）／段階2=`agy` 自動呼び出しは未実装）。**
+**状態: 方針確定・実例2パターンから抽出済み。2026-10-21 に役割分担・守りの設定を更新（段階1=文書・橋渡しは完了、PC 実測済み（agy 1.2.14）。★拒否リストは `--dangerously-skip-permissions` では効かないと実測／段階2=`agy` 自動呼び出しは未実装）。**
 今後Antigravityに実装作業を委ねるときはこの1枚を読み、書式を流用する。コピーは作らない（散らすと同期がずれて事故る）。
 
 - 設計: 司令塔。日付: 2026-09-08
@@ -86,7 +86,10 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 }
 ```
 
-- ★**鍵そのものが効くかは未確認**（2026-10-21 PC 実測）。使い捨てリポで AGENTS.md を外して push を頼んだが、止まった理由は「headless では許可を聞けないので自動拒否」で、deny ルールではなかった。Turbo（`--dangerously-skip-permissions` 相当）で deny だけが効くかは、本人の手元で1回試すまで分からない。**それまでは AGENTS.md と headless の自動拒否が実際の守り**。
+- ★★**拒否リストは「確認なし」では効かない**（2026-10-21 本人の PC で実測・agy 1.2.14）。使い捨てリポ（origin はローカルの bare リポ）で `~/.gemini/AGENTS.md` を外し、`agy -p "git push origin HEAD …" --dangerously-skip-permissions` を実行したら、deny に `command(git push)` が入っているのに **push は成功した**（`status: SUCCESS`・bare 側にコミットが届いた）。`--dangerously-skip-permissions` は deny も含めて全部飛ばす、と扱う。
+  - ★確認なしでない headless（フラグ無し）では、push は「許可を聞けないので自動拒否」で止まった。AGENTS.md があると、モデルが自分で断った（どちらも実測）。
+  - ★IDE・アプリの Turbo プリセットで deny が効くかは未確認（CLI の `--dangerously-skip-permissions` と同じとは限らない）。**効くと思わない**。
+  - **だから守りは3つ重ねる**: ①`--dangerously-skip-permissions` を使わない（dispatch でも付けない）②Antigravity に任せる作業ではリモートへ届かないようにする（`dispatch.py` が他の頭脳にしている `pushInsteadOf` で送り先を潰す方式を、agy にも同じく使う）③AGENTS.md（モデルが自分で断る。ただし外すと効かない＝最後の網）。deny は「入れておくが頼らない」。
 - ★その PC の初期設定は `artifactReviewMode=TURBO`・自動実行 `EAGER`・terminal sandbox off で、allow に過去の `git push origin <ブランチ>` が1行残っていた。新しい PC でも同じ形になりやすいので、allow に残った push 系は見直す。
 - 「AI Credit Overages」は **Never** のままにする（自動で呼ぶ以上、枠切れで止まる方が安全。`ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md` と同じ考え方）。★設定ファイル（config.json・user_settings.pb）には見当たらず、値は画面か `/usage` で確かめる。
 
@@ -95,7 +98,7 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 `tools/dispatch.py` に `--brain agy` を足す（headless・`--output-format json`・`--model`）前の確認:
 
 1. ✅ `agy` が入っているか・slug（2026-10-21 PC 実測。agy 1.2.14 は `%LOCALAPPDATA%\agy\bin\agy.exe`。slug は上の表）
-2. ⬜ 上の拒否リストで `git push` が Turbo でも弾かれるか（上記のとおり未確認。headless の自動拒否と AGENTS.md では止まった）
+2. ✅ 拒否リストの効き目（`--dangerously-skip-permissions` では**効かない**と実測。dispatch では付けず、`pushInsteadOf` で送り先を潰す既存の方式を agy にも使う）
 3. ⬜ headless で読み書き・テスト実行を許す allow を決める。★**allow が無いと headless では `read_file` すら自動拒否され、空の応答で終わる**（実測）。ジョブ方式の worktree に絞った `read_file(...)`・`write_file(...)`・`command(regex:npm run (build|lint|test))` を、`--dangerously-skip-permissions` を使わずに足す
 
 通ったら、[`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1c と `CLAUDE.md`「セッション開始時の必須アクション」5番の「本人の確認を待ってから本人が手動で投げる」を「司令塔が `--brain agy` で投げる」に改める。
