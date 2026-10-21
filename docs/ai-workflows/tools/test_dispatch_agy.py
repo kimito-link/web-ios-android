@@ -21,6 +21,11 @@ class AgyBuild(unittest.TestCase):
         self.assertEqual(cmd[cmd.index("--model") + 1], dispatch.AGY_DEFAULT_MODEL)
         self.assertEqual(cmd[cmd.index("--output-format") + 1], "json")
 
+    def test_task_gets_one_command_per_call_preamble(self):
+        cmd, _, _ = dispatch.build("agy", "do x", "", None)
+        prompt = cmd[cmd.index("-p") + 1]
+        self.assertTrue(prompt.startswith(dispatch.AGY_PREAMBLE) and prompt.endswith("do x"))
+
     def test_model_override(self):
         cmd, _, model = dispatch.build("agy", "do x", "", "gemini-4-argon-medium")
         self.assertEqual(model, "gemini-4-argon-medium")

@@ -138,6 +138,11 @@ def spool_task(task, brain):
 
 
 AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTIGRAVITY-HOWTO.md role table)
+# 2026-10-21 PC 実走: allow を regex で書いても、ファイル作成をシェル（リダイレクト・Set-Content）でやったり
+# `a ; b` とつないだりした1手が丸ごと自動拒否され、1ターンで何もせず終わった。Windows では分けられない行は完全一致になる
+# （https://antigravity.google/docs/permissions?tab=cli）。ファイルは編集ツールで、コマンドは1つずつ出させる。
+AGY_PREAMBLE = ("Headless run. Create and edit files only with your file-editing tools, never with shell commands or redirects. "
+                "Run shell commands one per tool call; never chain them with ; && || or pipes.\n\n")
 AGY_OK_STATUS = "SUCCESS"  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
 
 
@@ -208,7 +213,7 @@ def build(brain, task, allowed, model=None):
         # Headless auto-denies anything not in userSettings.globalPermissionGrants.allow (~/.gemini/config/config.json),
         # so the allow list must be set on the PC first. Not in AUTO_CHAIN: paid quota, and the allow list is per-PC.
         model = model or AGY_DEFAULT_MODEL
-        cmd = [agy_exe(), "-p", task, "--model", model, "--output-format", "json"]
+        cmd = [agy_exe(), "-p", AGY_PREAMBLE + task, "--model", model, "--output-format", "json"]
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
