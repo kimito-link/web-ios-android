@@ -11,9 +11,40 @@
  * 止めたいとき: 環境変数 HOOK_OUTCOME_LEDGER_OFF=1。
  */
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, openSync, readSync, fstatSync, closeSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { appendIfNew, makeRecord, parseLedger } from './outcome-ledger-core.mjs';
+
+// ★100年設計(hot path を無限肥大させない): 台帳は追記専用で永続に伸びるが、冪等判定は
+//   「同じ session_id の同じ tool_use_id を二度数えない」だけで、重複は常に時間的に隣接する
+//   (同じ呼び出しが遠く離れた過去に再出現することはない)。よって全文を読まず、末尾の一定バイト
+//   だけを走査すれば十分かつ正しい。全文読み(readFileSync)のままだと、deny が増えるほど毎回の
+//   ブロッキング判定が重くなる＝安全足場に静かな遅延 decay が溜まる。追記(書き込み)は壊れにくい
+//   追記専用のまま保ち、読み側だけを定数コストに固定する。履歴の刈り取りが要るなら別途の明示操作で行う
+//   (hot path では file を書き換えない=部分書き込みで台帳を壊さない)。
+export const DEDUP_TAIL_BYTES = 64 * 1024;
+
+/** ファイルの末尾 maxBytes だけを読み、完全な行だけを返す(先頭の欠けた行は捨てる)。巨大でも定数コスト。 */
+export function readLedgerTailText(path, maxBytes = DEDUP_TAIL_BYTES) {
+  const fd = openSync(path, 'r');
+  try {
+    const size = fstatSync(fd).size;
+    const start = size > maxBytes ? size - maxBytes : 0;
+    const len = size - start;
+    if (len <= 0) return '';
+    const buf = Buffer.allocUnsafe(len);
+    readSync(fd, buf, 0, len, start);
+    let text = buf.toString('utf8');
+    if (start > 0) {
+      // 途中から読んだので先頭行は欠けている可能性がある。最初の改行までを捨てる。
+      const nl = text.indexOf('\n');
+      text = nl >= 0 ? text.slice(nl + 1) : '';
+    }
+    return text;
+  } finally {
+    closeSync(fd);
+  }
+}
 
 /** cwd から祖先の .git を探してリポジトリ直下を返す(無ければ null)。transcript-reads と同じ考え方だが依存を増やさない。 */
 function findRepoRoot(/** @type {string} */ startDir) {
@@ -60,7 +91,8 @@ export function recordOutcome(input, meta) {
     const ledgerPath = join(repoRoot, '_loop', 'hook-outcomes.jsonl');
     let existing = [];
     try {
-      if (existsSync(ledgerPath)) existing = parseLedger(readFileSync(ledgerPath, 'utf8'));
+      // 冪等判定は末尾の一定バイトだけで足りる(重複は時間的に隣接・上のコメント参照)。全文は読まない。
+      if (existsSync(ledgerPath)) existing = parseLedger(readLedgerTailText(ledgerPath));
     } catch {
       existing = [];
     }
