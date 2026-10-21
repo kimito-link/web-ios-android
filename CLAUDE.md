@@ -118,34 +118,11 @@ CLAUDE.mdに解決策が書いてある地雷）を自力で再発見してい�
 2. セッションを再起動する（以後も自動インポートで継続的に最新が読まれる状態にしたい場合）
 「稼働中セッションには遡って効かない」＝「再起動するしかない」ではないことに注意する。
 
-★★★**この既知のケースを機械検知するhookを実装した（2026-09-26）**。
-`kimitolink-linktree`セッションが2026-08-31から一度も再起動されず26日間継続稼働しており、
-その間にこのCLAUDE.mdへ追記された全ルール（「直接URLを併記する」等）を一切反映していなかった
-実損（ユーザーがスクリーンショットで指摘して初めて発覚）を受け、「気づいたら疑う」という
-人間の注意力依存から、`UserPromptSubmit`hook（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)）
-による自動警告へ格上げした。transcript.jsonlの先頭行の`timestamp`フィールド（実測で
-全エントリに存在すると確認済み）からセッション開始時刻を取得し、12時間を超えていたら
-`additionalContext`で気づきを注入する。
-★実装時の訂正: 当初はファイルシステムの`birthtime`でセッション開始時刻を判定する設計を
-検討したが、実測したところWindows環境の`birthtime`は無関係な古い日付を返すことがあり
-信頼できないと判明した。transcript自体の中身（`timestamp`フィールド）を正本とするのが
-唯一確実な方法。グローバル設定（`~/.claude/settings.json`）にも`web-ios-android-relay.mjs`
-経由で配線済み、他プロジェクトのセッションでも自動的に効く。
-
-★★★★**「経過時間」だけでは検知できない実損が発生し、判定条件を追加した（2026-09-30）**。
-`soushin-suggest.link`セッションが「実機で確認した」と報告した後、プロダクトが新版へ
-更新されたにもかかわらず一度も再検証しないまま作業を続けていた。この種の違反は
-`check-commit-preceded-by-verification.mjs`（実地検証履歴チェック）が本来検出できる
-領域だが、そのセッションの`~/.claude/settings.json`がこのhook追加（2026-09-29）より
-前の状態のまま起動され続けていた可能性が高く、hook自体が発火していなかった。
-★これは「経過時間が長い」ことではなく「セッション開始時点のhook配線が、正本
-（`.claude/hooks/`・CLAUDE.md）の最新コミットより古い」ことが真因——経過時間のしきい値
-判定だけでは、配線がすぐ後に更新された短命セッションを見逃す。対処として
-`warn-long-running-session.mjs`に、`git log -1 --format=%cI -- .claude/hooks/ CLAUDE.md`
-でweb-ios-android正本の最終更新時刻を実測し、「セッション開始時刻 < 正本更新時刻」を
-検出したら経過時間のしきい値と独立に警告する判定を追加した。実地テスト（3ケース:
-古いセッション／健全な新しいセッション／経過時間は短いが正本更新前に開始した
-危険なセッション）で、旧ロジックが見逃すケースを正しく検知することを確認済み。
+★この稼働中セッション検知は hook 化済み（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)・
+`UserPromptSubmit`・非ブロッキング）。判定2軸: (1) セッション開始が12時間超、(2) セッション開始時刻 <
+正本（`.claude/hooks/`・CLAUDE.md）の最終更新時刻（配線が古いまま起動した短命セッションも捕捉）。
+実装経緯・26日連続稼働/soushin の実損・`birthtime` が信頼できない件の詳細:
+[`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)。
 
 ★★★★★**非ブロッキングの警告は、読まれなければ「形だけ」になる——外向きの操作の前は拒否に格上げした
 （2026-10-06）**。本人の指摘「CLAUDE.md が形だけで機能していない気がします」を、そのセッション自身の
@@ -385,37 +362,11 @@ canonical HEADが意図したshaになっている・remoteと一致している
 - 停止解除を口頭や通常チャットだけに書く（必ずcoordに残す）
 - 自分がholderなのに、終わってもPAUSEDのまま放置する
 - 完了報告で「全部終わり」と言うが、次セッションが再開できない
-- ★★**「自分のコミットをブランチへ退避してmainを戻す」ときに、対象範囲を確認せず
-  `git reset --hard <sha>`を打つ**（2026-09-28実損、`kimitolink-linktree`）。
-  やりたいことが「自分がついさっき作った1コミットだけを戻す」でも、面倒くさがって
-  `git reset --hard origin/main`のような**離れたSHAへの広範囲reset**を使うと、
-  **その瞬間の作業ツリーにあった、自分が関知していない未コミット変更まで巻き込んで
-  消える**。実損: `git branch <退避用>`で自分のコミットを退避した直後、続けて
-  `git reset --hard origin/main`を実行し、無関係な3ファイル
-  （`council/HANDOFF-ogp-and-app.md`・`../kimitolink-linktree/scripts/design-council.mjs`・
-  `templates-app/android-twa/README.md`。いずれも`git add`前の未コミット変更で、
-  他セッションかユーザー本人の作業）を消した。**未コミットの変更はgit addもコミットも
-  していない限り、通常のgit操作では復元不可能**（stashしていない・commitしていない
-  working tree差分はreflogにも残らない）。
-  ★**対処（実行前に必ず踏む3段）**:
-  1. **`reset --hard`を打つ前に、必ず直前で`git status --short`を実行し、
-     今から消える対象に見覚えのない変更が1件でも無いか目で確認する。**
-     1件でもあれば`reset --hard`を使わない
-  2. **「1コミットだけ戻したい」なら`HEAD~1`のようなHEAD相対で指定する**（`origin/main`
-     等の離れたSHAを漠然と指定しない——自分のコミットが今HEADから何個目かを
-     数えられないなら、そもそも広範囲resetをする資格がない）
-  3. **`main`をorigin相当に揃えたいだけなら、`reset --hard`ではなく
-     `git stash`（未コミット変更を退避）→`git pull --ff-only`→必要なら
-     `git stash pop`**、を使う。「未コミット変更がある状態で`reset --hard`を検討している」
-     こと自体が既に危険信号
-  ★これは「相手の作業ブランチを勝手にresetする」の1つ上の層の教訓——**同じセッション内の
-  自分の操作でも、作業ツリーの現況（`git status`）を見ずに広範囲resetを打てば
-  同じ事故になる**。coordの`files`宣言は「意図して触る対象」しか書かないため、
-  この種の巻き込み事故はcoordの仕組みだけでは防げない（機械検査は困難——「これから
-  実行するgitコマンドが安全か」は任意のシェルコマンド文字列の意味解釈が要り、
-  「新しいルールを書いたら機械検査化を検討する」節の基準2番（自然言語判断が絡む）
-  に該当する。フックで`git reset --hard`をパターンマッチして警告する案はfalse
-  positiveが多く実用性が低いため不採用。**唯一の対処は上記3段の手順を徹底すること**）。
+- ★★**`git reset --hard` の前に必ず `git status --short` で巻き込む未コミット変更が無いか目視する**
+  （1件でもあれば使わない）。1コミットだけ戻すなら `HEAD~n` 相対で指定（離れたSHAを漠然と指定しない）。
+  `main` を origin に揃えるだけなら `reset --hard` でなく `git stash`→`git pull --ff-only`→（必要なら）`git stash pop`。
+  実損の詳細・なぜcoord/機械検査で防げないか: [`_docs/git-safety-knowledge-base.md`](_docs/git-safety-knowledge-base.md)
+  （2026-09-28 kimitolink-linktree の巻き込み削除事故）。
 
 ### 作業分担の原則
 
