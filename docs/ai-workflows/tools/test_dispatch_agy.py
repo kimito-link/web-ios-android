@@ -42,6 +42,18 @@ class AgyStatus(unittest.TestCase):
     def test_last_status_wins(self):
         self.assertEqual(dispatch.agy_status('{"status":"RUNNING"}\n{"status":"ERROR"}'), "ERROR")
 
+    def test_success_with_denied_action_is_detected(self):
+        # 2026-10-21 PC 実測の形（status は SUCCESS だが何もしていない）
+        out = ('jetski: no output produced \u2014 a tool required the "command" permission that headless mode cannot '
+               'prompt for, so it was auto-denied.\n'
+               '{"status":"SUCCESS","response":"","num_turns":1,"denied_actions":[{"action":"command","display_name":"RunCommand"}]}')
+        self.assertEqual(dispatch.agy_status(out), "SUCCESS")
+        self.assertTrue(dispatch.agy_denied(out))
+        self.assertTrue(any(m in out for m in dispatch.FAIL_MARKS))
+
+    def test_empty_denied_list_is_fine(self):
+        self.assertFalse(dispatch.agy_denied('{"status":"SUCCESS","denied_actions":[]}'))
+
     def test_no_json_is_none(self):
         self.assertIsNone(dispatch.agy_status("plain text, rc 0"))
 

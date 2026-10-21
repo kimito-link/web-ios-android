@@ -106,7 +106,7 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 
 1. ✅ `agy` が入っているか・slug（2026-10-21 PC 実測。agy 1.2.14 は `%LOCALAPPDATA%\agy\bin\agy.exe`。slug は上の表）
 2. ✅ 拒否リストの効き目（`--dangerously-skip-permissions` では**効かない**と実測。dispatch では付けず、`pushInsteadOf` で送り先を潰す既存の方式を agy にも使う）
-3. ⬜ headless で読み書き・テスト実行を許す allow を決める。★**allow が無いと headless では `read_file` すら自動拒否され、空の応答で終わる**（実測）。ジョブ方式の worktree に絞った `read_file(...)`・`write_file(...)`・`command(regex:npm run (build|lint|test))` を、`--dangerously-skip-permissions` を使わずに足す
+3. ⬜ headless のコマンド許可。★**2026-10-21 実走（agy 1.4.4）: `config.json` の allow に `git add/commit` があっても headless では `RunCommand` が自動拒否され、`status: SUCCESS`・空の応答・`denied_actions` 付きで終わった**。拒否文は「`settings.json` の `permissions.allow` に `command(<target>)` を足せ」と言う＝headless が読むのは公式どおり `~/.gemini/antigravity-cli/settings.json`（`config.json` の `globalPermissionGrants` は IDE・アプリ側）。そこへ `git status/diff/add/commit/log`・`npm run (build|lint|test)`・`python -m unittest` だけを allow、push・gh・デプロイを deny で書く。dispatch は `denied_actions` があれば失敗扱いにする（SUCCESS を信じない）
 
 4. ⬜ 3 の allow を入れた PC で `python dispatch.py --brain agy --cwd <worktree> "<小さな作業>"` を1回走らせ、DONE になり commit まで進み push は通らないことを確かめる
 

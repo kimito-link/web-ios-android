@@ -41,7 +41,9 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # 2026-10-18: opencode は headless で権限を自動拒否しても rc=0 で終わる（何もせず「DONE」扱いだった）。
               # Grok Build の残高切れは "API error (status 402 ..." で、上の "API Error" と大文字小文字が違い拾えなかった。
               "auto-rejecting", "rejected permission to use this specific tool call", "Payment Required",
-              "usage balance exhausted"]
+              "usage balance exhausted",
+              # 2026-10-21 agy 実測: headless で許可の無いコマンドを自動拒否しても status=SUCCESS・rc=0 で終わる。
+              "so it was auto-denied"]
 TIMEOUTS = {"agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
@@ -150,6 +152,13 @@ def agy_status(out):
     import re
     found = re.findall(r'"status"\s*:\s*"([A-Z_]+)"', out)
     return found[-1] if found else None
+
+
+def agy_denied(out):
+    """True when agy's JSON lists any denied action. Measured 2026-10-21: a denied RunCommand still gave
+    status SUCCESS with an empty response, so SUCCESS alone would have reported a no-op run as DONE."""
+    import re
+    return re.search(r'"denied_actions"\s*:\s*\[\s*\{', out) is not None
 
 
 def build(brain, task, allowed, model=None):
@@ -290,7 +299,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
             f.write("\n# TIMEOUT\n")
     out = open(log, encoding="utf-8", errors="replace").read()
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
-    if brain == "agy" and agy_status(out) != AGY_OK_STATUS:
+    if brain == "agy" and (agy_status(out) != AGY_OK_STATUS or agy_denied(out)):
         failed = True
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
