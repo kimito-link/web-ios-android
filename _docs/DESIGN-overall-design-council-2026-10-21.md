@@ -110,7 +110,7 @@
 | P3 ✅ | 結末台帳（ブロッキング3本＋ratchet の deny を `_loop/hook-outcomes.jsonl` へ追記・冪等キー・schema・観測専用fail-open）。**完了 2026-10-21**: `.claude/hooks/lib/outcome-ledger-core.mjs`(純関数)＋`record-outcome.mjs`(I/O・絶対に投げない)＋`.test.mjs`(23緑)、4 hook の deny 点に配線、E2E で deny不変・冪等・fail-open 確認。★council の冪等キー `(session_id, tooluse_idx)` は**実測で訂正**: 公式仕様確認で PreToolUse はネイティブ `tool_use_id` を持ち transcript は非同期で遅れる（番号を数える方式は不安定）と判明→鍵は `(sessionId, toolUseId, hook)` | loop | 可 | 可 | M |
 | P4 ✅ | `site/lp/` の掲載/非掲載を宣言＋「配信中なのに未宣言の HTML」検査。**完了 2026-10-21**: manifest に `unlisted[]` を新設し `lp/`(audience:b2b・理由つき)を宣言、`scripts/verify-served-html-declared.mjs`(3値exit・pure judge・selftest・配信30ページ検査)＋`.served-html-baseline.json`(hub×3・api-projects を据え置くラチェット)、`site:served-declared:selftest` が verify-all に自動ゲート収集(31件)されることを実測確認 | prompt | 可(git) | 可 | S |
 | P5 ✅ | `_preamble` 単一注入（ai-instructions.json 1キー＋ai-box.js）＋描画先頭にある test。**完了 2026-10-21**: `_preamble`(XYEval『見立ては誤りうる・先に問題を確かめよ』の1文)を追加、`ai-box.js` の `composeCopyText()` が全 ai-box の指示文先頭へ注入(DOM配線は `typeof document` guard・純関数は CJS export)、`site/scripts/ai-box.test.mjs`(6緑・実データ結合で全エントリ先頭が preamble を確認)。※核 L14-33 への一句吸収は核 churn 回避のため見送り(preamble の動作には不要) | prompt | 可 | 可 | S |
-| P6 | index.html の否定形 hint-box 廃止 | prompt | 可 | 不可(CVRは実測パネル) | XS |
+| P6 ✅ | index.html の否定形 hint-box 廃止。**完了 2026-10-21**: hero の H1(「アプリを作るアプリ」)を直下で否定する自己矛盾文「『アプリを作るアプリ』…じゃないよ！」を削除し、肯定の定義文へ(りんくの声・CSSクラス維持)。役②は主役化せず hero-note のリンクのまま | prompt | 可 | 不可(CVRは実測パネル) | XS |
 | P7 | warn-long-running を「1回/セッション＋台帳記録」へ縮退 | harness | 可 | 可 | S |
 | P8 | commit-verification を product surface 限定で block 昇格 | harness | 可 | 可 | M（**P3 の FP率が出るまで保留**） |
 | P9 | FABLE-3STEP-HOWTO にハンドオフ契約節（事実/ゴール渡す・診断渡さない） | loop | 可 | 不可(文書) | S |
@@ -136,6 +136,7 @@
 - グローバル `~/.claude/settings.json` は**手配線が残る**（リポ側 settings しか直せない。P2 で dispatcher は不採用＝畳まない判断。新 hook/lib を他プロジェクトへ効かせるには手反映が要る）＝宣言して残す既知の穴。
 - `site/lp/` の CVR 計測は claims.json 流儀の provenance が要る＝**計測せずに主張を増やさない**。
 - 実装は本物Claudeが差分とチェックを確認してから（サブエージェント由来の外向き操作は `guard-external-actions` が常に拒否）。
+- ★既知の pre-existing(P6 と無関係): `npm run site:links`(verify-internal-links)が `site/hub/index.html → /hub/status/` のリンク切れで赤。`/hub/status/` は `npm run status:page` が deploy 時に生成するページで、この clone には未生成(deploy が `../ai-hub` 必須なのと同類)。P6 のコミットとは別件・別ファイル。PC 側の full build では解消する見込み。要実機確認。
 
 ## プログラム全体を「プロジェクト」として管理する（本人決定: 推奨順で全部・2026-10-21）
 
