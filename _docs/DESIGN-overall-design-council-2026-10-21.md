@@ -106,8 +106,8 @@
 |---|---|---|---|---|---|
 | **P0** ✅ | **ratchet budget hook**（`judge()` を import・Edit/Write 境界・増なら deny/減なら warn・マーカー移動 gaming 検知込み）。**完了 2026-10-21**: `.claude/hooks/check-claude-md-budget-ratchet.mjs`＋`.test.mjs`(14緑)、settings.json 配線、実 CLAUDE.md で E2E 確認(431→461増は deny) | harness+context | 可(配線1行外す) | 可 | S(半日) |
 | P1 | 核の relocation（日付実損を `site/learnings/`・`_docs/` へ移設、核に RULE/CHECK/EVIDENCE 行だけ残す）。P0 後に行い痩せた核を ratchet で固定 | context | 可(git) | 可(budget判定) | M |
-| P2 | manifest-dispatcher（`hooks/manifest.json`・settings.json を event毎1行・relay 実体をリポへ・致命/退行可 tier 宣言） | harness+loop | 可 | 可 | M |
-| P3 | 結末台帳（既定パス採用・ブロッキング3本＋ratchet のみ・冪等キー・schema） | loop | 可 | 可 | M |
+| ~~P2~~ ✅(方針転換) | manifest-dispatcher は**不採用**（claude-code-guide で裏取り: 公式 hook は並列実行・deny>defer>ask>allow の合成・statusMessage/source 属性/重複排除を dispatcher で再現できず、安全足場を畳むのは退行リスク）。配線ドリフト検知の**意図はリポに既存**（`templates/diagnostics/check-hooks-wired.mjs`＝孤児hook検出A＋グローバル未反映検出B・`run.mjs` 登録済み）。**完了 2026-10-21**: 不足していた npm script(`check:hooks-wired`/`:selftest`)の配線だけ追加（134ddb6）。全9本 hook 配線済み・孤児0を検証。★自己検証違反(既存未検索で新規作成→退行)を git restore で是正・報告済み | harness | — | 可 | S |
+| P3 ✅ | 結末台帳（ブロッキング3本＋ratchet の deny を `_loop/hook-outcomes.jsonl` へ追記・冪等キー・schema・観測専用fail-open）。**完了 2026-10-21**: `.claude/hooks/lib/outcome-ledger-core.mjs`(純関数)＋`record-outcome.mjs`(I/O・絶対に投げない)＋`.test.mjs`(23緑)、4 hook の deny 点に配線、E2E で deny不変・冪等・fail-open 確認。★council の冪等キー `(session_id, tooluse_idx)` は**実測で訂正**: 公式仕様確認で PreToolUse はネイティブ `tool_use_id` を持ち transcript は非同期で遅れる（番号を数える方式は不安定）と判明→鍵は `(sessionId, toolUseId, hook)` | loop | 可 | 可 | M |
 | P4 | `site/lp/` の掲載/非掲載を宣言＋「配信中なのに未宣言の HTML」検査 | prompt | 可 | 可 | S |
 | P5 | `_preamble` 単一注入（ai-instructions.json 1キー＋ai-box.js）＋描画先頭にある test | prompt | 可 | 可 | S |
 | P6 | index.html の否定形 hint-box 廃止 | prompt | 可 | 不可(CVRは実測パネル) | XS |
@@ -131,9 +131,9 @@
 
 ## 未確認・次にやること（宣言して残す）
 
-- ratchet の**マーカー移動 gaming** → P0 の追加条件で塞ぐ（実装時にテスト必須）。
-- P8 の「product surface」の定義（`site/`・LP・公開docのパス集合）は **P3 のデータを見てから**確定。
-- グローバル `~/.claude/settings.json` は manifest 化後も**手配線が残る**（dispatcher はリポ側しか直さない）＝宣言して残す既知の穴。
+- ratchet の**マーカー移動 gaming** → P0 の追加条件で塞ぐ（実装時にテスト必須）。✅塞いだ（P0）。
+- P8 の「product surface」の定義（`site/`・LP・公開docのパス集合）は **P3 のデータを見てから**確定。★P3 の台帳（`_loop/hook-outcomes.jsonl`）は配線済みだが、deny の実データはこれから溜まる＝**FP 率はまだ出せない**。P8 は実データが数件溜まり人手ラベルを付けてから着手（宣言して保留）。
+- グローバル `~/.claude/settings.json` は**手配線が残る**（リポ側 settings しか直せない。P2 で dispatcher は不採用＝畳まない判断。新 hook/lib を他プロジェクトへ効かせるには手反映が要る）＝宣言して残す既知の穴。
 - `site/lp/` の CVR 計測は claims.json 流儀の provenance が要る＝**計測せずに主張を増やさない**。
 - 実装は本物Claudeが差分とチェックを確認してから（サブエージェント由来の外向き操作は `guard-external-actions` が常に拒否）。
 

@@ -20,6 +20,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { findRepoRoot, normalizeWindowsPath, readStdin } from './lib/transcript-reads.mjs';
 import { measureCore, judge, DEFAULT_CORE_MAX } from '../../templates/diagnostics/check-claude-md-budget.mjs';
+import { recordOutcome } from './lib/record-outcome.mjs';
 
 // 編集後の CLAUDE.md 全文を組み立てる。組み立てられない(Edit の old_string が無い等)なら null=判定しない。
 export function applyEdit(preText, toolName, toolInput) {
@@ -44,16 +45,16 @@ export function decideRatchet(preText, postText, max = DEFAULT_CORE_MAX) {
 
   // マーカーを消して予算判定自体を無効化する抜け道を塞ぐ(核の境界を外す編集は拒否)。
   if (pre.declared && !post.declared) {
-    return { decision: 'deny', reason: 'core:end マーカーを消そうとしています。核の予算境界は外せません(マーカーは1つだけ残す)。' };
+    return { decision: 'deny', category: 'marker-removed', reason: 'core:end マーカーを消そうとしています。核の予算境界は外せません(マーカーは1つだけ残す)。' };
   }
   // 元々マーカーが無い(このリポは対象外)、または編集後もまだ無い → 予算の対象外。
-  if (!post.declared) return { decision: 'allow', reason: '' };
+  if (!post.declared) return { decision: 'allow', category: '', reason: '' };
 
   const jPost = judge(postText, max);
 
   // マーカーが2つ以上は常に拒否(judge と一致)。
   if (post.markers > 1) {
-    return { decision: 'deny', reason: `core:end マーカーが ${post.markers} 個になります(1つだけにする)。` };
+    return { decision: 'deny', category: 'multi-marker', reason: `core:end マーカーが ${post.markers} 個になります(1つだけにする)。` };
   }
 
   // gaming: 核が縮んだのに、縮んだ分だけファイル全体が縮んでいない = 行をマーカーより下へ退避しただけ。
@@ -64,6 +65,7 @@ export function decideRatchet(preText, postText, max = DEFAULT_CORE_MAX) {
   if (pre.declared && pre.coreLines > max && relocatedBelow > 0 && post.coreLines < pre.coreLines) {
     return {
       decision: 'deny',
+      category: 'gaming',
       reason:
         `核を ${coreShrink} 行減らしていますが、うち約 ${relocatedBelow} 行はマーカーを上へ動かして` +
         `「下へ退避」しただけで、ファイルからは消えていません(無法地帯へ潜るだけ)。` +
@@ -75,13 +77,13 @@ export function decideRatchet(preText, postText, max = DEFAULT_CORE_MAX) {
     // ここに来る fail は「核が上限超過」(markers>1 は上で処理済み)。
     if (post.coreLines > pre.coreLines) {
       // 増やして超過 = ラチェット発動(拒否)。
-      return { decision: 'deny', reason: `${jPost.detail}（今 ${pre.coreLines} 行→${post.coreLines} 行に増加）。核は増やせません。実損本文を site/learnings/ か _docs/ へ移し、規範と検査の入口だけ残してください。` };
+      return { decision: 'deny', category: 'over-budget-increase', reason: `${jPost.detail}（今 ${pre.coreLines} 行→${post.coreLines} 行に増加）。核は増やせません。実損本文を site/learnings/ か _docs/ へ移し、規範と検査の入口だけ残してください。` };
     }
     // 超過しているが減らす方向 = 通すが警告(減らす作業を妨げない)。
-    return { decision: 'warn', reason: `核はまだ上限 ${max} 行超過中（${pre.coreLines}→${post.coreLines} 行・減少中）。上限内まで移設を続けてください。` };
+    return { decision: 'warn', category: 'over-budget-shrink', reason: `核はまだ上限 ${max} 行超過中（${pre.coreLines}→${post.coreLines} 行・減少中）。上限内まで移設を続けてください。` };
   }
 
-  return { decision: 'allow', reason: '' };
+  return { decision: 'allow', category: '', reason: '' };
 }
 
 function main() {
@@ -117,8 +119,10 @@ function main() {
   const postText = applyEdit(preText, toolName, input.tool_input);
   if (postText == null) process.exit(0); // 組み立てられない=実際の編集も起きないので止めない
 
-  const { decision, reason } = decideRatchet(preText, postText);
+  const { decision, reason, category } = decideRatchet(preText, postText);
   if (decision === 'deny') {
+    // 結末台帳へ(観測・冪等・fail-open。記録の成否は判定に影響しない)。council §7 / P3。
+    recordOutcome(input, { hook: 'check-claude-md-budget-ratchet', reasonCategory: category || 'deny' });
     process.stdout.write(
       JSON.stringify({
         hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason },
