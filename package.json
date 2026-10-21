@@ -78,6 +78,8 @@
     "ci:usage:selftest": "node templates/scripts/check-actions-usage.mjs --selftest",
     "check:gates-wired": "node templates/diagnostics/check-gates-are-wired.mjs .",
     "check:gates-wired:selftest": "node templates/diagnostics/check-gates-are-wired.mjs --selftest",
+    "check:hooks-wired": "node templates/diagnostics/check-hooks-wired.mjs .",
+    "check:hooks-wired:selftest": "node templates/diagnostics/check-hooks-wired.mjs --selftest",
     "site:claims": "node scripts/verify-claims-coverage.mjs",
     "site:links": "node scripts/verify-internal-links.mjs",
     "site:learnings-map": "node scripts/verify-learnings-map.mjs",
