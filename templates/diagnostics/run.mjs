@@ -55,6 +55,11 @@ const CHECKS = [
   //   ★依存ゼロ(node:vm のみ)。既製プラグインはメンテナ1人 or 1.0未満で、
   //     ずっと動くことを当てにできないため、あえて標準APIだけで書いてある。
   { name: 'check-inline-script-syntax', path: join(__dirname, 'check-inline-script-syntax.mjs') },
+  // ★Chrome拡張のリポに「本物のブラウザで自動検証」(../extension-verify/run.mjs)が
+  //   配線されているか(2026-10-25追加・りんく「拡張関連全体のルールにしたい」)。
+  //   実損: AI が自分で読み込んで確かめず「拡張を再読み込みして開き直して」と人に頼み続けた。
+  //   Codex は CLAUDE.md を読まないので AGENTS.md への記載まで見る。拡張でないリポは pass。
+  { name: 'check-extension-verify-wired', path: join(__dirname, 'check-extension-verify-wired.mjs') },
   // ★症状の言葉で原因索引を引けるか。引数が無ければ対象から自動で探す。
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
