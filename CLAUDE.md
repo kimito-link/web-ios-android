@@ -52,6 +52,10 @@
 補足として残してよいが、URLを省略してはいけない。GitHub・Vercel・Google Cloud等
 どのサービスでも同じ——「開いてください」と言うなら、開くべき場所のURLを添える。
 
+★★**Chrome拡張は、AIが自分で読み込んで確かめる。人に「再読み込みして開き直して」と頼まない**（2026-10-25確立）。
+拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
+自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。
@@ -1276,6 +1280,25 @@ qa/
       notes.md
   bugs.md
 ```
+
+### ★Chrome拡張は「AIが読み込んで自分で確かめる」（2026-10-25確立・全拡張リポ共通）
+
+> りんくの言葉:「拡張を自動で動かして検証する仕組みを全部にいれたい」「拡張関連全体のルールにしたいのです」
+
+- **拡張を変えたら、報告の前に `npm run verify:extension` を自分で走らせる。** 実体は共通の
+  [`templates/extension-verify/run.mjs`](templates/extension-verify/README.md)。拡張を本物の Chromium に読み込み、
+  service worker の起動・全画面（popup／options／side panel／devtools／独自ページ）・content script の
+  全差し込み先を開いて、例外・`console.error`・読み込み失敗・空白・確認式を見る。結果とスクリーンショットは
+  `.artifacts/extension-verify/` に残る。**「拡張を再読み込みして開き直してください」と人に頼んで確認を代行させない。**
+- **全拡張リポに入れる。** `extension-verify.json`・npm script か CI への配線・**AGENTS.md への記載**が揃っていないと
+  [`templates/diagnostics/check-extension-verify-wired.mjs`](templates/diagnostics/check-extension-verify-wired.mjs)
+  （`npm run diagnostics` に登録済み）が赤にする。★Codex/Cursor は CLAUDE.md を読まないので、AGENTS.md に書かないと
+  ルールが届かない（実損: Codex が毎回「再読み込みして開き直して」と頼んでいた）。
+- **新しい画面を足したら設定に足す。** 足さないと「未検証の画面」で赤（網羅の門）。検証しない画面は理由つきで `ignorePages` へ。
+- **人の普段の Chrome への反映**（作業ツリーを読んでいる拡張のリロード）も、手段があれば AI がやる
+  （手本: 追憶 CLAUDE.md の `reload_extension`）。人に頼むのは手段が全部尽きたときだけ。
+- **この検証の外にあるもの**: ログインが要る本物のサイトでの精度、利用者の Chrome から拡張が外れていないか。
+  前者は各リポの実機確認、後者は各 PC 上の検査（手本: `../tsuioku-no-kirameki.com/scripts/check-chrome-load-path.mjs`）が受け持つ。
 
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 
