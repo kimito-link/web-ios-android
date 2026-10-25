@@ -3,6 +3,8 @@
 **全ての Chrome 拡張リポで同じ物差しを使う。** 拡張を本物の Chromium に読み込み、
 
 1. **静的**: manifest が指す全ファイル・service worker の import 先(再帰)・各画面の script/link が実在するか。
+   ★各画面に MV3 の CSP で必ず止まる書き方(インラインの `onerror=` 等・中身のある `<script>`・`javascript:`)が無いか。
+   Chrome 156 以降は書いてあるだけで `console.error` になるが、古い chromium では出ないので版に頼らず静的に見る。
    ★**網羅の門**: 拡張直下と manifest の画面があるフォルダの `*.html` は、「検証する」か「検証しない理由」の
    どちらかが設定に無いと赤。新しい画面を足して検証に入れ忘れる、を機械で止める。
 2. **起動**: service worker が起き、manifest の version を返すか(＝拡張が読み込まれて壊れていない)。

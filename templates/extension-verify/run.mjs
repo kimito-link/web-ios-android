@@ -170,6 +170,29 @@ export function missingHtmlRefs(extDir, pageRel) {
   return out;
 }
 
+/**
+ * MV3 の拡張ページの CSP(script-src 'self'。unsafe-inline は許されない)で必ず止められる書き方。
+ * ★インラインの onerror 等は「動かないうえに、Chrome 156 以降は書いてあるだけで console.error を出す」
+ * (2026-10-25 返信サジェストの CI で発覚。手元の古い chromium では出ず素通りしていた)。
+ * 版に頼らず静的に見る。manifest の sandbox.pages は CSP が別なので呼び出し側で除く。
+ */
+export function inlineScriptsBlockedByCsp(extDir, pageRel) {
+  const abs = join(extDir, pageRel);
+  if (!existsSync(abs)) return [];
+  const html = readFileSync(abs, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+  const out = [];
+  const tags = html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, '$1</script>');
+  for (const m of tags.matchAll(/<([a-z][\w-]*)\b[^>]*?\s(on[a-z]+)\s*=/gi)) out.push(`<${m[1]} ${m[2]}=…>(インラインのイベント)`);
+  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    const attrs = m[1];
+    if (/\ssrc\s*=/i.test(attrs) || !m[2].trim()) continue;
+    const type = (/\stype\s*=\s*["']?([^"'\s>]+)/i.exec(attrs) || [])[1];
+    if (!type || /^(text\/javascript|module|application\/javascript)$/i.test(type)) out.push('<script>…</script>(インラインのスクリプト)');
+  }
+  for (const m of html.matchAll(/\shref\s*=\s*["']\s*javascript:/gi)) out.push('href="javascript:…"');
+  return [...new Set(out)];
+}
+
 /** 網羅の門で見る HTML: 拡張直下 + 宣言済み画面のあるフォルダ(非再帰)。 */
 export function candidateHtml(extDir, manifest) {
   const dirs = new Set(['.']);
@@ -233,6 +256,12 @@ export function staticPlan(targetDir, cfg) {
   for (const p of cfg.pages) pageMap.set(String(p.path).replace(/^\//, ''), { ...pageMap.get(p.path), ...p, why: p.why || pageMap.get(p.path)?.why || 'config' });
   const pages = [...pageMap.values()];
   for (const p of pages) for (const r of missingHtmlRefs(extDir, stripQuery(p.path))) failures.push(`画面の参照先が無い: ${r}`);
+  const sandboxed = new Set((manifest.sandbox?.pages || []).map((p) => stripQuery(p)));
+  for (const p of pages) {
+    const rel = stripQuery(p.path);
+    if (sandboxed.has(rel)) continue;
+    for (const r of inlineScriptsBlockedByCsp(extDir, rel)) failures.push(`CSP で止まる書き方: ${rel} の ${r}(外部 .js に移して addEventListener にする)`);
+  }
 
   // ★網羅の門
   const covered = new Set(pages.map((p) => stripQuery(p.path)));
@@ -562,6 +591,13 @@ function selftest() {
   check('★未検証の画面を赤にする(網羅の門)', has('未検証の画面: extra.html'));
   check('★理由なしの除外を赤にする', has('ignorePages に理由が無い'));
   check('★どの content_scripts にも当たらない sites を赤にする', has('どの content_scripts も当たらない'));
+  const csp = mk({ 'a.html': '<img src="x.png" onerror="this.remove()"><script>alert(1)</script><a href="javascript:void 0">x</a>'
+    + '<script type="application/json">{"ok":1}</script><script src="ok.js"></script><script>/* x */</script><p data-x="1">onclick は文字</p>' });
+  const ci = inlineScriptsBlockedByCsp(csp, 'a.html');
+  check('★インラインの onerror を赤にする(MV3 の CSP で止まる)', ci.some((r) => r.includes('onerror')));
+  check('★インラインのスクリプトと javascript: を赤にする', ci.some((r) => r.includes('インラインのスクリプト')) && ci.some((r) => r.includes('javascript:')));
+  check('JSON の script・src 付き・本文の「onclick」は数えない', ci.length === 3 && !ci.some((r) => r.includes('onclick')));
+  rmSync(csp, { recursive: true, force: true });
 
   check('match: *.chatwork.com は www.chatwork.com に当たる', urlMatches('https://www.chatwork.com/#!rid1', ['https://*.chatwork.com/*']));
   check('match: *.chatwork.com は chatwork.com 自身にも当たる', urlMatches('https://chatwork.com/', ['https://*.chatwork.com/*']));
