@@ -259,15 +259,27 @@ export function staticPlan(targetDir, cfg) {
 }
 
 // ─── 2/3. ブラウザ検査 ───────────────────────────────────────────────────
-function loadPlaywright(targetDir) {
-  const tries = [join(targetDir, 'package.json'), import.meta.url];
-  for (const base of tries) {
+/**
+ * playwright の候補を全部集める(対象リポ → このキット → 実行場所/グローバル の順)。
+ * ★対象リポの playwright 版に合う chromium が未インストールでも、別の候補の chromium で起動できれば測れる
+ *   (例: リポは 1.64 だが PC に入っているのは 1.6x の chromium)。1つ目で諦めない。
+ */
+function playwrightCandidates(targetDir) {
+  const out = [];
+  const seen = new Set();
+  for (const base of [join(targetDir, 'package.json'), import.meta.url, join(process.cwd(), 'x.js')]) {
     const req = createRequire(base);
     for (const name of ['playwright', '@playwright/test', 'playwright-core']) {
-      try { const m = req(name); if (m.chromium) return m; } catch { /* 次へ */ }
+      try {
+        const path = req.resolve(name);
+        if (seen.has(path)) continue;
+        seen.add(path);
+        const m = req(name);
+        if (m.chromium) out.push({ name, path, chromium: m.chromium });
+      } catch { /* 次へ */ }
     }
   }
-  try { return createRequire(join(process.cwd(), 'x.js'))('playwright'); } catch { return null; }
+  return out;
 }
 
 /** Chromium の unpacked 拡張 ID(manifest.key があればそれ、無ければパス)。SW が無い拡張用の予備。 */
@@ -290,8 +302,8 @@ function asciiCopy(extDir, exclude) {
 const DEFAULT_HTML = '<!doctype html><html><head><meta charset="utf-8"><title>extension-verify</title></head><body><main><p>extension-verify</p></main></body></html>';
 
 async function browserPhase(targetDir, cfg, plan, { headed }) {
-  const pw = loadPlaywright(targetDir);
-  if (!pw) return { unmeasurable: 'playwright が見つからない(npm i -D playwright && npx playwright install chromium)' };
+  const candidates = playwrightCandidates(targetDir);
+  if (!candidates.length) return { unmeasurable: 'playwright が見つからない(npm i -D playwright && npx playwright install chromium)' };
   const results = [];
   const allow = cfg.allowErrors.map((a) => ({ re: new RegExp(a.pattern), reason: a.reason }));
   const isAllowed = (msg) => allow.some((a) => a.re.test(msg));
@@ -301,15 +313,23 @@ async function browserPhase(targetDir, cfg, plan, { headed }) {
   const copy = asciiCopy(plan.extDir, cfg.copyExclude);
   const userDataDir = mkdtempSync(join(tmpdir(), 'ext-verify-profile-'));
   let context;
-  try {
-    context = await pw.chromium.launchPersistentContext(userDataDir, {
-      channel: 'chromium',
-      headless: !headed,
-      args: [`--disable-extensions-except=${copy.dir}`, `--load-extension=${copy.dir}`],
-    });
-  } catch (e) {
+  const launchErrors = [];
+  // EXT_VERIFY_EXECUTABLE で chromium の実体を直接指定できる(どの playwright 版とも組める)
+  const executablePath = process.env.EXT_VERIFY_EXECUTABLE || undefined;
+  for (const c of candidates) {
+    try {
+      context = await c.chromium.launchPersistentContext(userDataDir, {
+        channel: executablePath ? undefined : 'chromium',
+        executablePath,
+        headless: !headed,
+        args: [`--disable-extensions-except=${copy.dir}`, `--load-extension=${copy.dir}`],
+      });
+      break;
+    } catch (e) { launchErrors.push(`${c.name}(${c.path}): ${String(e.message).split('\n')[0]}`); }
+  }
+  if (!context) {
     copy.cleanup();
-    return { unmeasurable: `Chromium を起動できない: ${String(e.message).split('\n')[0]}(npx playwright install chromium)` };
+    return { unmeasurable: `Chromium を起動できない(npx playwright install chromium): ${launchErrors.join(' / ')}` };
   }
 
   try {
