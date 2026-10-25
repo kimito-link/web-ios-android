@@ -79,7 +79,7 @@ export function loadConfig(targetDir) {
   const cfg = existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : {};
   return {
     configFound: existsSync(p),
-    extensionDir: cfg.extensionDir || '.',
+    extensionDir: cfg.extensionDir || guessExtensionDir(targetDir),
     pages: cfg.pages || [],
     ignorePages: cfg.ignorePages || [],
     sites: cfg.sites || [],
@@ -90,6 +90,16 @@ export function loadConfig(targetDir) {
 }
 
 const stripQuery = (p) => String(p).split(/[?#]/)[0];
+
+/** extensionDir 未指定のとき、拡張の manifest(manifest_version あり)がある場所を既定の候補から探す。 */
+function guessExtensionDir(targetDir) {
+  for (const d of ['.', 'extension', 'src', 'app', 'chrome-extension']) {
+    try {
+      if (Number.isInteger(JSON.parse(readFileSync(join(targetDir, d, 'manifest.json'), 'utf8')).manifest_version)) return d;
+    } catch { /* 次へ */ }
+  }
+  return '.';
+}
 
 // ─── 1. 静的検査 ──────────────────────────────────────────────────────────
 /** manifest が「拡張の画面」として宣言している HTML(クエリ付きのまま)。 */
@@ -299,6 +309,13 @@ function asciiCopy(extDir, exclude) {
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
+/** console.error の1行。★「Failed to load resource」は本文に URL が無いので、出どころの URL を足す(allowErrors で狙い撃ちできるように)。 */
+function consoleLine(m) {
+  const text = m.text();
+  const url = /^Failed to load resource/.test(text) ? m.location()?.url : '';
+  return `console.error: ${text}${url ? ` (${url})` : ''}`;
+}
+
 const DEFAULT_HTML = '<!doctype html><html><head><meta charset="utf-8"><title>extension-verify</title></head><body><main><p>extension-verify</p></main></body></html>';
 
 async function browserPhase(targetDir, cfg, plan, { headed }) {
@@ -358,7 +375,7 @@ async function browserPhase(targetDir, cfg, plan, { headed }) {
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(`例外: ${e.message}`));
-      page.on('console', (m) => { if (m.type() === 'error') errors.push(`console.error: ${m.text()}`); });
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(consoleLine(m)); });
       page.on('response', (r) => { if (r.url().startsWith('chrome-extension://') && r.status() >= 400) errors.push(`${r.status()}: ${r.url()}`); });
       // ★ERR_ABORTED は「ファイルが無い」ではなく読み込みの中断(headless で mp4 を再生しない等)。無い時は ERR_FILE_NOT_FOUND。
       page.on('requestfailed', (r) => {
@@ -429,7 +446,7 @@ async function browserPhase(targetDir, cfg, plan, { headed }) {
       cdp.on('Runtime.executionContextsCleared', () => ctxs.clear());
       const errors = [];
       page.on('pageerror', (e) => errors.push(`例外: ${e.message}`));
-      page.on('console', (m) => { if (m.type() === 'error') errors.push(`console.error: ${m.text()}`); });
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(consoleLine(m)); });
       await cdp.send('Runtime.enable');
       const name = `差し込み ${s.url}${s.auto ? '(自動)' : ''}`;
       let ok = true; let detail = '';
