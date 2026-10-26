@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { hasReasonTag, REASON_TAGS } from "./check-ask-preceded-by-research.mjs";
+import { findDesignPrincipleKeyword, hasReasonTag, REASON_TAGS } from "./check-ask-preceded-by-research.mjs";
 
 const HOOK = fileURLToPath(new URL("./check-ask-preceded-by-research.mjs", import.meta.url));
 const run = (input, env = {}) =>
@@ -17,6 +17,15 @@ describe("hasReasonTag", () => {
     expect(hasReasonTag(["確認が必要な理由：事実不在"])).toBe(true);
     expect(hasReasonTag(["確認が必要な理由: なんとなく"])).toBe(false);
     expect(hasReasonTag(["どちらにしますか"])).toBe(false);
+  });
+});
+
+describe("findDesignPrincipleKeyword", () => {
+  it("事業指標の名前(CPA・ROAS 等)を選択肢に出したら拾い、普通の文は拾わない", () => {
+    expect(findDesignPrincipleKeyword(["CPA を優先しますか"])).toBe("CPA");
+    expect(findDesignPrincipleKeyword(["roas重視の案"])).toBe("ROAS");
+    expect(findDesignPrincipleKeyword(["LTV 重視"])).toBe("LTV");
+    expect(findDesignPrincipleKeyword(["どのフォルダに置きますか"])).toBeNull();
   });
 });
 
