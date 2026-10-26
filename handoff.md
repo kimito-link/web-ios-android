@@ -16,7 +16,7 @@ WORKED_BY: claude-cloud（Opus／session_01F4N5YRVNWo4Cg2PpW96tjB）／ブラン
 MACHINE_NOTES: ★このセッションはクラウド（/home/user）。ここからは deploy 不可（`../ai-hub` 無し・Cloudflare/Wrangler 認証無し・wrangler 無し）＝本番反映と `~/.claude/skills/` の読取りは PC 側でしかできない。
 
 ## このプロジェクトは何か（1行）
-AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張/Web/iOS/Android のストア申請自動化キットを束ねた横断開発基盤。設計方針 = CVR/LTV × 100年メンテナンスフリー × 商品インパクト。
+AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張/Web/iOS/Android のストア申請自動化キットを束ねた横断開発基盤。設計方針 = 事業指標の最大化（北極星 LTV÷CPA・正本 docs/ai-rules/07_GROWTH_METRICS.md） × 100年メンテナンスフリー（コード構成は 01_CORE_RULES §2-1） × 商品インパクト。
 
 ## 開いているスレッド（プロジェクトのスレッドに割るならこの単位）
 
