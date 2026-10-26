@@ -27,6 +27,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-target-file-reachability.mjs\"",
             "timeout": 10,
             "statusMessage": "実装対象ファイルの到達性チェック中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-claude-md-budget-ratchet.mjs\"",
+            "timeout": 10,
+            "statusMessage": "核の予算(ratchet)チェック中..."
           }
         ]
       },

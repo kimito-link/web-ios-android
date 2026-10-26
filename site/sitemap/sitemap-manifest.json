@@ -180,5 +180,14 @@
         }
       ]
     }
+  ],
+  "$unlistedComment": "配信はされるが、ナビ(sections)には意図的に載せないページの宣言。audience=想定読者、reason=なぜ非掲載か。verify-served-html-declared.mjs が『配信されるのに宣言が無い HTML』を落とすための宣言先。sitemap-render.js は sections だけ読むので、ここは描画に影響しない。",
+  "unlisted": [
+    {
+      "label": "App Launch Accelerator（B2B・アプリ審査代行LP）",
+      "srcPath": "lp/index.html",
+      "audience": "b2b",
+      "reason": "事業者向けのアプリ審査代行サービスLP。個人開発者向けの一般ナビ(index/サイトマップ)とは集客導線が別のため意図的に未掲載。URL(/lp/)直打ち・外部広告からの着地専用。"
+    }
   ]
 }

@@ -226,3 +226,51 @@ PowerShellで3ケース（規範文＋機械検査言及なし／規範文＋言
   git管理外）
 - `templates/scripts/check-decision-receipt.mjs`（ハイブリッド型検査の既存実例、参照のみ）
 - `_docs/DESIGN-harvest-coverage-2026-09-14.md`（DESIGN文書フォーマットの型）
+
+---
+
+## 移設: `warn-long-running-session` の実装経緯（CLAUDE.md 核から移設・2026-10-21・P1）
+
+CLAUDE.md 核には規範（稼働中セッション検知hookの2軸判定＋「稼働中セッションは正本更新が自動反映されない→疑う」）
+だけを残し、以下の日付付き実損・設計経緯はここへ移した（核の予算を守る・全体設計会議 P1）。
+
+### 1. 26日間連続稼働セッションの実損 → hook 化（2026-09-26）
+`kimitolink-linktree`セッションが 2026-08-31 から一度も再起動されず **26日間継続稼働**しており、その間に
+CLAUDE.md へ追記された全ルール（「直接URLを併記する」等）を一切反映していなかった（ユーザーがスクリーンショットで
+指摘して初めて発覚）。「気づいたら疑う」という人間の注意力依存から、`UserPromptSubmit` hook
+（`.claude/hooks/warn-long-running-session.mjs`）による自動警告へ格上げした。transcript.jsonl の先頭行の
+`timestamp` フィールド（実測で全エントリに存在と確認）からセッション開始時刻を取得し、12時間超なら
+`additionalContext` で気づきを注入する。
+★実装時の訂正: 当初はファイルシステムの `birthtime` で開始時刻を判定する設計を検討したが、実測で Windows の
+`birthtime` は無関係な古い日付を返すことがあり信頼できないと判明。transcript の中身（`timestamp`）を正本とするのが
+唯一確実。グローバル設定（`~/.claude/settings.json`）にも `web-ios-android-relay.mjs` 経由で配線済み。
+
+### 2. 「経過時間」だけでは漏れる実損 → 正本更新時刻の判定を追加（2026-09-30）
+`soushin-suggest.link`セッションが「実機で確認した」と報告後、プロダクトが新版へ更新されたのに一度も再検証せず
+作業を続けた。本来 `check-commit-preceded-by-verification.mjs` が検出できる領域だが、そのセッションの
+`~/.claude/settings.json` がこの hook 追加（2026-09-29）より前の状態のまま起動され続けていた可能性が高く、
+hook 自体が発火していなかった。★真因は「経過時間が長い」ではなく「セッション開始時点の hook 配線が、正本
+（`.claude/hooks/`・CLAUDE.md）の最新コミットより古い」こと——経過時間のしきい値判定だけでは、配線がすぐ後に
+更新された短命セッションを見逃す。対処として `warn-long-running-session.mjs` に
+`git log -1 --format=%cI -- .claude/hooks/ CLAUDE.md` で正本の最終更新時刻を実測し、「セッション開始時刻 <
+正本更新時刻」を検出したら経過時間と独立に警告する判定を追加した。実地テスト3ケース（古い/健全/経過時間は短いが
+正本更新前に開始した危険なセッション）で、旧ロジックが見逃すケースを正しく検知することを確認済み。
+
+出典: 2026-09-26 / 2026-09-30 実損。CLAUDE.md「正本への自動到達経路」節から移設（2026-10-21・P1）。
+
+## 移設: `check-write-preceded-by-search` の実装経緯（CLAUDE.md 核から移設・2026-10-21・P1）
+
+CLAUDE.md 核「実装着手前の非交渉ルール」項目1には規範（既存実装を検索する／否定的な結論を出す前も同強度で検索する）
+だけを残し、以下の機械検査化の経緯はここへ移した。
+
+**実損 → hook 化（2026-09-28）**: `soushin-suggest.link` セッションが同一作業内で3回、既存実装を検索せずに新規関数を
+書いた（ヘッダーバンド自作／フッター実装を2つ新規作成／自分で作った共通部品を自分で使わない、という自己不整合まで発生）。
+「気づいたら疑う」という人間の注意力依存から、`PreToolUse(Write|Edit)` hook
+（`.claude/hooks/check-write-preceded-by-search.mjs`）による自動警告へ格上げした。`check-ask-preceded-by-research.mjs` と
+同じ設計思想（transcript走査・非ブロッキング・fail-open）で、書こうとしている内容に新規関数定義らしきパターンがあり、
+かつ直近15回のツール呼び出しに Grep/Glob が無ければ `systemMessage` で気づきを注入する。「検索した形跡があるか」という
+客観的事実だけを見る設計であり、「本当に重複を評価したか」までは検出できない（機械化できない理由の明示・本文書の
+「新しいルールを書いたら機械検査化を検討する」の型）。グローバル設定（`~/.claude/settings.json`）にも
+`web-ios-android-relay.mjs` 経由で配線済み（ただし稼働中セッションには再起動まで反映されない）。
+
+出典: 2026-09-28 実損（`soushin-suggest.link`）。CLAUDE.md「実装着手前の非交渉ルール」項目1から移設（2026-10-21・P1）。
