@@ -45,6 +45,7 @@ import {
   readStdin,
   transcriptTouchedPath,
 } from './lib/transcript-reads.mjs';
+import { recordOutcome } from './lib/record-outcome.mjs';
 
 export const RISKY_PATTERNS = [
   { id: 'git push', re: /(^|[\s;&|(])git\s+(?:-C\s+\S+\s+)?push\b(?![^\n;&|]*--dry-run)/ },
@@ -201,7 +202,9 @@ function fetchChecks(pr) {
   }
 }
 
-function deny(reason) {
+function deny(reason, input, category) {
+  // 結末台帳へ(観測・冪等・fail-open。記録の成否は判定に影響しない)。council §7 / P3。
+  if (input && category) recordOutcome(input, { hook: 'guard-external-actions', reasonCategory: category });
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
@@ -246,11 +249,15 @@ function main() {
         'サブエージェント自身の Read はそこに残らないため、Read しても通りません（試さなくてよい）。\n- ' +
         '作業は commit までで止め、push・マージ・デプロイは親セッションに引き継いでください' +
         '（親が差分とチェックを確かめてから実行します）。バイパス変数や別シェルでの迂回はしないこと。' +
-        '\n（このガードは .claude/hooks/guard-external-actions.mjs）'
+        '\n（このガードは .claude/hooks/guard-external-actions.mjs）',
+      input,
+      'subagent'
     );
   }
 
   const reasons = [];
+  /** @type {string[]} reasons と対になる結末カテゴリ(台帳用・先頭を主因として記録)。 */
+  const categories = [];
 
   // 1. CLAUDE.md を現在の内容のまま全文 Read したか
   const claudeMdPath = join(repoRoot, 'CLAUDE.md');
@@ -270,6 +277,7 @@ function main() {
             : 'このセッションで CLAUDE.md を Read していません。') +
             ` ${claudeMdPath} — ${describeCoverageGap(coverage)}`
         );
+        categories.push('no-claude-md-read');
       }
     }
   }
@@ -281,6 +289,7 @@ function main() {
       `${coordPath} にこのセッションで一度も触れていません。write_lock と他セッションの files を読み、` +
         '自分の session 行を書いてから進めてください（並列セッション協調プロトコル）。'
     );
+    categories.push('no-coord');
   }
 
   // 3. gh pr merge: チェックに失敗が無いか（Gate を迂回して成功扱いにしない）
@@ -294,6 +303,7 @@ function main() {
             'ユーザーがチャットで明示的にバイパスを承認した場合に限り、コマンドの先頭に ' +
             'GATE_BYPASS_APPROVED_BY_USER="<承認の中身>" を付けてください（無断で付けるのは虚偽申告）。'
         );
+        categories.push('pr-check-red');
       }
     }
   }
@@ -323,6 +333,7 @@ function main() {
           ' ★意図的に直接 push する場合に限り、ユーザーがチャットで承認したうえで' +
           ' GATE_BYPASS_APPROVED_BY_USER="<承認の中身>" を付けてください（無断で付けるのは虚偽申告）。'
       );
+      categories.push('protected-branch');
     }
   }
 
@@ -332,7 +343,9 @@ function main() {
   deny(
     `外向き・取り消せない操作（${risky.join(' / ')}）の前に、CLAUDE.md が求める手順が踏まれていません:\n- ` +
       reasons.join('\n- ') +
-      '\n（このガードは .claude/hooks/guard-external-actions.mjs。「読んだか・触れたか・チェックが緑か」という事実だけを見ます）'
+      '\n（このガードは .claude/hooks/guard-external-actions.mjs。「読んだか・触れたか・チェックが緑か」という事実だけを見ます）',
+    input,
+    categories[0] || 'blocked'
   );
 }
 

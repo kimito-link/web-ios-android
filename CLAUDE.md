@@ -52,6 +52,10 @@
 補足として残してよいが、URLを省略してはいけない。GitHub・Vercel・Google Cloud等
 どのサービスでも同じ——「開いてください」と言うなら、開くべき場所のURLを添える。
 
+★★**Chrome拡張は、AIが自分で読み込んで確かめる。人に「再読み込みして開き直して」と頼まない**（2026-10-25確立）。
+拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
+自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。
@@ -61,7 +65,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 |---|---|---|
 | 非交渉ルール・4基準・5類型 | このファイル（`CLAUDE.md`） | 公開 |
 | 規則本文 | [`docs/ai-rules/`](docs/ai-rules/) | 公開 |
-| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
+| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14 ／ **デザイン名前の翻訳**＝曖昧な見た目依頼を定着したデザイン用語に翻訳し3方向を出す・[`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md)） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
 | 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
@@ -118,34 +122,11 @@ CLAUDE.mdに解決策が書いてある地雷）を自力で再発見してい�
 2. セッションを再起動する（以後も自動インポートで継続的に最新が読まれる状態にしたい場合）
 「稼働中セッションには遡って効かない」＝「再起動するしかない」ではないことに注意する。
 
-★★★**この既知のケースを機械検知するhookを実装した（2026-09-26）**。
-`kimitolink-linktree`セッションが2026-08-31から一度も再起動されず26日間継続稼働しており、
-その間にこのCLAUDE.mdへ追記された全ルール（「直接URLを併記する」等）を一切反映していなかった
-実損（ユーザーがスクリーンショットで指摘して初めて発覚）を受け、「気づいたら疑う」という
-人間の注意力依存から、`UserPromptSubmit`hook（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)）
-による自動警告へ格上げした。transcript.jsonlの先頭行の`timestamp`フィールド（実測で
-全エントリに存在すると確認済み）からセッション開始時刻を取得し、12時間を超えていたら
-`additionalContext`で気づきを注入する。
-★実装時の訂正: 当初はファイルシステムの`birthtime`でセッション開始時刻を判定する設計を
-検討したが、実測したところWindows環境の`birthtime`は無関係な古い日付を返すことがあり
-信頼できないと判明した。transcript自体の中身（`timestamp`フィールド）を正本とするのが
-唯一確実な方法。グローバル設定（`~/.claude/settings.json`）にも`web-ios-android-relay.mjs`
-経由で配線済み、他プロジェクトのセッションでも自動的に効く。
-
-★★★★**「経過時間」だけでは検知できない実損が発生し、判定条件を追加した（2026-09-30）**。
-`soushin-suggest.link`セッションが「実機で確認した」と報告した後、プロダクトが新版へ
-更新されたにもかかわらず一度も再検証しないまま作業を続けていた。この種の違反は
-`check-commit-preceded-by-verification.mjs`（実地検証履歴チェック）が本来検出できる
-領域だが、そのセッションの`~/.claude/settings.json`がこのhook追加（2026-09-29）より
-前の状態のまま起動され続けていた可能性が高く、hook自体が発火していなかった。
-★これは「経過時間が長い」ことではなく「セッション開始時点のhook配線が、正本
-（`.claude/hooks/`・CLAUDE.md）の最新コミットより古い」ことが真因——経過時間のしきい値
-判定だけでは、配線がすぐ後に更新された短命セッションを見逃す。対処として
-`warn-long-running-session.mjs`に、`git log -1 --format=%cI -- .claude/hooks/ CLAUDE.md`
-でweb-ios-android正本の最終更新時刻を実測し、「セッション開始時刻 < 正本更新時刻」を
-検出したら経過時間のしきい値と独立に警告する判定を追加した。実地テスト（3ケース:
-古いセッション／健全な新しいセッション／経過時間は短いが正本更新前に開始した
-危険なセッション）で、旧ロジックが見逃すケースを正しく検知することを確認済み。
+★この稼働中セッション検知は hook 化済み（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)・
+`UserPromptSubmit`・非ブロッキング）。判定2軸: (1) セッション開始が12時間超、(2) セッション開始時刻 <
+正本（`.claude/hooks/`・CLAUDE.md）の最終更新時刻（配線が古いまま起動した短命セッションも捕捉）。
+実装経緯・26日連続稼働/soushin の実損・`birthtime` が信頼できない件の詳細:
+[`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)。
 
 ★★★★★**非ブロッキングの警告は、読まれなければ「形だけ」になる——外向きの操作の前は拒否に格上げした
 （2026-10-06）**。本人の指摘「CLAUDE.md が形だけで機能していない気がします」を、そのセッション自身の
@@ -242,21 +223,9 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
    開発者登録・API仕様、いずれも「一般論の手順を先に語り、実環境を見ていない」）。
    ★**新しく作るときは検索するのに、「無理だ」と判断するときだけ検索を省略する**という
    非対称性が本質。否定的な結論を出す前は、肯定的な結論を出す前と同じ強度で検索する。
-   ★★**この1番自体を機械検知するhookを実装した（2026-09-28）**。
-   `soushin-suggest.link`セッションが同一作業内で3回、既存実装を検索せずに新規関数を
-   書いた（ヘッダーバンド自作／フッター実装を2つ新規作成／自分で作った共通部品を
-   自分で使わない、という自己不整合まで発生）実損を受け、「気づいたら疑う」という
-   人間の注意力依存から、`PreToolUse(Write|Edit)`hook
-   （[`.claude/hooks/check-write-preceded-by-search.mjs`](.claude/hooks/check-write-preceded-by-search.mjs)）
-   による自動警告へ格上げした。`check-ask-preceded-by-research.mjs`と同じ設計思想
-   （transcript走査・非ブロッキング・fail-open）で、書こうとしている内容に新規関数
-   定義らしきパターンがあり、かつ直近15回のツール呼び出しにGrep/Globが無ければ
-   `systemMessage`で気づきを注入する。「検索した形跡があるか」という客観的事実だけを
-   見る設計であり、「本当に重複を評価したか」までは検出できない（機械化できない理由の
-   明示。詳細は「新しいルールを書いたら機械検査化を検討する」節参照）。グローバル設定
-   （`~/.claude/settings.json`）にも`web-ios-android-relay.mjs`経由で配線済み、
-   他プロジェクトのセッションでも自動的に効く（ただし既に稼働中のセッションには
-   セッション再起動まで反映されない——「正本への自動到達経路」節の既知の制約と同じ）。
+   ★この1番は `.claude/hooks/check-write-preceded-by-search.mjs`（`PreToolUse(Write|Edit)`・非ブロッキング）が機械検知する
+   （新規関数定義らしきパターンを書く前の直近15ツールに Grep/Glob が無ければ警告）。実装経緯（soushin の自己不整合実損）・
+   機械化できない部分の明示: [`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)。
 2. **`ai-hub`で共通部品を確認する** — `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` / `--sig "<キーワード>"`（「セッション開始時の必須アクション」3番目と同じコマンド。実装着手の直前にもう一度確認する）
 2.5. **CANONICAL CHECKを通す** — 既存候補が見つかったら「それを信じてよいか」を判定する
    （同じ責務か・同じ意味か・置き場所は適切か・依存方向は逆転していないか）。判定結果は
@@ -385,37 +354,11 @@ canonical HEADが意図したshaになっている・remoteと一致している
 - 停止解除を口頭や通常チャットだけに書く（必ずcoordに残す）
 - 自分がholderなのに、終わってもPAUSEDのまま放置する
 - 完了報告で「全部終わり」と言うが、次セッションが再開できない
-- ★★**「自分のコミットをブランチへ退避してmainを戻す」ときに、対象範囲を確認せず
-  `git reset --hard <sha>`を打つ**（2026-09-28実損、`kimitolink-linktree`）。
-  やりたいことが「自分がついさっき作った1コミットだけを戻す」でも、面倒くさがって
-  `git reset --hard origin/main`のような**離れたSHAへの広範囲reset**を使うと、
-  **その瞬間の作業ツリーにあった、自分が関知していない未コミット変更まで巻き込んで
-  消える**。実損: `git branch <退避用>`で自分のコミットを退避した直後、続けて
-  `git reset --hard origin/main`を実行し、無関係な3ファイル
-  （`council/HANDOFF-ogp-and-app.md`・`../kimitolink-linktree/scripts/design-council.mjs`・
-  `templates-app/android-twa/README.md`。いずれも`git add`前の未コミット変更で、
-  他セッションかユーザー本人の作業）を消した。**未コミットの変更はgit addもコミットも
-  していない限り、通常のgit操作では復元不可能**（stashしていない・commitしていない
-  working tree差分はreflogにも残らない）。
-  ★**対処（実行前に必ず踏む3段）**:
-  1. **`reset --hard`を打つ前に、必ず直前で`git status --short`を実行し、
-     今から消える対象に見覚えのない変更が1件でも無いか目で確認する。**
-     1件でもあれば`reset --hard`を使わない
-  2. **「1コミットだけ戻したい」なら`HEAD~1`のようなHEAD相対で指定する**（`origin/main`
-     等の離れたSHAを漠然と指定しない——自分のコミットが今HEADから何個目かを
-     数えられないなら、そもそも広範囲resetをする資格がない）
-  3. **`main`をorigin相当に揃えたいだけなら、`reset --hard`ではなく
-     `git stash`（未コミット変更を退避）→`git pull --ff-only`→必要なら
-     `git stash pop`**、を使う。「未コミット変更がある状態で`reset --hard`を検討している」
-     こと自体が既に危険信号
-  ★これは「相手の作業ブランチを勝手にresetする」の1つ上の層の教訓——**同じセッション内の
-  自分の操作でも、作業ツリーの現況（`git status`）を見ずに広範囲resetを打てば
-  同じ事故になる**。coordの`files`宣言は「意図して触る対象」しか書かないため、
-  この種の巻き込み事故はcoordの仕組みだけでは防げない（機械検査は困難——「これから
-  実行するgitコマンドが安全か」は任意のシェルコマンド文字列の意味解釈が要り、
-  「新しいルールを書いたら機械検査化を検討する」節の基準2番（自然言語判断が絡む）
-  に該当する。フックで`git reset --hard`をパターンマッチして警告する案はfalse
-  positiveが多く実用性が低いため不採用。**唯一の対処は上記3段の手順を徹底すること**）。
+- ★★**`git reset --hard` の前に必ず `git status --short` で巻き込む未コミット変更が無いか目視する**
+  （1件でもあれば使わない）。1コミットだけ戻すなら `HEAD~n` 相対で指定（離れたSHAを漠然と指定しない）。
+  `main` を origin に揃えるだけなら `reset --hard` でなく `git stash`→`git pull --ff-only`→（必要なら）`git stash pop`。
+  実損の詳細・なぜcoord/機械検査で防げないか: [`_docs/git-safety-knowledge-base.md`](_docs/git-safety-knowledge-base.md)
+  （2026-09-28 kimitolink-linktree の巻き込み削除事故）。
 
 ### 作業分担の原則
 
@@ -1290,6 +1233,42 @@ qa/
       notes.md
   bugs.md
 ```
+
+### ★Chrome拡張は「AIが読み込んで自分で確かめる」（2026-10-25確立・全拡張リポ共通）
+
+> りんくの言葉:「拡張を自動で動かして検証する仕組みを全部にいれたい」「拡張関連全体のルールにしたいのです」
+
+- **拡張を変えたら、報告の前に `npm run verify:extension` を自分で走らせる。** 実体は共通の
+  [`templates/extension-verify/run.mjs`](templates/extension-verify/README.md)。拡張を本物の Chromium に読み込み、
+  service worker の起動・全画面（popup／options／side panel／devtools／独自ページ）・content script の
+  全差し込み先を開いて、例外・`console.error`・読み込み失敗・空白・確認式を見る。結果とスクリーンショットは
+  `.artifacts/extension-verify/` に残る。**「拡張を再読み込みして開き直してください」と人に頼んで確認を代行させない。**
+- **全拡張リポに入れる。** `extension-verify.json`・npm script か CI への配線・**AGENTS.md への記載**が揃っていないと
+  [`templates/diagnostics/check-extension-verify-wired.mjs`](templates/diagnostics/check-extension-verify-wired.mjs)
+  （`npm run diagnostics` に登録済み）が赤にする。★Codex/Cursor は CLAUDE.md を読まないので、AGENTS.md に書かないと
+  ルールが届かない（実損: Codex が毎回「再読み込みして開き直して」と頼んでいた）。
+- **新しい画面を足したら設定に足す。** 足さないと「未検証の画面」で赤（網羅の門）。検証しない画面は理由つきで `ignorePages` へ。
+- **人の普段の Chrome への反映**（作業ツリーを読んでいる拡張のリロード）も、手段があれば AI がやる
+  （手本: 追憶 CLAUDE.md の `reload_extension`）。人に頼むのは手段が全部尽きたときだけ。
+- **この検証の外にあるもの**: ログインが要る本物のサイトでの精度、利用者の Chrome から拡張が外れていないか。
+  前者は各リポの実機確認、後者は各 PC 上の検査（手本: `../tsuioku-no-kirameki.com/scripts/check-chrome-load-path.mjs`）が受け持つ。
+
+### ★★AIは人の普段の Chrome に繋がない（「リモートデバッグを許可しますか？」を出さない、2026-10-26確立・全ツール共通）
+
+> りんくの言葉:「全体のルールとしてこれを何回ももとめられるとすとれすなのでやめてほしい」
+
+- **原因**: `chrome-devtools-mcp --autoConnect`（Chrome 144+）は、人が普段使っている Chrome に後から繋ぐ。
+  Chrome は繋がれるたびに「リモート デバッグを許可しますか？」を出す（毎回・常に許可の選択肢は無い）。
+  2026-10-26 時点で出していたのは `~/.claude.json` の MCP `chrome-devtools-live`（`--autoConnect`）だった。
+- **ルール**: AI が Chrome を自動操作するときは、**自動操作専用のプロフィール**を使う。人の普段の Chrome には繋がない。
+  - chrome-devtools-mcp: `--autoConnect` を使わず `--userDataDir C:\Users\info\.chrome-devtools-live`（ログインを残したいとき）か
+    `--isolated`（使い捨て）。専用プロフィールのログインは初回だけ人がする。以後は残る。
+  - 自分で起動して繋ぐときは `--user-data-dir=<専用フォルダ> --remote-debugging-port=<番号>` で起動し `--browserUrl` で繋ぐ。
+  - 人の普段のログイン状態がどうしても要る作業は、Claude in Chrome 拡張（`mcp__claude-in-chrome__*`）を使う（ダイアログは出ない）。
+- **やらないこと**: 普段のプロフィールの Cookie を専用フォルダへコピーする・普段の Chrome をデバッグポート付きで起動し直す、
+  といった「確認を出さないために安全を下げる」回避。`--autoConnect` を Claude Code / Codex / Cursor / Antigravity どの設定にも足さない。
+- ★機械検査: 「設定ファイルに `--autoConnect` があるか」は事実として検出できるが、設定は各 PC ローカル（git 外）にあるため
+  リポの Gate では見られない。新しい PC・新しい AI ツールを足したら、MCP 設定に `autoConnect` が無いことを grep で確かめる。
 
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 

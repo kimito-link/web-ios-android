@@ -45,6 +45,7 @@ const DESIGN_PRINCIPLE_KEYWORDS = [
 //   fail-open（このhookが壊れても質問は止めない）。無効化: 環境変数 ASK_REASON_TAG_OFF=1。
 
 import { readFileSync, existsSync } from 'node:fs';
+import { recordOutcome } from './lib/record-outcome.mjs';
 
 const RESEARCH_TOOLS = new Set(['Grep', 'Glob', 'WebFetch', 'WebSearch', 'Agent', 'Task']);
 const LOOKBACK_TOOL_USES = 20;
@@ -150,6 +151,8 @@ function main() {
 
   // 検査0（拒否）: 理由タグが無い質問は通さない。判定基準を自分で適用して決める方へ戻す。
   if (process.env.ASK_REASON_TAG_OFF !== '1' && !hasReasonTag(extractQuestionTexts(input.tool_input))) {
+    // 結末台帳へ(観測・冪等・fail-open)。council §7 / P3。
+    recordOutcome(input, { hook: 'check-ask-preceded-by-research', reasonCategory: 'no-reason-tag' });
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
