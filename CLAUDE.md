@@ -1300,6 +1300,23 @@ qa/
 - **この検証の外にあるもの**: ログインが要る本物のサイトでの精度、利用者の Chrome から拡張が外れていないか。
   前者は各リポの実機確認、後者は各 PC 上の検査（手本: `../tsuioku-no-kirameki.com/scripts/check-chrome-load-path.mjs`）が受け持つ。
 
+### ★★AIは人の普段の Chrome に繋がない（「リモートデバッグを許可しますか？」を出さない、2026-10-26確立・全ツール共通）
+
+> りんくの言葉:「全体のルールとしてこれを何回ももとめられるとすとれすなのでやめてほしい」
+
+- **原因**: `chrome-devtools-mcp --autoConnect`（Chrome 144+）は、人が普段使っている Chrome に後から繋ぐ。
+  Chrome は繋がれるたびに「リモート デバッグを許可しますか？」を出す（毎回・常に許可の選択肢は無い）。
+  2026-10-26 時点で出していたのは `~/.claude.json` の MCP `chrome-devtools-live`（`--autoConnect`）だった。
+- **ルール**: AI が Chrome を自動操作するときは、**自動操作専用のプロフィール**を使う。人の普段の Chrome には繋がない。
+  - chrome-devtools-mcp: `--autoConnect` を使わず `--userDataDir C:\Users\info\.chrome-devtools-live`（ログインを残したいとき）か
+    `--isolated`（使い捨て）。専用プロフィールのログインは初回だけ人がする。以後は残る。
+  - 自分で起動して繋ぐときは `--user-data-dir=<専用フォルダ> --remote-debugging-port=<番号>` で起動し `--browserUrl` で繋ぐ。
+  - 人の普段のログイン状態がどうしても要る作業は、Claude in Chrome 拡張（`mcp__claude-in-chrome__*`）を使う（ダイアログは出ない）。
+- **やらないこと**: 普段のプロフィールの Cookie を専用フォルダへコピーする・普段の Chrome をデバッグポート付きで起動し直す、
+  といった「確認を出さないために安全を下げる」回避。`--autoConnect` を Claude Code / Codex / Cursor / Antigravity どの設定にも足さない。
+- ★機械検査: 「設定ファイルに `--autoConnect` があるか」は事実として検出できるが、設定は各 PC ローカル（git 外）にあるため
+  リポの Gate では見られない。新しい PC・新しい AI ツールを足したら、MCP 設定に `autoConnect` が無いことを grep で確かめる。
+
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 
 **正本**: `../ai-generic-rules/docs/policies/OBSERVATION_CHANNEL_INTEGRITY.md`
