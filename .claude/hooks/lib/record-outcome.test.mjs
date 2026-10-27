@@ -65,8 +65,8 @@ describe('recordOutcome — 末尾に重複があれば二重記録しない(E2E
   function makeRepoWithLedger(entries) {
     const dir = mkdtempSync(join(tmpdir(), 'rec-e2e-'));
     mkdirSync(join(dir, '.git'), { recursive: true });
-    mkdirSync(join(dir, '_loop'), { recursive: true });
-    const p = join(dir, '_loop', 'hook-outcomes.jsonl');
+    mkdirSync(join(dir, '.loop'), { recursive: true });
+    const p = join(dir, '.loop', 'hook-outcomes.jsonl');
     writeFileSync(p, entries.map((e) => JSON.stringify(e)).join('\n') + (entries.length ? '\n' : ''), 'utf8');
     return { dir, p };
   }

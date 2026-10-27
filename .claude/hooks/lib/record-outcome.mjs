@@ -7,7 +7,10 @@
  *   記録に失敗しても hook は自分の permissionDecision をそのまま出す(fail-open)。安全足場(hook 本体)の
  *   邪魔を記録機能が決してしないため、全体を try/catch で握りつぶす。設計: council §7 / surechigai「退行して続行」。
  *
- * 台帳の場所: <repoRoot>/_loop/hook-outcomes.jsonl(`_loop/` は .gitignore 済み＝実データは commit しない)。
+ * 台帳の場所: <repoRoot>/.loop/hook-outcomes.jsonl(`.loop/` は .gitignore 済み＝実データは commit しない)。
+ *   ★`_loop/` にしない(2026-10-27 実害): Chrome は拡張フォルダ直下に「_」始まりの名前があると
+ *   拡張を読み込まない("Filenames starting with _ are reserved")。この hook は拡張のリポでも動くので、
+ *   deny 1回で利用者の Chrome から拡張が消えた。「.」始まりは Chrome が受け付ける(実測)。
  * 止めたいとき: 環境変数 HOOK_OUTCOME_LEDGER_OFF=1。
  */
 
@@ -88,7 +91,7 @@ export function recordOutcome(input, meta) {
     });
     if (!made.ok || !made.record) return { recorded: false, reason: 'invalid-record' };
 
-    const ledgerPath = join(repoRoot, '_loop', 'hook-outcomes.jsonl');
+    const ledgerPath = join(repoRoot, '.loop', 'hook-outcomes.jsonl');
     let existing = [];
     try {
       // 冪等判定は末尾の一定バイトだけで足りる(重複は時間的に隣接・上のコメント参照)。全文は読まない。
