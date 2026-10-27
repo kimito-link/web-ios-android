@@ -1,0 +1,164 @@
+/* 診断結果シェル。点数を先に、状態は言葉と印でも示す。
+   色の対は tokens.mjs の COLOR_PAIRS と同じ16進。文字と背景は 4.5:1 以上。 */
+
+.diagnosis-shell {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2rem);
+  color: #1c1917; /* pair:text fg */
+  background: #fffdf8; /* pair:text bg */
+  font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.diagnosis-shell *,
+.diagnosis-shell *::before,
+.diagnosis-shell *::after {
+  box-sizing: border-box;
+}
+
+.diagnosis-shell .language,
+.diagnosis-shell button,
+.diagnosis-shell input {
+  font: inherit;
+  max-width: 100%;
+}
+
+.domain-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+
+.domain-form label {
+  flex: 1 1 100%;
+  color: #44403c; /* pair:muted fg */
+  background: #fffdf8; /* pair:muted bg */
+}
+
+.domain-form input {
+  flex: 1 1 12rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #1c1917;
+  border-radius: 0.5rem;
+  color: #1c1917;
+  background: #fffdf8;
+}
+
+.diagnosis-shell button,
+.diagnosis-shell .web-only a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.diagnosis-shell button {
+  border: 2px solid #1c1917;
+  color: #fffdf8; /* pair:on-button fg */
+  background: #1c1917; /* pair:on-button bg */
+}
+
+.diagnosis-shell button:focus-visible,
+.diagnosis-shell a:focus-visible,
+.diagnosis-shell input:focus-visible {
+  outline: 3px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
+.score {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.score-number {
+  color: #102033; /* pair:score fg */
+  background: #fffdf8; /* pair:score bg */
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-caption,
+.summary-label,
+.recheck-label {
+  color: #44403c;
+  background: #fffdf8;
+}
+
+.summary {
+  margin: 0.5rem 0 1rem;
+  font-size: 1.125rem;
+}
+
+.status {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.25rem 0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.status-good {
+  color: #14532d; /* pair:good fg */
+  background: #dcfce7; /* pair:good bg */
+}
+
+.status-warn {
+  color: #78350f; /* pair:warn fg */
+  background: #fef3c7; /* pair:warn bg */
+}
+
+.status-bad {
+  color: #7f1d1d; /* pair:bad fg */
+  background: #fee2e2; /* pair:bad bg */
+}
+
+.status-pending {
+  color: #1c1917; /* pair:pending fg */
+  background: #f5f5f4; /* pair:pending bg */
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.actions button {
+  flex: 1 1 12rem;
+}
+
+.web-only a {
+  color: #1e3a8a; /* pair:link fg */
+  background: #fffdf8; /* pair:link bg */
+  text-decoration: underline;
+}
+
+.details {
+  margin-top: 1rem;
+}
+
+.due {
+  margin: 0 0 1rem;
+  font-weight: 700;
+}
+
+@media (max-width: 40rem) {
+  .domain-form button,
+  .actions button,
+  .web-only a {
+    flex: 1 1 100%;
+  }
+}

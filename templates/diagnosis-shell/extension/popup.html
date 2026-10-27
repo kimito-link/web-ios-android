@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ドメインの結果</title>
+  <link rel="stylesheet" href="../diagnosis-shell.css">
+</head>
+<body>
+  <!-- 拡張のポップアップ。案内の入力欄はまだ置かない。 -->
+  <div data-diagnosis-shell data-surface="extension" lang="ja"></div>
+  <script type="module">
+    import { mountDiagnosisShell } from "../diagnosis-shell.js";
+    import { previewDiagnose } from "../preview-diagnose.mjs";
+    const root = document.querySelector("[data-diagnosis-shell]");
+    mountDiagnosisShell(root, {
+      diagnose: previewDiagnose,
+      origin: "https://example.com",
+      config: { distribution: { surface: "extension" } },
+    });
+  </script>
+</body>
+</html>

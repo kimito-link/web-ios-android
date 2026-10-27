@@ -77,6 +77,15 @@
     }
   },
 
+  "distribution": {
+    "_note": "診断アプリの出し分け。app と extension は紹介・有料・LINEの文言を出さない。referralPlaceholder は Xserver の回答待ちの目印だけで、画面はまだ作らない。ビルド時は環境変数 DISTRIBUTION_SURFACE が surface より優先される。",
+    "surface": "web",
+    "referralPlaceholder": {
+      "enabled": false,
+      "status": "pending-xserver"
+    }
+  },
+
   "lineBot": {
     "_note": "LINE公式アカウントでAI社員と会話できるbotを作る場合だけ書く。enabled:trueにして templates/line-bot/ をコピー。作らないなら省略可(enabled:false扱い)。",
     "enabled": false,

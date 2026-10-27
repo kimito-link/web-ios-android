@@ -41,6 +41,7 @@
     "claims:provenance:selftest": "node scripts/verify-numeric-claims-provenance.mjs --selftest",
     "config:schema": "node templates/scripts/verify-app-config-schema.mjs",
     "config:schema:selftest": "node templates/scripts/verify-app-config-schema.mjs --selftest",
+    "diagnosis-shell:selftest": "node --test templates/diagnosis-shell/diagnosis-shell.test.mjs",
     "assetlinks:check": "node templates/scripts/verify-assetlinks-published.mjs",
     "assetlinks:check:selftest": "node templates/scripts/verify-assetlinks-published.mjs --selftest",
     "twa:signing:check": "node templates/scripts/verify-twa-signing-matches-assetlinks.mjs",

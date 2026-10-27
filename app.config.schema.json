@@ -209,6 +209,30 @@
       }
     },
 
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "診断アプリのビルド対象。app と extension は紹介・有料・LINE の文言を出さない。referralPlaceholder は Xserver 回答待ちの目印で、画面も拡張の入力欄もまだ作らない。未設定の描画は店頭向けに app として扱う。",
+      "properties": {
+        "_note": { "type": "string" },
+        "surface": {
+          "type": "string",
+          "enum": ["app", "extension", "web"],
+          "description": "このビルドの面。ビルド時は環境変数 DISTRIBUTION_SURFACE がこの値より優先される。"
+        },
+        "referralPlaceholder": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "紹介コードは未実装。enabled は false 固定。Xserver の代理店コードと共有者の LINE 入口が決まるまで、UI を作らない。",
+          "required": ["enabled", "status"],
+          "properties": {
+            "enabled": { "type": "boolean", "const": false },
+            "status": { "type": "string", "const": "pending-xserver" }
+          }
+        }
+      }
+    },
+
     "lineBot": {
       "type": "object",
       "additionalProperties": false,

@@ -9,7 +9,7 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 進行中（複数スレッド。下の「開いているスレッド」参照）
+STATUS: 進行中。診断結果シェル（面フラグ・点数優先・再確認・共有）はブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。紹介コードの UI は未着手（Xserver 待ち）。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
 ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
 LAST_WORKED_ON: 2026-10-21T03:10:00Z
 WORKED_BY: claude-cloud（Opus／session_01F4N5YRVNWo4Cg2PpW96tjB）／ブランチ claude/charming-knuth-is4kx6
