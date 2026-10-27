@@ -318,6 +318,10 @@ node scripts/council-cleanup.mjs --dry-run   # 何が掃除されるか見るだ
 - 役割定義・出力フォーマット・批判強制を変えるときは、各スクリプトでなく `council-roles.mjs` を直す。**2リポに実体コピーがあるので両方同期**すること。
   - `kimitolink-linktree/scripts/council-roles.mjs`（UI/UX版・実装役がReact/Tailwind前提）
   - `tsuioku-no-kirameki.com/scripts/council-roles.mjs`（汎用版）
+  - ★会議の判断基準 `DESIGN_STANCE`（全役割の system に必ず入る）も両方に**同じ文**で置く。版は `DESIGN_STANCE_VERSION`（2026-10-27版＝
+    北極星 LTV÷CPA・ガードレール・無料ユーザーの価値・判断の順番・コード構成7項目・公開前4問）。正本は
+    [`CLAUDE.md`「設計方針」節](../../CLAUDE.md)と [`07_GROWTH_METRICS.md`](../ai-rules/07_GROWTH_METRICS.md)。正本の方針が変わったら、両リポの文と版を一緒に更新する
+    （各リポの `council-roles.stance.test.*` が要点の欠落を落とす）。
 - このHOWTO自体は**正本1つ**（`web-ios-android/docs/ai-workflows/`）。各リポには「正本はここ」という橋渡しの1行だけ置き、HOWTO本文のコピーは作らない。
 
 ---
