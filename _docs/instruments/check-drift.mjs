@@ -665,6 +665,19 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-26追加。2026-10-21 の Guideline 2.3.4 却下対応で作った
+     *   personal スキルを repo へ格上げした（前例: 上の self-verification、
+     *   _docs/DESIGN-self-verification-skill-2026-09-27.md）。実際に動くのは
+     *   Personal(~)側なので、正本(repo)と割れると古い手順で呼ばれる。
+     */
+    label: 'appstore-preview-videoスキル',
+    canonical: resolve(KIT_ROOT, '.claude/skills/appstore-preview-video/SKILL.md'),
+    copies: [
+      resolve(homedir(), '.claude/skills/appstore-preview-video/SKILL.md')
+    ]
+  },
+  {
+    /*
      * ★2026-10-05追加。PWA起動画面の検査。旧説（background_color を外す）を反転し、
      *   「background_color があり --expect-bg と一致」を合格にした金型。
      *   surechigai は APP_BASE_BG を埋め込んだ特化コピーをやめ、無改変コピー＋
