@@ -15,6 +15,7 @@
 | `next-app/` | **Web アプリ本体の雛形**(Next.js 15 + React 19 + Tailwind 4 + App Router)。ClerkProvider/middleware/.env.example、SEO ヘルパ(Metadata API 版)、JsonLd、汎用 UI(Hero/Faq/CTA)、最適化済み next.config、★診断進捗ページ `/check-shindan-version/` を同梱。詳細は [`next-app/README-clerk.md`](next-app/README-clerk.md) | `{{displayName}}`/`{{productionDomain}}`/`{{primaryColor}}`/`{{accentColor}}` を app.config.json の値に置換。Clerk 不使用なら CLERK_* と .template を消すだけ |
 | `capacitor/capacitor.config.template.ts` | Capacitor 設定の金型(server.url 連動型) | `{{bundleId}}` 等を app.config.json の値に置換 |
 | [`expo-native/`](expo-native/README.md) | **React Native(Expo) をネイティブのまま両ストアに出す金型**(WebView 非依存)。iOS/Android のリリース CI + 署名注入 + Play グラフィック生成 + 資産名衝突テスト。**方式の選び分け(TWA/Capacitor/Expo)と地雷4件を README に集約** | `<PLAY_PACKAGE_NAME>`/`<APP_BUNDLE_ID>`/`<PRODUCTION_DOMAIN>` を置換。`*.mjs` は無改変 |
+| [`hands-free-runner/`](hands-free-runner/README.md) | **人に渡す黒い画面(ダブルクリックする .cmd)のひな型**(2026-10-28)。Enter 待ちなし(クリップボード/ファイルの到着で進む)・段ごとに `~/.ai-runs/<名前>/state.json` を書いて AI が読む・何度実行しても途中から・秘密は状態に書かない・英数字だけの `.cmd`。検査は `diagnostics/check-human-script-no-wait.mjs`。正本 `docs/ai-rules/08_NO_HUMAN_HANDS.md` §4 | `example.mjs` の段(`steps`)と `name` を作業に合わせて書き替える。`runner.mjs` は無改変 |
 | `scripts/patch-ios-launch-dark.mjs` | iOS 起動フラッシュ対策(2点だけ・独自VC無し) | **無改変で使える**(背景色 #0A0A0F 固定) |
 | `workflows/ios-shell-guardrail.yml` | 独自ネイティブ注入の再混入を CI で赤にするガード | 無改変(禁止パターンはアプリ非依存に一般化済み) |
 | `scripts/lint-pre-submission.mjs` | 審査前 lint(実証済み Apple 却下ベクタを CI で検出) | **無改変**(app.config.json + env 駆動。無いファイルは skip) |

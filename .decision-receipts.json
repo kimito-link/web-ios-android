@@ -468,6 +468,26 @@
         "templates/extension-self-update/self-update.js",
         "templates/extension-self-update/self-update.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-28T13:13:47.307Z",
+      "responsibility": "hands-free-human-handoff-script",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/hands-free-runner/runner.mjs",
+      "scopePaths": [
+        "templates/hands-free-runner/runner.mjs",
+        "templates/hands-free-runner/example.mjs",
+        "templates/diagnostics/check-human-script-no-wait.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-28T13:13:59.716Z",
+      "responsibility": "hands-free-runner-test",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/hands-free-runner/runner.test.mjs"
+      ]
     }
   ]
 }

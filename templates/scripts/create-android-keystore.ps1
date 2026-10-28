@@ -24,6 +24,7 @@ param(
   [string]$DistinguishedName = "CN=<運営者名>, O=<会社名>, L=Tokyo, C=JP",
   [int]$ValidityDays = 10000,
   # 非対話実行用（CI / 自動化）。指定すると Read-Host を使わない。
+  # human-wait-ok: 引数なしのときだけ、パスワードを画面に残さず本人が手で打つ（-StorePassword で無人にできる）
   [string]$StorePassword,
   [string]$KeyPassword
 )

@@ -110,6 +110,7 @@ if ($UploadOnly) {
 }
 
 # --- 3. 審査提出 (POST items/{id}/publish) ---
+# human-wait-ok: 審査提出は取り消せない外向きの操作なので本人の yes を待つ（-Yes で OK 済みとして無人にできる）
 if (-not $Yes) {
     Write-Host ""
     Write-Host "次に審査へ提出します (公開申請)。過去の却下歴 (Blue Argon=リモートコード / Red Nickel=禁止語) に" -ForegroundColor Yellow

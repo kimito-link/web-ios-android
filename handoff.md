@@ -32,6 +32,10 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 - 確定済みの手順（再設計しない）: ①repo に `.claude/skills/appstore-preview-video/SKILL.md` を作成（personal版の内容そのまま）②`_docs/instruments/check-drift.mjs` の PAIRS に self-verification(L660-663)と同型エントリ追加（canonical=repo側・copies=homedir側）③`node _docs/instruments/check-drift.mjs` で登録確認 → commit/push（同ブランチ＝PR #101 に乗る）。
 - **BLOCKER**: 261行の SKILL.md 本文がクラウドに無い（`find /` で不在を確認済み・PC固有）。**ユーザーが本文をペースト/添付したら即実行**。でっち上げはしない。
 
+### スレC: 人の手を使わない全体設計（2026-10-28）
+- 本人指示「全体設計として人間の手は使わない設計で」。正本 `docs/ai-rules/08_NO_HUMAN_HANDS.md`＋CLAUDE.md 冒頭★★★＋設計決定書「人の手を使わない」節。
+- 状態: 下書きPR #118（ブランチ claude/project-thread-r1yp3s）。規則・棚卸し・ひな型 `templates/hands-free-runner/`・検査 `templates/diagnostics/check-human-script-no-wait.mjs` まで。NEXT_ACTION: りんくのOKでマージ。以後、人に渡すスクリプトはひな型から作る。
+
 ### 据え置き（意図的・順序原則。蒸し返さない）
 - P1 バッチ2(これ以上): 核が 370/450 で余裕＝追加移設は churn。
 - P8（commit-verification を block 昇格）: P3 台帳に deny 実データ0件＝FP率が出ないため、データが溜まるまで保留。
