@@ -32,6 +32,7 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-cross-checked.mjs` | ★**1つの手段だけで断定していないか**（別の手段でも確かめた回数を数える） | `--baseline <数>` で下限。減ったら赤 |
 | `check-inline-script-syntax.mjs` | ★**HTMLの中に直接書いたJSの構文**（eslintが素通りする死角） | 依存ゼロ。HTMLが無ければskip |
 | `check-extension-verify-wired.mjs` | ★**Chrome拡張に「本物のブラウザで自動検証」が入っているか**（[`../extension-verify/`](../extension-verify/README.md) の設定・npm script か CI への配線・AGENTS.md への記載・未検証の画面が無いこと） | 拡張の manifest.json（manifest_version あり）を追跡するリポだけ。無ければpass |
+| `check-human-script-no-wait.mjs` | ★**人に渡すスクリプト(.cmd/.bat/.ps1)が Enter 待ちで止まらないか・.cmd が英数字だけか**（`pause`・`set /p`・`Read-Host` 等。意図的な待ちは `human-wait-ok: <理由>` で外す。ひな型は [`../hands-free-runner/`](../hands-free-runner/README.md)） | `.cmd`/`.bat`/`.ps1` を追跡するリポだけ。無ければpass |
 | `check-timing-instrumented.mjs` | 「遅い」と言われる経路に**時間**を測る計器があるか | `.ahk/.js/.mjs/.ts/.cs/.py` |
 | `check-heartbeat-present.mjs` | ★製品が「異常なし」を自分で名乗れるか（心拍） | ログを書く製品のみ。書かなければskip |
 | `check-instruments-reachable.mjs` | ★計器が**あるのに動かない**形（try に飲まれて一度も記録されない） | ラチェット。実測値を基準に |

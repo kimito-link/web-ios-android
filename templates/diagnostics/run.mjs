@@ -60,6 +60,11 @@ const CHECKS = [
   //   実損: AI が自分で読み込んで確かめず「拡張を再読み込みして開き直して」と人に頼み続けた。
   //   Codex は CLAUDE.md を読まないので AGENTS.md への記載まで見る。拡張でないリポは pass。
   { name: 'check-extension-verify-wired', path: join(__dirname, 'check-extension-verify-wired.mjs') },
+  // ★人に渡すスクリプトが Enter 待ちで止まらないか・.cmd が英数字だけか(2026-10-28追加・
+  //   りんく「全体設計として人間の手は使わない設計で」)。実損: 黒い画面が Enter 待ちで止まり、
+  //   人に「いちばん下の行を送って」と頼んでいた／日本語入りの .cmd がダブルクリックで即閉じた。
+  //   意図的な待ち(本人の OK 等)は human-wait-ok: <理由> で外す。.cmd/.ps1 が無いリポは pass。
+  { name: 'check-human-script-no-wait', path: join(__dirname, 'check-human-script-no-wait.mjs') },
   // ★症状の言葉で原因索引を引けるか。引数が無ければ対象から自動で探す。
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。

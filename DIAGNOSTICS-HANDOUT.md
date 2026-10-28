@@ -39,6 +39,7 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-cross-checked` | ★**1つの手段だけで断定している**もの（別の手段で確かめた回数が減っていないか） |
 | `check-inline-script-syntax` | ★**HTMLの中に直接書いたJSが壊れている**もの（lintが見ておらず、壊れると画面が真っ白になる） |
 | `check-extension-verify-wired` | ★**Chrome拡張なのに「本物のブラウザに読み込んで全画面を自動で確かめる」仕組みが入っていない**もの（AIが自分で確かめず人に再読み込みを頼む原因） |
+| `check-human-script-no-wait` | ★**人に渡す黒い画面が「Enter を押して」で止まる**もの、日本語が入っていてダブルクリックで即閉じる `.cmd`（AIから中身が見えず、人に画面を読ませる原因） |
 | `check-timing-instrumented` | **「遅い」と言われる経路に時間を測る計器が無い**もの |
 | `check-heartbeat-present` | **製品が「異常なし」を自分で名乗れない**もの（沈黙と正常を区別できない） |
 | `check-instruments-reachable` | 計器が**あるのに動かない**もの（try に飲まれて1件も記録されない等） |

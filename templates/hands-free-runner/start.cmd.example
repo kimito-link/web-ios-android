@@ -1,0 +1,6 @@
+@echo off
+rem ASCII only. Japanese text in a .cmd is misread right after a code page change and the window closes at once
+rem (2026-10-28). The Japanese guidance is printed by the .mjs script instead. No pause: progress goes to
+rem %USERPROFILE%\.ai-runs\<name>\state.json and log.txt, which the AI reads.
+chcp 65001 >nul
+node "%~dp0example.mjs"

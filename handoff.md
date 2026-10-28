@@ -34,7 +34,7 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 
 ### スレC: 人の手を使わない全体設計（2026-10-28）
 - 本人指示「全体設計として人間の手は使わない設計で」。正本 `docs/ai-rules/08_NO_HUMAN_HANDS.md`＋CLAUDE.md 冒頭★★★＋設計決定書「人の手を使わない」節。
-- 状態: 規則と棚卸しを下書きPR（ブランチ claude/project-thread-r1yp3s）。NEXT_ACTION: マージ後、人に渡すスクリプトの金型（状態ファイル・Enter待ちなし・再開可・英数字 .cmd）を `templates/` に作り、機械検査へ。
+- 状態: 下書きPR #118（ブランチ claude/project-thread-r1yp3s）。規則・棚卸し・ひな型 `templates/hands-free-runner/`・検査 `templates/diagnostics/check-human-script-no-wait.mjs` まで。NEXT_ACTION: りんくのOKでマージ。以後、人に渡すスクリプトはひな型から作る。
 
 ### 据え置き（意図的・順序原則。蒸し返さない）
 - P1 バッチ2(これ以上): 核が 370/450 で余裕＝追加移設は churn。
