@@ -1250,6 +1250,8 @@ qa/
 - **新しい画面を足したら設定に足す。** 足さないと「未検証の画面」で赤（網羅の門）。検証しない画面は理由つきで `ignorePages` へ。
 - **人の普段の Chrome への反映**（作業ツリーを読んでいる拡張のリロード）も、手段があれば AI がやる
   （手本: 追憶 CLAUDE.md の `reload_extension`）。人に頼むのは手段が全部尽きたときだけ。
+  ★既定の手段は、拡張自身が新しい版に気づいて読み込み直す [`templates/extension-self-update/`](templates/extension-self-update/README.md)
+  （git pull して manifest の version を上げれば、2分以内に入れ替わる。初回の1回だけ人の 🔄 が要る）。
 - **この検証の外にあるもの**: ログインが要る本物のサイトでの精度、利用者の Chrome から拡張が外れていないか。
   前者は各リポの実機確認、後者は各 PC 上の検査（手本: `../tsuioku-no-kirameki.com/scripts/check-chrome-load-path.mjs`）が受け持つ。
 
