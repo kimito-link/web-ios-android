@@ -53,6 +53,14 @@
    7行＋CSS3行。Coreは無改変が契約なので、サイト固有値（URL・文言）はconfigへ外出しして
    正本に取り込んだ。generatorは`adminUrl`が書かれているときだけ`config.js`へ載せるため、
    使わないサイトの生成物は1バイトも変わらない。
+9. フッターだけに出したいリンク（プライバシーポリシー・特定商取引法に基づく表記など）は、
+   `site-chrome.config.json` の任意キー `footerItems`（`navItems` と同じ `{href,label}` の配列）に書く。
+   Coreはフッターのリンク列で `navItems` の後ろに並べる。未指定なら出力は変わらない。
+   著作権表記の中のリンク（`.site-footer-copy a`）は文字色を継いで下線だけ付ける。
+   ★出典（2026-10-28還流）: JS は `line-bot/apps/lp`、CSS は `soushin-suggest.link/public` が
+   先にCoreのコピーへ直接足していたもの。同じ時に line-bot が Core に足していた
+   「お問い合わせLINE」固定ボタンは、LINEアカウントIDなどサイト固有値の塊なので正本へは入れず、
+   line-bot 側の `site-chrome.local.js` へ移した（Coreは無改変の契約）。
 
 ### ★CSS読み込み順の罠（2026-09-03、line-bot/apps/lp移行で実際に踏んだ事故）
 
