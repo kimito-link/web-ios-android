@@ -1004,6 +1004,9 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   `/plugin install claude-security@claude-plugins-official`）。走らせたかどうかは
   `templates/scripts/check-security-scan-ran.mjs`（HEAD に対するスキャンの有無と CRITICAL/HIGH を刻印から読む。走らせていなければ
   exit 2＝測れていない）。0件は安全の証明ではない（非決定的・補完であって代替ではない）。詳細は同 §5-1a。
+- **★ログイン画面は「説明なしで次に押すものが分かる」（全プロジェクト共通の指針・2026-10-28採用）。** 入り方は番号つきで並べる／
+  パスキーは「登録した端末だけ」と書き、ログイン直後に「この端末に登録しますか？」と勧める／パスキーが無い端末でも
+  メールの6桁（`autocomplete="one-time-code"`）で入れるようにする。詳細は [`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) §3-1。
 - **★コードコメントの書き方（全プロジェクト共通の指針・2026-10-16採用）。** 新規ファイルは**先頭に「役割・使い方・なぜ要るか」を
   必ず書く**（機械検査: `templates/diagnostics/check-file-header-comment.mjs`。新規だけ赤）。責務のまとまりには「なぜ」を書き、
   **1行ごとの「何を」は書かない**（腐る）。コメントの中身の正しさは機械で見られない（意味判断）のでレビューに残す。
