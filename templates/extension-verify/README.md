@@ -83,4 +83,6 @@ node ../web-ios-android/templates/extension-verify/run.mjs --selftest       # �
   ここは「全部の入口が開いて、落ちずに立ち上がる」を全拡張で同じ物差しで保証する土台。
 - **利用者の普段の Chrome に拡張が入ったままか**(Chrome 再起動・別プロファイルで外れる件)。
   それは各 PC 上の検査の役目(手本: 追憶 `scripts/check-chrome-load-path.mjs`)。
+- **普段の Chrome で動いている拡張を新しい版に入れ替えること**。それは拡張自身が行う
+  ([`../extension-self-update/`](../extension-self-update/README.md))。`--load-extension` の拡張は `runtime.reload()` 後に戻らないので、ここでは試せない。
 - ★Chrome 正式版(137+)は `--load-extension` を無視する。Playwright の chromium を使う(このスクリプトは `channel: 'chromium'`)。
