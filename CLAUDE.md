@@ -185,24 +185,15 @@ write_lock（Main-Write Pause）を取らずに3リポの main へ PR をマー�
    で投げ、返ってきたログの要点だけ読んで検品する。頭脳の使い分けと財布（Claude週間上限／SuperGrok／
    Alibaba無料枠／Cloudflare無料枠／ローカル）は正本 [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。
    スクリーンショットは文章の何倍も上限を消費するので、画面の内容は本人に文字で貼ってもらう。
-   ★**「難しい判断＋実装＋テストまで一貫でやる重い仕事」は Google Antigravity（本人が有料契約済み・Opus 4.6/Sonnet 4.6）へ本人が手で投げる**（2026-09-16確定）。
-   Antigravity は API を外に出さない IDE 内完結エージェントなので dispatch の `--brain` には入れない（別レイヤー）。
-   予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。本物 Claude の週間上限は
-   「Antigravity の結果の検品」「Antigravity でも詰まる設計判断」だけに温存する。
-   ★★**Grok BuildとAntigravityの使い分け基準（2026-09-23確立）**: 主軸は「人手が要るか」。
-   `dispatch --brain grok`は司令塔（本物のClaude）が自動で呼べる＝**人間は何もしなくていい**。
-   AntigravityはIDEを人間が手で開いて指示を貼る必要がある＝**人手が要る**。この非対称性ゆえ、
-   「人間がやる必要のない作業はAIがすべてやる」の原則（上の設計方針節）に従い、**Grok Buildを
-   常に優先**し、Antigravityへの投入は次のいずれかに該当するときに限る:
-   1. 同じ作業でGrokが2回以上失敗した（`--brain auto`のフォールバックがqwen以下まで
-      落ちても解決しない規模・種類の作業）
-   2. 1回の作業が長時間（目安30分超）に及ぶ見込みで、かつ設計判断を伴う
-      （「難しい判断＋実装＋テストまで一貫」に該当するケース）
-   3. Grok Buildのheadless実行では扱えない対話的作業（IDE上でのステップ実行確認、
-      ビジュアルデバッグ等）
-   該当しない限りAntigravityへ回さない。該当する場合のみ、本物のClaudeが「Antigravityに
-   投げてください」と理由（上記1〜3のどれか）を添えて本人に提案する（提案止まりでよく、
-   本人の確認を待ってから本人が手動で投げる——ここは既存方針通り人間の操作が必須）。
+   ★**「難しい判断＋実装＋テストまで一貫でやる重い仕事」は Google Antigravity（本人が有料契約済み・Claude Opus 5.5/Sonnet 5.5・Gemini 4 Argon）へ回す**
+   （2026-09-16確定、2026-10-21更新）。Antigravity の Opus 5.5 は司令塔と同じ頭脳で、Claude の週間上限とは別の Google 側の枠で動く。
+   ★Antigravity は CLAUDE.md を読まない（読むのは AGENTS.md）・Turbo は権限無制限で push も止まらない。橋渡しはリポ直下の
+   [`AGENTS.md`](AGENTS.md)、拒否リスト・モデル別の役割分担・引き継ぎの流れは正本 [`ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
+   予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
+   ★★**Grok BuildとAntigravityの使い分け**: 今は「人手が要るか」が主軸で **Grok Build を優先**し、Antigravity は
+   正本 [`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1c の条件（Grok 2回失敗／30分超の設計判断を伴う作業／
+   対話的作業／司令塔が自分の上限で重い実装をしそうなとき）に当たるときだけ、理由とモデルを添えて本人に提案する（本人が手で投げる）。
+   `agy -p`（headless）を PC で確かめたら `dispatch.py --brain agy` で司令塔が自動で投げる運用へ移る（同 HOWTO「段階2」）。
 
 ## 実装着手前の非交渉ルール（NON-NEGOTIABLE、2026-09-02追記）
 
