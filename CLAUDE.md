@@ -52,6 +52,10 @@
 補足として残してよいが、URLを省略してはいけない。GitHub・Vercel・Google Cloud等
 どのサービスでも同じ——「開いてください」と言うなら、開くべき場所のURLを添える。
 
+★★**Chrome拡張は、AIが自分で読み込んで確かめる。人に「再読み込みして開き直して」と頼まない**（2026-10-25確立）。
+拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
+自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。
@@ -61,7 +65,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 |---|---|---|
 | 非交渉ルール・4基準・5類型 | このファイル（`CLAUDE.md`） | 公開 |
 | 規則本文 | [`docs/ai-rules/`](docs/ai-rules/) | 公開 |
-| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
+| 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14 ／ **デザイン名前の翻訳**＝曖昧な見た目依頼を定着したデザイン用語に翻訳し3方向を出す・[`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md)） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
 | 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
@@ -118,34 +122,11 @@ CLAUDE.mdに解決策が書いてある地雷）を自力で再発見してい�
 2. セッションを再起動する（以後も自動インポートで継続的に最新が読まれる状態にしたい場合）
 「稼働中セッションには遡って効かない」＝「再起動するしかない」ではないことに注意する。
 
-★★★**この既知のケースを機械検知するhookを実装した（2026-09-26）**。
-`kimitolink-linktree`セッションが2026-08-31から一度も再起動されず26日間継続稼働しており、
-その間にこのCLAUDE.mdへ追記された全ルール（「直接URLを併記する」等）を一切反映していなかった
-実損（ユーザーがスクリーンショットで指摘して初めて発覚）を受け、「気づいたら疑う」という
-人間の注意力依存から、`UserPromptSubmit`hook（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)）
-による自動警告へ格上げした。transcript.jsonlの先頭行の`timestamp`フィールド（実測で
-全エントリに存在すると確認済み）からセッション開始時刻を取得し、12時間を超えていたら
-`additionalContext`で気づきを注入する。
-★実装時の訂正: 当初はファイルシステムの`birthtime`でセッション開始時刻を判定する設計を
-検討したが、実測したところWindows環境の`birthtime`は無関係な古い日付を返すことがあり
-信頼できないと判明した。transcript自体の中身（`timestamp`フィールド）を正本とするのが
-唯一確実な方法。グローバル設定（`~/.claude/settings.json`）にも`web-ios-android-relay.mjs`
-経由で配線済み、他プロジェクトのセッションでも自動的に効く。
-
-★★★★**「経過時間」だけでは検知できない実損が発生し、判定条件を追加した（2026-09-30）**。
-`soushin-suggest.link`セッションが「実機で確認した」と報告した後、プロダクトが新版へ
-更新されたにもかかわらず一度も再検証しないまま作業を続けていた。この種の違反は
-`check-commit-preceded-by-verification.mjs`（実地検証履歴チェック）が本来検出できる
-領域だが、そのセッションの`~/.claude/settings.json`がこのhook追加（2026-09-29）より
-前の状態のまま起動され続けていた可能性が高く、hook自体が発火していなかった。
-★これは「経過時間が長い」ことではなく「セッション開始時点のhook配線が、正本
-（`.claude/hooks/`・CLAUDE.md）の最新コミットより古い」ことが真因——経過時間のしきい値
-判定だけでは、配線がすぐ後に更新された短命セッションを見逃す。対処として
-`warn-long-running-session.mjs`に、`git log -1 --format=%cI -- .claude/hooks/ CLAUDE.md`
-でweb-ios-android正本の最終更新時刻を実測し、「セッション開始時刻 < 正本更新時刻」を
-検出したら経過時間のしきい値と独立に警告する判定を追加した。実地テスト（3ケース:
-古いセッション／健全な新しいセッション／経過時間は短いが正本更新前に開始した
-危険なセッション）で、旧ロジックが見逃すケースを正しく検知することを確認済み。
+★この稼働中セッション検知は hook 化済み（[`.claude/hooks/warn-long-running-session.mjs`](.claude/hooks/warn-long-running-session.mjs)・
+`UserPromptSubmit`・非ブロッキング）。判定2軸: (1) セッション開始が12時間超、(2) セッション開始時刻 <
+正本（`.claude/hooks/`・CLAUDE.md）の最終更新時刻（配線が古いまま起動した短命セッションも捕捉）。
+実装経緯・26日連続稼働/soushin の実損・`birthtime` が信頼できない件の詳細:
+[`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)。
 
 ★★★★★**非ブロッキングの警告は、読まれなければ「形だけ」になる——外向きの操作の前は拒否に格上げした
 （2026-10-06）**。本人の指摘「CLAUDE.md が形だけで機能していない気がします」を、そのセッション自身の
@@ -233,21 +214,9 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
    開発者登録・API仕様、いずれも「一般論の手順を先に語り、実環境を見ていない」）。
    ★**新しく作るときは検索するのに、「無理だ」と判断するときだけ検索を省略する**という
    非対称性が本質。否定的な結論を出す前は、肯定的な結論を出す前と同じ強度で検索する。
-   ★★**この1番自体を機械検知するhookを実装した（2026-09-28）**。
-   `soushin-suggest.link`セッションが同一作業内で3回、既存実装を検索せずに新規関数を
-   書いた（ヘッダーバンド自作／フッター実装を2つ新規作成／自分で作った共通部品を
-   自分で使わない、という自己不整合まで発生）実損を受け、「気づいたら疑う」という
-   人間の注意力依存から、`PreToolUse(Write|Edit)`hook
-   （[`.claude/hooks/check-write-preceded-by-search.mjs`](.claude/hooks/check-write-preceded-by-search.mjs)）
-   による自動警告へ格上げした。`check-ask-preceded-by-research.mjs`と同じ設計思想
-   （transcript走査・非ブロッキング・fail-open）で、書こうとしている内容に新規関数
-   定義らしきパターンがあり、かつ直近15回のツール呼び出しにGrep/Globが無ければ
-   `systemMessage`で気づきを注入する。「検索した形跡があるか」という客観的事実だけを
-   見る設計であり、「本当に重複を評価したか」までは検出できない（機械化できない理由の
-   明示。詳細は「新しいルールを書いたら機械検査化を検討する」節参照）。グローバル設定
-   （`~/.claude/settings.json`）にも`web-ios-android-relay.mjs`経由で配線済み、
-   他プロジェクトのセッションでも自動的に効く（ただし既に稼働中のセッションには
-   セッション再起動まで反映されない——「正本への自動到達経路」節の既知の制約と同じ）。
+   ★この1番は `.claude/hooks/check-write-preceded-by-search.mjs`（`PreToolUse(Write|Edit)`・非ブロッキング）が機械検知する
+   （新規関数定義らしきパターンを書く前の直近15ツールに Grep/Glob が無ければ警告）。実装経緯（soushin の自己不整合実損）・
+   機械化できない部分の明示: [`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)。
 2. **`ai-hub`で共通部品を確認する** — `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` / `--sig "<キーワード>"`（「セッション開始時の必須アクション」3番目と同じコマンド。実装着手の直前にもう一度確認する）
 2.5. **CANONICAL CHECKを通す** — 既存候補が見つかったら「それを信じてよいか」を判定する
    （同じ責務か・同じ意味か・置き場所は適切か・依存方向は逆転していないか）。判定結果は
@@ -376,37 +345,11 @@ canonical HEADが意図したshaになっている・remoteと一致している
 - 停止解除を口頭や通常チャットだけに書く（必ずcoordに残す）
 - 自分がholderなのに、終わってもPAUSEDのまま放置する
 - 完了報告で「全部終わり」と言うが、次セッションが再開できない
-- ★★**「自分のコミットをブランチへ退避してmainを戻す」ときに、対象範囲を確認せず
-  `git reset --hard <sha>`を打つ**（2026-09-28実損、`kimitolink-linktree`）。
-  やりたいことが「自分がついさっき作った1コミットだけを戻す」でも、面倒くさがって
-  `git reset --hard origin/main`のような**離れたSHAへの広範囲reset**を使うと、
-  **その瞬間の作業ツリーにあった、自分が関知していない未コミット変更まで巻き込んで
-  消える**。実損: `git branch <退避用>`で自分のコミットを退避した直後、続けて
-  `git reset --hard origin/main`を実行し、無関係な3ファイル
-  （`council/HANDOFF-ogp-and-app.md`・`../kimitolink-linktree/scripts/design-council.mjs`・
-  `templates-app/android-twa/README.md`。いずれも`git add`前の未コミット変更で、
-  他セッションかユーザー本人の作業）を消した。**未コミットの変更はgit addもコミットも
-  していない限り、通常のgit操作では復元不可能**（stashしていない・commitしていない
-  working tree差分はreflogにも残らない）。
-  ★**対処（実行前に必ず踏む3段）**:
-  1. **`reset --hard`を打つ前に、必ず直前で`git status --short`を実行し、
-     今から消える対象に見覚えのない変更が1件でも無いか目で確認する。**
-     1件でもあれば`reset --hard`を使わない
-  2. **「1コミットだけ戻したい」なら`HEAD~1`のようなHEAD相対で指定する**（`origin/main`
-     等の離れたSHAを漠然と指定しない——自分のコミットが今HEADから何個目かを
-     数えられないなら、そもそも広範囲resetをする資格がない）
-  3. **`main`をorigin相当に揃えたいだけなら、`reset --hard`ではなく
-     `git stash`（未コミット変更を退避）→`git pull --ff-only`→必要なら
-     `git stash pop`**、を使う。「未コミット変更がある状態で`reset --hard`を検討している」
-     こと自体が既に危険信号
-  ★これは「相手の作業ブランチを勝手にresetする」の1つ上の層の教訓——**同じセッション内の
-  自分の操作でも、作業ツリーの現況（`git status`）を見ずに広範囲resetを打てば
-  同じ事故になる**。coordの`files`宣言は「意図して触る対象」しか書かないため、
-  この種の巻き込み事故はcoordの仕組みだけでは防げない（機械検査は困難——「これから
-  実行するgitコマンドが安全か」は任意のシェルコマンド文字列の意味解釈が要り、
-  「新しいルールを書いたら機械検査化を検討する」節の基準2番（自然言語判断が絡む）
-  に該当する。フックで`git reset --hard`をパターンマッチして警告する案はfalse
-  positiveが多く実用性が低いため不採用。**唯一の対処は上記3段の手順を徹底すること**）。
+- ★★**`git reset --hard` の前に必ず `git status --short` で巻き込む未コミット変更が無いか目視する**
+  （1件でもあれば使わない）。1コミットだけ戻すなら `HEAD~n` 相対で指定（離れたSHAを漠然と指定しない）。
+  `main` を origin に揃えるだけなら `reset --hard` でなく `git stash`→`git pull --ff-only`→（必要なら）`git stash pop`。
+  実損の詳細・なぜcoord/機械検査で防げないか: [`_docs/git-safety-knowledge-base.md`](_docs/git-safety-knowledge-base.md)
+  （2026-09-28 kimitolink-linktree の巻き込み削除事故）。
 
 ### 作業分担の原則
 
@@ -711,17 +654,21 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 
 ## AIへのお願い（守ること）
 
-- **設計方針（2026-09-01 確立、2026-09-23 自動決定を明文化、2026-09-28 商品インパクト基準を追加）:
-  CVR/LTV最大化 × 100年メンテナンスのいらない設計（＝根本解決） × 商品としてのインパクト（後述5問）。**
+- **設計方針（2026-09-01 確立、2026-09-23 自動決定を明文化、2026-09-28 商品インパクト基準を追加、2026-10-22 事業指標を拡張）:
+  事業指標の最大化（CVR・LTV・CPA効率ほか） × 100年メンテナンスのいらない設計（＝根本解決） × 商品としてのインパクト（後述5問）。**
+  1本目の軸は CVR/LTV の2つから、**北極星「LTV÷CPA」（＋回収期間）に全部の数字をまとめる指標の束**へ広げた
+  （CPA＝1人を連れてくる費用は**下げるほど良い**。本人の「CPA最大化」は「CPA効率の最大化」と読む）。
+  束の中身（継続率・ARPU・バイラル係数・NPS・ストア評価・公開到達率など）・壊してはいけないガードレール・
+  判断の順番の正本は [`docs/ai-rules/07_GROWTH_METRICS.md`](docs/ai-rules/07_GROWTH_METRICS.md)（本文をここへコピーしない）。
   何を作る・直すときも、最後にこの3つに照らして判断する。**判断が割れたときはこの3つを優先し、
   ユーザーに選択肢を出して止まらない**（このリポの担当AIとしての既定の振る舞い）:
 ### 商品としてのインパクト基準（2026-09-28追加）
 
-前の2つ（CVR/LTV・100年メンテナンス
+前の2つ（事業指標・100年メンテナンス
     フリー）が実装・技術判断の軸なのに対し、こちらは**その商品・機能が世に出す価値そのものが
     野心的か**を測る軸。新しい機能・アプリ・LPを企画する段階で、次の5問を自問する
     （既存2軸と同じく、**自分で判断に迷ったときの判定基準**であり、AskUserQuestionの
-    選択肢としてそのまま人間に投げない——「CVR/LTV」「100年メンテナンスのいらない設計」
+    選択肢としてそのまま人間に投げない——「CVR/LTV/CPA」等の事業指標「100年メンテナンスのいらない設計」
     自体を選択肢化しない、上の節と同じ扱い）:
     1. この商品は、10年後も語られるかどうか
     2. この商品は、市場の常識を変えられるか
@@ -730,7 +677,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     5. 商品によってお客様の生き方・判断を変えられるかどうか
     ★これは**大きな新規企画（新しいアプリ・新しい事業の柱）を検討する段階**で自問する基準で
     あり、日々の細かいバグ修正・小さな機能追加のたびに問う基準ではない（そこは引き続き
-    CVR/LTVと100年メンテナンスフリーの2軸で判断する）。5問全部にYESと言える必要はなく、
+    事業指標と100年メンテナンスフリーの2軸で判断する）。5問全部にYESと言える必要はなく、
     **判断が割れたときに「より野心的な方」へ倒す**ための軸として使う。
 ### 「選択肢を出して止まらない」＝「選択肢を提示だけして返事を待つ」ではない
 
@@ -738,8 +685,8 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     指摘され明文化）。**人間がやる必要のない作業はAIがすべてやる。**実装・調査・
     ファイル操作・設定変更・定型判断など、人間の承認や手作業が本質的に不要な場面では、
     「A案とB案どちらにしますか」とAskUserQuestion等で選択肢を並べて止まらない。
-    **判断が割れたら、CVR/LTV最大化と100年メンテナンスフリー設計のどちらがより資するかを
-    自分で判定し、確認を取らずにその場で決めて実行してから、決めた内容と理由を報告する**
+    **判断が割れたら、事業指標の最大化（07_GROWTH_METRICS §4 の順: ガードレール→LTV÷CPA→回収の早さ→
+    保守の手間）と100年メンテナンスフリー設計のどちらがより資するかを自分で判定し、確認を取らずにその場で決めて実行してから、決めた内容と理由を報告する**
     （提案→承認待ちの順番ではなく、実行→報告の順番にする）。
     人間の判断が必須なのは、このCLAUDE.md体系より優先されるシステム側ルールの
     「Explicit permission required」「Prohibited」に該当する不可逆・対外的な操作
@@ -747,7 +694,7 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     存在せず聞かなければ埋まらないこと（未記入の`app.config.json`項目、ユーザーだけが
     知る事業判断等）に限る。**それ以外で「念のため確認」に流れるのは、この2指針で
     自分の頭で決められるのに決めていないだけ**——決めて実行する方に倒す。
-    ★★★**「CVR/LTV」「100年メンテナンスのいらない設計」自体をAskUserQuestionの
+    ★★★**「CVR/LTV」「CPA」等の事業指標・「100年メンテナンスのいらない設計」自体をAskUserQuestionの
     選択肢として人間に提示してはいけない**（2026-09-28実損、`soushin-suggest.link`）。
     これらは**自分が判断に迷ったときに、確認を取らず自分で決めるための判定基準**
     であり、人間に選ばせる選択肢の1つではない。実損では「進め方をどうしますか？」の
@@ -901,11 +848,18 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
     実際に新しい値を書き込む場面では、引き続き`~/.claude/CLAUDE.md`
     「クリップボード経由」節（`request_access`→`read_clipboard`→Bash環境変数）
     を使うか、MCPの`value`引数へ渡す前提で使うかを都度判断する。
-### CVR/LTV最大化
+### 事業指標の最大化（CVR・LTV・CPA効率ほか、2026-10-22拡張）
 
 ユーザーが目的（アプリ公開・情報を得る・迷いなく次の一手が分かる）に
-    到達する率と、使い続ける理由を最大化する。内部の都合（実装のしやすさ）を優先して、
+    到達する率と、使い続ける理由を最大化し、その1人を連れてくる費用を下げる。内部の都合（実装のしやすさ）を優先して、
     ユーザーが見る画面・触る導線・理解のしやすさを犠牲にしない。
+    - **最後は1つの式に戻す**: 北極星＝LTV÷CPA（目安3以上）と回収期間。上げられるつまみは
+      ①来る人を安く増やす（CPA↓・自然流入・バイラル係数・ストア転換率）②CVR③単価（ARPU・客単価）
+      ④続く期間（継続率・解約率）⑤原価（粗利率＝上の「使われるほど黒字」節）の5つだけ。
+      企画・変更のたびに「どの数字をどちらへ動かすか」を1行書いてから作る。一覧・定義・ガードレール・判断順は
+      [`docs/ai-rules/07_GROWTH_METRICS.md`](docs/ai-rules/07_GROWTH_METRICS.md)。
+    - ★**信用を削って作る数字は採らない**（解約しにくくする・★5の人だけに評価を頼む・誤解させる言葉・
+      原価を見ない無料枠）。返ってくるのが後なだけで、100年設計と正面からぶつかる。
     - ★**「商品の品質」より「売り方（伝わり方）の品質」がCVRを決める**（2026-09-01追記）。
       中身が優れていても、それが伝わる形になっていなければ選ばれない。逆に、
       伝わり方が優れていれば、中身の差は埋まる。実装・機能の良し悪しだけで
@@ -927,6 +881,9 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
 （対症療法・自前の脆い判定ロジック・ハードコードした一覧・抜け漏れのあるチェック）を
 選ばない。**なぜ起きたかの根本原因まで遡って直す**。後から見た人・未来の自分・
 別のAIが同じ調査・同じ手間を繰り返さずに済む形にする。
+★コードの置き方の具体形は「**人間もAIも迷わないコード構成**」7項目（入口は1つ・置き場所と名前で中身が分かる・
+1ファイル1責務・判断と入出力を分ける・正本は1か所・なぜを書く）。正本は
+[`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) §2-1（2026-10-26）。
 
 この2つを実現するための具体的な手段が、次の4つの基準。
 - **新しい機能・検査を作るときの4つの基準（2026-08-25 確立）。**
@@ -1038,6 +995,9 @@ iOS/Android/Web/Chrome の自動化スクリプト・CI・TWA は **`templates/`
   `/plugin install claude-security@claude-plugins-official`）。走らせたかどうかは
   `templates/scripts/check-security-scan-ran.mjs`（HEAD に対するスキャンの有無と CRITICAL/HIGH を刻印から読む。走らせていなければ
   exit 2＝測れていない）。0件は安全の証明ではない（非決定的・補完であって代替ではない）。詳細は同 §5-1a。
+- **★ログイン画面は「説明なしで次に押すものが分かる」（全プロジェクト共通の指針・2026-10-28採用）。** 入り方は番号つきで並べる／
+  パスキーは「登録した端末だけ」と書き、ログイン直後に「この端末に登録しますか？」と勧める／パスキーが無い端末でも
+  メールの6桁（`autocomplete="one-time-code"`）で入れるようにする。詳細は [`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) §3-1。
 - **★コードコメントの書き方（全プロジェクト共通の指針・2026-10-16採用）。** 新規ファイルは**先頭に「役割・使い方・なぜ要るか」を
   必ず書く**（機械検査: `templates/diagnostics/check-file-header-comment.mjs`。新規だけ赤）。責務のまとまりには「なぜ」を書き、
   **1行ごとの「何を」は書かない**（腐る）。コメントの中身の正しさは機械で見られない（意味判断）のでレビューに残す。
@@ -1267,6 +1227,44 @@ qa/
       notes.md
   bugs.md
 ```
+
+### ★Chrome拡張は「AIが読み込んで自分で確かめる」（2026-10-25確立・全拡張リポ共通）
+
+> りんくの言葉:「拡張を自動で動かして検証する仕組みを全部にいれたい」「拡張関連全体のルールにしたいのです」
+
+- **拡張を変えたら、報告の前に `npm run verify:extension` を自分で走らせる。** 実体は共通の
+  [`templates/extension-verify/run.mjs`](templates/extension-verify/README.md)。拡張を本物の Chromium に読み込み、
+  service worker の起動・全画面（popup／options／side panel／devtools／独自ページ）・content script の
+  全差し込み先を開いて、例外・`console.error`・読み込み失敗・空白・確認式を見る。結果とスクリーンショットは
+  `.artifacts/extension-verify/` に残る。**「拡張を再読み込みして開き直してください」と人に頼んで確認を代行させない。**
+- **全拡張リポに入れる。** `extension-verify.json`・npm script か CI への配線・**AGENTS.md への記載**が揃っていないと
+  [`templates/diagnostics/check-extension-verify-wired.mjs`](templates/diagnostics/check-extension-verify-wired.mjs)
+  （`npm run diagnostics` に登録済み）が赤にする。★Codex/Cursor は CLAUDE.md を読まないので、AGENTS.md に書かないと
+  ルールが届かない（実損: Codex が毎回「再読み込みして開き直して」と頼んでいた）。
+- **新しい画面を足したら設定に足す。** 足さないと「未検証の画面」で赤（網羅の門）。検証しない画面は理由つきで `ignorePages` へ。
+- **人の普段の Chrome への反映**（作業ツリーを読んでいる拡張のリロード）も、手段があれば AI がやる
+  （手本: 追憶 CLAUDE.md の `reload_extension`）。人に頼むのは手段が全部尽きたときだけ。
+  ★既定の手段は、拡張自身が新しい版に気づいて読み込み直す [`templates/extension-self-update/`](templates/extension-self-update/README.md)
+  （git pull して manifest の version を上げれば、2分以内に入れ替わる。初回の1回だけ人の 🔄 が要る）。
+- **この検証の外にあるもの**: ログインが要る本物のサイトでの精度、利用者の Chrome から拡張が外れていないか。
+  前者は各リポの実機確認、後者は各 PC 上の検査（手本: `../tsuioku-no-kirameki.com/scripts/check-chrome-load-path.mjs`）が受け持つ。
+
+### ★★AIは人の普段の Chrome に繋がない（「リモートデバッグを許可しますか？」を出さない、2026-10-26確立・全ツール共通）
+
+> りんくの言葉:「全体のルールとしてこれを何回ももとめられるとすとれすなのでやめてほしい」
+
+- **原因**: `chrome-devtools-mcp --autoConnect`（Chrome 144+）は、人が普段使っている Chrome に後から繋ぐ。
+  Chrome は繋がれるたびに「リモート デバッグを許可しますか？」を出す（毎回・常に許可の選択肢は無い）。
+  2026-10-26 時点で出していたのは `~/.claude.json` の MCP `chrome-devtools-live`（`--autoConnect`）だった。
+- **ルール**: AI が Chrome を自動操作するときは、**自動操作専用のプロフィール**を使う。人の普段の Chrome には繋がない。
+  - chrome-devtools-mcp: `--autoConnect` を使わず `--userDataDir C:\Users\info\.chrome-devtools-live`（ログインを残したいとき）か
+    `--isolated`（使い捨て）。専用プロフィールのログインは初回だけ人がする。以後は残る。
+  - 自分で起動して繋ぐときは `--user-data-dir=<専用フォルダ> --remote-debugging-port=<番号>` で起動し `--browserUrl` で繋ぐ。
+  - 人の普段のログイン状態がどうしても要る作業は、Claude in Chrome 拡張（`mcp__claude-in-chrome__*`）を使う（ダイアログは出ない）。
+- **やらないこと**: 普段のプロフィールの Cookie を専用フォルダへコピーする・普段の Chrome をデバッグポート付きで起動し直す、
+  といった「確認を出さないために安全を下げる」回避。`--autoConnect` を Claude Code / Codex / Cursor / Antigravity どの設定にも足さない。
+- ★機械検査: 「設定ファイルに `--autoConnect` があるか」は事実として検出できるが、設定は各 PC ローカル（git 外）にあるため
+  リポの Gate では見られない。新しい PC・新しい AI ツールを足したら、MCP 設定に `autoConnect` が無いことを grep で確かめる。
 
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 

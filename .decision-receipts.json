@@ -448,6 +448,26 @@
       "scopePaths": [
         "templates/scripts/lib/candidate-files.test.mjs"
       ]
+    },
+    {
+      "at": "2026-10-25T12:23:55.460Z",
+      "responsibility": "chrome-extension-real-browser-verify",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/extension-verify/run.mjs",
+      "scopePaths": [
+        "templates/extension-verify/run.mjs",
+        "templates/diagnostics/check-extension-verify-wired.mjs"
+      ]
+    },
+    {
+      "at": "2026-10-28T00:54:45.040Z",
+      "responsibility": "extension-self-reload-on-new-version",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/extension-self-update/self-update.js",
+      "scopePaths": [
+        "templates/extension-self-update/self-update.js",
+        "templates/extension-self-update/self-update.test.mjs"
+      ]
     }
   ]
 }

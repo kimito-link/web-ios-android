@@ -47,17 +47,30 @@
 // 標準入力(JSON): session_id, transcript_path, prompt, cwd
 // require-claude-md-read.mjsと同じtranscript_path走査パターンを流用する。
 
-import { createReadStream, existsSync, readFileSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 
 // ★警告を出す閾値。実測した実損(26日間)より大幅に短い12時間に設定する。
 //   長時間セッションは異常ではなく実態として起こりうる運用（並列セッション
 //   協調プロトコル節を参照）なので、短すぎる閾値は「いつも警告が出る」
 //   オオカミ少年になる。CLAUDE.md掟⑥と同じ考え方で、まず緩めに始める。
 const WARN_THRESHOLD_HOURS = 12;
+
+// ★1回/セッションへ縮退(council 2026-10-21 P7): 毎ターン出る警告はオオカミ少年になり、
+//   13日続いたセッションで毎ターン出ていたのに一度も行動に繋がらなかった(「非ブロッキングの
+//   警告は、読まれなければ形だけ」の実証)。初回だけ出し、セッションごとの印(tmpdir のマーカー)で
+//   二度目以降は黙る。マーカーの中身がそのまま「いつ・なぜ出したか」の記録(台帳)になる。
+//   P3 の結末台帳(hook-outcomes.jsonl)はブロッキング hook 専用なので、警告系はそこに混ぜない。
+export function sanitizeSessionId(id) {
+  return String(id == null ? '' : id).replace(/[^A-Za-z0-9_.:-]/g, '_').slice(0, 160);
+}
+export function markerPathFor(base, sessionId) {
+  return join(base, 'claude-hook-markers', 'warn-long-running', sanitizeSessionId(sessionId) + '.json');
+}
 
 function normalizeWindowsPath(p) {
   if (process.platform !== 'win32' || typeof p !== 'string') return p;
@@ -188,6 +201,11 @@ async function main() {
     process.exit(0);
   }
 
+  // ★1回/セッション(P7): この session_id で既に出していれば黙る(マーカーの存在で判定)。
+  const sessionId = typeof input.session_id === 'string' ? input.session_id : '';
+  const markerPath = sessionId ? markerPathFor(tmpdir(), sessionId) : null;
+  if (markerPath && existsSync(markerPath)) process.exit(0);
+
   const elapsedDays = (elapsedHours / 24).toFixed(1);
   const messages = [];
   if (elapsedHours >= WARN_THRESHOLD_HOURS) {
@@ -212,6 +230,20 @@ async function main() {
     '新しいセッションに切り替えてください。'
   );
 
+  // 記録(台帳): いつ・なぜ出したかをセッションの印として残す。これが二度目を黙らせる根拠にもなる。
+  if (markerPath) {
+    try {
+      mkdirSync(dirname(markerPath), { recursive: true });
+      writeFileSync(
+        markerPath,
+        JSON.stringify({ schema: 1, sessionId, at: new Date().toISOString(), elapsedHours: Math.floor(elapsedHours), canonicalUpdatedAfterStart }) + '\n',
+        'utf8'
+      );
+    } catch {
+      // 記録に失敗しても警告は出す(fail-open)。その場合、二度目を黙らせられない可能性は残る。
+    }
+  }
+
   const output = {
     hookSpecificOutput: {
       hookEventName: 'UserPromptSubmit',
@@ -222,4 +254,6 @@ async function main() {
   process.exit(0);
 }
 
-main();
+// import(テスト)時は main を走らせない(main は stdin を読んでブロックするため)。
+const isMain = Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (isMain) main();

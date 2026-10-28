@@ -63,5 +63,15 @@ site/hub/revenue/
 .service-status-snapshot.json
 site/hub/status/
 
+# 横断知見ダッシュボード（kimito-skill.link/hub/・Cloudflare Access 保護）の生成物。
+# ai-hub/index.json（非公開）と github/ 配下の実スキャンから作るため、非公開リポの
+# 名前・フォルダ構成・鍵の作り直しスクリプト名などが入る＝public リポに置かない。
+# `npm run hub:page`（deploy:site の最初の手順）が毎回作り直すので、手元と配信には残る。
+site/hub/hub-data.json
+site/hub/index.html
+site/hub/matrix.json
+
 # 自己改善ループの実データ置き場（症状カード・提案書・承認台帳）。実データが混ざりうるのでコミットしない
 _loop/
+# hook の結末台帳(record-outcome.mjs)。_ 始まりだと Chrome が拡張を読み込まないので . 始まりに置く
+.loop/

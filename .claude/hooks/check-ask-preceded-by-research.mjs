@@ -26,8 +26,11 @@
 //   意味判断（「本当にユーザーの決定が必要か」）は検出できないが、
 //   このキーワード自体が選択肢に出てくること自体が強いシグナルであるため、
 //   「無理に自動化しない」対象ではなく機械化する（指摘を受けて即日実装）。
+// ★2026-10-22: 1本目の軸を「事業指標の束」(docs/ai-rules/07_GROWTH_METRICS.md)へ広げたので、束の名前も同じ扱いにする。
+//   誤検知を避けるため、日常語(継続率・評価など)は入れず、物差しとしてしか出てこない略語・言い回しだけを足す。
 const DESIGN_PRINCIPLE_KEYWORDS = [
   '100年', 'CVR', 'LTV', 'メンテナンスフリー', 'メンテナンスのいらない',
+  'CPA', 'ROAS', 'ARPU', 'NPS', 'バイラル係数', '回収期間', '事業指標',
 ];
 
 // ★2026-10-18追加: 「理由タグ」必須（拒否）。本人の指摘「100年後安心できる設計・CVR/LTV・ユーザーにとって一番いい
@@ -42,6 +45,7 @@ const DESIGN_PRINCIPLE_KEYWORDS = [
 //   fail-open（このhookが壊れても質問は止めない）。無効化: 環境変数 ASK_REASON_TAG_OFF=1。
 
 import { readFileSync, existsSync } from 'node:fs';
+import { recordOutcome } from './lib/record-outcome.mjs';
 
 const RESEARCH_TOOLS = new Set(['Grep', 'Glob', 'WebFetch', 'WebSearch', 'Agent', 'Task']);
 const LOOKBACK_TOOL_USES = 20;
@@ -115,7 +119,7 @@ function extractQuestionTexts(toolInput) {
   return texts;
 }
 
-function findDesignPrincipleKeyword(texts) {
+export function findDesignPrincipleKeyword(texts) {
   for (const text of texts) {
     for (const keyword of DESIGN_PRINCIPLE_KEYWORDS) {
       if (text.toUpperCase().includes(keyword.toUpperCase())) return keyword;
@@ -147,6 +151,8 @@ function main() {
 
   // 検査0（拒否）: 理由タグが無い質問は通さない。判定基準を自分で適用して決める方へ戻す。
   if (process.env.ASK_REASON_TAG_OFF !== '1' && !hasReasonTag(extractQuestionTexts(input.tool_input))) {
+    // 結末台帳へ(観測・冪等・fail-open)。council §7 / P3。
+    recordOutcome(input, { hook: 'check-ask-preceded-by-research', reasonCategory: 'no-reason-tag' });
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',

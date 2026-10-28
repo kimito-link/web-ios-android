@@ -33,14 +33,23 @@
       .replace(/>/g, '&gt;');
   }
 
-  function renderBox(slot, entry, index) {
+  // コピー本文を組み立てる。_preamble(XYEval『誤った見立てに引きずられない』の1文)があれば
+  // 必ず先頭に差し込む（council 2026-10-21 P5）。純関数＝テストできる(末尾で export）。
+  function composeCopyText(preamble, text) {
+    var body = String(text == null ? '' : text);
+    var pre = preamble == null ? '' : String(preamble).trim();
+    return pre ? pre + '\n\n' + body : body;
+  }
+
+  function renderBox(slot, entry, index, preamble) {
     var copyId = 'ai-copy-text-' + index;
+    var copyText = composeCopyText(preamble, entry.text);
     slot.classList.remove('ai-box-slot');
     slot.classList.add('ai-box');
     slot.innerHTML =
       '<h2>' + entry.title + '</h2>\n' +
       '<div class="ai-sub">このURLをAIに貼って、下の指示をそのままコピペしてください</div>\n' +
-      '<div class="ai-copy" id="' + copyId + '">' + escapeHtml(entry.text) + '</div>\n' +
+      '<div class="ai-copy" id="' + copyId + '">' + escapeHtml(copyText) + '</div>\n' +
       '<button class="ai-copy-btn" type="button">コピー</button>' +
       (entry.note ? '\n<div class="ai-note">' + entry.note + '</div>' : '');
 
@@ -106,6 +115,9 @@
     fetch(dataPath).then(function (res) { return res.json(); }).then(onData).catch(function () { onData(null); });
   }
 
+  // ★ブラウザでだけ起動する。Node(テスト)で読み込んだときは document が無いので配線しない
+  //   （純関数 composeCopyText だけを末尾で export し、テストから検査できるようにするため）。
+  if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('DOMContentLoaded', function () {
     var boxSlots = document.querySelectorAll('.ai-box-slot');
     var indexSlots = document.querySelectorAll('.ai-index-slot');
@@ -117,7 +129,7 @@
           var key = slot.getAttribute('data-ai-key');
           var entry = data && data[key];
           if (entry) {
-            renderBox(slot, entry, i);
+            renderBox(slot, entry, i, data && data._preamble);
           } else {
             renderError(slot, key);
           }
@@ -138,4 +150,10 @@
       });
     }
   });
+  }
+
+  // Node(テスト)からは純関数だけを取り出せるようにする。ブラウザでは module が無いので無視される。
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { composeCopyText: composeCopyText };
+  }
 })();

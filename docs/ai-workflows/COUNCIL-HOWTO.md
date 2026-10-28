@@ -34,7 +34,7 @@
 | cloudflare/gpt-oss-20b | 別系統の発散 | 3 | liveProbe（毎日実疎通） |
 | cloudflare/llama-3.3-70b | 速い視点 | 4 | liveProbe |
 | cloudflare/nemotron-120b | 汎用 | 4 | liveProbe。失敗率が高め |
-| cloudflare/deepseek-v4-pro | 批判 | 4 | liveProbe。推論を切る設定(`enable_thinking=false`)で完走。2026-10-17 に glm-4.7-flash（推論の独白を出していた）から入れ替え。新規予備なので昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
+| cloudflare/deepseek-v4.1-flash | 批判 | 4 | liveProbe。`@cf/deepseek-ai/deepseek-v4.1-flash-1017`。推論を切る設定(`enable_thinking=false`)が必須（既定だと推論で上限を使い切り本文が空）。2026-10-28 に v4-pro-0813 から入れ替え（本番条件の実測で中身同等・約2倍速い）。新規予備なので昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | cloudflare/qwen3-30b-a3b | 発散 | 4 | liveProbe |
 | cloudflare/qwen2.5-coder-32b | 実装レビュー | 4 | liveProbe |
 | nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
@@ -318,6 +318,10 @@ node scripts/council-cleanup.mjs --dry-run   # 何が掃除されるか見るだ
 - 役割定義・出力フォーマット・批判強制を変えるときは、各スクリプトでなく `council-roles.mjs` を直す。**2リポに実体コピーがあるので両方同期**すること。
   - `kimitolink-linktree/scripts/council-roles.mjs`（UI/UX版・実装役がReact/Tailwind前提）
   - `tsuioku-no-kirameki.com/scripts/council-roles.mjs`（汎用版）
+  - ★会議の判断基準 `DESIGN_STANCE`（全役割の system に必ず入る）も両方に**同じ文**で置く。版は `DESIGN_STANCE_VERSION`（2026-10-27版＝
+    北極星 LTV÷CPA・ガードレール・無料ユーザーの価値・判断の順番・コード構成7項目・公開前4問）。正本は
+    [`CLAUDE.md`「設計方針」節](../../CLAUDE.md)と [`07_GROWTH_METRICS.md`](../ai-rules/07_GROWTH_METRICS.md)。正本の方針が変わったら、両リポの文と版を一緒に更新する
+    （各リポの `council-roles.stance.test.*` が要点の欠落を落とす）。
 - このHOWTO自体は**正本1つ**（`web-ios-android/docs/ai-workflows/`）。各リポには「正本はここ」という橋渡しの1行だけ置き、HOWTO本文のコピーは作らない。
 
 ---
