@@ -39,6 +39,19 @@
         "additionalProperties": false
       }
     },
+    "footerItems": {
+      "type": "array",
+      "description": "任意。フッターだけに出すリンク（プライバシーポリシー・特定商取引法に基づく表記など）。navItems の後ろに並ぶ。未指定なら何も足さない。2026-10-28、line-bot/apps/lp の実装を正本へ還流。",
+      "items": {
+        "type": "object",
+        "required": ["href", "label"],
+        "properties": {
+          "href": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
     "adminUrl": {
       "type": "string",
       "minLength": 1,

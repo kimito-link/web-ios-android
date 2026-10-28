@@ -65,6 +65,12 @@
       .concat(NAV_ITEMS.map(function (item) {
         return '<a href="' + item.href + '">' + item.label + '</a>';
       }))
+      // フッターだけに出すリンク（特定商取引法に基づく表記など）。
+      // ★未指定なら空配列で、出力は従来と変わらない。
+      //   2026-10-28: line-bot/apps/lp（kimitotalk.link）が先に足していたものを正本へ還流。
+      .concat((CONFIG.footerItems || []).map(function (item) {
+        return '<a href="' + item.href + '">' + item.label + '</a>';
+      }))
       .join('\n    ');
 
     // ★管理者ログインはフッターの隅に小さく出す。
