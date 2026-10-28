@@ -28,6 +28,11 @@
 **作業ブランチで commit したところで止める。** push・PR・マージ・デプロイは Claude Code が
 差分を実際に動かして検品してから行う（[`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)）。
 
+## 人の手を使わない（2026-10-28）
+
+人に「押して・貼って・画面を読んで・Enter を押して」と頼む前に、自分でやる道を全部ためす。人に渡すスクリプトは
+Enter 待ちを置かず、状態をファイルに書き、何度実行しても途中から続くようにする。正本: [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](docs/ai-rules/08_NO_HUMAN_HANDS.md)。
+
 ## 終わったら
 
 `handoff.md`（無ければ [`templates/handoff/handoff.md.example`](templates/handoff/handoff.md.example) から作る）の
