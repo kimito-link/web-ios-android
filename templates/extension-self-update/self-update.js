@@ -41,7 +41,9 @@ export async function extensionPageInFront() {
       const ctx = await chrome.runtime.getContexts({ contextTypes: ['TAB', 'POPUP'] });
       if (ctx.some((c) => c.contextType === 'POPUP')) return true;
       const ids = new Set(active.map((t) => t.id));
-      return ctx.some((c) => ids.has(c.tabId));
+      // ★サイトのページに埋め込んだ拡張の iframe(frameId>0)は「拡張の画面を開いている」に数えない。
+      //   数えると、そのタブが前面の間は入れ替わりが永遠に止まる(追憶の watch ページ popup.html?inline=1 で実際に起きた)。
+      return ctx.some((c) => ids.has(c.tabId) && !(Number(c.frameId) > 0));
     }
     const origin = chrome.runtime.getURL('');
     return active.some((t) => String(t.url || t.pendingUrl || '').startsWith(origin));
