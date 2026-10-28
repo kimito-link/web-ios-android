@@ -26,7 +26,7 @@ Grok Bot（常駐アプリ・SpaceXAI製）      … 進行役。ファイル読
         ▼
 実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し、本当に済んだものだけ done・それ以外は failed に結果を返す
         ▼
-dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は grok→qwen→oc→cf→local を自動フォールバック
+dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は `AUTO_CHAIN`（grok→qwen→oc→cf→nvidia→mistral→glm→local）を自動フォールバック
         ▼
 grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を動かす。文章は gemini/groq(--text)
 ```
@@ -129,8 +129,15 @@ Qwen / Cloudflare / ローカルへ振り分ける**前**に、まずこの段�
 - データは専用ブランチ `usage-data` の `usage.json`（ページとは別。再デプロイ不要で更新できる）。ページは公開・`noindex`（載せるのは割合と回復時刻だけ。鍵・会話内容は載せない）
 - 記録のしかた: `get_usage` の出力を `node scripts/record-usage-snapshot.mjs < usage.json` に渡す（初回は `--init`）。Claude の会話が動いたときだけ使用量は増えるので、**区切りで1回記録すれば足りる**
 - 「危険」は、今のペースが続くと枠の終わりより前に100%へ届く場合（時間の割に使いすぎ）。Claude 自身の「木曜の夜に上限」の警告と一致することを確認済み
-- **頭脳の状況（無料API・従量API・ローカルLLM）も同じページに出す**（2026-10-19）。`node scripts/record-brain-status.mjs` が、Alibaba（モデルごと）・Gemini（モデルごと）・Cloudflare・Groq（応答ヘッダの残量）・OpenRouter（残高 $）・NVIDIA・Mistral・ローカル（Ollama・GPUメモリ）を1トークン以下で確認して `brains.json` に保存する。Grok Build は確認の口が無いので実行ログの最新結果で判定。
+- **頭脳の状況（無料API・従量API・ローカルLLM）も同じページに出す**（2026-10-19）。`node scripts/record-brain-status.mjs` が、Alibaba（モデルごと）・Gemini（モデルごと）・Cloudflare・Groq（応答ヘッダの残量）・OpenRouter（残高 $）・Muse（OpenCode Zen）・NVIDIA・Mistral・ローカル（Ollama・GPUメモリ）を1トークン以下で確認して `brains.json` に保存する。Grok Build は確認の口が無いので実行ログの最新結果で判定。
   残量をゲージにできるのは、Groq（今日のリクエスト・1分のトークン）、OpenRouter（残高）、Alibaba/Gemini（使えるモデルの数）、ローカル（GPUメモリの空き）。Cloudflare・NVIDIA・Mistral・Grok は残量の数字を取得できない（権限や口が無い）ので、使えるかどうかだけ。
+  ★2026-10-28 **Meta Muse（`--brain muse`）を追加（明示指定のみ・自動の順番にはまだ入れていない）**。OpenCode Zen の無料モデル `opencode/muse-spark-1.3-contributor-free`（料金0）。
+  「Contributor」は**送った内容を Meta が学習に使う**条件なので、秘密・外に出せないコードは送らない（他の無料枠と同じ扱い）。
+  鍵はユーザー環境変数 `OPENCODE_API_KEY`（https://opencode.ai/auth で発行）。Zen が止まっているときの有料の逃げ道は同じモデルの
+  `--model openrouter/meta/muse-spark-1.3-contributor`（入力 $0.10・出力 $0.20 / 100万トークン）か `meta/muse-spark-1.3-contributor`（鍵 `META_MODEL_API_KEY`）。
+  ★クラウドから鍵なしで叩いた実測（2026-10-28）: Zen の他の無料モデルは `FreeUsageLimitError`、Muse は `Model is unavailable` を返した。両方とも `FAIL_MARKS` に入れて次の頭脳へ落ちるようにした。
+  ★同日 PC で有効なキー（OpenCode コンソールのサービスアカウント `dispatch`）でも `Model is unavailable`（同じキーで big-pickle は 429＝キーは有効）。**Zen 側で Muse が止まっている**。usage ページの Muse 行が「使える」になったら `AUTO_CHAIN` の grok の次に入れる。
+  ★PC の Claude Code（auto mode）は、キーを環境変数へ恒久保存する操作を本人の許可後も「Unauthorized Persistence」で止めた。保存は Muse が復活したときに改めて行う
   ★2026-10-19 の実測: Grok Build 残高切れ(402)・Alibaba 全6モデルの無料枠切れ・OpenRouter 残高切れ($30 を使い切り)が重なり、`--brain auto` は Cloudflare まで落ちていた。順序・モデル鎖・失敗の合図は `dispatch.py` を読む（複製しない）
 - 判定の中身は `site/hub/usage/usage-history.mjs`（純関数・テスト20件）。★この関数群は無料LLM（Cloudflare Qwen3.8-27B）に仕様書を渡して書かせ、テストが通ることで合格にした（§1b の運用の最初の実例）。
   複数行のタスクを引数に直接渡すと最初の1行しか届かない（実測）ので、**仕様はファイルに書き、「このファイルを読んで実装して」と1行で渡す**
