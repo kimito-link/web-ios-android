@@ -1,6 +1,6 @@
 """dispatch.py の --brain muse（OpenCode Zen + Meta Muse Spark）の単体テスト。実行: python -m unittest docs/ai-workflows/tools/test_dispatch_muse.py
 opencode は起動しない（コマンドの組み立て・順番・失敗の合図だけを見る）。
-なぜ要るか: muse は「無料」が前提で順番の2番目に置いている。既定のモデルが有料版に変わったり、Zen の枠切れの返事を
+なぜ要るか: muse は「無料」が前提。既定のモデルが有料版に変わったり、Zen の枠切れの返事を
 成功と読んだりすると、気づかないまま課金されるか、何もしていないのに DONE になる。"""
 import importlib.util, os, unittest
 
@@ -19,8 +19,10 @@ class MuseBuild(unittest.TestCase):
         _, _, model = dispatch.build("muse", "do x", "", "openrouter/meta/muse-spark-1.3-contributor")
         self.assertEqual(model, "openrouter/meta/muse-spark-1.3-contributor")
 
-    def test_second_in_auto_chain(self):
-        self.assertEqual(dispatch.AUTO_CHAIN[:2], ["grok", "muse"])
+    def test_not_in_auto_chain_until_it_answers(self):
+        # 2026-10-28 PC 実測: 有効なキーでも "Model is unavailable"。返事が来た頭脳だけ順番に入れる決まり。
+        # 戻すときはこのテストを「grok の次」に書き換える。
+        self.assertNotIn("muse", dispatch.AUTO_CHAIN)
         self.assertIn("muse", dispatch.TIMEOUTS)
 
     def test_zen_failures_fall_through(self):

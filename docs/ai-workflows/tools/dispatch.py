@@ -1,7 +1,7 @@
 """
 dispatch.py - run one task headlessly on a free/cheap brain, with automatic fallback.
 
-  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (grok -> muse -> qwen -> ... -> local)
+  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (grok -> qwen -> ... -> local)
   python dispatch.py --brain grok  --cwd <dir> "task"    # Grok Build headless (--always-approve so file edits do not block)
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
   python dispatch.py --brain oc    --cwd <dir> "task"    # OpenCode + Alibaba qwen3.8-27b (direct)
@@ -33,9 +33,10 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # Full picture: MULTI-BRAIN-HOWTO.md §0. Grok Bot writes jobs into <repo>/_jobs/inbox; job-runner.py (Task
 # Scheduler, every 10 min) runs them through this dispatch. "The real Claude only plans/judges; hands are free brains."
 # Agent brains (can read/write files, run commands): auto tries them in this order.
-# muse is 2nd (2026-10-28): free on OpenCode Zen and a strong agentic coder, so it is tried before the per-model
-# Alibaba quotas and the Cloudflare daily allowance (which bills overage on this account).
-AUTO_CHAIN = ["grok", "muse", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# muse (OpenCode Zen free Muse Spark) is NOT in the chain yet: on 2026-10-28 the PC test with a valid key got
+# "Model is unavailable". Only brains that actually answered go in. When the usage page shows it "ok", put it 2nd
+# (after grok): it is free and a strong agentic coder, ahead of Alibaba and Cloudflare (which bills overage here).
+AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
