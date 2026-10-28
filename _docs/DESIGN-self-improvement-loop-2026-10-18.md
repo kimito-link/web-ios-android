@@ -10,7 +10,7 @@
 | 設計案の主張 | 結果 | 根拠 |
 |---|---|---|
 | `dispatch.py --brain local` は Ollama(127.0.0.1) | **○ 確認** | `docs/ai-workflows/tools/dispatch.py` L139-141: `ANTHROPIC_BASE_URL=http://127.0.0.1:11434` |
-| `--brain auto` は外部ベンダーへ落ちる（使わない） | **○ 確認** | L34 `AUTO_CHAIN = grok→qwen→oc→cf→nvidia→mistral→glm→local`（local は最後）。既定の `--brain` は `auto` |
+| `--brain auto` は外部ベンダーへ落ちる（使わない） | **○ 確認** | L34 `AUTO_CHAIN = grok→muse→qwen→oc→cf→nvidia→mistral→glm→local`（2026-10-28 muse 追加）（local は最後）。既定の `--brain` は `auto` |
 | `hub.mjs find --sig` | **○ 確認** | `ai-hub/bin/hub.mjs` の使い方に `--sig "文字列"`（ヒット0で exit 1） |
 | 汎用診断 `npm run diagnostics` | **○ 確認** | `package.json`: `node templates/diagnostics/run.mjs .` |
 | 改善台帳（数値のみ） | **○ 確認** | `record-improvement.mjs`・`improvement-history.mjs`・`improvement-metrics.mjs`・`npm run improvement:record` |

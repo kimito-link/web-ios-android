@@ -1,11 +1,12 @@
 """
 dispatch.py - run one task headlessly on a free/cheap brain, with automatic fallback.
 
-  python dispatch.py "task text"                         # --brain auto: grok -> qwen -> oc -> cf -> local
+  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (grok -> muse -> qwen -> ... -> local)
   python dispatch.py --brain grok  --cwd <dir> "task"    # Grok Build headless (--always-approve so file edits do not block)
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
   python dispatch.py --brain oc    --cwd <dir> "task"    # OpenCode + Alibaba qwen3.8-27b (direct)
   python dispatch.py --brain cf    --cwd <dir> "task"    # OpenCode + Cloudflare qwen3.8-27b (free daily quota)
+  python dispatch.py --brain muse  --cwd <dir> "task"    # OpenCode Zen + Meta Muse Spark 1.3 Contributor (free; prompts may train Meta's models)
   python dispatch.py --brain nvidia --cwd <dir> "task"   # OpenCode + NVIDIA NIM DeepSeek V4.1 Flash (free, 80-model catalog)
   python dispatch.py --brain mistral --cwd <dir> "task"  # OpenCode + Mistral Codestral (free monthly, coding-specialised)
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
@@ -18,7 +19,7 @@ stop the work; the next brain takes over and the log says which one actually did
 
 Failure signatures treated as "try the next brain": non-zero exit, timeout, or output containing any of FAIL_MARKS.
 Full output: %LOCALAPPDATA%\\llm-proxy\\runs\\<timestamp>-<brain>.log. Canonical copy: web-ios-android/docs/ai-workflows/tools/.
-Secrets: none here. Keys come from user env vars DASHSCOPE_API_KEY / CF_WORKERS_AI_TOKEN.
+Secrets: none here. Keys come from user env vars DASHSCOPE_API_KEY / CF_WORKERS_AI_TOKEN / OPENCODE_API_KEY etc.
 """
 import argparse, json, os, subprocess, sys, time, urllib.request
 
@@ -32,7 +33,9 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # Full picture: MULTI-BRAIN-HOWTO.md §0. Grok Bot writes jobs into <repo>/_jobs/inbox; job-runner.py (Task
 # Scheduler, every 10 min) runs them through this dispatch. "The real Claude only plans/judges; hands are free brains."
 # Agent brains (can read/write files, run commands): auto tries them in this order.
-AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# muse is 2nd (2026-10-28): free on OpenCode Zen and a strong agentic coder, so it is tried before the per-model
+# Alibaba quotas and the Cloudflare daily allowance (which bills overage on this account).
+AUTO_CHAIN = ["grok", "muse", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
@@ -43,8 +46,10 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               "auto-rejecting", "rejected permission to use this specific tool call", "Payment Required",
               "usage balance exhausted",
               # 2026-10-21 agy 実測: headless で許可の無いコマンドを自動拒否しても status=SUCCESS・rc=0 で終わる。
-              "so it was auto-denied"]
-TIMEOUTS = {"agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
+              "so it was auto-denied",
+              # 2026-10-28 OpenCode Zen 実測: 無料モデルの枠切れと、上流(Meta 等)が止まっているときの返事。
+              "FreeUsageLimitError", "Model is unavailable"]
+TIMEOUTS = {"agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -197,6 +202,14 @@ def build(brain, task, allowed, model=None):
         # brains (grok/qwen/oc/cf) and BEFORE local in AUTO_CHAIN: used when free quotas are spent,
         # in preference to local (free but slow + weak at agent tasks). Key: user env OPENROUTER_API_KEY.
         model = model or "openrouter/z-ai/glm-5.3-flash"
+        cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "muse":
+        # OpenCode Zen + Meta Muse Spark 1.3 Contributor (models.dev 2026-10-28: opencode/muse-spark-1.3-contributor-free,
+        # $0 in/out). "Contributor" = Meta may train on prompts and outputs, so do not send secrets or code that must
+        # not leave the PC (same stance as the other free tiers). Paid fallbacks of the same model, by --model:
+        # meta/muse-spark-1.3-contributor ($0.10/$0.20 per 1M, key META_MODEL_API_KEY) or meta/muse-spark-1.3
+        # ($1.25/$4.25, no training). Key: user env OPENCODE_API_KEY (or `opencode auth login` -> OpenCode Zen).
+        model = model or "opencode/muse-spark-1.3-contributor-free"
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "nvidia":
         # OpenCode + NVIDIA NIM (free, 80-model catalog, ~40 rpm eval tier). DeepSeek V4.1 Flash is a
@@ -380,7 +393,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")

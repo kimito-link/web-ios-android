@@ -67,7 +67,7 @@ async function devStats() {
 function brainWork() {
   const cfg = readDispatchConfig();
   const runs = readRunLogs({ failMarks: cfg.FAIL_MARKS, perBrain: 500, maxFiles: 2000, sinceMs });
-  const FREE = new Set(['qwen', 'oc', 'cf', 'nvidia', 'mistral', 'gemini', 'groq', 'local']);
+  const FREE = new Set(['qwen', 'oc', 'cf', 'muse', 'nvidia', 'mistral', 'gemini', 'groq', 'local']);
   let done = 0, tried = 0;
   const byBrain = {};
   for (const [brain, list] of Object.entries(runs)) {
