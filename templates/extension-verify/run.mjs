@@ -346,7 +346,11 @@ async function browserPhase(targetDir, cfg, plan, { headed }) {
       }
       id = new URL(sw.url()).host;
       let ver = null;
-      try { ver = await sw.evaluate(() => chrome.runtime.getManifest().version); } catch (e) { ver = 'ERR ' + e.message; }
+      // ★SW が見えた直後は chrome.runtime がまだ付いていないことがある（2026-10-29、返信サジェストで毎回赤になった）。
+      //   0ms では typeof chrome.runtime === 'undefined'、500ms 後には object。最大5秒だけ待ち直す。
+      for (let i = 0; i < 25; i++) {
+        try { ver = await sw.evaluate(() => chrome.runtime.getManifest().version); break; } catch (e) { ver = 'ERR ' + e.message; await new Promise((r) => setTimeout(r, 200)); }
+      }
       results.push({ kind: 'boot', name: 'service worker 起動', ok: ver === plan.manifest.version, detail: `id=${id} version=${ver}` });
     } else {
       id = extensionIdFor(copy.dir, plan.manifest);
