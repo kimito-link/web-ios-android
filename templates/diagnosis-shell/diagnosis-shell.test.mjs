@@ -1,6 +1,6 @@
 // 診断結果シェルの回帰テスト。
 // 何を守るか: アプリと拡張の描画に紹介・有料・LINEが出ないこと、点数が先に出ること、
-// 共有リンクに紹介が無いこと、再確認が端末内だけで終わること、文字と背景が 4.5:1 以上であること。
+// 共有リンクが共有者の LINE だけで取次店コードを含まないこと、再確認が端末内だけで終わること、文字と背景が 4.5:1 以上であること。
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -12,8 +12,8 @@ import { previewDiagnose } from './preview-diagnose.mjs';
 import { QUICK_VIEW_ORDER } from './quick-view.mjs';
 import { dueReminders, buildIcs, nextCheckDate, planReminder, rememberRecheck } from './reminder.mjs';
 import { renderShell } from './render.mjs';
-import { buildShareLink, chooseShareChannel, shareLinkQueryKeys } from './share.mjs';
-import { blocksForSurface, readReferralPlaceholder, resolveSurface } from './surface-policy.mjs';
+import { buildShareLink, buildSharePayload, chooseShareChannel, normalizeSharerLine, shareLinkQueryKeys } from './share.mjs';
+import { allowsPromoWording, blocksForSurface, resolveSurface } from './surface-policy.mjs';
 import { COLOR_PAIRS, contrastRatio } from './tokens.mjs';
 import { WEB_ONLY_COPY } from './web-only-copy.mjs';
 
@@ -65,27 +65,70 @@ test('Web は有料と LINE を出し、紹介は出さない', () => {
 
 test('禁止語の検出器は、文言を足した文字列を赤にする', () => {
   assert.equal(findForbiddenWording('紹介コードはこちら').some((hit) => hit.id === 'referral'), true);
+  assert.equal(findForbiddenWording('取次店コードはこちら').some((hit) => hit.id === 'referral'), true);
   assert.equal(findForbiddenWording('料金を見る').some((hit) => hit.id === 'paid'), true);
   assert.equal(findForbiddenWording('LINE公式アカウント').some((hit) => hit.id === 'line'), true);
 });
 
 test('環境変数が app のとき、設定が web でも有料と LINE を隠す', () => {
-  const html = draw('web', { env: { DISTRIBUTION_SURFACE: 'app' } });
+  const html = draw('web', { env: { DISTRIBUTION_SURFACE: 'app' }, sharerLine: '@Example_01' });
   assert.deepEqual(findForbiddenWording(html), []);
   assert.match(html, /data-surface="app"/);
+  assert.equal(html.includes('@Example_01'), false);
+  assert.equal(html.includes('line='), false);
+});
+
+test('環境変数が extension のときも紹介・有料・LINEを出さない', () => {
+  const html = draw('web', { env: { DISTRIBUTION_SURFACE: 'extension' }, sharerLine: '@Example_01' });
+  assert.equal(allowsPromoWording('extension'), false);
+  assert.deepEqual(findForbiddenWording(html), []);
+  assert.match(html, /data-surface="extension"/);
+  assert.equal(html.includes('@Example_01'), false);
+});
+
+test('環境変数が web のときは、設定が app でも今までの案内と共有者の LINE を出す', () => {
+  const html = draw('app', { env: { DISTRIBUTION_SURFACE: 'web' }, sharerLine: '@Example_01' });
+  const hits = findForbiddenWording(html);
+  assert.equal(allowsPromoWording('web'), true);
+  assert.ok(hits.some((hit) => hit.id === 'paid'));
+  assert.ok(hits.some((hit) => hit.id === 'line'));
+  assert.equal(hits.some((hit) => hit.id === 'referral'), false);
+  assert.match(html, /line=%40Example_01/);
+  assert.match(html, /data-sharer-line/);
 });
 
 test('未知の面はアプリとして扱い、有料と LINE を隠す', () => {
   assert.equal(resolveSurface({ distribution: { surface: 'store' } }), 'app');
-  assert.deepEqual(findForbiddenWording(draw('store')), []);
+  assert.equal(resolveSurface({ distribution: { surface: 'web' } }, { DISTRIBUTION_SURFACE: 'kiosk' }), 'web');
+  assert.deepEqual(findForbiddenWording(draw('store', { sharerLine: '@Example_01' })), []);
 });
 
-test('紹介プレースホルダは画面に出ない', () => {
-  const placeholder = readReferralPlaceholder({ distribution: { referralPlaceholder: { enabled: true } } });
-  assert.deepEqual(placeholder, { enabled: false, status: 'pending-xserver' });
-  assert.equal(blocksForSurface('web').referral, false);
-  assert.equal(draw('web').includes('pending-xserver'), false);
-  assert.equal(draw('app').includes('pending-xserver'), false);
+test('取次店コードの欄はどの面にも無く、共有リンクは共有者の LINE だけ', () => {
+  for (const surface of ['app', 'extension', 'web']) {
+    assert.equal(Object.hasOwn(blocksForSurface(surface), 'referral'), false);
+    const html = draw(surface, { sharerLine: '@Example_01' });
+    assert.equal(html.includes('取次店'), false, surface);
+    assert.equal(html.includes('pending-xserver'), false, surface);
+    assert.equal(html.includes('referralPlaceholder'), false, surface);
+    assert.equal(findForbiddenWording(html).some((hit) => hit.id === 'referral'), false, surface);
+    if (surface === 'web') {
+      assert.match(html, /data-sharer-line>共有者のLINE @Example_01/);
+      assert.match(html, /line=%40Example_01/);
+    } else {
+      assert.equal(html.includes('@Example_01'), false, surface);
+      assert.equal(html.includes('data-sharer-line'), false, surface);
+      assert.equal(html.includes('line='), false, surface);
+      assert.deepEqual(findForbiddenWording(html), []);
+    }
+  }
+  const untouched = draw('web');
+  assert.equal(untouched.includes('data-sharer-line'), false);
+  assert.equal(untouched.includes('line='), false);
+  const english = draw('web', { locale: 'en', sharerLine: '@Example_01' });
+  assert.match(english, /data-sharer-line>Sharer LINE @Example_01/);
+  const englishApp = draw('app', { locale: 'en', sharerLine: '@Example_01', env: { DISTRIBUTION_SURFACE: 'app' } });
+  assert.deepEqual(findForbiddenWording(englishApp), []);
+  assert.equal(englishApp.includes('Sharer LINE'), false);
 });
 
 test('点数、状態の言葉、ひとこと、詳しい説明の順', () => {
@@ -146,10 +189,56 @@ test('再確認は端末内のメモだけで、サーバープッシュも収�
   assert.equal(dueReminders(stored, '2026-11-25').length, 0);
 });
 
-test('共有リンクは /check/ だけで、紹介のクエリを付けない', () => {
-  const url = buildShareLink({ origin: 'https://example.com', domain: 'https://www.example.com/path' });
-  assert.equal(url, 'https://example.com/check/?domain=example.com');
-  assert.deepEqual(shareLinkQueryKeys(url), ['domain']);
+test('共有リンクは /check/ と共有者の LINE だけで、取次店コードを付けない', () => {
+  const plain = buildShareLink({ origin: 'https://example.com', domain: 'https://www.example.com/path' });
+  assert.equal(plain, 'https://example.com/check/?domain=example.com');
+  assert.deepEqual(shareLinkQueryKeys(plain), ['domain']);
+  const shared = buildShareLink({
+    origin: 'https://example.com',
+    domain: 'https://www.example.com/path',
+    allowLine: true,
+    line: '@Example_01',
+  });
+  assert.equal(shared, 'https://example.com/check/?domain=example.com&line=%40Example_01');
+  assert.deepEqual(shareLinkQueryKeys(shared), ['domain', 'line']);
+  assert.equal(normalizeSharerLine('12345678'), '');
+  assert.equal(normalizeSharerLine('取次店123'), '');
+  assert.equal(normalizeSharerLine('referral'), '');
+  const refused = buildShareLink({
+    origin: 'https://example.com',
+    domain: 'example.com',
+    allowLine: true,
+    line: '12345678',
+  });
+  assert.deepEqual(shareLinkQueryKeys(refused), ['domain']);
+  const hidden = buildSharePayload({
+    origin: 'https://example.com',
+    domain: 'example.com',
+    score: 88,
+    summary: 'ok',
+    locale: 'ja',
+    allowLine: false,
+    line: '@Example_01',
+    lineLabel: '共有者のLINE',
+  });
+  assert.equal(hidden.url, 'https://example.com/check/?domain=example.com');
+  assert.equal(hidden.line, '');
+  assert.equal(hidden.text.includes('@Example_01'), false);
+  assert.equal(hidden.text.includes('LINE'), false);
+  const shown = buildSharePayload({
+    origin: 'https://example.com',
+    domain: 'example.com',
+    score: 88,
+    summary: 'ok',
+    locale: 'ja',
+    allowLine: true,
+    line: '@Example_01',
+    lineLabel: '共有者のLINE',
+  });
+  assert.equal(shown.line, '@Example_01');
+  assert.match(shown.text, /共有者のLINE @Example_01$/);
+  assert.equal(new URL(shown.url).searchParams.get('ref'), null);
+  assert.equal(new URL(shown.url).searchParams.get('agency'), null);
   assert.equal(chooseShareChannel('app', { webShare: true }), 'native-sheet');
   assert.equal(chooseShareChannel('app', { capacitorShare: true }), 'native-sheet');
   assert.equal(chooseShareChannel('web', { webShare: true }), 'web-share');
@@ -231,19 +320,19 @@ test('拡張の読み込み経路に、Web 向けの案内文ファイルが無�
   }
 });
 
-test('app.config の distribution は面と紹介プレースホルダだけを許す', () => {
+test('app.config の distribution は面だけで、取次店コードの欄を許さない', () => {
   const schema = JSON.parse(readFileSync(`${ROOT}app.config.schema.json`, 'utf8'));
   const config = JSON.parse(readFileSync(`${ROOT}app.config.json`, 'utf8'));
   const ajv = new Ajv({ allErrors: true, strict: false });
   const validate = ajv.compile(schema.properties.distribution);
   assert.equal(validate(config.distribution), true, JSON.stringify(validate.errors));
-  assert.equal(config.distribution.referralPlaceholder.enabled, false);
-  assert.equal(config.distribution.referralPlaceholder.status, 'pending-xserver');
+  assert.equal(Object.hasOwn(config.distribution, 'referralPlaceholder'), false);
+  assert.equal(Object.hasOwn(schema.properties.distribution.properties, 'referralPlaceholder'), false);
+  assert.equal(config.distribution.surface, 'web');
   assert.equal(validate({ surface: 'mars' }), false);
-  assert.equal(validate({ referralPlaceholder: { enabled: true, status: 'pending-xserver' } }), false);
-  assert.equal(validate({ referralPlaceholder: { enabled: false, status: 'ready' } }), false);
   assert.equal(validate({
-    surface: 'extension',
+    surface: 'web',
     referralPlaceholder: { enabled: false, status: 'pending-xserver' },
-  }), true);
+  }), false);
+  assert.equal(validate({ surface: 'extension' }), true);
 });

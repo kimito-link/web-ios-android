@@ -5,7 +5,7 @@
 export const FORBIDDEN_RULES = Object.freeze([
   {
     id: 'referral',
-    re: /紹介コード|紹介リンク|紹介URL|アフィリエイト|affiliate|referral|代理店コード|[?&](?:ref|af)=/i,
+    re: /紹介コード|紹介リンク|紹介URL|アフィリエイト|affiliate|referral|代理店コード|取次店|[?&](?:ref|af)=/i,
   },
   {
     id: 'paid',

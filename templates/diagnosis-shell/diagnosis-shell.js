@@ -39,6 +39,7 @@ export function mountDiagnosisShell(root, options) {
       now: opts.now,
       pricingPath: opts.pricingPath,
       webCopy: opts.webCopy,
+      sharerLine: opts.sharerLine,
     });
     bind();
     announceDue();
@@ -102,24 +103,30 @@ export function mountDiagnosisShell(root, options) {
 
   const shareResult = async () => {
     if (!result || result.score == null) return;
+    const allowLine = surface === 'web';
+    const lineCopy = opts.webCopy && opts.webCopy.sharerLine;
     const payload = buildSharePayload({
       origin,
       domain: result.domain,
       score: result.score,
       summary: result.summary[locale],
       locale,
+      allowLine,
+      line: opts.sharerLine,
+      lineLabel: allowLine && lineCopy ? lineCopy[locale] : '',
     });
     const channel = chooseShareChannel(surface, {
       capacitorShare: Boolean(globalThis.Capacitor && globalThis.Capacitor.Plugins && globalThis.Capacitor.Plugins.Share),
       webShare: typeof navigator.share === 'function',
     });
     const status = root.querySelector('[data-share-status]');
+    const sheet = { title: payload.title, text: payload.text, url: payload.url };
     if (channel === 'native-sheet' && globalThis.Capacitor && globalThis.Capacitor.Plugins && globalThis.Capacitor.Plugins.Share) {
-      await globalThis.Capacitor.Plugins.Share.share(payload);
+      await globalThis.Capacitor.Plugins.Share.share(sheet);
       return;
     }
     if (channel === 'native-sheet' || channel === 'web-share') {
-      await navigator.share(payload);
+      await navigator.share(sheet);
       return;
     }
     await navigator.clipboard.writeText(payload.url);

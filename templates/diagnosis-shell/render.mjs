@@ -16,6 +16,7 @@ import { buildSharePayload } from './share.mjs';
  * @param {object|null} [input.result]
  * @param {string} [input.origin]
  * @param {string} [input.lineUrl]
+ * @param {string} [input.sharerLine]
  * @param {string} [input.pricingPath]
  * @param {string} [input.now]
  */
@@ -54,12 +55,17 @@ export function renderResult(input) {
   const view = buildQuickView(input.result, locale);
   const checkedAt = input.result.checkedAt || input.now || '2026-10-27T00:00:00.000Z';
   const nextOn = nextCheckDate(checkedAt);
+  const webCopy = input.webCopy || {};
+  const allowLine = blocks.line === true;
   const share = input.result.score == null ? null : buildSharePayload({
     origin: input.origin || 'https://example.com',
     domain: input.result.domain,
     score: input.result.score,
     summary: view.summary,
     locale,
+    allowLine,
+    line: input.sharerLine,
+    lineLabel: allowLine && webCopy.sharerLine ? webCopy.sharerLine[locale] : '',
   });
   const parts = [
     '<div class="quick" data-quick-view>',
@@ -85,12 +91,16 @@ export function renderResult(input) {
     `<p data-checked-domain>${escapeHtml(view.domain)}</p>`,
     '</details>',
   );
-  const webCopy = input.webCopy || {};
   if (blocks.pricing && input.pricingPath && webCopy.pricing && webCopy.pricing[locale]) {
     parts.push(`<p class="web-only" data-pricing><a href="${escapeHtml(input.pricingPath)}">${escapeHtml(webCopy.pricing[locale])}</a></p>`);
   }
   if (blocks.line && input.lineUrl && webCopy.line && webCopy.line[locale]) {
     parts.push(`<p class="web-only" data-line><a href="${escapeHtml(input.lineUrl)}">${escapeHtml(webCopy.line[locale])}</a></p>`);
+  }
+  if (share && share.line) {
+    const label = webCopy.sharerLine && webCopy.sharerLine[locale];
+    const shown = label ? `${label} ${share.line}` : share.line;
+    parts.push(`<p class="web-only" data-sharer-line>${escapeHtml(shown)}</p>`);
   }
   return parts.join('');
 }

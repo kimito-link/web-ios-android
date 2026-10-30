@@ -78,12 +78,8 @@
   },
 
   "distribution": {
-    "_note": "診断アプリの出し分け。app と extension は紹介・有料・LINEの文言を出さない。referralPlaceholder は Xserver の回答待ちの目印だけで、画面はまだ作らない。ビルド時は環境変数 DISTRIBUTION_SURFACE が surface より優先される。",
-    "surface": "web",
-    "referralPlaceholder": {
-      "enabled": false,
-      "status": "pending-xserver"
-    }
+    "_note": "診断アプリの出し分け。ビルド時は環境変数 DISTRIBUTION_SURFACE が surface より優先される。その値が app または extension のとき、描画に紹介・有料・LINEの文言を出さない。共有リンクの識別子は共有者の LINE だけで、取次店コードの欄は無い。",
+    "surface": "web"
   },
 
   "lineBot": {

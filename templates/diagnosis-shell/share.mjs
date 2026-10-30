@@ -1,12 +1,26 @@
-// 結果の共有。リンクに案内の識別子は付けない。
+// 結果の共有。許可したときだけ、共有者の入口を line クエリに載せる。
 // なぜ要るか: アプリは共有シート、Web は Web Share API、無ければリンクのコピー、で同じ結果を渡す。
-// 外部の番号は、回答があるまでクエリに載せない。載せない名前の一覧はこのファイルだけが持つ。
+// ref や agency などの案内クエリは付けない。許可は allowLine で、app と extension の描画は false。
 
 import { normalizeLocale } from './copy.mjs';
 
 const BANNED_QUERY = new Set([
-  'ref', 'referral', 'referrer', 'affiliate', 'af', 'agency', 'xserver', 'line', 'lineid',
+  'ref', 'referral', 'referrer', 'affiliate', 'af', 'agency', 'xserver', 'agencycode',
 ]);
+
+/**
+ * @param {string} raw
+ * @returns {string} 空文字は不正。数字だけ、または案内の識別子に見える値は捨てる。
+ */
+export function normalizeSharerLine(raw) {
+  const source = String(raw || '').trim();
+  if (!source || /取次|紹介|affiliate|referral|代理店/i.test(source)) return '';
+  let value = source.startsWith('@') ? source.slice(1) : source;
+  if (!/^[A-Za-z0-9._-]{2,20}$/.test(value)) return '';
+  if (/^\d+$/.test(value)) return '';
+  if (/^(?:ref|referral|referrer|affiliate|af|agency|xserver|agencycode)$/i.test(value)) return '';
+  return `@${value}`;
+}
 
 /**
  * @param {string} raw
@@ -25,7 +39,7 @@ export function normalizeDomain(raw) {
 }
 
 /**
- * @param {{origin: string, domain: string}} input
+ * @param {{origin: string, domain: string, line?: string, allowLine?: boolean}} input
  */
 export function buildShareLink(input) {
   const host = new URL(input.origin);
@@ -35,6 +49,10 @@ export function buildShareLink(input) {
   if (!domain) throw new Error('domain required');
   const url = new URL('/check/', `${host.protocol}//${host.host}`);
   url.searchParams.set('domain', domain);
+  if (input.allowLine === true) {
+    const line = normalizeSharerLine(input.line);
+    if (line) url.searchParams.set('line', line);
+  }
   for (const key of [...url.searchParams.keys()]) {
     if (BANNED_QUERY.has(key.toLowerCase())) url.searchParams.delete(key);
   }
@@ -42,16 +60,27 @@ export function buildShareLink(input) {
 }
 
 /**
- * @param {{origin: string, domain: string, score: number|string, summary: string, locale: string}} input
+ * @param {{origin: string, domain: string, score: number|string, summary: string, locale: string, line?: string, allowLine?: boolean, lineLabel?: string}} input
  */
 export function buildSharePayload(input) {
   const locale = normalizeLocale(input.locale);
-  const url = buildShareLink({ origin: input.origin, domain: input.domain });
+  const allowLine = input.allowLine === true;
+  const line = allowLine ? normalizeSharerLine(input.line) : '';
+  const url = buildShareLink({
+    origin: input.origin,
+    domain: input.domain,
+    allowLine,
+    line,
+  });
   const domain = normalizeDomain(input.domain);
-  const text = locale === 'en'
+  let text = locale === 'en'
     ? `${domain}: ${input.score}. ${input.summary}`
     : `${domain}：${input.score}点。${input.summary}`;
-  return { title: domain, text, url };
+  if (line) {
+    const label = typeof input.lineLabel === 'string' ? input.lineLabel.trim() : '';
+    text = label ? `${text} ${label} ${line}` : `${text} ${line}`;
+  }
+  return { title: domain, text, url, line };
 }
 
 /**

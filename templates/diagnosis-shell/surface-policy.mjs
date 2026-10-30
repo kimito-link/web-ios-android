@@ -1,23 +1,12 @@
 // 診断結果シェルの「どの面のビルドか」と、その面で出してよい塊。
 // なぜ要るか: アプリと拡張は本人の日常使いなので、人に勧める案内文を出さない。
-// Web は人に提案する面なので、その案内文を出せる。案内の識別子の画面はどの面でもまだ出さない。
+// Web は人に提案する面なので、その案内文を出せる。
+// 共有リンクに足してよい識別子は、許可したときの line だけ。案内コードの欄は持たない。
 // 測れないとき: surface が app / extension / web のどれでもなければ店頭向けに app とみなし、案内文を隠す。
+// 環境変数 DISTRIBUTION_SURFACE が app または extension のときは、設定が web でも案内文を出さない。
+// 環境変数がそれらの名前でないときは、設定の surface を今まで通り使う。
 
 export const SURFACES = Object.freeze(['app', 'extension', 'web']);
-
-/**
- * 案内の識別子の目印。画面も入力欄もまだ無い。
- * 外部の番号と、共有者の入口が決まるまで enabled は false のまま。
- * @typedef {object} ReferralPlaceholder
- * @property {false} enabled
- * @property {'pending-xserver'} status
- */
-
-/** @type {ReferralPlaceholder} */
-export const REFERRAL_PLACEHOLDER = Object.freeze({
-  enabled: false,
-  status: 'pending-xserver',
-});
 
 /**
  * ビルド対象の面を決める。環境変数 DISTRIBUTION_SURFACE が app.config の surface より先。
@@ -34,25 +23,25 @@ export function resolveSurface(config, env) {
 }
 
 /**
- * 設定に紹介の値が書いてあっても、画面用の値は作らない。
- * @returns {ReferralPlaceholder}
+ * 紹介・有料・LINE の文言を、この面の描画に載せてよいか。
+ * app と extension は載せない。Web だけ載せる。
+ * @param {'app'|'extension'|'web'} surface
  */
-export function readReferralPlaceholder() {
-  return REFERRAL_PLACEHOLDER;
+export function allowsPromoWording(surface) {
+  return surface === 'web';
 }
 
 /**
  * @param {'app'|'extension'|'web'} surface
  */
 export function blocksForSurface(surface) {
-  const web = surface === 'web';
+  const web = allowsPromoWording(surface);
   return {
     quickView: true,
     recheck: true,
     share: true,
     pricing: web,
     line: web,
-    referral: false,
   };
 }
 

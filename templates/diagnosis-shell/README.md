@@ -1,6 +1,6 @@
 # diagnosis-shell/ — 診断アプリの結果シェル
 
-今の到達点: テンプレート実装済み。紹介コードの画面は作っていない（Xserver の回答待ち）。
+今の到達点: テンプレート実装済み。共有リンクに載せる識別子は共有者の LINE だけ。取次店コードは出さない（Xserver の回答）。
 
 診断アプリの Web・iOS/Android・Chrome 拡張で、同じ結果の見せ方を使うための金型。
 点数とひとことを、ドメインを入れた直後に出す。次に見る日を伝え、端末の中だけで知らせるか、カレンダーに入れる。
@@ -13,20 +13,20 @@
 `app.config.json` の `distribution.surface` は `app` / `extension` / `web`。
 ビルド時は環境変数 `DISTRIBUTION_SURFACE` が設定より優先される。どちらも読めないときは `app` とみなし、人に勧める案内を出さない。
 
-| 面 | 点数・再確認・共有 | 有料・LINE の案内 | 紹介 |
+| 面 | 点数・再確認・共有 | 有料・LINE の案内 | 共有リンクの識別子 |
 |---|---|---|---|
-| app（iOS / Android） | 出す | 出さない | 出さない |
-| extension | 出す | 出さない | 出さない |
-| web | 出す | 出す（`web-only-copy.mjs` を渡したとき） | 出さない |
+| app（iOS / Android） | 出す | 出さない | `domain` だけ |
+| extension | 出す | 出さない | `domain` だけ |
+| web | 出す | 出す（`web-only-copy.mjs` を渡したとき） | 共有者の LINE があるときだけ `line`。取次店コードは無い |
 
-`distribution.referralPlaceholder` は目印だけ。`enabled` は `false`、`status` は `pending-xserver` 固定。画面も、拡張の設定欄も、まだ無い。
+環境変数 `DISTRIBUTION_SURFACE` が `app` または `extension` のときは、設定の `surface` が `web` でも案内文を出さない。環境変数が `app` / `extension` / `web` のどれでもないときは、設定の `surface` を今まで通り使う。どちらも読めないときは `app`。
 
 ## 使い方
 
 1. このディレクトリを診断アプリへコピーする。
 2. アプリと拡張では `web-only-copy.mjs` と `check-page.html` を配信物に入れない。
 3. 公開 URL は `/check/`。`check-page.html` というファイル名は URL に出さない。
-4. 共有リンクの起点は `https` で、`www` は付けない。クエリは `domain` だけ。
+4. 共有リンクの起点は `https` で、`www` は付けない。クエリは `domain` と、Web で共有者の LINE があるときだけ `line`。取次店コードのクエリは付けない。
 5. 本番の診断関数を `diagnose` に渡す。`previewDiagnose` は通信しない見本で、本番の判定には使わない。
 
 ```html
@@ -45,7 +45,7 @@ Web だけ、次も渡す。
 
 ```js
 import { WEB_ONLY_COPY } from "./web-only-copy.mjs";
-// lineUrl, pricingPath: "/price/", webCopy: WEB_ONLY_COPY
+// lineUrl, sharerLine: "@example", pricingPath: "/price/", webCopy: WEB_ONLY_COPY
 ```
 
 拡張のポップアップは `extension/popup.html`。再確認のアラームは `extension/alarm-listener.js` を、既存のサービスワーカーから読む。アイコンのパスは、その拡張が既に持っているアイコンに合わせる。マニフェストの版はここでは変えない。
@@ -67,7 +67,7 @@ import { WEB_ONLY_COPY } from "./web-only-copy.mjs";
 
 `npm run diagnosis-shell:selftest`
 
-アプリまたは拡張の描画に、紹介・有料・LINE の文言が含まれると失敗する。
-Web の描画では有料と LINE が出て、紹介は出ないことも見る。
+`DISTRIBUTION_SURFACE` が app または extension の描画に、紹介・有料・LINE の文言が含まれると失敗する。
+Web の描画では有料と LINE が出て、取次店コードは出ないことも見る。共有リンクは共有者の LINE だけを足す。
 
 未確認: 実機の共有シート、Capacitor のローカル通知、Chrome のアラーム。このリポジトリでは端末が無い。

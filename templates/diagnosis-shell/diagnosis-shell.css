@@ -140,6 +140,11 @@
   flex: 1 1 12rem;
 }
 
+.diagnosis-shell p.web-only {
+  margin: 0.75rem 0 0;
+  overflow-wrap: anywhere;
+}
+
 .web-only a {
   color: #1e3a8a; /* pair:link fg */
   background: #fffdf8; /* pair:link bg */

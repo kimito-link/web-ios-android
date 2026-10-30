@@ -5,4 +5,5 @@
 export const WEB_ONLY_COPY = Object.freeze({
   pricing: { ja: '料金を見る', en: 'See pricing' },
   line: { ja: 'LINEで担当者に相談する', en: 'Talk with us on LINE' },
+  sharerLine: { ja: '共有者のLINE', en: 'Sharer LINE' },
 });
