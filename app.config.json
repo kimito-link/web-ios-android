@@ -77,6 +77,11 @@
     }
   },
 
+  "distribution": {
+    "_note": "診断アプリの出し分け。ビルド時は環境変数 DISTRIBUTION_SURFACE が surface より優先される。その値が app または extension のとき、描画に紹介・有料・LINEの文言を出さない。共有リンクの識別子は共有者の LINE だけで、取次店コードの欄は無い。",
+    "surface": "web"
+  },
+
   "lineBot": {
     "_note": "LINE公式アカウントでAI社員と会話できるbotを作る場合だけ書く。enabled:trueにして templates/line-bot/ をコピー。作らないなら省略可(enabled:false扱い)。",
     "enabled": false,

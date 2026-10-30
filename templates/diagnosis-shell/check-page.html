@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ドメインの結果</title>
+  <link rel="stylesheet" href="./diagnosis-shell.css">
+</head>
+<body>
+  <!-- 公開 URL は /check/ 。このファイル名は URL に出さない。 -->
+  <div data-diagnosis-shell data-surface="web" lang="ja"></div>
+  <script type="module">
+    import { mountDiagnosisShell } from "./diagnosis-shell.js";
+    import { previewDiagnose } from "./preview-diagnose.mjs";
+    import { WEB_ONLY_COPY } from "./web-only-copy.mjs";
+    const root = document.querySelector("[data-diagnosis-shell]");
+    mountDiagnosisShell(root, {
+      diagnose: previewDiagnose,
+      origin: "https://example.com",
+      lineUrl: "https://line.me/R/ti/p/@example",
+      sharerLine: "@example",
+      pricingPath: "/price/",
+      webCopy: WEB_ONLY_COPY,
+      config: { distribution: { surface: root.dataset.surface || "web" } },
+    });
+  </script>
+</body>
+</html>

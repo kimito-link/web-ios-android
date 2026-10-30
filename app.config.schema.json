@@ -209,6 +209,20 @@
       }
     },
 
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "診断アプリのビルド対象。環境変数 DISTRIBUTION_SURFACE が app または extension のとき、そのビルドは紹介・有料・LINE の文言を出さない。未設定の描画は店頭向けに app として扱う。取次店コードの欄は持たない。共有リンクに足せる識別子は共有者の LINE だけ。",
+      "properties": {
+        "_note": { "type": "string" },
+        "surface": {
+          "type": "string",
+          "enum": ["app", "extension", "web"],
+          "description": "このビルドの面。ビルド時は環境変数 DISTRIBUTION_SURFACE がこの値より優先される。"
+        }
+      }
+    },
+
     "lineBot": {
       "type": "object",
       "additionalProperties": false,
