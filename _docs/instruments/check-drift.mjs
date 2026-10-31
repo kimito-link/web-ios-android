@@ -678,6 +678,19 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-10-31追加。Anthropic 公式スキル frontend-design（anthropics/skills、Apache-2.0）を
+     *   無改変で取り込んだ。全プロジェクトで効かせるには Personal(~)側にも置く。
+     *   公式が更新されたら repo 側を先に差し替え、~側をそろえる
+     *   （手順: _docs/DESIGN-frontend-design-skill-2026-10-31.md）。
+     */
+    label: 'frontend-designスキル（Anthropic公式）',
+    canonical: resolve(KIT_ROOT, '.claude/skills/frontend-design/SKILL.md'),
+    copies: [
+      resolve(homedir(), '.claude/skills/frontend-design/SKILL.md')
+    ]
+  },
+  {
+    /*
      * ★2026-10-05追加。PWA起動画面の検査。旧説（background_color を外す）を反転し、
      *   「background_color があり --expect-bg と一致」を合格にした金型。
      *   surechigai は APP_BASE_BG を埋め込んだ特化コピーをやめ、無改変コピー＋
