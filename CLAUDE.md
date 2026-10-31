@@ -1177,7 +1177,8 @@ line-botで、LINEアクセストークンをリッチメニュー適用のた�
 
 ### 確認環境の優先順（固定）
 
-1. **PC上のブラウザ**（Browser pane。日常確認はここが基本）
+1. **PC上のブラウザ**（Browser pane。日常確認はここが基本）。★開くのは `http://localhost` と `https` だけ。ローカルの HTML（`file://`）は
+   開かない（内蔵ブラウザから SSH 鍵・`.env` を読まれる穴、hook で拒否。[`09_AI_TOOL_BROWSER_SAFETY.md`](docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md)）
 2. **★PC上のエミュレータ/シミュレータをAIがadb等で操作**（Android=AVDエミュレータ、
    iOS=Xcode Simulator[要macOS]）。**実機固有のネイティブUI・出し分け・ネイティブプラグインを、
    物理端末なしでAIが端から端まで動かして目視確認できる**。人間に「実機で見て」と頼む前に必ずここを試す。
@@ -1272,6 +1273,13 @@ qa/
   といった「確認を出さないために安全を下げる」回避。`--autoConnect` を Claude Code / Codex / Cursor / Antigravity どの設定にも足さない。
 - ★機械検査: 「設定ファイルに `--autoConnect` があるか」は事実として検出できるが、設定は各 PC ローカル（git 外）にあるため
   リポの Gate では見られない。新しい PC・新しい AI ツールを足したら、MCP 設定に `autoConnect` が無いことを grep で確かめる。
+
+### ★★AIツールの内蔵ブラウザは「普通のブラウザより守りが弱いことがある」（2026-10-31・EMBRACE）
+
+Claude Desktop・Codex・VS Code・Cursor・Copilot の内蔵ブラウザで、ローカルの HTML から SSH 鍵・`.env` を読む／隠した指示でコマンドを動かす／
+アドレスバーを偽る穴が報告された（Forever Security, 2026-10-29）。**内蔵ブラウザで `file://` を開かない（hook で拒否）・知らないリポを README の通りに
+丸投げしない（先に読むだけ）・内蔵ブラウザでログインしない・鍵は使い回さず漏れたら1本だけ止められる形にする**。
+正本: [`docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md`](docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md)（ここへ本文をコピーしない）。
 
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 
