@@ -1198,8 +1198,10 @@ Android なら AVD を AI が起動→APKビルド→install→adb で操作→s
 これが「iOS/Android の動作確認を AI がやればズレのないものができる」の実体。
 
 ★★**Windows常駐アプリ（AutoHotkey・PowerToys連携ランチャー等、Browser paneで開けないネイティブUI）
-の確認は、人間に「Ctrl+Win+Gを押してスクショを撮って」と頼むのではなく、`mcp__computer-use__*`
-（`request_access`→`screenshot`）でAI自身がそのウィンドウを直接撮影する**（2026-09-27実損）。
+の確認は、人間に「Ctrl+Win+Gを押してスクショを撮って」と頼むのではなく、AI自身が見る**（2026-09-27実損）。
+★2026-11-01から第一手段は **`agent-desktop`**（Vercel Labs・どのAIからもコマンドで使える・マウスを奪わず裏で動く・部品一覧を読んで押して読み直す）。
+部品が読めないアプリだけ `mcp__computer-use__*`（`request_access`→`screenshot`・Claude Desktopのとき）。
+入れ方・安全の決まり・機械の歯止め（`.claude/hooks/guard-agent-desktop.mjs`）の正本: [`docs/ai-workflows/AGENT-DESKTOP-HOWTO.md`](docs/ai-workflows/AGENT-DESKTOP-HOWTO.md)。
 これは上記1〜4のどれにも明示的に当てはまらない第5のケース（PC上で動くが、ブラウザでもモバイル
 実機でもない常駐アプリ）であり、明文化が漏れていたため実際に人間へ何度もスクショ依頼をする
 事故が起きた。★実損の核心はさらに深い: AIは「数値上は44px余っている」という**計算結果**と、
