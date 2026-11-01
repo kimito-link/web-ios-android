@@ -39,7 +39,8 @@
 3. **一度だけの許可で、以後ずっと AI が回せる形にできるか** — 長く使えるトークン（期限は無期限か最長）・OAuth を1回・
    GitHub Secrets に置いて workflow の中で使う（値を誰の目にも出さない）・Remote Control でその PC 上で動かす。
    ★毎回のログイン承認（`vercel login` 等）が要る作りは、トークン方式か MCP に置き換える。
-4. **AI が自分で見て・読んで・続けられるか** — 画面は AI がスクリーンショットを撮る（専用プロフィールのブラウザ・computer-use）。
+4. **AI が自分で見て・読んで・続けられるか** — 画面は AI が自分で見る（ウェブは専用プロフィールのブラウザ、PC のアプリは
+   [`agent-desktop`](../ai-workflows/AGENT-DESKTOP-HOWTO.md)、それで読めないものだけ computer-use）。
    黒い画面の中身は、スクリプトが**状態ファイルに書き**、AI がフォルダ接続で読む。人に「いちばん下の行を送って」と頼まない。
 5. **自分で直る・自分で入れ替わる形にできるか** — 拡張は [`templates/extension-self-update/`](../../templates/extension-self-update/README.md)、
    無料 DB の休止は定期の起こし役（cron / workflow）、期限切れは期限の前に CI が知らせて自動で差し替え。
