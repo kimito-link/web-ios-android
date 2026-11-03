@@ -24,7 +24,7 @@
 > 会議のモデル名提案は幻覚が混じる（実例: `llama-3.3-70b-instant` は実在しない）。**採用前に必ず `/models` か実呼び出しで実在確認**すること。
 > weight は小さいほど先に選ばれる（1=主力、3=予備、4=最後の砦）。
 
-**クラウド（18体）**
+**クラウド（19体）**
 
 | メンバー | 役割 | weight | 備考 |
 |---|---|---|---|
@@ -33,12 +33,13 @@
 | groq/gpt-oss-20b | 別系統の発散 | 3 | |
 | cloudflare/gpt-oss-20b | 別系統の発散 | 3 | liveProbe（毎日実疎通） |
 | cloudflare/llama-3.3-70b | 速い視点 | 4 | liveProbe |
-| cloudflare/nemotron-120b | 汎用 | 4 | liveProbe。失敗率が高め |
+| cloudflare/nemotron-120b | 汎用 | 4 | liveProbe。失敗率が高め（2026-11-03 の本番条件実測で5回中3回途中切れ）。統合の最後の砦なので残す |
 | cloudflare/deepseek-v4.1-flash | 批判 | 4 | liveProbe。`@cf/deepseek-ai/deepseek-v4.1-flash-1017`。推論を切る設定(`enable_thinking=false`)が必須（既定だと推論で上限を使い切り本文が空）。2026-10-28 に v4-pro-0813 から入れ替え（本番条件の実測で中身同等・約2倍速い）。新規予備なので昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | cloudflare/qwen3-30b-a3b | 発散 | 4 | liveProbe |
 | cloudflare/qwen2.5-coder-32b | 実装レビュー | 4 | liveProbe |
 | nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
 | nvidia/deepseek-v4.1-flash | 批判 | 3 | liveProbe |
+| nvidia/nemotron-3.5-super | 汎用 | 3 | liveProbe。`nvidia/nemotron-3.5-super-vl-120b-a12b`（2026-10-15 公開の新世代）。推論オフ(`enable_thinking=false`)必須（既定だと推論で上限を使い切り空/途中切れ）。2026-11-03 追加（本番条件の実測で3/3 OK・5〜33秒）。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | openrouter/nemotron-3-ultra-550b | 統括 | 3 | 無料枠で429が出やすい予備 |
 | sambanova/deepseek-v3.1 | 批判 | 4 | **キー失効で401（6日連続・2026-09-28〜）**。再発行で復活する枠なので外さない |
 | mistral/magistral-medium | 統括 | 3 | 429（容量上限）で落ちる日がある |
@@ -46,6 +47,9 @@
 | mistral/codestral | 実装レビュー | 3 | |
 | gemini-2.5-flash | 汎用 | 1 | |
 | gemini-3.7-flash | 汎用 | 3 | |
+
+**2026-11-03 に試して見送った新顔**（`tsuioku-no-kirameki.com/scripts/council-trial.mjs` で本番条件の実測。詳細は `council-lineup.mjs` のコメント）: Gemini 4 Argon・3.1 Pro（無料枠では呼べない）、gemini-3.8-flash（4回とも混雑503。空いたら 3.7-flash と入れ替え候補）、Mistral Large 4（本文空・タイムアウト）、Kimi K2.6/K2.7・GLM 5.3・MiniMax M3.1・Step 5（推論で上限を使い切り空）、cloudflare/glm-5.2（推論オフなら合格だが、無料で呼べているか未確認のため保留）。
+新顔を探すときは `node scripts/council-trial.mjs`（全カタログの新顔を一斉に試す）か `--models プロバイダ:モデル,...`（指定だけ）。Mistral は `--delay 30000` でも429が出やすい。
 
 **ローカル（Ollama・無料無制限・オフライン保険）**: 12GB VRAM に収まる2体だけ置く（2026-10-12 実測で入れ替え）。VRAM からはみ出す大物は遅くなるだけなので置かない。
 
