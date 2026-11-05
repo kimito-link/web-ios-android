@@ -48,8 +48,20 @@ const ROOT = resolve(positional[0] ?? process.cwd());
  * 既定の検査対象。増やすときはここに足す。
  * ★2026-09-27追加: .claude/skills/self-verification/SKILL.md。
  *   規範文ではなく手順書だが、中のコマンド例・参照パスも同様に腐りうるため対象にする。
+ * ★2026-11-05追加: docs/claude-md/*.md。CLAUDE.md の後半を移した先で、移動前は検査対象だった。
+ *   読み込み時に一覧を作るので、節が増えても足し忘れない。フォルダが無いリポでは何も足さない。
  */
-const DEFAULT_TARGETS = ["CLAUDE.md", ".claude/skills/self-verification/SKILL.md"];
+const CLAUDE_MD_SECTIONS_DIR = "docs/claude-md";
+const DEFAULT_TARGETS = [
+  "CLAUDE.md",
+  ".claude/skills/self-verification/SKILL.md",
+  ...(existsSync(resolve(ROOT, CLAUDE_MD_SECTIONS_DIR))
+    ? readdirSync(resolve(ROOT, CLAUDE_MD_SECTIONS_DIR))
+        .filter((name) => name.endsWith(".md"))
+        .sort()
+        .map((name) => `${CLAUDE_MD_SECTIONS_DIR}/${name}`)
+    : []),
+];
 
 /**
  * 除外するパターン。

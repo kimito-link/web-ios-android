@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// PreToolUse(Edit|Write) ガード。CLAUDE.md・docs/ai-rules/への編集を対象に、
+// PreToolUse(Edit|Write) ガード。CLAUDE.md・docs/ai-rules/・docs/claude-md/への編集を対象に、
 // 非ブロッキング警告のみ(fail-open)。
 //
 // CLAUDE.md「新しいルールを書いたら、その場で機械検査化を検討する」節
@@ -47,7 +47,9 @@ function readStdin() {
 function isTargetFile(filePath) {
   if (typeof filePath !== 'string') return false;
   const normalized = normalizeWindowsPath(filePath).replace(/\\/g, '/');
-  return /\/CLAUDE\.md$/.test(normalized) || /\/docs\/ai-rules\//.test(normalized);
+  return /\/CLAUDE\.md$/.test(normalized)
+    || /\/docs\/ai-rules\//.test(normalized)
+    || /\/docs\/claude-md\//.test(normalized); // CLAUDE.md の後半の移動先(2026-11-05)
 }
 
 function extractAddedText(toolInput) {
