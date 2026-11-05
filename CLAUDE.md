@@ -63,6 +63,15 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
 自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
 
+★★**Web画面（LP・サイト・アプリの画面・ダッシュボード）を新しく作る／見た目を作り直すときは、Anthropic公式スキル
+`frontend-design` を通す**（2026-10-31確立）。「紫のグラデ・均一な角丸カード・どこかで見た配置」というAIのありがちな見た目を
+避けるため、**作る前に方向性（色4〜6・書体・配置・原則）を決め、ありがちな型と比べて直してから**コードを書く。
+正本は [`.claude/skills/frontend-design/SKILL.md`](.claude/skills/frontend-design/SKILL.md)（公式 `anthropics/skills` の無改変コピー・Apache-2.0）。
+このリポ流の読み替え: ①スキルの「方向性をクライアントに確認する」は、**方向を自分で決めて作り、決めた方向と理由を報告する**
+（人を待たない。曖昧な依頼の言語化には [`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md) を使ってよい）
+②各リポのブランド規定（[`LOGO-RULES.md`](docs/brand/LOGO-RULES.md)・キャラ・既存のデザイン部品）がある所ではそちらが勝つ
+③作った後は自分でスクリーンショットを撮って見直す。取り込みの経緯・更新手順: [`_docs/DESIGN-frontend-design-skill-2026-10-31.md`](_docs/DESIGN-frontend-design-skill-2026-10-31.md)。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。

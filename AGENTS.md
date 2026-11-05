@@ -33,6 +33,13 @@
 人に「押して・貼って・画面を読んで・Enter を押して」と頼む前に、自分でやる道を全部ためす。人に渡すスクリプトは
 Enter 待ちを置かず、状態をファイルに書き、何度実行しても途中から続くようにする。正本: [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](docs/ai-rules/08_NO_HUMAN_HANDS.md)。
 
+## Web画面を作るとき（2026-10-31）
+
+LP・サイト・アプリの画面を新しく作る／見た目を作り直すときは、先に
+[`.claude/skills/frontend-design/SKILL.md`](.claude/skills/frontend-design/SKILL.md)（Anthropic 公式スキル）を読み、
+方向性（色・書体・配置・原則）を決めて「AIのありがちな見た目」と比べて直してから書く。方向は自分で決めて報告する（人を待たない）。
+ブランド規定（`docs/brand/LOGO-RULES.md`・キャラ）がある所ではそちらが勝つ。
+
 ## 終わったら
 
 `handoff.md`（無ければ [`templates/handoff/handoff.md.example`](templates/handoff/handoff.md.example) から作る）の
