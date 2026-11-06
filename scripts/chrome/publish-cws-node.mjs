@@ -2,7 +2,7 @@
  * scripts/chrome/publish-cws-node.mjs
  *
  * Chrome Web Store API v1.1 で zip をアップロードし審査提出する（Node版・外部依存なし）。
- * publish-cws.ps1 の Node 等価。Node の https のみ使用。Windows + Git Bash で PowerShell 経由が
+ * Node の https のみ使用。Windows + Git Bash で PowerShell 経由が
  * 固まる/文字化けする事故を避けるため、申請パイプラインはこちらを正とする（docs/CHROME-WEBSTORE.md 罠⑤）。
  *
  * 認証は .env.cws（拡張ルート優先、無ければ scripts/chrome のもの・gitignore必須）から読む:
