@@ -40,6 +40,7 @@ export function mountDiagnosisShell(root, options) {
       pricingPath: opts.pricingPath,
       webCopy: opts.webCopy,
       sharerLine: opts.sharerLine,
+      offers: opts.offers,
     });
     bind();
     announceDue();

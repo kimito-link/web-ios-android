@@ -48,6 +48,10 @@ import { WEB_ONLY_COPY } from "./web-only-copy.mjs";
 // lineUrl, sharerLine: "@example", pricingPath: "/price/", webCopy: WEB_ONLY_COPY
 ```
 
+Web の結果のあとには、いま画面にある結果、それで決められること、今開いているあいだと閉じたあと、の順で短い文が出る。料金と LINE はそのあとで、どちらも見なくても結果は残る。LINE は会話の置き場所で、このページは結果を自動では送らない。
+
+`offers` を渡したときだけ、結果のさらに下に補完の選択が出る。各要素には、同じ用途が楽になる一文、既存の料金の文言、https か `/` のリンク、見送りの文が要る。欠けた要素は出さない。チェックボックスは無く、アプリと拡張では `offers` を渡しても描画しない。見本の `check-page.html` は別商品の料金を持たない。
+
 拡張のポップアップは `extension/popup.html`。再確認のアラームは `extension/alarm-listener.js` を、既存のサービスワーカーから読む。アイコンのパスは、その拡張が既に持っているアイコンに合わせる。マニフェストの版はここでは変えない。
 
 ## 再確認と共有

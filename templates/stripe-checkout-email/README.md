@@ -62,3 +62,6 @@ iOS/Android提出パイプラインとは無関係）。
   [`../../docs/ai-rules/01_CORE_RULES.md`](../../docs/ai-rules/01_CORE_RULES.md) §5を参照。
 - 本テンプレートは`templates/`の既存ファイルとは独立した新規カテゴリ。既存のiOS/Android提出
   パイプライン（`templates/scripts/`, `templates/workflows/`）とは混同しない。
+- 購入完了メールの本文と、コメントアウトされた関連案内は、この変更では送る文面を変えていない。
+  関連案内を有効にするのは、同じ用途を楽にする実在の商品に、公開の https URL と既存の料金が揃ったときだけ。
+  高い段への置き換えや、金額の無い仮のボタンでは有効にしない。

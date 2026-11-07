@@ -63,6 +63,63 @@ test('Web は有料と LINE を出し、紹介は出さない', () => {
   assert.equal(hits.some((hit) => hit.id === 'referral'), false);
 });
 
+test('Web は結果のあとで、自分ごと・得・今と後・任意の案内の順', () => {
+  const html = draw('web');
+  const scoreAt = html.indexOf('data-score');
+  const relevanceAt = html.indexOf('data-reason-relevance');
+  const benefitAt = html.indexOf('data-reason-benefit');
+  const actingAt = html.indexOf('data-reason-acting');
+  const waitingAt = html.indexOf('data-reason-waiting');
+  const pricingAt = html.indexOf('data-pricing');
+  const lineAt = html.indexOf('data-line');
+  assert.ok(scoreAt < relevanceAt && relevanceAt < benefitAt && benefitAt < actingAt);
+  assert.ok(actingAt < waitingAt && waitingAt < pricingAt && pricingAt < lineAt);
+  assert.match(html, /data-pricing-lead>料金のページでは/);
+  assert.match(html, /見るだけでは申し込みになりません/);
+  assert.match(html, /LINEは、その会話を置く場所です/);
+  assert.match(html, /株式会社ベストトラスト/);
+  assert.equal(html.includes('data-complementary'), false);
+  assert.equal(/type="checkbox"|checked=/i.test(html), false);
+  const reason = html.slice(relevanceAt, html.indexOf('data-pricing-lead'));
+  assert.equal(reason.includes('LINE'), false);
+});
+
+test('補完の選択は Web だけ、値段と見送りが揃ったものだけ', () => {
+  const offer = {
+    id: 'keep',
+    name: '更新を任せる',
+    jointBenefit: '出したあとに残る更新を、同じ運用の中で任せられます。',
+    priceText: '表のとおり月額',
+    href: 'https://example.com/price/',
+    askLabel: 'この選択について聞く（任意）',
+    decline: '見送っても、いまの結果はそのままです。',
+  };
+  const web = draw('web', { offers: [offer, { name: '欠け', href: 'https://example.com/x' }] });
+  assert.ok(web.indexOf('data-score') < web.indexOf('data-complementary'));
+  assert.match(web, /data-joint>出したあとに残る更新を、同じ運用の中で任せられます。/);
+  assert.match(web, /data-offer-price>表のとおり月額/);
+  assert.match(web, /data-decline>見送っても、いまの結果はそのままです。/);
+  assert.equal(web.includes('欠け'), false);
+  assert.equal(/type="checkbox"|checked=/i.test(web), false);
+  for (const surface of ['app', 'extension']) {
+    const hidden = draw(surface, { offers: [offer] });
+    assert.equal(hidden.includes('data-complementary'), false, surface);
+    assert.equal(hidden.includes('表のとおり月額'), false, surface);
+    assert.equal(hidden.includes('data-reason'), false, surface);
+    assert.deepEqual(findForbiddenWording(hidden), []);
+  }
+  const badHref = draw('web', {
+    offers: [
+      { ...offer, href: 'http://example.com/price/' },
+      { ...offer, href: 'https://www.example.com/price/' },
+      { ...offer, href: 'javascript:alert(1)' },
+    ],
+  });
+  assert.equal(badHref.includes('data-complementary'), false);
+  const path = draw('web', { offers: [{ ...offer, href: '/price/' }] });
+  assert.match(path, /href="\/price\/"/);
+});
+
 test('禁止語の検出器は、文言を足した文字列を赤にする', () => {
   assert.equal(findForbiddenWording('紹介コードはこちら').some((hit) => hit.id === 'referral'), true);
   assert.equal(findForbiddenWording('取次店コードはこちら').some((hit) => hit.id === 'referral'), true);
@@ -314,8 +371,10 @@ test('拡張の読み込み経路に、Web 向けの案内文ファイルが無�
   assert.equal(seen.has('web-only-copy.mjs'), false);
   for (const file of seen) {
     const source = readFileSync(`${HERE}${file}`, 'utf8');
-    assert.equal(source.includes('料金を見る'), false, file);
-    assert.equal(source.includes('Talk with us on LINE'), false, file);
+    assert.equal(source.includes(WEB_ONLY_COPY.pricing.ja), false, file);
+    assert.equal(source.includes(WEB_ONLY_COPY.line.ja), false, file);
+    assert.equal(source.includes(WEB_ONLY_COPY.line.en), false, file);
+    assert.equal(source.includes('株式会社ベストトラスト'), false, file);
     assert.equal(source.includes('line.me'), false, file);
   }
 });
