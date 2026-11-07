@@ -9,7 +9,16 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 進行中。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
+STATUS: 進行中。2026-11-08 の Web 案内文は別ブランチのドラフト PR（マージもデプロイもしない）。診断結果シェルは、以前のブランチ `cursor/diagnosis-shell-surfaces-6fd9` で取次店コードを出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
+
+### 2026-11-08: 相手の得から書く Web 案内
+- STATUS: ドラフト実装。このリポジトリの診断シェル Web と `site/lp/index.html` のみ。他リポジトリは未変更。
+- FILES_CHANGED: `templates/diagnosis-shell/`、`site/lp/index.html`、`docs/ai-rules/09_RECIPIENT_FIRST_COPY.md`、`_docs/ROLLOUT-recipient-first-copy-2026-11-08.md`、診断シェルの README とテスト、Stripe 金型 README の注意、`docs/ai-rules/README.md`、`package.json` のテストコマンド。
+- TESTS_RUN: `npm run diagnosis-shell:selftest`
+- TEST_RESULT: 27件パス（実行時の出力）。
+- REMAINING_RISKS: 他プログラムの画面には未反映。購入メールと配信本文は未変更。LP はローカルのテストで構造を確認し、本番には出していない。
+- NEXT_ACTION: ドラフト PR のレビュー。反映は人がマージしたあと。棚卸しの URL があるプログラムは、そのリポジトリの Web だけを次に見る。
+- WORKED_BY: cursor cloud agent
 ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
 LAST_WORKED_ON: 2026-10-21T03:10:00Z
 WORKED_BY: claude-cloud（Opus／session_01F4N5YRVNWo4Cg2PpW96tjB）／ブランチ claude/charming-knuth-is4kx6

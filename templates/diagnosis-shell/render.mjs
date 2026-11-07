@@ -91,11 +91,21 @@ export function renderResult(input) {
     `<p data-checked-domain>${escapeHtml(view.domain)}</p>`,
     '</details>',
   );
+  if (webSurface(blocks)) {
+    parts.push(renderReason(webCopy, locale));
+  }
   if (blocks.pricing && input.pricingPath && webCopy.pricing && webCopy.pricing[locale]) {
+    const lead = webCopy.pricingLead && webCopy.pricingLead[locale];
+    if (lead) parts.push(`<p class="web-only" data-pricing-lead>${escapeHtml(lead)}</p>`);
     parts.push(`<p class="web-only" data-pricing><a href="${escapeHtml(input.pricingPath)}">${escapeHtml(webCopy.pricing[locale])}</a></p>`);
   }
   if (blocks.line && input.lineUrl && webCopy.line && webCopy.line[locale]) {
+    const lead = webCopy.lineLead && webCopy.lineLead[locale];
+    if (lead) parts.push(`<p class="web-only" data-line-lead>${escapeHtml(lead)}</p>`);
     parts.push(`<p class="web-only" data-line><a href="${escapeHtml(input.lineUrl)}">${escapeHtml(webCopy.line[locale])}</a></p>`);
+  }
+  if (webSurface(blocks)) {
+    parts.push(renderOffers(input.offers, webCopy, locale));
   }
   if (share && share.line) {
     const label = webCopy.sharerLine && webCopy.sharerLine[locale];
@@ -103,6 +113,84 @@ export function renderResult(input) {
     parts.push(`<p class="web-only" data-sharer-line>${escapeHtml(shown)}</p>`);
   }
   return parts.join('');
+}
+
+function webSurface(blocks) {
+  return blocks.pricing === true || blocks.line === true;
+}
+
+function renderReason(webCopy, locale) {
+  const reason = webCopy.reason;
+  if (!reason) return '';
+  const keys = ['relevance', 'benefit', 'acting', 'waiting'];
+  const paragraphs = [];
+  for (const key of keys) {
+    const text = reason[key] && reason[key][locale];
+    if (!text) return '';
+    paragraphs.push(`<p data-reason-${key}>${escapeHtml(text)}</p>`);
+  }
+  return `<div class="reason web-only" data-reason>${paragraphs.join('')}</div>`;
+}
+
+function renderOffers(offers, webCopy, locale) {
+  if (!Array.isArray(offers) || offers.length === 0) return '';
+  const cards = [];
+  for (const offer of offers) {
+    const card = renderOffer(offer, locale);
+    if (card) cards.push(card);
+  }
+  if (cards.length === 0) return '';
+  const heading = webCopy.offersHeading && webCopy.offersHeading[locale];
+  const note = webCopy.offersNote && webCopy.offersNote[locale];
+  return [
+    '<section class="offers web-only" data-complementary>',
+    heading ? `<h2>${escapeHtml(heading)}</h2>` : '',
+    note ? `<p data-offers-note>${escapeHtml(note)}</p>` : '',
+    cards.join(''),
+    '</section>',
+  ].join('');
+}
+
+function renderOffer(offer, locale) {
+  if (!offer || typeof offer !== 'object') return '';
+  const href = safeOfferHref(offer.href);
+  const name = localized(offer.name, locale);
+  const joint = localized(offer.jointBenefit, locale);
+  const price = localized(offer.priceText, locale);
+  const ask = localized(offer.askLabel, locale);
+  const decline = localized(offer.decline, locale);
+  if (!href || !name || !joint || !price || !ask || !decline) return '';
+  const id = typeof offer.id === 'string' ? offer.id : '';
+  return [
+    `<article class="offer" data-offer="${escapeHtml(id)}">`,
+    `<h3>${escapeHtml(name)}</h3>`,
+    `<p data-joint>${escapeHtml(joint)}</p>`,
+    `<p data-offer-price>${escapeHtml(price)}</p>`,
+    `<p class="web-only"><a href="${escapeHtml(href)}">${escapeHtml(ask)}</a></p>`,
+    `<p data-decline>${escapeHtml(decline)}</p>`,
+    '</article>',
+  ].join('');
+}
+
+function localized(value, locale) {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (value && typeof value === 'object' && typeof value[locale] === 'string' && value[locale].trim()) {
+    return value[locale].trim();
+  }
+  return '';
+}
+
+function safeOfferHref(value) {
+  const href = typeof value === 'string' ? value.trim() : '';
+  if (href.startsWith('/') && !href.startsWith('//')) return href;
+  try {
+    const url = new URL(href);
+    if (url.protocol !== 'https:') return '';
+    if (url.hostname.startsWith('www.')) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
 }
 
 function renderLanguageButton(locale) {

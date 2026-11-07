@@ -52,7 +52,8 @@
 }
 
 .diagnosis-shell button,
-.diagnosis-shell .web-only a {
+.diagnosis-shell .web-only a,
+.diagnosis-shell .offer a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -60,7 +61,16 @@
   min-width: 44px;
   padding: 0.6rem 1rem;
   border-radius: 0.5rem;
+}
+
+.diagnosis-shell button {
   text-decoration: none;
+}
+
+.diagnosis-shell .web-only a,
+.diagnosis-shell .offer a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .diagnosis-shell button {
@@ -145,10 +155,33 @@
   overflow-wrap: anywhere;
 }
 
-.web-only a {
+.web-only a,
+.offer a {
   color: #1e3a8a; /* pair:link fg */
   background: #fffdf8; /* pair:link bg */
   text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.reason p,
+.offers p,
+.offers h2,
+.offer h3 {
+  margin: 0.5rem 0 0;
+  color: #1c1917; /* pair:text fg */
+  background: #fffdf8; /* pair:text bg */
+}
+
+.offers {
+  margin-top: 1.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #44403c; /* pair:muted fg */
+}
+
+.offers h2,
+.offer h3 {
+  font-size: 1.125rem;
+  line-height: 1.4;
 }
 
 .details {
