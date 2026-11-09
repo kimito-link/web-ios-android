@@ -131,7 +131,7 @@ AIにとっては「探し直す量」が減る＝作業が速く、重複実装
 |---|---|
 | 導入 | `/plugin install claude-security@claude-plugins-official` → `/reload-plugins`（マーケットが無ければ先に `/plugin marketplace add anthropics/claude-plugins-official`） |
 | 実行 | `/claude-security`（メニュー）。「全体」「今のブランチの差分」「PRの差分」「1コミット」を選べる。例: `/claude-security scan my branch at high` |
-| 推奨モデル | Claude Opus 5.5 または Fable 5.1（`/model` で選ぶ）。一部が Opus 4.8 に切り替わることがある |
+| 推奨モデル | Claude Opus 5.5 または Fable 5.2（`/model` で選ぶ。2026-11-10 に 5.1 から更新）。一部が Opus 4.8 に切り替わることがある |
 | 結果 | リポ内の `CLAUDE-SECURITY-<時刻>/` に、`RESULTS.md`（人が読む）・`.jsonl`・`.sarif`・刻印 `CLAUDE-SECURITY-REVISION-<sha12>[-dirty].json`。★自前の `.gitignore` を持つのでコミットされない |
 | 必要なもの | Python 3.9 以上（PATH）／差分・パッチは git の作業ツリー |
 | 費用 | 実行のたびに「時間とトークンの見積り」の確認が出る。**公開前と大きな変更の後に絞る**（毎コミットで回さない） |

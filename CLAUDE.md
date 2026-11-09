@@ -13,15 +13,15 @@
 
 ## ★核: 質問する前にこの手順を必ず通す（2026-09-24確立、詳細はファイル後半）
 
-このCLAUDE.mdは1000行超あり、最重要ルールが中盤に埋没して守られない事故が
+このCLAUDE.mdは一時1000行超あり、最重要ルールが中盤に埋没して守られない事故が
 繰り返された（詳細: [`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)）。
 そこでこの1ブロックだけを冒頭に置く。**「AskUserQuestion等で選択肢を出す」「確認して
 ください、で応答を終える」の前に、必ずこの順で自問する**（4項目はいずれも
-「AIへのお願い（守ること）」節の同名ルールが詳細・実損エピソード付きで解説している。
+[`docs/claude-md/09-ai-guidelines.md`](docs/claude-md/09-ai-guidelines.md)「AIへのお願い（守ること）」の同名ルールが詳細・実損エピソード付きで解説している。
 そちらを読んでいれば読み直さなくてよい——ここは行動フローの要約のみ）:
 
 1. **調べる**: `Grep`/`Glob`/`WebFetch`/`WebSearch`/`Agent`。詳細4項目・実損は
-   後述「AIへのお願い」節「あらゆる調査を尽くす」参照。
+   [`09-ai-guidelines.md`](docs/claude-md/09-ai-guidelines.md)「あらゆる調査を尽くす」参照。
 2. **裏取りする**: 見つけた答え・出した結論を実地で確認する（実行・再現・ログ確認）。
    「コードを読んで筋が通る」で止めない。「編集した」「コミットした」を
    「本番に反映された」と混同しない。
@@ -32,7 +32,7 @@
    事実として存在しない情報（ユーザーだけが知る事業判断、未記入の設定値、
    複数の正しい選択肢のうち好みの問題）だけ。それ以外は自分で決めて実行してから報告する。
 
-★**このファイルの「必読の核」は、冒頭から `core:end` マーカーまで**（約430行）。hook が全文Read判定をするのもそこまで。
+★**このファイルの「必読の核」は、冒頭から `core:end` マーカーまで**（約380行。2026-11-10実測381行）。hook が全文Read判定をするのもそこまで。
 マーカーより下（AIのお願い・ドメイン接続・確認ルール等）は、その作業に入るときに該当の節だけ読む。
 
 ★★**外向き・取り消せない操作（push・PRマージ・workflow実行・secret設定・デプロイ）の前は、
@@ -61,7 +61,7 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 
 ★★**Chrome拡張は、AIが自分で読み込んで確かめる。人に「再読み込みして開き直して」と頼まない**（2026-10-25確立）。
 拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
-自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
+自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は [`docs/claude-md/11-verification-rules.md`](docs/claude-md/11-verification-rules.md) の同名小節。
 
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
@@ -70,7 +70,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 
 | 種類 | 正本の場所 | 公開可否 |
 |---|---|---|
-| 非交渉ルール・4基準・5類型 | このファイル（`CLAUDE.md`） | 公開 |
+| 非交渉ルール・判断の軸 | このファイル（`CLAUDE.md` の核）。4基準・5類型の本文は [`docs/claude-md/09-ai-guidelines.md`](docs/claude-md/09-ai-guidelines.md) | 公開 |
 | 規則本文 | [`docs/ai-rules/`](docs/ai-rules/) | 公開 |
 | 進め方HOWTO（council-fable / wayfinder-to-spec / **マルチ頭脳**＝本物Claude・Qwen本家・Cloudflare・ローカルの4段で週間上限に縛られない運用、2026-09-14 ／ **デザイン名前の翻訳**＝曖昧な見た目依頼を定着したデザイン用語に翻訳し3方向を出す・[`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md)） | [`docs/ai-workflows/`](docs/ai-workflows/)（[`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md)） | 公開 |
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
@@ -107,7 +107,6 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 - 「web-ios-androidのルールが伝わらない」という事象が今後発生したら、まず
   `github/CLAUDE.md`の`@web-ios-android/CLAUDE.md`インポート行が消えていないか、
   初回承認ダイアログを断って以後インポートが無効になっていないかを疑う
-  （このファイル「知見の地図」節冒頭にも同じ注意書きあり）
 - 既存の個々のプロジェクトに残っている`@../web-ios-android/CLAUDE.md`（`kimito-link`等
   約20件）は重複だが実害はないため、削除の必要はない（プロジェクト固有の注意点も
   併記されているものが多く、無理に触らない）
@@ -118,7 +117,7 @@ Claude Codeは指示書（CLAUDE.md）をセッション開始時に読み込む
 自動的に反映されない（起動時点のスナップショットのまま動き続ける）。実例:
 「Mistral AI実装と会議ハーネス設計」セッションが`github/CLAUDE.md`への今回のimport追記
 （2026-09-16 11:42）より前から開いたまま動いており、Cloudflareトークンの権限問題
-（本ファイル「★★Cloudflareのトークンは『用途ごとに権限が独立している』」節、既に
+（[`docs/claude-md/10-domain-and-cloudflare.md`](docs/claude-md/10-domain-and-cloudflare.md)「★★Cloudflareのトークンは『用途ごとに権限が独立している』」、既に
 CLAUDE.mdに解決策が書いてある地雷）を自力で再発見していた。ユーザーが手動で
 「`C:\...\web-ios-android` みてください」と教えて初めて参照できた。
 ★**対処**: 長時間開いたままのセッションで「web-ios-androidに書いてあるはずのことが
@@ -256,7 +255,7 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
 7. **既存設計を回避するための一時的な近似実装を作らない** — 手を抜いた代替は基準④「最高品質」違反
 8. **Gateを無効化・迂回して成功扱いにしない** — `--no-verify`等でチェックを飛ばさない
 9. **変更後は対象Gateをすべて実行する** — 該当する `templates/scripts/run-instruments.mjs`（またはプロジェクト固有の検査群）を実行し、[`templates/diagnostics/check-gates-are-wired.mjs`](templates/diagnostics/check-gates-are-wired.mjs) で配線漏れも確認する
-10. **Gate失敗時は対症療法ではなく根本原因を修正する** — 症状を消すのではなく、なぜ起きたかまで遡る（冒頭「設計方針」の「100年メンテナンスのいらない設計＝根本解決」そのもの）
+10. **Gate失敗時は対症療法ではなく根本原因を修正する** — 症状を消すのではなく、なぜ起きたかまで遡る（下の「判断の軸」2「100年メンテナンスのいらない設計」そのもの）
 
 迷ったら、**「新しく作る」より先に「既に存在しないか」を調査する**。
 
@@ -272,7 +271,7 @@ OTel/SLO運用のような新しい基盤は**このキットの規模には過�
 正式に許容する。PC負荷は別問題として`~/.claude/CLAUDE.md`「PCが重い」節の健康チェックで扱う）。
 
 ★このプロトコルの要点: **速さより先に「止める場所」を用意する**。止める場所が無いと、
-エージェントは衝突するまで走ってしまう。上の`ListAgents`+`SendMessage`方式は
+エージェントは衝突するまで走ってしまう。[`docs/claude-md/05-repo-roles.md`](docs/claude-md/05-repo-roles.md) の`ListAgents`+`SendMessage`方式は
 「CLAUDE.mdという1ファイルへの越境書き戻し」という狭い場面には十分だが、
 リポジトリ全体・全ファイルを対象にした一般ルールとしては以下を使う。
 
