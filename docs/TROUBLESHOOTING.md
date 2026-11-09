@@ -132,6 +132,8 @@ submitへ進む設計になっています（実装：`ensurePrivacyPublished()`
 つまり**この1項目だけは自動化できず、必ず人間がGUIで公開する必要がある**。
 
 ### 直し方（人間の作業・2〜3分）
+★渡し方は [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](ai-rules/08_NO_HUMAN_HANDS.md) §3.5（りんくの Chrome にいる Claude へ、貼るだけの文で渡す）。下の手順は、その文に入れる中身。
+
 1. [App Store Connect](https://appstoreconnect.apple.com) → アプリ → 「App のプライバシー」
 2. 「データタイプ」の「編集」から、実際に収集しているデータ種別だけチェック
    （例：メールアドレス／メールまたはテキストメッセージ／ユーザID など。
