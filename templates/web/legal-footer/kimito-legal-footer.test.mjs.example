@@ -33,6 +33,15 @@ test('リンクの順序は 利用規約 → プライバシー → 特商法 �
   assert.ok(some.includes('プライバシーポリシー') && !some.includes('利用規約') && !some.includes('特定商取引法'));
 });
 
+test('全サービス共通で「同じ運営のほかのサービス」（一覧ページ）への戻り道を出す。法務リンクの後ろ', () => {
+  const f = load();
+  for (const html of [f.buildHtml({ serviceName: 'x' }), f.buildHtml({ serviceName: 'x', terms: '/t/', privacy: '/p/' })]) {
+    assert.match(html, /<a href="https:\/\/best-trust\.biz\/products\/">同じ運営のほかのサービス<\/a>/);
+  }
+  const withLinks = f.buildHtml({ serviceName: 'x', privacy: '/p/' });
+  assert.ok(withLinks.indexOf('同じ運営のほかのサービス') > withLinks.indexOf('プライバシーポリシー'));
+});
+
 test('存在しないページへのリンクは出さない（何も渡さなければリンク一覧ごと出ない）', () => {
   assert.ok(!load().buildHtml({ serviceName: 'x' }).includes('<ul>'));
 });
