@@ -38,7 +38,7 @@
 | cloudflare/qwen3-30b-a3b | 発散 | 4 | liveProbe |
 | cloudflare/qwen2.5-coder-32b | 実装レビュー | 4 | liveProbe |
 | nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
-| nvidia/deepseek-v4.1-flash | 批判 | 3 | liveProbe |
+| nvidia/deepseek-v4.1-flash | 批判 | 3 | liveProbe。待ち時間は150秒（2026-11-09 の実測で108.9秒かかったため90秒から延長） |
 | nvidia/nemotron-3.5-super | 汎用 | 3 | liveProbe。`nvidia/nemotron-3.5-super-vl-120b-a12b`（2026-10-15 公開の新世代）。推論オフ(`enable_thinking=false`)必須（既定だと推論で上限を使い切り空/途中切れ）。2026-11-03 追加（本番条件の実測で3/3 OK・5〜33秒）。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | nvidia/nemotron-3.5-lightning | 汎用 | 3 | liveProbe。`nvidia/nemotron-3.5-lightning-30b-a3b`（30B/3B有効の速い型）。推論オフ(`enable_thinking=false`)必須（既定は3/3空返答）。2026-11-05 追加（本番条件の実測で3/3 OK・5.6〜10.8秒）。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | openrouter/nemotron-3-ultra-550b | 統括 | 3 | 無料枠で429が出やすい予備 |
@@ -50,6 +50,7 @@
 
 **2026-11-03 に試して見送った新顔**（`tsuioku-no-kirameki.com/scripts/council-trial.mjs` で本番条件の実測。詳細は `council-lineup.mjs` のコメント）: Gemini 4 Argon・3.1 Pro（無料枠では呼べない）、gemini-3.8-flash（4回とも混雑503。空いたら 3.7-flash と入れ替え候補）、Mistral Large 4（本文空・タイムアウト）、Kimi K2.6/K2.7・GLM 5.3・MiniMax M3.1・Step 5（推論で上限を使い切り空）、cloudflare/glm-5.2（推論オフなら合格だが、無料で呼べているか未確認のため保留）。
 **2026-11-05 の入れ替え**: `sambanova/deepseek-v3.1` を撤去（410＝SambaNova での提供終了。キーの作り直しでは戻らない）。見送り: Kimi K3.1 Pro・Muse Spark Open・Qwen3.8-Max（無料で呼べる経路なし）、gemini-3.8-flash（1回OKのあと503が2回。3.7-flashも同日503）、Mistral Large 4（両経路で本文空）、GLM 5.3・MiniMax M3.1（推論オフでも空）、cloudflare/qwen3.8-27b（groq に同じモデルが主力で居る）、muse-glimmer-30b（25〜159秒と遅い）。
+**2026-11-09 の再測定**: Lightning・Super は2体とも3/3で安定。gemini-3.7-flash は3回とも失敗（タイムアウト・503）、入れ替え候補の 3.8-flash も3回失敗のため据え置き。Kimi K3.1 Pro は NVIDIA の一覧に無く 404。NVIDIA の一覧に新顔なし。SambaNova は多くのモデルが402（支払い方法の登録が必要）。
 新顔を探すときは `node scripts/council-trial.mjs`（全カタログの新顔を一斉に試す）か `--models プロバイダ:モデル,...`（指定だけ）。Mistral は `--delay 30000` でも429が出やすい。
 
 **ローカル（Ollama・無料無制限・オフライン保険）**: 12GB VRAM に収まる2体だけ置く（2026-10-12 実測で入れ替え）。VRAM からはみ出す大物は遅くなるだけなので置かない。
