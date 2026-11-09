@@ -15,7 +15,7 @@
 - **Antigravity**: Google製のVSCodeベースagentic IDE。このPCには`.antigravity-ide`として
   インストール済み（2026-09-08時点で直近使用実績あり）。対話的にファイルを見ながら
   試行錯誤できる点が、バッチ的な「次チャット」との違い
-- **council-fable**: 無料マルチLLM会議→Fable(claude-fable-5-1)設計→実装ハンドオフ、の
+- **council-fable**: 無料マルチLLM会議→Fable(claude-fable-5-2)設計→実装ハンドオフ、の
   3段構えワークフロー（[`FABLE-3STEP-HOWTO.md`](FABLE-3STEP-HOWTO.md)が正本）。Antigravityは
   この「手順3: 実装」を担う選択肢の1つ
 

@@ -9,10 +9,10 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 進行中。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
+STATUS: 進行中（2026-11-10 更新: 下の「開いているスレッド」のうち A・B・C はマージ済み。新しく D を追加）。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
 ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
-LAST_WORKED_ON: 2026-10-21T03:10:00Z
-WORKED_BY: claude-cloud（Opus／session_01F4N5YRVNWo4Cg2PpW96tjB）／ブランチ claude/charming-knuth-is4kx6
+LAST_WORKED_ON: 2026-11-10T00:00:00Z
+WORKED_BY: claude-cloud／ブランチ claude/project-thread-hjnnu3（Fable 5.2 による全体設計の見直し）
 MACHINE_NOTES: ★このセッションはクラウド（/home/user）。ここからは deploy 不可（`../ai-hub` 無し・Cloudflare/Wrangler 認証無し・wrangler 無し）＝本番反映と `~/.claude/skills/` の読取りは PC 側でしかできない。
 
 ## このプロジェクトは何か（1行）
@@ -21,23 +21,28 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 ## 開いているスレッド（プロジェクトのスレッドに割るならこの単位）
 
 ### スレA: PR #101「全体設計 会議バックログ P0–P10＋デザイン名前翻訳プロンプト」
-- 状態: **open・CI緑・mergeable_state: clean**（コンフリクト無し）。レビュー/マージ待ち（人の確認）。
+- 状態: **マージ済み（00fe3b5、2026-10-26）・本番反映済み**。以下は当時の記録。
 - URL: https://github.com/kimito-link/web-ios-android/pull/101 （base: main / head: claude/charming-knuth-is4kx6 / 13 commits・27 files・+1582/-90）
 - 内容: P0 ratchet予算hook／P2 dispatcher不採用＋既存check-hooks-wiredにnpm配線／P3 結末台帳(冪等・fail-open・末尾64KiB走査)／P4 配信HTML宣言検査＋lp/をunlisted宣言／P5 _preamble単一注入／P6 否定形hint-box是正／P7 warn-long-running 1回/セッション／P9 FABLE ハンドオフ契約／P10 JIT三層設計／追加: DESIGN-NAMING-PROMPT.md。
 - NEXT_ACTION: ①人がレビュー→マージ ②**PC側で本番反映**: `git checkout claude/charming-knuth-is4kx6 && git pull && npx wrangler login（初回のみ）&& npm run deploy:site`。終わったらクラウドセッションに「done」と伝えれば本番URLのマーカー（_preamble・unlisted・composeCopyText・「じゃないよ」消失）を再取得して確認する。
 - 監視: 作成セッションが `subscribe_pr_activity` で #101 を見張り中（CI/レビュー/マージのイベントで起床）。安全網チェックインも armed（約50分→以降4時間間隔・変化無しなら静かに再アーム）。
 
-### スレB: appstore-preview-video スキルの格上げ（★ブロック中）
+### スレB: appstore-preview-video スキルの格上げ（マージ済み: #108・490621d）
 - 目的: 個人設定 `~/.claude/skills/appstore-preview-video/SKILL.md`（261行・git管理外）を repo の `.claude/skills/` へ格上げし共有化。前例 self-verification と同型（precedence Enterprise>Personal>Project ＝ **両方に置く・personalは消さない**）。
 - 確定済みの手順（再設計しない）: ①repo に `.claude/skills/appstore-preview-video/SKILL.md` を作成（personal版の内容そのまま）②`_docs/instruments/check-drift.mjs` の PAIRS に self-verification(L660-663)と同型エントリ追加（canonical=repo側・copies=homedir側）③`node _docs/instruments/check-drift.mjs` で登録確認 → commit/push（同ブランチ＝PR #101 に乗る）。
 - **BLOCKER**: 261行の SKILL.md 本文がクラウドに無い（`find /` で不在を確認済み・PC固有）。**ユーザーが本文をペースト/添付したら即実行**。でっち上げはしない。
 
 ### スレC: 人の手を使わない全体設計（2026-10-28）
 - 本人指示「全体設計として人間の手は使わない設計で」。正本 `docs/ai-rules/08_NO_HUMAN_HANDS.md`＋CLAUDE.md 冒頭★★★＋設計決定書「人の手を使わない」節。
-- 状態: 下書きPR #118（ブランチ claude/project-thread-r1yp3s）。規則・棚卸し・ひな型 `templates/hands-free-runner/`・検査 `templates/diagnostics/check-human-script-no-wait.mjs` まで。NEXT_ACTION: りんくのOKでマージ。以後、人に渡すスクリプトはひな型から作る。
+- 状態: **マージ済み（#118・2c6cbd3、2026-10-28）・本番反映済み**。以後、人に渡すスクリプトはひな型 `templates/hands-free-runner/` から作る。
+
+### スレD: Fable 5.2 で全体設計を見直す（2026-11-10）
+- 結果の正本: [`_docs/DESIGN-fable-5-2-review-2026-11-10.md`](_docs/DESIGN-fable-5-2-review-2026-11-10.md)。
+- 状態: 下書きPR（ブランチ claude/project-thread-hjnnu3）。参照切れ・古い数字の修正と、Fable 5.1→5.2 の書き換えまで。
+- 承認の表は 2026-11-10 にりんくのOKで核へ入れた。NEXT_ACTION: PR のマージ（りんくのOK）。核の経緯を外へ移す作業は別PRで分けて行う。
 
 ### 据え置き（意図的・順序原則。蒸し返さない）
-- P1 バッチ2(これ以上): 核が 370/450 で余裕＝追加移設は churn。
+- P1 バッチ2(これ以上): 核が 380/450 で余裕＝追加移設は churn（ただし Fable 5.2 の見直しで「経緯の移設」を再提案。スレD参照）。
 - P8（commit-verification を block 昇格）: P3 台帳に deny 実データ0件＝FP率が出ないため、データが溜まるまで保留。
 
 ## FILES_CHANGED（PR #101・主なもの）
