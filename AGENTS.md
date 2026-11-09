@@ -33,6 +33,11 @@
 人に「押して・貼って・画面を読んで・Enter を押して」と頼む前に、自分でやる道を全部ためす。人に渡すスクリプトは
 Enter 待ちを置かず、状態をファイルに書き、何度実行しても途中から続くようにする。正本: [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](docs/ai-rules/08_NO_HUMAN_HANDS.md)。
 
+## ストアの入力欄は全部埋める（2026-11-09）
+
+ストアに出すときは、必須の欄だけでなく任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も、
+言われなくても素材を作って入れる。空きは `node scripts/check-store-fields.mjs` で出る。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
+
 ## 終わったら
 
 `handoff.md`（無ければ [`templates/handoff/handoff.md.example`](templates/handoff/handoff.md.example) から作る）の

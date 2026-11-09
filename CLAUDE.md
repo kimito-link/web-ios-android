@@ -63,6 +63,10 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 拡張を変えたら `npm run verify:extension`（共通の [`templates/extension-verify/`](templates/extension-verify/README.md)）を
 自分で走らせ、全画面・全差し込み先の合否と証拠を添えて報告する。詳細は「確認と不具合対応の共通ルール」節の同名小節。
 
+★★**ストアの入力欄は、任意でも言われなくても全部埋める（2026-11-09 本人指示「CVRにも影響しそう」）**。提出・更新の前に
+`node scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
+欄の正本は `templates/scripts/lib/store-fields.json`、ストア側で欄が増えたら `watch-store-fields.mjs` が週1で知らせる。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。
