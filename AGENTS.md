@@ -28,6 +28,23 @@
 **作業ブランチで commit したところで止める。** push・PR・マージ・デプロイは Claude Code が
 差分を実際に動かして検品してから行う（[`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)）。
 
+## コミットの名前とメール（2026-11-05）
+
+commit する前に、作者がりんくの GitHub アカウントに結びつくメールになっているか確かめる。無ければこう設定する:
+
+```bash
+git config user.name  "kimito-link"
+git config user.email "222187038+kimito-link@users.noreply.github.com"
+```
+
+- **メールを自分で作らない**（`noreply@kimito-link.local`・`bot@example.com` など）。GitHub のどのアカウントにも
+  結びつかないメールだと、Vercel が「チームのメンバーではない人のコミット」とみなしてデプロイを止める。
+  2026-11-05 に Grok Bot が `Grok Bot <noreply@kimito-link.local>` で commit し、返信サジェストの PR #213 の
+  デプロイが止まった（Vercel から「Failed deployment」のメール）。
+- AI の名前を残したいときは、作者ではなくコミット文の末尾に `Co-authored-by:` や `担当AI: Grok Bot` と書く。
+- `222187038+kimito-link@users.noreply.github.com` は GitHub が kimito-link に配る公開用のメール（番号はアカウントID）。
+  本人の実アドレスを出さずにアカウントへ結びつく。
+
 ## 人の手を使わない（2026-10-28）
 
 人に「押して・貼って・画面を読んで・Enter を押して」と頼む前に、自分でやる道を全部ためす。人に渡すスクリプトは
