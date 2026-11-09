@@ -158,6 +158,11 @@
           "srcPath": "showcase/index.html"
         },
         {
+          "label": "🏢 管理体制・API導線 — どんな体制で開発・運用し、どの外部サービスとつながっているか",
+          "href": "../api-projects/",
+          "srcPath": "api-projects/index.html"
+        },
+        {
           "label": "実証知見まとめ — 申請まで通した知見",
           "href": "../learnings/",
           "srcPath": "learnings/index.html"
@@ -166,6 +171,32 @@
           "label": "更新情報と動作チェック — キットの最新版、準備の進み具合、問題の有無",
           "href": "../check-shindan-version/",
           "srcPath": "check-shindan-version/index.html"
+        }
+      ]
+    },
+    {
+      "title": "🔗 りんくのほかのサービス",
+      "slug": "related-services",
+      "links": [
+        {
+          "label": "kimito.link — 公開プロフィール・リンクまとめと分析",
+          "href": "https://kimito.link/",
+          "external": true
+        },
+        {
+          "label": "Kimito Talk — LINE公式アカウントのAI自動応答",
+          "href": "https://kimitotalk.link/",
+          "external": true
+        },
+        {
+          "label": "WEBサイト健康診断 — 社名の検索リスクを1分で確認",
+          "href": "https://web-health-check.link/",
+          "external": true
+        },
+        {
+          "label": "送信サジェスト — クリップボード履歴＆定型文ツール（Windows無料）",
+          "href": "https://soushin-suggest.link/",
+          "external": true
         }
       ]
     },

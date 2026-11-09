@@ -137,6 +137,10 @@ export const TASKS = Object.freeze([
     cmd: ['node', 'scripts/check-instrument-ran.mjs', '--check']
   },
   {
+    kind: 'gate', label: '検索の道（sitemap.xml・焼き込みリンク・各ページの canonical 等）',
+    cmd: ['node', 'scripts/build-site-seo.mjs', '--check']
+  },
+  {
     kind: 'gate', label: '公開ダッシュボードの鮮度',
     cmd: ['node', 'scripts/check-hub-page-freshness.mjs', '--root', '.', '--data', 'site/hub/hub-data.json']
   },

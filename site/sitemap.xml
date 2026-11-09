@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 自動生成: scripts/build-site-seo.mjs（正本は site/sitemap/sitemap-manifest.json）。手で書き換えない。 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://kimito-skill.link/</loc></url>
-  <url><loc>https://kimito-skill.link/guide/</loc></url>
-  <url><loc>https://kimito-skill.link/ai-guide/</loc></url>
-  <url><loc>https://kimito-skill.link/check-shindan-version/</loc></url>
-  <url><loc>https://kimito-skill.link/features/health-check/</loc></url>
-  <url><loc>https://kimito-skill.link/showcase/</loc></url>
-  <url><loc>https://kimito-skill.link/api-projects/</loc></url>
-  <url><loc>https://kimito-skill.link/howto/</loc></url>
-  <url><loc>https://kimito-skill.link/walkthrough/</loc></url>
-  <url><loc>https://kimito-skill.link/troubleshooting/</loc></url>
-  <url><loc>https://kimito-skill.link/learnings/</loc></url>
-  <url><loc>https://kimito-skill.link/apps/</loc></url>
-  <url><loc>https://kimito-skill.link/sitemap/</loc></url>
+  <url><loc>https://kimito-skill.link/</loc><lastmod>2026-10-26</lastmod></url>
+  <url><loc>https://kimito-skill.link/guide/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/story/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/ai-guide/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/howto/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/howto/github/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/howto/vercel/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/howto/domain/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/howto/cloudflare/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/walkthrough/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/walkthrough/ios/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/walkthrough/play/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/walkthrough/chrome/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/line-bot-hub/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/line-bot/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/line-bot-features/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/help/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/troubleshooting/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/tax/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/features/health-check/</loc><lastmod>2026-10-28</lastmod></url>
+  <url><loc>https://kimito-skill.link/apps/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/showcase/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/api-projects/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/learnings/</loc><lastmod>2026-10-19</lastmod></url>
+  <url><loc>https://kimito-skill.link/check-shindan-version/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/sitemap/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://kimito-skill.link/lp/</loc><lastmod>2026-10-17</lastmod></url>
 </urlset>

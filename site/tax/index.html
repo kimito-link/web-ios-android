@@ -123,7 +123,23 @@
 </head>
 <body>
 
-<div id="site-header"></div>
+<div id="site-header"><!-- prerender:start（scripts/build-site-seo.mjs が焼き込む。手で書き換えない） --><header>
+  <a class="logo-link" href="/"><img class="logo" src="/images/logo.png" alt="Kimito-Link"></a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
+    <a href="/">🏠 トップ</a>
+    <a href="/guide/">📋 はじめる準備</a>
+    <a href="/showcase/">📱 公開・導入事例</a>
+    <a href="/api-projects/">🏢 管理体制・API導線</a>
+    <a href="/troubleshooting/">🩹 つまずいたら</a>
+    <a href="/features/health-check/">🎬 起動画面と動作確認</a>
+    <a href="/check-shindan-version/">✅ 更新・動作状況</a>
+    <a href="/ai-guide/">🤖 AI向けガイド</a>
+    <a href="/sitemap/">🗺️ その他の説明</a>
+    <a href="/hub/usage/">📊 AI運用の状況</a>
+    <a href="/hub/">🔒 作業台（本人専用）</a>
+  </nav>
+</header><!-- prerender:end --></div>
 
 <nav class="breadcrumb" aria-label="パンくずリスト">
   <a href="../">ホーム</a> ＞ <a href="../help/">困ったとき</a> ＞ 課金の税務
@@ -255,7 +271,22 @@
 
 </div>
 
-<div id="site-footer"></div>
+<div id="site-footer"><!-- prerender:start（scripts/build-site-seo.mjs が焼き込む。手で書き換えない） --><footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="/">🏠 トップ</a>
+    <a href="/guide/">📋 はじめる準備</a>
+    <a href="/showcase/">📱 公開・導入事例</a>
+    <a href="/api-projects/">🏢 管理体制・API導線</a>
+    <a href="/troubleshooting/">🩹 つまずいたら</a>
+    <a href="/features/health-check/">🎬 起動画面と動作確認</a>
+    <a href="/check-shindan-version/">✅ 更新・動作状況</a>
+    <a href="/ai-guide/">🤖 AI向けガイド</a>
+    <a href="/sitemap/">🗺️ その他の説明</a>
+    <a href="/hub/usage/">📊 AI運用の状況</a>
+    <a href="/hub/">🔒 作業台（本人専用）</a>
+  </div>
+  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+</footer><!-- prerender:end --></div>
 
 <script src="../scripts/site-chrome.config.js"></script>
 <script src="../scripts/site-chrome.js"></script>

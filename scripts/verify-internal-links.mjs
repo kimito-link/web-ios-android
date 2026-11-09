@@ -72,6 +72,14 @@ function isSkippable(href) {
   );
 }
 
+/**
+ * 本番へ出す直前（npm run deploy:site）に毎回作られ、git には載らないページ（.gitignore 参照）。
+ * 手元の clone には無いのが正常なので、リンク先として「在る」とみなす。
+ * 2026-11-09: ヘッダーのナビを HTML に焼き込んだ（scripts/build-site-seo.mjs）ことで、
+ * これまで JS の中にだけあった /hub/ へのリンクがこの検査に見えるようになったため追加。
+ */
+const DEPLOY_GENERATED = new Set(['hub/index.html']);
+
 /** ディレクトリ/ファイル参照をファイルシステム上のパスに解決する。
  *  サイトルート絶対パス（"/" 始まり）は site/ を起点に解決する。
  */
@@ -129,7 +137,7 @@ for (const file of htmlFiles) {
     const pathPart = beforeAnchor.split('?')[0]; // クエリ文字列（例: common.css?v=1）を除去
     const target = resolveLinkTarget(file, pathPart);
 
-    if (!fs.existsSync(target)) {
+    if (!fs.existsSync(target) && !DEPLOY_GENERATED.has(path.relative(SITE_DIR, target).replace(/\\/g, '/'))) {
       fail(rel, `リンク切れ: ${href} → ${path.relative(ROOT, target)} が存在しない`);
       continue;
     }

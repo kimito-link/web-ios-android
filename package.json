@@ -66,7 +66,7 @@
     "status:collect": "node scripts/status/collect-service-status.mjs",
     "status:page": "node scripts/generate-service-status-dashboard.mjs --root . --out site/hub/status",
     "status:page:selftest": "node scripts/generate-service-status-dashboard.mjs --selftest",
-    "deploy:site": "npm run hub:page && npm run shindan:update && npm run revenue:page && npm run status:page && node templates/scripts/deploy-cloudflare-pages.mjs --dir site",
+    "deploy:site": "npm run hub:page && npm run shindan:update && npm run revenue:page && npm run status:page && node scripts/build-site-seo.mjs && node templates/scripts/deploy-cloudflare-pages.mjs --dir site",
     "check:instrument-drift:coverage": "node _docs/instruments/check-drift-coverage.mjs",
     "check:instrument-drift:coverage:selftest": "node _docs/instruments/check-drift-coverage.mjs --selftest",
     "check:runner-registers-all": "node templates/diagnostics/check-runner-registers-all.mjs .",
@@ -89,7 +89,10 @@
     "site:learnings-map": "node scripts/verify-learnings-map.mjs",
     "site:learnings-map:selftest": "node scripts/verify-learnings-map.mjs --selftest",
     "site:served-declared": "node scripts/verify-served-html-declared.mjs",
-    "site:served-declared:selftest": "node scripts/verify-served-html-declared.mjs --selftest"
+    "site:served-declared:selftest": "node scripts/verify-served-html-declared.mjs --selftest",
+    "site:seo": "node scripts/build-site-seo.mjs --check",
+    "site:seo:build": "node scripts/build-site-seo.mjs",
+    "site:seo:selftest": "node scripts/build-site-seo.mjs --selftest"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

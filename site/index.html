@@ -23,13 +23,37 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "web-ios-android アプリ公開キット",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Windows, macOS, Linux",
-    "description": "AI開発の総合ルール（重複実装防止・出荷事故ゲート等）と、それを実践する作業効率化のひな型。Web・iPhone・Android・Chromeアドオンの公開準備をAIと自動化で進めるテンプレートも含む",
-    "url": "https://kimito-skill.link/",
-    "downloadUrl": "https://kimito-skill.link/download/web-ios-android-template.zip"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://kimito-skill.link/#website",
+        "url": "https://kimito-skill.link/",
+        "name": "Kimito-Link アプリ公開キット",
+        "inLanguage": "ja",
+        "publisher": {
+          "@id": "https://kimito-skill.link/#org"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://kimito-skill.link/#org",
+        "name": "Kimito Link",
+        "url": "https://kimito-skill.link/",
+        "logo": "https://kimito-skill.link/images/logo.png"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "web-ios-android アプリ公開キット",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "description": "AI開発の総合ルール（重複実装防止・出荷事故ゲート等）と、それを実践する作業効率化のひな型。Web・iPhone・Android・Chromeアドオンの公開準備をAIと自動化で進めるテンプレートも含む",
+        "url": "https://kimito-skill.link/",
+        "downloadUrl": "https://kimito-skill.link/download/web-ios-android-template.zip",
+        "publisher": {
+          "@id": "https://kimito-skill.link/#org"
+        }
+      }
+    ]
   }
   </script>
   <style>
@@ -613,7 +637,23 @@
 <body>
 
 <!-- ヘッダー -->
-<div id="site-header"></div>
+<div id="site-header"><!-- prerender:start（scripts/build-site-seo.mjs が焼き込む。手で書き換えない） --><header>
+  <a class="logo-link" href="/"><img class="logo" src="/images/logo.png" alt="Kimito-Link"></a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span></span></button>
+  <nav id="site-nav">
+    <a href="/" class="active">🏠 トップ</a>
+    <a href="/guide/">📋 はじめる準備</a>
+    <a href="/showcase/">📱 公開・導入事例</a>
+    <a href="/api-projects/">🏢 管理体制・API導線</a>
+    <a href="/troubleshooting/">🩹 つまずいたら</a>
+    <a href="/features/health-check/">🎬 起動画面と動作確認</a>
+    <a href="/check-shindan-version/">✅ 更新・動作状況</a>
+    <a href="/ai-guide/">🤖 AI向けガイド</a>
+    <a href="/sitemap/">🗺️ その他の説明</a>
+    <a href="/hub/usage/">📊 AI運用の状況</a>
+    <a href="/hub/">🔒 作業台（本人専用）</a>
+  </nav>
+</header><!-- prerender:end --></div>
 
 <!-- ヒーロー -->
 <div class="hero">
@@ -814,7 +854,23 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
   <div id="more">
     <div style="font-size:1rem; font-weight:900; margin-bottom:14px;">📚 もっと知りたい方へ</div>
     <!-- 中身は more-links.js が assets/data/more-links.json を読んで実行時に描画する（HTML側に個別カードは書かない） -->
-    <div class="more-cards more-links-slot"></div>
+    <div class="more-cards more-links-slot"><!-- prerender:start（scripts/build-site-seo.mjs が焼き込む。手で書き換えない） --><div class="more-group-head" style="font-size:0.78rem; font-weight:800; color:#999; margin:4px 2px 2px;">実際の画面で追体験する</div>
+<a href="walkthrough/" class="more-card"><div class="mc-icon">📷</div><div><h4>お店への申請 追体験（3プラットフォーム）</h4><p>iOS・Android・Chrome で人間が触る画面だけ。「やることこれだけ」形式</p></div></a>
+<a href="walkthrough/ios/" class="more-card"><div class="mc-icon">🍎</div><div><h4>App Store 追体験（実画面）</h4><p>プライバシー申告・秘密情報・通知・配信地域175か国まで。キャプチャ5枚＋自動化コマンド付き</p></div></a>
+<a href="walkthrough/play/" class="more-card"><div class="mc-icon">▶</div><div><h4>Google Play 追体験（実画面）</h4><p>本物の Play Console 画面で、アプリ作成〜審査送信までをそのままなぞれます</p></div></a>
+<a href="walkthrough/chrome/" class="more-card"><div class="mc-icon">🧩</div><div><h4>Chrome ウェブストア 追体験（実画面）</h4><p>ログイン連携の初回セットアップ → 以降は2コマンドで送信。キャプチャ5枚付き</p></div></a>
+<div class="more-group-head" style="font-size:0.78rem; font-weight:800; color:#999; margin:4px 2px 2px;">始める前に読んでおく</div>
+<a href="guide/" class="more-card"><div class="mc-icon">📋</div><div><h4>はじめる前の準備</h4><p>Apple・Googleへの開発者登録のしかた</p></div></a>
+<a href="howto/" class="more-card"><div class="mc-icon">🖼️</div><div><h4>ゆっくり解説</h4><p>GitHub・Vercel・ドメインって何？<br>画面つきでわかりやすく説明します</p></div></a>
+<a href="story/" class="more-card"><div class="mc-icon">📖</div><div><h4>完成ものがたり</h4><p>このキットが「5年後に楽できるレベル」になるまでの作り直し記録を、3人のゆっくりが追体験</p></div></a>
+<div class="more-group-head" style="font-size:0.78rem; font-weight:800; color:#999; margin:4px 2px 2px;">作ったものを販売する</div>
+<a href="https://github.com/kimito-link/web-ios-android/tree/main/templates/stripe-checkout-email" class="more-card" target="_blank" rel="noopener"><div class="mc-icon">💳</div><div><h4>買い切り課金＋購入完了メールの金型</h4><p>決済→自動送信の仕組みで、ダウンロード案内メールを自動で送ります。実際に使われている型</p></div></a>
+<div class="more-group-head" style="font-size:0.78rem; font-weight:800; color:#999; margin:4px 2px 2px;">困ったとき・知っておくこと</div>
+<a href="troubleshooting/" class="more-card"><div class="mc-icon">🩹</div><div><h4>公開でつまずいたら</h4><p>「承認されたのにDLできない」など、よくある罠と直し方</p></div></a>
+<a href="tax/" class="more-card"><div class="mc-icon">💴</div><div><h4>アプリ課金の税務手続き</h4><p>もし将来アプリ内課金や有料アプリで収益が出たら関係してくる話です。米国での源泉徴収の手続きと銀行受取。正しいやり方</p></div></a>
+<a href="learnings/" class="more-card"><div class="mc-icon">📚</div><div><h4>実証知見まとめ</h4><p>健康診断アプリで iOS/Android/Chrome 申請まで通した知見・必要な情報の一覧</p></div></a>
+<a href="line-bot/" class="more-card"><div class="mc-icon">💬</div><div><h4>無応答ゼロ化の仕組み</h4><p>LINEのAI社員が「既読無視」しない設計。AIの切り替えと実際に起きた不具合の直し方</p></div></a>
+<a href="line-bot-features/" class="more-card"><div class="mc-icon">🖼️</div><div><h4>画像・動画・音声認識</h4><p>LINEのAI社員が写真も動画も聞いた話も分かる仕組み。どのAIモデルが何を担当しているか、対応モデル一覧と実機検証で判明した罠</p></div></a><!-- prerender:end --></div>
   </div>
 
   <!-- 右カラム: 自動化される作業の一覧 ＋ セキュリティ/レスポンシブの実測結果パネル -->
@@ -924,7 +980,22 @@ Webを公開したら npm run security:score を実行し、内部先取りと m
 </div>
 
 <!-- フッター -->
-<div id="site-footer"></div>
+<div id="site-footer"><!-- prerender:start（scripts/build-site-seo.mjs が焼き込む。手で書き換えない） --><footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="/">🏠 トップ</a>
+    <a href="/guide/">📋 はじめる準備</a>
+    <a href="/showcase/">📱 公開・導入事例</a>
+    <a href="/api-projects/">🏢 管理体制・API導線</a>
+    <a href="/troubleshooting/">🩹 つまずいたら</a>
+    <a href="/features/health-check/">🎬 起動画面と動作確認</a>
+    <a href="/check-shindan-version/">✅ 更新・動作状況</a>
+    <a href="/ai-guide/">🤖 AI向けガイド</a>
+    <a href="/sitemap/">🗺️ その他の説明</a>
+    <a href="/hub/usage/">📊 AI運用の状況</a>
+    <a href="/hub/">🔒 作業台（本人専用）</a>
+  </div>
+  <div class="site-footer-copy">Kimito Link — クリエイター支援テンプレート</div>
+</footer><!-- prerender:end --></div>
 
 <script>
 // 各ステップカードの「▼ くわしく見る」開閉（.step-detail の表示/非表示を切り替える）

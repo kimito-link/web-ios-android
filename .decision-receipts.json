@@ -488,6 +488,15 @@
       "scopePaths": [
         "templates/hands-free-runner/runner.test.mjs"
       ]
+    },
+    {
+      "at": "2026-11-09T06:27:55.523Z",
+      "responsibility": "site-seo-sitemap-xml-and-link-prerender",
+      "decision": "REUSE",
+      "canonicalSource": "site/sitemap/sitemap-manifest.json",
+      "scopePaths": [
+        "scripts/build-site-seo.mjs"
+      ]
     }
   ]
 }
