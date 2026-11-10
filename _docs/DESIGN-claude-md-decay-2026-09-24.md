@@ -274,3 +274,166 @@ CLAUDE.md 核「実装着手前の非交渉ルール」項目1には規範（既
 `web-ios-android-relay.mjs` 経由で配線済み（ただし稼働中セッションには再起動まで反映されない）。
 
 出典: 2026-09-28 実損（`soushin-suggest.link`）。CLAUDE.md「実装着手前の非交渉ルール」項目1から移設（2026-10-21・P1）。
+
+## 移設（2026-11-10）: CLAUDE.md 核から移した経緯・実損の原文
+
+核を短くするため、規範だけを核に残し、経緯・実損・実装の解説をここへ原文のまま移した（PR「CLAUDE.md の核を短くする」）。
+下の「上の」「本節」などの指示語は、移す前の CLAUDE.md の中での位置を指す。
+
+### 「正本への自動到達経路」節（全文）
+
+**個々のプロジェクトへ`@`インポート付きCLAUDE.mdを個別に作る必要はない。**
+`github/CLAUDE.md`の冒頭に置いた`@web-ios-android/CLAUDE.md`という1行だけが正本経路。
+
+きっかけ: `github/`配下の約30プロジェクトへ、このファイルの内容を届けるために
+「各プロジェクトのルートへ`@../web-ios-android/CLAUDE.md`付きCLAUDE.mdを個別に手作業で
+作る」という方式を一時採用したが、新規プロジェクト追加・調査漏れのたびに伝播が途切れる
+事故が繰り返された（前回「14件対応完了」と報告した直後、別の11プロジェクトで未対応が
+発覚。「相対パスで1つ参照すればよいと言ったばかりなのに、また個別対応が必要になっている」
+という指摘で発覚）。
+
+★**根本原因はClaude Codeの仕様誤解だった**: Claude Codeは「作業ディレクトリと**その祖先
+ディレクトリすべて**のCLAUDE.mdを自動で読み込む」設計（[Claude Code Memory公式ドキュメント](https://code.claude.com/docs/en/memory)）。
+つまり`github/line-bot`でセッションを開けば、`github/line-bot/CLAUDE.md`だけでなく
+祖先の`github/CLAUDE.md`も自動的に読まれる。`github/CLAUDE.md`にimport構文
+（`@web-ios-android/CLAUDE.md`）さえ置けば、配下の**既存・新規を問わず全プロジェクト**に
+自動伝播する——個別配布は最初から不要だった。
+
+**今後の運用**:
+- 新しいプロジェクトを`github/`配下に作っても、web-ios-androidの正本を読むための
+  追加作業は不要（`github/CLAUDE.md`が自動的にカバーする）
+- 「web-ios-androidのルールが伝わらない」という事象が今後発生したら、まず
+  `github/CLAUDE.md`の`@web-ios-android/CLAUDE.md`インポート行が消えていないか、
+  初回承認ダイアログを断って以後インポートが無効になっていないかを疑う
+- 既存の個々のプロジェクトに残っている`@../web-ios-android/CLAUDE.md`（`kimito-link`等
+  約20件）は重複だが実害はないため、削除の必要はない（プロジェクト固有の注意点も
+  併記されているものが多く、無理に触らない）
+
+★★**この修正が効かない既知のケース: 「既に開いたまま動いているセッション」（2026-09-16追記）**。
+Claude Codeは指示書（CLAUDE.md）をセッション開始時に読み込む設計であり、稼働中に
+祖先ディレクトリのCLAUDE.mdが後から書き換わっても、既に開いているセッションへは
+自動的に反映されない（起動時点のスナップショットのまま動き続ける）。実例:
+「Mistral AI実装と会議ハーネス設計」セッションが`github/CLAUDE.md`への今回のimport追記
+（2026-09-16 11:42）より前から開いたまま動いており、Cloudflareトークンの権限問題
+（[`docs/claude-md/10-domain-and-cloudflare.md`](../docs/claude-md/10-domain-and-cloudflare.md)「★★Cloudflareのトークンは『用途ごとに権限が独立している』」、既に
+CLAUDE.mdに解決策が書いてある地雷）を自力で再発見していた。ユーザーが手動で
+「`C:\...\web-ios-android` みてください」と教えて初めて参照できた。
+★**対処**: 長時間開いたままのセッションで「web-ios-androidに書いてあるはずのことが
+参照されていない」と感じたら、まず新しいセッションかどうかを疑う。対処は2通り:
+1. **そのセッションに直接「`web-ios-android/CLAUDE.md`を読んで」と指示する**
+   （最も簡単。`Read`ツールでいつでも最新の内容を読める。効かないのはあくまで
+   セッション開始時の`@`インポート自動展開だけで、明示的なReadは別物）
+2. セッションを再起動する（以後も自動インポートで継続的に最新が読まれる状態にしたい場合）
+「稼働中セッションには遡って効かない」＝「再起動するしかない」ではないことに注意する。
+
+★この稼働中セッション検知は hook 化済み（[`.claude/hooks/warn-long-running-session.mjs`](../.claude/hooks/warn-long-running-session.mjs)・
+`UserPromptSubmit`・非ブロッキング）。判定2軸: (1) セッション開始が12時間超、(2) セッション開始時刻 <
+正本（`.claude/hooks/`・CLAUDE.md）の最終更新時刻（配線が古いまま起動した短命セッションも捕捉）。
+実装経緯・26日連続稼働/soushin の実損・`birthtime` が信頼できない件の詳細:
+[`_docs/DESIGN-claude-md-decay-2026-09-24.md`](DESIGN-claude-md-decay-2026-09-24.md)。
+
+★★★★★**非ブロッキングの警告は、読まれなければ「形だけ」になる——外向きの操作の前は拒否に格上げした
+（2026-10-06）**。本人の指摘「CLAUDE.md が形だけで機能していない気がします」を、そのセッション自身の
+記録で実測した。上の「経過時間・正本更新」の警告は、13日続いたセッションで**毎ターン出ていたのに、
+一度も CLAUDE.md を読み直す行動に繋がらなかった**。同じセッションは、①`.agent/coord.md` の
+write_lock（Main-Write Pause）を取らずに3リポの main へ PR をマージし、②Gate1 の diff-check が赤の
+まま（保護パスに触れたため）マージし、③ワークフローの実行を「未実行」と誤報告した（出力が空だったのを
+未実行と読んだ。実際は起動していた）。①②は「CLAUDE.md に書いてある手順」を、③は「裏取り」を、
+読んでいながら飛ばした——**文章と警告だけでは、外へ出す直前の1手を止められない**。
+- 対処: `.claude/hooks/guard-external-actions.mjs`（PreToolUse(Bash)・**拒否**）。Bash の中の
+  `git push` / `gh pr merge` / `gh workflow run|enable` / `gh secret set` / `gh release` / `gh api -X 変更系` /
+  `vercel --prod` / `wrangler deploy` / `npm publish` の前で、(1) cwd のリポの CLAUDE.md を**現在の内容のまま
+  全文 Read した形跡**、(2) `.agent/coord.md` に**触れた形跡**、(3) `gh pr merge` ではマージ対象PRの**チェックに
+  失敗が無いこと**、を事実だけで確かめ、欠けていれば拒否する。判定部品は `.claude/hooks/lib/transcript-reads.mjs`
+  に1つだけ置き、`require-claude-md-read.mjs`（Edit/Write 前）と共有する（複製しない）。
+- ★チェックが赤のPRをどうしても通すなら、**ユーザーがチャットで明示承認した後に限り**、コマンドへ
+  `GATE_BYPASS_APPROVED_BY_USER="<承認の中身>"` を付ける。無断で付けるのは虚偽申告で、ここを機械が見張る手段は無い
+  （付けた事実がコマンド履歴に残る＝後から検査できる、までが限界）。
+- ★判定しないこと: 読んだ内容に**従ったか**／引用符に隠した操作（`bash -c "..."`）／MCP・Agent 経由の外向き操作。
+  「全文Read」は「見た」までの証拠で、読んでも破る可能性は残る。だから他の hook・Gate は別に残す。
+- ★サブエージェント（Agent で起動した子）からの外向き操作は**常に拒否**する（2026-10-07）。公式仕様で `transcript_path` は
+  親セッションの会話ログを指し、子の Read・coord 参照はそこに残らない（`agent_id` があれば子の呼び出し）ため、
+  子が CLAUDE.md を全文 Read しても通らない。子は commit までで止め、push・マージ・デプロイは**親が差分とチェックを
+  確かめてから代行**する。拒否メッセージもこの理由を言う（以前は「Read してください」と誤誘導していた）。
+- 配線: このリポのセッションは `.claude/settings.json`、他プロジェクトのセッションは
+  `~/.claude/settings.json`（`web-ios-android-relay.mjs guard-external-actions.mjs`）。後者は PC ローカルで
+  git に載らないので、**新しい PC では手で足す**（設計: 本節。確認は `node .claude/hooks/guard-external-actions.test.mjs` 相当の
+  `npx vitest run .claude/hooks/guard-external-actions.test.mjs`）。
+
+
+### 「セッション開始時の必須アクション」0番
+
+0. **最初の応答の冒頭で「正本を読み込み済みです」と自己申告する**（2026-09-16確立）。
+   `github/CLAUDE.md`の`@web-ios-android/CLAUDE.md`インポート経由で、この正本は
+   セッション開始時に自動でコンテキストに入っているはずだが、それをユーザーが
+   確認する手段が無く、「web-ios-androidを読んで」と毎回言わせてしまっていた
+   （実損: 複数の稼働中セッションで、CLAUDE.mdに解決策がある地雷を自力で再発見
+   していた実例が繰り返し見つかった）。★このファイルの内容（非交渉ルール・4基準・
+   このキットが何かの一言説明のいずれか）を、実際に**要約して**最初の発言に含める
+   （「読み込み済みです」と定型文だけ書いて中身を示さないのは自己申告に過ぎず、
+   本当に読めている証拠にならない——基準③「完膚なきまでの裏取り」と同じ考え方）。
+   これにより、ユーザーは最初の1発言を見るだけで正本が届いているか判断できる。
+   届いていない（要約できない）場合は、正直にその旨を報告し、
+   `web-ios-android/CLAUDE.md`を明示的にReadしてから作業を始める。
+
+### 「セッション開始時の必須アクション」5番
+
+5. **本物のClaudeは「考える・判断する・検品する」だけ。手を動かす仕事は他の頭脳へ投げる**（2026-09-15
+   本人指示で確定）。ファイル作成・定型修正・調査・文章量産・テスト追加は、自分でやらずに
+   `python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
+   で投げ、返ってきたログの要点だけ読んで検品する。頭脳の使い分けと財布（Claude週間上限／SuperGrok／
+   Alibaba無料枠／Cloudflare無料枠／ローカル）は正本 [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](../docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。
+   スクリーンショットは文章の何倍も上限を消費するので、画面の内容は本人に文字で貼ってもらう。
+   ★**「難しい判断＋実装＋テストまで一貫でやる重い仕事」は Google Antigravity（本人が有料契約済み・Claude Opus 5.5/Sonnet 5.5・Gemini 4 Argon）へ回す**
+   （2026-09-16確定、2026-10-21更新）。Antigravity の Opus 5.5 は司令塔と同じ頭脳で、Claude の週間上限とは別の Google 側の枠で動く。
+   ★Antigravity は CLAUDE.md を読まない（読むのは AGENTS.md）・Turbo は権限無制限で push も止まらない。橋渡しはリポ直下の
+   [`AGENTS.md`](../AGENTS.md)、拒否リスト・モデル別の役割分担・引き継ぎの流れは正本 [`ANTIGRAVITY-HOWTO.md`](../docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
+   予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
+   ★★**Grok BuildとAntigravityの使い分け**: 今は「人手が要るか」が主軸で **Grok Build を優先**し、Antigravity は
+   正本 [`MULTI-BRAIN-HOWTO.md`](../docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1c の条件（Grok 2回失敗／30分超の設計判断を伴う作業／
+   対話的作業／司令塔が自分の上限で重い実装をしそうなとき）に当たるときだけ、理由とモデルを添えて本人に提案する（本人が手で投げる）。
+   `agy -p`（headless）を PC で確かめたら `dispatch.py --brain agy` で司令塔が自動で投げる運用へ移る（同 HOWTO「段階2」）。
+
+### 「実装着手前の非交渉ルール」前書き
+
+Deep Research（大企業向けマイクロサービス基盤の調査）を検討した際、Backstage・Pact Broker・
+OTel/SLO運用のような新しい基盤は**このキットの規模には過剰**と判断し不採用にした。だが1点だけ、
+「AIが調べずに新しく作る→重複する→片方だけ直す→ドリフトする→別の場所が壊れる」という事故を
+防ぐ**行動順序の明文化**は、新しい仕組みを増やさずに**既存の仕組みを正しい順番で使わせるだけ**
+なので採用する。実装（コードを書く・ファイルを変更する）を始める前に、必ずこの順で確認する:
+
+### 「実装着手前の非交渉ルール」1番
+
+1. **既存実装を検索する** — `Grep`/`Glob`で対象領域の既存コードを探す
+   ★**否定形で答える前ほど検索を飛ばしやすい**（2026-09-14、line-bot-e8の同日5件の実損から確立）。
+   「できません」「ありません」「〜が必要です」と言いかけた瞬間こそ、この1番を踏んでいるか
+   自問する。実例: 「LINEアカウント作成は代行できません」→未検索のまま2回連続で回答→
+   3度目にユーザーから「web-ios-android見れば仕組み化しているはず」と言われて初めて
+   検索し、`ai-shain-worker`配下に`open-line-form.mjs`（reCAPTCHA部分だけ人に渡す設計。
+   [`docs/ai-rules/05_HANDING_SCREEN_TO_HUMAN.md`](../docs/ai-rules/05_HANDING_SCREEN_TO_HUMAN.md)
+   の出典元）が既にあると判明。他4件も同日同型（プライバシーポリシー公開・OAuth設定・
+   開発者登録・API仕様、いずれも「一般論の手順を先に語り、実環境を見ていない」）。
+   ★**新しく作るときは検索するのに、「無理だ」と判断するときだけ検索を省略する**という
+   非対称性が本質。否定的な結論を出す前は、肯定的な結論を出す前と同じ強度で検索する。
+   ★この1番は `.claude/hooks/check-write-preceded-by-search.mjs`（`PreToolUse(Write|Edit)`・非ブロッキング）が機械検知する
+   （新規関数定義らしきパターンを書く前の直近15ツールに Grep/Glob が無ければ警告）。実装経緯（soushin の自己不整合実損）・
+   機械化できない部分の明示: [`_docs/DESIGN-claude-md-decay-2026-09-24.md`](DESIGN-claude-md-decay-2026-09-24.md)。
+
+### 「実装着手前の非交渉ルール」5番
+
+5. **変更による影響範囲を確認してから編集する** — 呼び出し元・配布先（`templates/`配下は複数プロジェクトへ配られる前提）を把握してから触る
+   ★★**「設計書が指す対象ファイル」を鵜呑みにせず、実際のルーティングから到達可能か確認する**
+   （2026-09-29実損、`kimito-Link-Voice`）。`index.html`（旧「声優マッチング」時代のダッシュボード）
+   を設計書どおりに全面実装・本番デプロイしたが、`server.js`の実ルーティングは`/`に`lp/index.html`
+   を配信しており、`index.html`はどこからもリンクされていない未使用ファイルだった。設計書
+   （`../kimito-Link-Voice/docs/DESIGN-clerk-migration-2026-09-26.md`）自体が、事業ピボット（`../kimito-Link-Voice/docs/BILLING-DESIGN.md`）
+   を踏まえず旧`index.html`を前提に書かれた古い設計書だった。「ファイルが存在する」ことと
+   「そのファイルが実際に配信されている」ことは別の命題——複数のHTML/エントリファイルが
+   存在するプロジェクトで大きな変更に着手する前は、`server.js`等（各言語のアプリ起動ファイル）のルーティング定義を
+   grepするか、本番/ローカルの該当パスへ実際にアクセスして確認する。この1番目の「既存実装を
+   検索する」を「対象ファイルが到達可能か」にまで広げたもの。
+   ★機械化: 「HTMLファイルへの大規模書き換え直前に、ルーティング定義の検索(Grepで`app.get`等)
+   または本番/ローカルへの実アクセス(WebFetch/curl)を行った形跡があるか」という客観的事実は
+   検出できるが、「設計書の前提が本当に正しいか」という意味判断はできない。
+   `.claude/hooks/check-target-file-reachability.mjs`（`check-write-preceded-by-search.mjs`と
+   同じtranscript走査・非ブロッキング・fail-open型）で実装済み、`settings.json`に配線済み。
