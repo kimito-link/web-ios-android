@@ -48,6 +48,17 @@
         ]
       },
       {
+        "matcher": "AskUserQuestion|mcp__hearthbot__post_message|mcp__hearthbot__request_decision|mcp__hearthbot__post_widget|mcp__hearthbot__edit_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-human-handoff.mjs\"",
+            "timeout": 10,
+            "statusMessage": "人に手作業を頼む文のチェック中..."
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
