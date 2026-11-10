@@ -57,6 +57,11 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 方向性（色・書体・配置・原則）を決めて「AIのありがちな見た目」と比べて直してから書く。方向は自分で決めて報告する（人を待たない）。
 ブランド規定（`docs/brand/LOGO-RULES.md`・キャラ）がある所ではそちらが勝つ。
 
+## ストアの入力欄は全部埋める（2026-11-09）
+
+ストアに出すときは、必須の欄だけでなく任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も、
+言われなくても素材を作って入れる。空きは `node scripts/check-store-fields.mjs` で出る。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
+
 ## 終わったら
 
 `handoff.md`（無ければ [`templates/handoff/handoff.md.example`](templates/handoff/handoff.md.example) から作る）の

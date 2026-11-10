@@ -1,0 +1,74 @@
+# ★ストアの入力欄が増えた・変わったことに、人が言う前に気づく（2026-11-09）。
+#
+# ■ なぜ要るか
+#   りんくの指示「今後入力項目が増えたら、言わなくても入れてほしい。CVR にも影響しそう」。
+#   App Store Connect に「iPhone Duo 用のスクリーンショット」「ヘッダと検索結果」が出ていたのに、
+#   キットの欄の表（templates/scripts/lib/store-fields.json）には iPhone Duo が無かった。
+#   ⟹ 週1で各ストアの公式の項目一覧（API 定義・仕様ページ）と表を比べ、変化があれば Issue（ai-task）を立てる。
+#
+# ■ 何をするか
+#   watch-store-fields.mjs: 0=変化なし / 1=変化あり / 2=取れなかった源がある
+#   1 のときだけ Issue を立てる（同じ題の Issue が開いていれば、コメントを足すだけにする）。
+#   2 は落とさない（相手のサイトの一時的な不調で毎週赤にしない）。出力には必ず出る。
+#
+# ■ 費用: このリポは公開なので Actions は無料。週1・数十秒。
+#
+# ■ ★この workflow が判定しないこと
+#   増えた欄が自分のアプリに要るか・素材の作り方は決めない（AI が Issue を見て、表に足して下書き PR を出す）。
+#   ルール本文: docs/ai-rules/10_STORE_FIELDS.md
+
+name: store-fields-watch (ストアの入力欄の見張り)
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 公式の項目一覧と表を比べる
+        id: watch
+        run: |
+          set +e
+          node templates/scripts/watch-store-fields.mjs --json watch-result.json | tee watch-output.txt
+          echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: 変化があれば Issue にする
+        if: steps.watch.outputs.code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create ai-task --color 5319e7 --description "AI が受け持つ作業" --force >/dev/null
+          title="ストアの入力欄が増えた・変わった（store-fields-watch）"
+          {
+            echo "週1の見張り（\`watch-store-fields.mjs\`）が、ストアの公式の項目一覧の変化を見つけました。"
+            echo ""
+            echo "やること: 増えた欄を \`templates/scripts/lib/store-fields.json\` の \`stores\` に足す → \`--update\` で known を揃える → 下書き PR。"
+            echo "決まり: [docs/ai-rules/10_STORE_FIELDS.md](../blob/main/docs/ai-rules/10_STORE_FIELDS.md)"
+            echo ""
+            echo '```'
+            cat watch-output.txt
+            echo '```'
+          } > body.md
+          num=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body-file body.md
+          else
+            gh issue create --title "$title" --label ai-task --body-file body.md
+          fi
