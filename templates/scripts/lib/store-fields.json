@@ -1,0 +1,736 @@
+{
+  "_README": "ストアの入力欄の対応表（正本）。各ストアの画面にある入力欄を、必須か任意かを問わず全部並べ、このリポのどこに素材を置くか・何で入れるかを書く。check-store-fields.mjs と lint-pre-submission の CHECK 35 がこの表で『埋まっていない欄』を出し、watch-store-fields.mjs が各ストアの公式の項目一覧（API 定義・仕様ページ）とこの表の watch を比べて『増えた欄』を知らせる。ルールの本文: docs/ai-rules/10_STORE_FIELDS.md",
+  "schema": 1,
+  "checkedAt": "2026-11-09",
+  "levels": {
+    "required": "無いと提出・公開できない",
+    "cvr": "任意だが商品ページの見え方・CVR に効く。言われなくても入れる",
+    "when": "条件つき（その機能・端末に対応するときだけ）。条件に当たるなら入れる"
+  },
+  "stores": {
+    "appstore": {
+      "label": "App Store（App Store Connect）",
+      "fields": [
+        {
+          "id": "name",
+          "label": "アプリ名",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "config": "identity.displayName"
+          }
+        },
+        {
+          "id": "subtitle",
+          "label": "サブタイトル",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/appstore/subtitle-ja.txt"
+            ]
+          }
+        },
+        {
+          "id": "description",
+          "label": "説明文",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/appstore/description-ja.txt"
+            ]
+          }
+        },
+        {
+          "id": "keywords",
+          "label": "キーワード",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/appstore/keywords-ja.txt"
+            ]
+          }
+        },
+        {
+          "id": "promotionalText",
+          "label": "プロモーション用テキスト",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/appstore/promotional-text-ja.txt"
+            ]
+          },
+          "note": "審査なしで差し替えられる。季節・新機能の一言に使う"
+        },
+        {
+          "id": "whatsNew",
+          "label": "このバージョンの新機能",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "files": [
+              "release-notes/CURRENT-ja.txt"
+            ]
+          },
+          "note": "初版では出ない。2版目から必須"
+        },
+        {
+          "id": "supportUrl",
+          "label": "サポートURL",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "config": [
+              "contact.supportUrl",
+              "identity.productionDomain"
+            ]
+          },
+          "note": "提出スクリプトは無ければ本番URLで代用する"
+        },
+        {
+          "id": "marketingUrl",
+          "label": "マーケティングURL",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "config": [
+              "contact.marketingUrl",
+              "identity.productionDomain"
+            ]
+          },
+          "note": "提出スクリプトは無ければ本番URLで代用する"
+        },
+        {
+          "id": "privacyPolicyUrl",
+          "label": "プライバシーポリシーURL",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "config": "contact.privacyUrl"
+          }
+        },
+        {
+          "id": "screenshotsIphone",
+          "label": "iPhone のスクリーンショット",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "ios-screenshots",
+              "store-assets/appstore/screenshots"
+            ]
+          },
+          "make": "capture-appstore-screenshots.mjs → frame-appstore-screenshots.mjs"
+        },
+        {
+          "id": "screenshotsIphoneDuo",
+          "label": "iPhone Duo のスクリーンショット（外側・内側の画面）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/screenshots-iphone-duo"
+            ]
+          },
+          "note": "上げると商品ページに『iPhone Duo 対応』のバッジが出る。2027年4月から iOS 27.1 SDK 以降のアプリは必須。外側 1398x2034 / 内側 2007x2853（横向きも可）。ASC API 4.6 の表示種別にまだ無いので画面で上げる"
+        },
+        {
+          "id": "screenshotsIpad",
+          "label": "iPad のスクリーンショット",
+          "level": "when",
+          "when": "iPad に対応するアプリ",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/screenshots-ipad"
+            ]
+          }
+        },
+        {
+          "id": "appPreview",
+          "label": "App プレビュー（動画）",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/previews",
+              "_store-assets/app-preview/out"
+            ]
+          },
+          "make": ".claude/skills/appstore-preview-video"
+        },
+        {
+          "id": "creativeHeader",
+          "label": "ヘッダと検索結果 → ヘッダ（商品ページの一番上の大きな画像）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/creative-assets/header.jpg",
+              "store-assets/creative-assets/header.jpeg",
+              "store-assets/creative-assets/header.png"
+            ]
+          },
+          "make": "generate-store-assets.mjs --creative",
+          "note": "3840x1646(21:9)・透明不可。版が編集できる間だけ上げられる。ASC API 4.6 に無いので画面で上げる"
+        },
+        {
+          "id": "creativeSearch",
+          "label": "ヘッダと検索結果 → 検索結果（検索に出る画像）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/creative-assets/search-results.jpg",
+              "store-assets/creative-assets/search-results.jpeg",
+              "store-assets/creative-assets/search-results.png",
+              "store-assets/creative-assets/search.jpg",
+              "store-assets/creative-assets/search.png"
+            ]
+          },
+          "make": "generate-store-assets.mjs --creative",
+          "note": "3:2・1920x1280〜3840x2560・透明不可"
+        },
+        {
+          "id": "productPageOptimization",
+          "label": "プロダクトページの最適化（アイコン・スクショの A/B テスト）",
+          "level": "when",
+          "when": "1日あたりの閲覧が数百を超え、差が測れるようになったら",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/ppo"
+            ]
+          }
+        },
+        {
+          "id": "inAppEvents",
+          "label": "App 内イベント",
+          "level": "when",
+          "when": "期間限定の催し・ライブ・新機能の告知があるとき",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/in-app-events"
+            ]
+          }
+        },
+        {
+          "id": "customProductPages",
+          "label": "カスタムプロダクトページ",
+          "level": "when",
+          "when": "広告・流入元ごとに見せ方を変えるとき",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/appstore/custom-product-pages"
+            ]
+          }
+        }
+      ]
+    },
+    "play": {
+      "label": "Google Play（Play Console）",
+      "fields": [
+        {
+          "id": "title",
+          "label": "アプリ名",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "config": "identity.displayName"
+          }
+        },
+        {
+          "id": "shortDescription",
+          "label": "簡単な説明（80字）",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "config": "identity.shortDescription"
+          }
+        },
+        {
+          "id": "fullDescription",
+          "label": "詳しい説明",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/play/listing-copy.md"
+            ]
+          }
+        },
+        {
+          "id": "icon",
+          "label": "アプリのアイコン（512x512）",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/play/icon-512.png"
+            ]
+          },
+          "make": "generate-store-assets.mjs --graphic"
+        },
+        {
+          "id": "featureGraphic",
+          "label": "フィーチャーグラフィック（1024x500）",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/play/feature-graphic.png",
+              "store-assets/play/feature-graphic.jpg"
+            ]
+          },
+          "make": "generate-store-assets.mjs --graphic"
+        },
+        {
+          "id": "phoneScreenshots",
+          "label": "スマートフォンのスクリーンショット（2枚以上）",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/play/screenshots"
+            ],
+            "min": 2
+          },
+          "make": "capture-play-screenshots.mjs"
+        },
+        {
+          "id": "video",
+          "label": "動画（YouTube の URL）",
+          "level": "cvr",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/play/video-url.txt"
+            ]
+          }
+        },
+        {
+          "id": "tabletScreenshots",
+          "label": "タブレットのスクリーンショット（7インチ・10インチ）",
+          "level": "when",
+          "when": "タブレットに対応するアプリ（大画面の掲載に出るため、対応するなら入れる）",
+          "fill": "api",
+          "has": {
+            "dirs": [
+              "store-assets/play/screenshots-tablet"
+            ]
+          }
+        },
+        {
+          "id": "dataSafety",
+          "label": "データ セーフティ",
+          "level": "required",
+          "fill": "api",
+          "has": {
+            "files": [
+              "store-assets/play/data-safety.csv"
+            ]
+          },
+          "make": "play-generate-data-safety-csv.mjs → play-fill-data-safety.mjs"
+        }
+      ]
+    },
+    "cws": {
+      "label": "Chrome ウェブストア",
+      "fields": [
+        {
+          "id": "icon",
+          "label": "ストアのアイコン（128x128）",
+          "level": "required",
+          "fill": "zip",
+          "has": {
+            "files": [
+              "icons/icon128.png",
+              "icons/icon-128.png",
+              "extension/icons/icon128.png",
+              "store-assets/chrome/icon-128.png"
+            ]
+          }
+        },
+        {
+          "id": "description",
+          "label": "説明",
+          "level": "required",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/chrome/description-ja.txt"
+            ]
+          }
+        },
+        {
+          "id": "screenshots",
+          "label": "スクリーンショット（1280x800 か 640x400、1枚以上）",
+          "level": "required",
+          "fill": "screen",
+          "has": {
+            "dirs": [
+              "store-assets/chrome/screenshots"
+            ]
+          }
+        },
+        {
+          "id": "smallPromoTile",
+          "label": "プロモーション タイル（小・440x280）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/chrome/promo-small-440x280.png",
+              "store-assets/chrome/promo-small-440x280.jpg"
+            ]
+          },
+          "make": "generate-store-assets.mjs --creative --chrome"
+        },
+        {
+          "id": "marqueePromoTile",
+          "label": "マーキー プロモーション タイル（1400x560）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/chrome/promo-marquee-1400x560.png",
+              "store-assets/chrome/promo-marquee-1400x560.jpg"
+            ]
+          },
+          "make": "generate-store-assets.mjs --creative --chrome",
+          "note": "無いとストアの大きな特集枠（マーキー）に載れない"
+        },
+        {
+          "id": "video",
+          "label": "プロモーション動画（YouTube の URL）",
+          "level": "cvr",
+          "fill": "screen",
+          "has": {
+            "files": [
+              "store-assets/chrome/video-url.txt"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "watch": {
+    "_README": "各ストアの公式の項目一覧。watch-store-fields.mjs が取りに行き、known と違えば『欄が増えた・変わった』として知らせる。増えた欄は上の stores に足してから known を更新する（--update）。",
+    "api": [
+      {
+        "id": "asc-openapi",
+        "label": "App Store Connect API の定義（掲載文の欄・スクショ/プレビューの端末の種類）",
+        "url": "https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip",
+        "kind": "asc-openapi",
+        "known": {
+          "AppStoreVersionLocalization": [
+            "description",
+            "keywords",
+            "locale",
+            "marketingUrl",
+            "promotionalText",
+            "supportUrl",
+            "whatsNew"
+          ],
+          "AppInfoLocalization": [
+            "locale",
+            "name",
+            "privacyChoicesUrl",
+            "privacyPolicyText",
+            "privacyPolicyUrl",
+            "subtitle"
+          ],
+          "ScreenshotDisplayType": [
+            "APP_APPLE_TV",
+            "APP_APPLE_VISION_PRO",
+            "APP_DESKTOP",
+            "APP_IPAD_105",
+            "APP_IPAD_97",
+            "APP_IPAD_PRO_129",
+            "APP_IPAD_PRO_3GEN_11",
+            "APP_IPAD_PRO_3GEN_129",
+            "APP_IPHONE_35",
+            "APP_IPHONE_40",
+            "APP_IPHONE_47",
+            "APP_IPHONE_55",
+            "APP_IPHONE_58",
+            "APP_IPHONE_61",
+            "APP_IPHONE_65",
+            "APP_IPHONE_67",
+            "APP_WATCH_SERIES_10",
+            "APP_WATCH_SERIES_3",
+            "APP_WATCH_SERIES_4",
+            "APP_WATCH_SERIES_7",
+            "APP_WATCH_ULTRA",
+            "IMESSAGE_APP_IPAD_105",
+            "IMESSAGE_APP_IPAD_97",
+            "IMESSAGE_APP_IPAD_PRO_129",
+            "IMESSAGE_APP_IPAD_PRO_3GEN_11",
+            "IMESSAGE_APP_IPAD_PRO_3GEN_129",
+            "IMESSAGE_APP_IPHONE_40",
+            "IMESSAGE_APP_IPHONE_47",
+            "IMESSAGE_APP_IPHONE_55",
+            "IMESSAGE_APP_IPHONE_58",
+            "IMESSAGE_APP_IPHONE_61",
+            "IMESSAGE_APP_IPHONE_65",
+            "IMESSAGE_APP_IPHONE_67"
+          ],
+          "PreviewType": [
+            "APPLE_TV",
+            "APPLE_VISION_PRO",
+            "DESKTOP",
+            "IPAD_105",
+            "IPAD_97",
+            "IPAD_PRO_129",
+            "IPAD_PRO_3GEN_11",
+            "IPAD_PRO_3GEN_129",
+            "IPHONE_35",
+            "IPHONE_40",
+            "IPHONE_47",
+            "IPHONE_55",
+            "IPHONE_58",
+            "IPHONE_61",
+            "IPHONE_65",
+            "IPHONE_67"
+          ],
+          "productPageSchemas": [
+            "AppClipHeaderImage",
+            "AppCustomProductPage",
+            "AppCustomProductPageLocalization",
+            "AppCustomProductPageVersion",
+            "AppEvent",
+            "AppEventAssetType",
+            "AppEventLocalization",
+            "AppEventScreenshot",
+            "AppEventVideoClip",
+            "AppPreview",
+            "AppPreviewSet",
+            "AppScreenshot",
+            "AppScreenshotSet",
+            "AppStoreVersionExperiment",
+            "AppStoreVersionExperimentTreatment",
+            "AppStoreVersionExperimentTreatmentLocalization",
+            "AppStoreVersionExperimentV2"
+          ]
+        }
+      },
+      {
+        "id": "play-discovery",
+        "label": "Google Play Developer API の定義（掲載の欄・画像の種類）",
+        "url": "https://androidpublisher.googleapis.com/$discovery/rest?version=v3",
+        "kind": "play-discovery",
+        "known": {
+          "Listing": [
+            "fullDescription",
+            "language",
+            "shortDescription",
+            "title",
+            "video"
+          ],
+          "AppDetails": [
+            "contactEmail",
+            "contactPhone",
+            "contactWebsite",
+            "defaultLanguage"
+          ],
+          "imageType": [
+            "appImageTypeUnspecified",
+            "featureGraphic",
+            "icon",
+            "phoneScreenshots",
+            "sevenInchScreenshots",
+            "tenInchScreenshots",
+            "tvBanner",
+            "tvScreenshots",
+            "wearScreenshots"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "id": "apple-screenshots",
+        "label": "Apple: スクリーンショットの仕様",
+        "url": "https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications",
+        "start": "Screenshot specifications</h1>",
+        "end": "Developer Footer",
+        "known": {
+          "labels": [
+            "10.5\" display",
+            "11\" display",
+            "12.9\" display",
+            "13\" display",
+            "9.7\" display",
+            "Apple TV",
+            "Apple TV Display",
+            "Apple Vision Pro",
+            "Apple Watch",
+            "Apple Watch Display",
+            "Display scaling",
+            "Mac",
+            "Mac Display",
+            "Note",
+            "Notes",
+            "Related",
+            "Required device sizes",
+            "Requirement",
+            "Screenshot size",
+            "Specifications",
+            "Vision Pro Display",
+            "iPad",
+            "iPad (if your app supports iPadOS)",
+            "iPhone",
+            "iPhone Duo",
+            "iPhone with Dynamic Island (large display)",
+            "iPhone with Dynamic Island (medium display)",
+            "iPhone with Face ID (large display)",
+            "iPhone with Face ID (medium display)",
+            "iPhone with Home Button (3.5\" display)",
+            "iPhone with Home Button (4\" display)",
+            "iPhone with Home Button (large display)",
+            "iPhone with Home Button (medium display)"
+          ]
+        }
+      },
+      {
+        "id": "apple-previews",
+        "label": "Apple: App プレビューの仕様",
+        "url": "https://developer.apple.com/help/app-store-connect/reference/app-preview-specifications",
+        "start": "App preview specifications</h1>",
+        "end": "Developer Footer",
+        "known": {
+          "labels": [
+            "10.5\" display",
+            "11\" display",
+            "12.9\" display",
+            "13\" display",
+            "9.7\" display",
+            "Accepted resolution",
+            "Accepted resolutions",
+            "App Preview Requirements",
+            "App Preview resolutions",
+            "Apple TV",
+            "Apple Vision Pro",
+            "Context",
+            "Description",
+            "Device resolution",
+            "Device resolutions",
+            "Display order",
+            "File formats",
+            "H.264 format",
+            "Mac",
+            "Note",
+            "Orientation",
+            "Overview",
+            "Poster frame",
+            "ProRes 422 (HQ only) format",
+            "Processing time",
+            "Related",
+            "Scaling",
+            "Unscaled versions",
+            "Video specifications",
+            "When you upload",
+            "iMessage",
+            "iPad",
+            "iPhone",
+            "iPhone Duo",
+            "iPhone with Dynamic Island (large display)",
+            "iPhone with Dynamic Island (medium display)",
+            "iPhone with Face ID (large display)",
+            "iPhone with Face ID (medium display)",
+            "iPhone with Home Button (3.5\" display)",
+            "iPhone with Home Button (4\" display)",
+            "iPhone with Home Button (large display)",
+            "iPhone with Home Button (medium display)"
+          ]
+        }
+      },
+      {
+        "id": "apple-creative",
+        "label": "Apple: ヘッダと検索結果・App 内イベントの素材の仕様",
+        "url": "https://developer.apple.com/help/app-store-connect/reference/app-information/creative-assets-specifications",
+        "start": "Creative assets specifications</h1>",
+        "end": "Developer Footer",
+        "known": {
+          "labels": [
+            "Aspect ratio",
+            "Frames per second",
+            "Image specifications for In-App Event cards",
+            "Image specifications for product page header and search results",
+            "Maximum file size",
+            "Maximum length",
+            "Minimum length",
+            "Note",
+            "Notes",
+            "Placement",
+            "Resolution",
+            "Supported extensions",
+            "Video specifications for In-App Event media",
+            "Video specifications for product page header and search results"
+          ]
+        }
+      },
+      {
+        "id": "play-preview-assets",
+        "label": "Google Play: プレビュー素材（画像・動画）の決まり",
+        "url": "https://support.google.com/googleplay/android-developer/answer/9866151?hl=en",
+        "start": "Add preview assets",
+        "end": "Was this helpful",
+        "known": {
+          "labels": [
+            "Android Automotive OS",
+            "Android TV",
+            "Android XR",
+            "Asset usage",
+            "Content guidelines",
+            "Content guidelines: Requirements and recommendations",
+            "Graphics",
+            "Grow users",
+            "Highly recommended",
+            "Important",
+            "Large screens",
+            "Main store listing",
+            "Manage preview assets",
+            "Note",
+            "Preview asset usage and content guidelines",
+            "Preview assets",
+            "Requirements",
+            "Store presence",
+            "Store settings",
+            "Usage",
+            "Wear OS",
+            "Wear OS watch faces"
+          ]
+        }
+      },
+      {
+        "id": "cws-images",
+        "label": "Chrome ウェブストア: 画像の決まり",
+        "url": "https://developer.chrome.com/docs/webstore/images?hl=en",
+        "start": "<h1",
+        "end": "What next?",
+        "known": {
+          "labels": [
+            "96x96",
+            "Bad icons (too-drastic perspective)",
+            "Extension icon",
+            "Good icons (front-facing)",
+            "Icon size",
+            "No status",
+            "Note",
+            "Pending Review status",
+            "Perspective",
+            "Promotional images",
+            "Rejected",
+            "Screenshots"
+          ]
+        }
+      }
+    ]
+  }
+}

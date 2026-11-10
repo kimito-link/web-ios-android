@@ -22,7 +22,7 @@ iOS の「配信地域」、Android の「審査送信」と同じで、**最後
 
 ## 全体像：4つの値を1ファイルに入れれば、以降は2コマンド
 
-### ★ 推奨：Node 版（Windows + Git Bash で固まらない）
+### Node 版（Windows + Git Bash で固まらない）
 
 ```bash
 npm run publish:cws         # zip作成 → アップロード → 検証待ち → 審査提出（全自動）
@@ -31,19 +31,12 @@ npm run publish:cws:check   # ID/権限の検証だけ（読み取り専用・�
 npm run publish:cws:upload  # アップロードのみ（下書き確認・提出しない）
 ```
 
-> **なぜ Node 版が正本か（罠⑤）**：PowerShell 版（`.ps1`）は、ユーザーの PowerShell プロファイル
+> **なぜ Node 版だけなのか（罠⑤）**：以前あった PowerShell 版は、ユーザーの PowerShell プロファイル
 > （`Microsoft.PowerShell_profile.ps1`）にパースエラーがあると巻き込まれて **0バイトの空 zip** を作り、
-> 申請が静かに失敗する。日本語パス（`デスクトップ`）の文字化けも誘発する。Node 版は外部依存ゼロ・
+> 申請が静かに失敗した。日本語パス（`デスクトップ`）の文字化けも誘発した。Node 版は外部依存ゼロ・
 > PowerShell 非経由で、zip 生成も Node の zlib で自前実装しているため、この事故が起きない。詳細は罠⑤。
 
-### 旧：PowerShell 版（プロファイルがクリーンな環境向け）
-
-```powershell
-.\build-zip.ps1      # 拡張を zip にパッケージ化
-.\publish-cws.ps1    # アップロード → 確認 → 審査提出
-```
-
-どちらの版も、`.env.cws` に **4つの値** を1回だけ用意すれば動きます。
+`.env.cws` に **4つの値** を1回だけ用意すれば動きます。
 
 | 値 | どこで取る |
 |---|---|
@@ -110,10 +103,10 @@ CWS_ITEM_ID=...
 ## 申請のたびにやること
 
 1. コード修正 → `manifest.json`（＋必要なら表示用バージョン）を bump
-2. zip 作成：`.\build-zip.ps1`
-3. アップロード＋審査提出：`.\publish-cws.ps1`
-   - 下書き確認だけ：`.\publish-cws.ps1 -UploadOnly`
-   - 確認プロンプトを飛ばす：`.\publish-cws.ps1 -Yes`
+2. zip 作成からアップロード、審査提出まで：`npm run publish:cws`
+   - zip 作成だけ：`npm run zip:cws`
+   - 下書き確認だけ：`npm run publish:cws:upload`
+   - ID と権限の確認だけ：`npm run publish:cws:check`
 
 成功すると `審査提出 完了: status=OK` が出る。あとは Google の審査メールを待つだけ。
 
@@ -156,6 +149,7 @@ CWS_ITEM_ID=...
 **対処（恒久）**：**PowerShell を経由しない Node 版を使う**。zip 生成を PowerShell の `Compress-Archive` から
 Node の `zlib`（外部依存なし）に置き換えた `build-zip-node.mjs` / `publish-cws-node.mjs` を用意済み。
 `npm run publish:cws` がそれを呼ぶ。これでプロファイル汚染・日本語パスの両方の事故が消える。
+PowerShell 版のスクリプトは、この事故を繰り返さないよう 2026-11-06 に削除した。
 
 > グローバル運用ルール（`AI_HARNESS_OPERATION.md`）の「Windows シェルは Git Bash 優先・PowerShell の
 > インライン実行を避ける」と同じ理由。**PowerShell に処理を投げる npm スクリプトは地雷**だと考える。

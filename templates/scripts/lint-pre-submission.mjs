@@ -39,6 +39,7 @@ import {
 } from './lib/distinction-checks.mjs';
 import { checkListingSourceFiles, REQUIRED_LISTING_FILES } from './lib/listing-source-files.mjs';
 import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creative-asset-specs.mjs';
+import { storeFieldsReport } from './check-store-fields.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
@@ -1244,6 +1245,25 @@ function hasDistinctionObject(d) {
   if (r.status === 'ok') ok(r.name, r.detail);
   else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
   else skip(r.name, r.detail);
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 35 — ストアの入力欄の空き（対応表 lib/store-fields.json と照らす）。
+//   任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・App プレビュー・プロモーション用テキスト等）は無くても提出が通るので、
+//   言われるまで空のまま公開されていた。りんくの指示（2026-11-09）「入力項目が増えたら言わなくても入れて。CVR に効く」。
+//   ここでは warn で全部の空きを並べる（必須の欄の厳密な検査は CHECK 21・32・34 などが受け持つので、二重に fail にしない）。
+//   一覧と作り方は `node scripts/check-store-fields.mjs`、ルールは docs/ai-rules/10_STORE_FIELDS.md。
+// ----------------------------------------------------------------------------
+{
+  const { targets, rows } = storeFieldsReport(ROOT);
+  const empty = rows.filter((r) => !r.filled && r.level !== 'when');
+  if (!targets.length) skip('store-fields', '出すストアが分からない（STORE_TARGETS で指定できる）');
+  else if (!empty.length) ok('store-fields', `${targets.join('/')} の必須・CVR の欄は全部素材がある`);
+  else {
+    for (const r of empty) {
+      warn('store-fields', r.level === 'required' ? 'required' : 'CVR', `${r.storeLabel}「${r.label}」の素材が無い${r.make ? `。作り方: ${r.make}` : ''}${r.fill === 'screen' ? '（API に無い欄。画面で上げる）' : ''}`);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------

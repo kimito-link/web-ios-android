@@ -1,6 +1,6 @@
 # ヘッダーと検索結果の素材（2.3.14）を、全アプリの出荷手順に入れる
 
-**今の到達点: 検査と手順は実装済み。素材の作成と ASC への登録は、アプリごとに人手が要る（ASC の画面で上げる）。**
+**今の到達点: 検査・手順・素材の自動作成（`generate-store-assets.mjs --creative`）は実装済み。ASC への登録は API に無いので、AI が画面で上げる（2026-11-09）。**
 入口: [`docs/ai-rules/01_CORE_RULES.md`](../docs/ai-rules/01_CORE_RULES.md) の「2.3.14」行 → このファイル。
 関連: [`templates/scripts/lib/creative-asset-specs.mjs`](../templates/scripts/lib/creative-asset-specs.mjs)（寸法の検査）、
 [`templates/scripts/lint-pre-submission.mjs`](../templates/scripts/lint-pre-submission.mjs) の CHECK 32。
@@ -35,10 +35,15 @@ ASC の「配信 → 版 → プロダクトページ情報 → ヘッダと検�
 - 出す前（PREPARE_FOR_SUBMISSION）に上げるのが一番楽。**提出の前に素材を用意する**
 - 提出した後に気づいたら: ①「この版を審査から削除」して編集 → 上げて再提出（待ち行列の順番は最後になる）か、②次の版（例 0.1.3）で上げる。
   どちらにするかは、直したい緊急度で決める（見た目の改善だけなら②で足りる）
-- ASC API でこの欄を操作できるかは**未確認**（API の一覧に見当たらず、現状は画面操作を前提にする）
+- ASC API にこの欄は**無い**（2026-11-09、App Store Connect API 4.6 の OpenAPI 定義で確認。ヘッダ系は App Clip の `AppClipHeaderImage` だけ）。画面で上げる。
+  API に足されたら `watch-store-fields.mjs` が知らせる（[`docs/ai-rules/10_STORE_FIELDS.md`](../docs/ai-rules/10_STORE_FIELDS.md)）
 
 ## 作り方の型（アプリごと）
 1. アプリ名・短い説明・アイコン・実際の画面を使い、HTML で組む（価格・主張・他アプリを入れない）
 2. ブラウザ（Playwright）で、指定の寸法の**不透明な JPEG**として書き出す（PNG のスクリーンショットは透明を持つことがあるので JPEG が安全）
 3. `store-assets/creative-assets/` に置いて lint を通し、画像を目視してから ASC へ上げる
 実例: `malwarecheck.site/scripts/generate-creative-assets.mjs`
+
+★2026-11-09 からキットに同梱: `node scripts/generate-store-assets.mjs --creative` が 1〜2 を行う
+（`store-assets/creative-assets/header.html` / `search-results.html` があればそれを撮る。無ければアイコン・アプリ名・短い説明で組む。既にある絵は上書きしない）。
+任意の欄を全部埋める決まりは [`docs/ai-rules/10_STORE_FIELDS.md`](../docs/ai-rules/10_STORE_FIELDS.md)。

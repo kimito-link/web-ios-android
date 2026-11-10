@@ -488,6 +488,18 @@
       "scopePaths": [
         "templates/hands-free-runner/runner.test.mjs"
       ]
+    },
+    {
+      "at": "2026-11-09T11:56:47.528Z",
+      "responsibility": "store-listing-field-inventory-and-watch",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/scripts/lib/creative-asset-specs.mjs",
+      "scopePaths": [
+        "templates/scripts/lib/store-fields.mjs",
+        "templates/scripts/lib/store-fields.json",
+        "templates/scripts/check-store-fields.mjs",
+        "templates/scripts/watch-store-fields.mjs"
+      ]
     }
   ]
 }

@@ -28,7 +28,8 @@
 
 ### 確認環境の優先順（固定）
 
-1. **PC上のブラウザ**（Browser pane。日常確認はここが基本）
+1. **PC上のブラウザ**（Browser pane。日常確認はここが基本）。★開くのは `http://localhost` と `https` だけ。ローカルの HTML（`file://`）は
+   開かない（内蔵ブラウザから SSH 鍵・`.env` を読まれる穴、hook で拒否。[`09_AI_TOOL_BROWSER_SAFETY.md`](../ai-rules/09_AI_TOOL_BROWSER_SAFETY.md)）
 2. **★PC上のエミュレータ/シミュレータをAIがadb等で操作**（Android=AVDエミュレータ、
    iOS=Xcode Simulator[要macOS]）。**実機固有のネイティブUI・出し分け・ネイティブプラグインを、
    物理端末なしでAIが端から端まで動かして目視確認できる**。人間に「実機で見て」と頼む前に必ずここを試す。
@@ -49,8 +50,10 @@ Android なら AVD を AI が起動→APKビルド→install→adb で操作→s
 これが「iOS/Android の動作確認を AI がやればズレのないものができる」の実体。
 
 ★★**Windows常駐アプリ（AutoHotkey・PowerToys連携ランチャー等、Browser paneで開けないネイティブUI）
-の確認は、人間に「Ctrl+Win+Gを押してスクショを撮って」と頼むのではなく、`mcp__computer-use__*`
-（`request_access`→`screenshot`）でAI自身がそのウィンドウを直接撮影する**（2026-09-27実損）。
+の確認は、人間に「Ctrl+Win+Gを押してスクショを撮って」と頼むのではなく、AI自身が見る**（2026-09-27実損）。
+★2026-11-01から第一手段は **`agent-desktop`**（Vercel Labs・どのAIからもコマンドで使える・マウスを奪わず裏で動く・部品一覧を読んで押して読み直す）。
+部品が読めないアプリだけ `mcp__computer-use__*`（`request_access`→`screenshot`・Claude Desktopのとき）。
+入れ方・安全の決まり・機械の歯止め（`.claude/hooks/guard-agent-desktop.mjs`）の正本: [`docs/ai-workflows/AGENT-DESKTOP-HOWTO.md`](../ai-workflows/AGENT-DESKTOP-HOWTO.md)。
 これは上記1〜4のどれにも明示的に当てはまらない第5のケース（PC上で動くが、ブラウザでもモバイル
 実機でもない常駐アプリ）であり、明文化が漏れていたため実際に人間へ何度もスクショ依頼をする
 事故が起きた。★実損の核心はさらに深い: AIは「数値上は44px余っている」という**計算結果**と、
@@ -123,6 +126,13 @@ qa/
   といった「確認を出さないために安全を下げる」回避。`--autoConnect` を Claude Code / Codex / Cursor / Antigravity どの設定にも足さない。
 - ★機械検査: 「設定ファイルに `--autoConnect` があるか」は事実として検出できるが、設定は各 PC ローカル（git 外）にあるため
   リポの Gate では見られない。新しい PC・新しい AI ツールを足したら、MCP 設定に `autoConnect` が無いことを grep で確かめる。
+
+### ★★AIツールの内蔵ブラウザは「普通のブラウザより守りが弱いことがある」（2026-10-31・EMBRACE）
+
+Claude Desktop・Codex・VS Code・Cursor・Copilot の内蔵ブラウザで、ローカルの HTML から SSH 鍵・`.env` を読む／隠した指示でコマンドを動かす／
+アドレスバーを偽る穴が報告された（Forever Security, 2026-10-29）。**内蔵ブラウザで `file://` を開かない（hook で拒否）・知らないリポを README の通りに
+丸投げしない（先に読むだけ）・内蔵ブラウザでログインしない・鍵は使い回さず漏れたら1本だけ止められる形にする**。
+正本: [`docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md`](../ai-rules/09_AI_TOOL_BROWSER_SAFETY.md)（ここへ本文をコピーしない）。
 
 ### ★「観測系そのものが壊れている」可能性を先に疑う（2026-09-11追記）
 

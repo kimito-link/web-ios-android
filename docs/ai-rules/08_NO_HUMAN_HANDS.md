@@ -43,7 +43,8 @@
    `start_remote_control`（承認済みフォルダ・既定の PC）で git pull・npm・`wrangler deploy`・拡張の入れ替えをその PC 上で実行できる。
    初回だけ PC 側に承認の画面が出るが、それは「一度だけの許可」。毎回「Git Bash に貼って」と頼むのは、この段を飛ばしている。
    `wrangler login` のようなブラウザでの本人ログインだけは残る→長期の API トークン（`CLOUDFLARE_API_TOKEN`）に置き換えて年1回以下へ。
-4. **AI が自分で見て・読んで・続けられるか** — 画面は AI がスクリーンショットを撮る（専用プロフィールのブラウザ・computer-use）。
+4. **AI が自分で見て・読んで・続けられるか** — 画面は AI が自分で見る（ウェブは専用プロフィールのブラウザ、PC のアプリは
+   [`agent-desktop`](../ai-workflows/AGENT-DESKTOP-HOWTO.md)、それで読めないものだけ computer-use）。
    黒い画面の中身は、スクリプトが**状態ファイルに書き**、AI がフォルダ接続で読む。人に「いちばん下の行を送って」と頼まない。
 5. **自分で直る・自分で入れ替わる形にできるか** — 拡張は [`templates/extension-self-update/`](../../templates/extension-self-update/README.md)、
    無料 DB の休止は定期の起こし役（cron / workflow）、期限切れは期限の前に CI が知らせて自動で差し替え。

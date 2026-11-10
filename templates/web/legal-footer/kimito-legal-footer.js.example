@@ -5,6 +5,10 @@
  *   1行目: 「<サービス名>は、kimito-link.com（Kimito-Link Project）と同じ運営による公式サービスです。」
  *   2行目: 利用規約 ・ プライバシーポリシー ・ 特定商取引法に基づく表記 ・ お問い合わせ
  *          （★各サイトに実在するページだけを data 属性で渡す。無い項目は出さない）
+ *   3行目: 「同じ運営のほかのサービス」→ https://best-trust.biz/products/（全サービスの一覧。全サイト共通で毎回出す）
+ *          ★2026-11-09 追加（サービスのサイト全体のSEO）。一覧ページは全サービスへリンクしているのに、
+ *            各サービスから一覧へ戻る道が1本も無かった。戻り道があると、検索エンジンが
+ *            サービス同士のつながりを辿れ、利用者もほかのサービスに気づける。
  *
  * 使い方（各ページの </body> 直前に1行）:
  *   <script src="/js/kimito-legal-footer.js"
@@ -33,6 +37,7 @@
     var STYLE_ID = 'kimito-legal-footer-style';
     var ROOT_ID = 'kimito-legal-footer';
     var OFFICIAL_URL = 'https://kimito-link.com/';
+    var PRODUCTS_URL = 'https://best-trust.biz/products/';
 
     var CSS =
         '#' + ROOT_ID + '{position:relative;z-index:var(--klf-z,1);box-sizing:border-box;width:100%;margin:0;padding:28px 16px 36px;' +
@@ -43,7 +48,8 @@
         'justify-content:center;gap:2px 6px;}' +
         '#' + ROOT_ID + ' a{color:inherit;text-decoration:underline;text-underline-offset:2px;' +
         'padding:6px 8px;display:inline-block;}' +
-        '#' + ROOT_ID + ' a:hover{opacity:.7;}';
+        '#' + ROOT_ID + ' a:hover{opacity:.7;}' +
+        '#' + ROOT_ID + ' .klf-more{margin:8px 0 0;}';
 
     function esc(s) {
         return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -77,7 +83,8 @@
             : '';
 
         return '<p>' + name + 'は、<a href="' + OFFICIAL_URL + '" rel="noopener">kimito-link.com</a>' +
-            '（Kimito-Link Project）と同じ運営による公式サービスです。</p>' + list;
+            '（Kimito-Link Project）と同じ運営による公式サービスです。</p>' + list +
+            '<p class="klf-more"><a href="' + PRODUCTS_URL + '">同じ運営のほかのサービス</a></p>';
     }
 
     function mount(o) {
