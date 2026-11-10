@@ -96,7 +96,7 @@
 
     <div class="hero">
       <h1>Chrome Web Store 追体験<br>― 人間がさわる画面は、これだけ ―</h1>
-      <!-- 出典: docs/CHROME-WEBSTORE.md:57（初回15分）、scripts/chrome/build-zip.ps1・publish-cws.ps1（実在確認済み） -->
+      <!-- 出典: docs/CHROME-WEBSTORE.md:57（初回15分）、package.json の zip:cws・publish:cws（実在確認済み） -->
       <p class="sub">実際に拡張を申請したときの画面で、同じ手順をなぞれるよ。<br>初回 OAuth セットアップ（約15分）のあとは、ふだんの更新は<b>コマンド2つ</b>で審査提出まで自動。<br>説明文や画像を直す日は、画面を自動でなぞる<b>別ルート</b>(下の⑥)に切り替えると速い。</p>
       <div class="progress">
         <span>① 初回アイテム</span><span>② OAuth</span><span>③ .env.cws</span><span>④ 2コマンド</span><span>⑥ 画像/説明の編集</span>
@@ -111,8 +111,8 @@
         </div>
       </div>
       <div class="cmd-box">
-        <div class="cmd">.\build-zip.ps1</div>
-        <div class="cmd">.\publish-cws.ps1</div>
+        <div class="cmd">npm run zip:cws</div>
+        <div class="cmd">npm run publish:cws</div>
       </div>
       <p style="font-size:.92em; text-align:center; color:#5a6573;">manifest の version bump → zip → アップロード → 審査提出。成功すると <code>status=OK</code></p>
     </div>
@@ -201,8 +201,8 @@ CWS_ITEM_ID=...</pre>
         <tr><th>審査</th><td>Google 側（数時間〜数日）。合否は自動化外</td></tr>
       </table>
       <div class="shot">
-        <img src="../../assets/captures/chrome/05-publish-success.png" alt="publish-cws.ps1 成功 status=OK" loading="lazy">
-        <div class="cap">📷 実画面: <code>build-zip.ps1</code> → <code>publish-cws.ps1</code> 成功時の <code>status=OK</code></div>
+        <img src="../../assets/captures/chrome/05-publish-success.png" alt="申請スクリプト成功 status=OK（旧PowerShell版の画面）" loading="lazy">
+        <div class="cap">📷 実画面: 成功時の <code>status=OK</code>（旧PowerShell版の画面。今は <code>npm run publish:cws</code> で同じ結果が出ます）</div>
       </div>
     </div>
 

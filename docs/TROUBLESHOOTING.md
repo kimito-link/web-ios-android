@@ -281,7 +281,7 @@ keytool -list -v -keystore upload-key.jks -alias upload | grep SHA256
 - [ ] **iOS**：配信地域が設定済みか（未設定だとDL不可）
 - [ ] **iOS**：実機の App Store 検索／直リンク `apps.apple.com/jp/app/idXXXXXXXX` でDL確認
 - [ ] **Android**：製品版が「審査に送信済み」か（リリース作成だけで止まっていないか）
-- [ ] **Chrome**：`publish-cws.ps1` で `status=OK` を確認（審査提出済みか）
+- [ ] **Chrome**：`npm run publish:cws` で `status=OK` を確認（審査提出済みか）
 - [ ] 反映には時差あり（iOS配信網：〜数時間、検索ヒット：〜24時間、Chrome審査：〜数日）
 - [ ] 公開できたら、関係者にストアURLを共有 🎉
 

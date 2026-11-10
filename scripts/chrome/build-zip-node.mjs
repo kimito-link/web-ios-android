@@ -2,13 +2,14 @@
  * scripts/chrome/build-zip-node.mjs
  *
  * Chrome 拡張 ZIP 作成（Node だけ・外部依存なし・PowerShell 不使用）。
- * build-zip.ps1 の Node 等価。Windows + Git Bash 環境では PowerShell プロファイルの
- * パースエラーや日本語パス文字化けに巻き込まれて「空 zip」が生成される事故があるため、
- * 申請パイプラインはこちらを正とする（罠⑤、docs/CHROME-WEBSTORE.md 参照）。
+ * Windows + Git Bash 環境では PowerShell プロファイルのパースエラーや日本語パス文字化けに
+ * 巻き込まれて「空 zip」が生成される事故があったため、PowerShell 版は廃止した
+ * （罠⑤、docs/CHROME-WEBSTORE.md 参照）。
  *
- * 仕様（build-zip.ps1 と同一）:
+ * 仕様:
  *   - manifest.json のあるディレクトリを拡張ルートとして自動検出
- *   - ルート直下から不要物（node_modules/.git/dist/store-assets/test 等・.env*・*.zip）を除外して全部入れる
+ *   - ルート直下から不要物（node_modules/.git/dist/store-assets/test 等・*.zip）を除外して全部入れる
+ *   - .env* はどの階層でも入れない。申請用の scripts/chrome/ も入れない
  *   - manifest.json が zip の最上位に来る（= ルート直下の中身をそのまま zip ルートへ）
  *   - 出力: dist/<name>-v<version>.zip（name は manifest.name を slug 化）
  *
@@ -50,7 +51,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'u
 const version = manifest.version;
 const name = (String(manifest.name || '').replace(/[^\w\-]/g, '').replace(/^_+/, '')) || 'extension';
 
-// 除外（build-zip.ps1 と同一思想）
+// 除外（ルート直下）
 const EXCLUDE_DIRS = new Set([
   'node_modules', '.git', '.github', 'dist', 'store-assets', OUT_DIR,
   '.vscode', '.idea', 'test', 'tests',
@@ -74,6 +75,9 @@ function walk(dir, base, out) {
   for (const n of fs.readdirSync(dir)) {
     const full = path.join(dir, n);
     const rel = `${base}/${n}`;
+    // ★秘密を zip に入れない: publish-cws-node.mjs は scripts/chrome/.env.cws も読むので、
+    //   上の階層だけ除外していると、公開される拡張に認証情報が入ってしまう。
+    if (n.startsWith('.env') || rel === 'scripts/chrome') continue;
     const st = fs.statSync(full);
     if (st.isDirectory()) walk(full, rel, out);
     else out.push({ full, rel });
