@@ -436,6 +436,8 @@ Codex等`@import`を持たないツール向けに、CLAUDE.mdの**一部セク�
 この用途には[`check-cross-tool-instruction-sync.mjs`](check-cross-tool-instruction-sync.mjs)
 を使う。見出し文字列でセクションを切り出し、そのSHA256ハッシュとコピー側の
 `<!-- sync:<label> hash:<12桁> -->`マーカーを突き合わせる鮮度チェック。
+`itemsOnly: true` のペアは、セクションの中の番号つき項目だけを見張る（コピー側が項目だけを写しているとき用。
+まわりの文が変わっても赤くならない。2026-11-10）。
 
 ```bash
 node _docs/instruments/check-cross-tool-instruction-sync.mjs

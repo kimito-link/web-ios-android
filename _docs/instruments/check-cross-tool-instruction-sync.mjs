@@ -90,6 +90,26 @@ export function extractSection(text, startHeadingSubstring) {
   return lines.slice(startIdx, endIdx).join('\n');
 }
 
+/**
+ * ★セクションの中から「番号つきの項目（1. 2. …）」のかたまりだけを抜き出す（2026-11-10）。
+ * 最初の `1. ` 行から、次の空行の手前まで。項目が無ければ null。
+ *
+ * なぜ要るか: コピー側（AGENTS.md）が写しているのは項目だけなのに、節全体のハッシュで
+ * 見張っていたので、項目のまわりの文が1文変わるたびにマーカーが古くなり、赤のまま
+ * 放置されていた（2026-11-10 実測: 項目は同じ意味のまま、マーカーだけ古かった）。
+ * 写している範囲と見張る範囲をそろえる。
+ */
+export function extractNumberedItems(sectionText) {
+  const lines = sectionText.split('\n');
+  const startIdx = lines.findIndex((l) => /^1\.\s/.test(l));
+  if (startIdx === -1) return null;
+  let endIdx = lines.length;
+  for (let i = startIdx + 1; i < lines.length; i += 1) {
+    if (lines[i].trim() === '') { endIdx = i; break; }
+  }
+  return lines.slice(startIdx, endIdx).join('\n');
+}
+
 /** ★セクション本文からSHA256を計算し、読みやすい先頭12桁だけ返す。 */
 export function sectionHash(sectionText) {
   const normalized = sectionText
@@ -125,13 +145,18 @@ function rel(p) {
  * canonicalHeading… 正本側でセクションを切り出す見出しの部分文字列
  * copyPath        … 転記先ファイル
  * label           … マーカーコメントに使う短い識別子（英数字のみ推奨）
+ * itemsOnly       … true なら、セクションの中の番号つき項目だけを見張る
+ *                   （コピー側が項目だけを写しているとき。まわりの文の変更では赤くならない）
  */
 export const PAIRS = [
   {
-    label: 'core-block',
+    // ★ラベルを core-block から変えた（2026-11-10）。見張る範囲が「節全体」から「4項目だけ」に
+    //   変わったので、古いマーカー（節全体のハッシュ）を新しい意味で読み違えないようにするため。
+    label: 'core-block-items',
     canonicalPath: resolve(KIT_ROOT, 'CLAUDE.md'),
     canonicalHeading: '★核: 質問する前にこの手順を必ず通す',
     copyPath: resolve(GH_ROOT, 'line-bot/AGENTS.md'),
+    itemsOnly: true,
   },
 ];
 
@@ -150,7 +175,14 @@ function compare(pair) {
       detail: `正本に見出し「${pair.canonicalHeading}」が見つかりません（改題された可能性）`,
     };
   }
-  const currentHash = sectionHash(section);
+  const watched = pair.itemsOnly ? extractNumberedItems(section) : section;
+  if (watched === null) {
+    return {
+      verdict: 'inconclusive',
+      detail: `正本の「${pair.canonicalHeading}」に番号つきの項目（1. …）が見つかりません`,
+    };
+  }
+  const currentHash = sectionHash(watched);
   const copyText = readFileSync(pair.copyPath, 'utf8');
   const markerHash = findMarkerHash(copyText, pair.label);
 
@@ -218,6 +250,15 @@ if (SELFTEST) {
       copyPath: resolve(HERE, '.nope-does-not-exist2.md'),
     });
     if (r.verdict !== 'inconclusive') fails.push(`存在しない正本をinconclusiveにできない(得た: ${r.verdict})`);
+  }
+
+  // 毒6: 項目だけを見張るとき、まわりの文が変わってもハッシュは同じ・項目が変われば違う値になるべき
+  {
+    const mk = (around, item) => `## S\n${around}\n\n1. ${item}\n   続き\n2. b\n\n後ろの文 ${around}\n`;
+    const hOf = (t) => sectionHash(extractNumberedItems(extractSection(t, 'S')));
+    if (hOf(mk('前の文A', 'a')) !== hOf(mk('前の文B', 'a'))) fails.push('項目のまわりの文の変更を拾ってしまう(そろえ直しが増える)');
+    if (hOf(mk('前の文A', 'a')) === hOf(mk('前の文A', 'x'))) fails.push('項目の変更を拾えない(検知漏れ)');
+    if (extractNumberedItems('## S\n項目なし\n') !== null) fails.push('項目が無いのにnullを返さなかった');
   }
 
   if (fails.length) {
