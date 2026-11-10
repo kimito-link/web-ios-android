@@ -4,11 +4,11 @@
 // なぜ要るか: 無料枠は頭脳ごとに別々に切れる(2026-10-19 は Grok Build の残高切れ・Alibaba の無料枠切れ・OpenRouter の残高切れが重なっていた)。
 //   切れている頭脳へ投げて失敗→次へ、を繰り返さないよう、使える頭脳と残量を一目で見えるようにする。
 // 何を調べるか(いずれも1トークン以下の軽い確認。鍵の値は出力にも保存にも載せない):
-//   Alibaba のモデルごと / Gemini のモデルごと / Cloudflare / Groq(応答ヘッダの残量) / OpenRouter(残高$) / NVIDIA / Mistral / ローカル(Ollama・GPU)
+//   Alibaba のモデルごと / Gemini のモデルごと / Cloudflare / Groq(応答ヘッダの残量) / OpenRouter(残高$) / Muse(OpenCode Zen) / NVIDIA / Mistral / ローカル(Ollama・GPU)
 //   Grok Build は確認用の口が無いので、実行ログの最新結果から判定する。
 // 使い方: node scripts/record-brain-status.mjs            (保存)
 //         node scripts/record-brain-status.mjs --dry-run  (保存せず結果を表示)
-// 前提: 鍵はユーザー環境変数(DASHSCOPE_API_KEY / GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / NVIDIA_API_KEY / MISTRAL_API_KEY /
+// 前提: 鍵はユーザー環境変数(DASHSCOPE_API_KEY / GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OPENCODE_API_KEY / NVIDIA_API_KEY / MISTRAL_API_KEY /
 //   CF_WORKERS_AI_TOKEN + CLOUDFLARE_ACCOUNT_ID)。無ければ「鍵が未設定」と出す。順序・モデル鎖・失敗の合図は dispatch.py を読む(複製しない)。
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -73,6 +73,13 @@ async function probeOpenRouter() {
   try { const d = JSON.parse(r.bodyText).data; total = d.total_credits; used = d.total_usage; } catch { /* 読めない */ }
   return { hasKey: true, state: classifyHttp(r), total, used };
 }
+// Muse: OpenCode Zen の無料モデル(料金0)に1トークンだけ聞く。dispatch.py の --brain muse と同じモデル。
+const ZEN_BASE = 'https://opencode.ai/inference/openai/v1';
+async function probeMuse() {
+  if (!E.OPENCODE_API_KEY) return { hasKey: false };
+  const r = await post(`${ZEN_BASE}/chat/completions`, bearer(E.OPENCODE_API_KEY), { model: 'muse-spark-1.3-contributor-free', messages: [{ role: 'user', content: 'OK' }], max_tokens: 1 });
+  return { hasKey: true, state: classifyHttp(r) };
+}
 async function probeList(url, key) {
   if (!key) return { hasKey: false };
   return { hasKey: true, state: classifyHttp(await http(url, { headers: bearer(key) })) };
@@ -113,7 +120,7 @@ function readCfNeurons() {
 }
 
 // ---- まとめる ----------------------------------------------------------------------------------
-const REASON_LABEL = { 'usage balance exhausted': '残高切れ(402)', 'Payment Required': '残高切れ(402)', 'Free quota exhausted': '無料枠切れ', insufficient_quota: '無料枠切れ', 'rate limit': '混み合い', RESOURCE_EXHAUSTED: '枠切れ', 'quota exceeded': '枠切れ', 'auto-rejecting': '権限で止まった' };
+const REASON_LABEL = { 'usage balance exhausted': '残高切れ(402)', 'Payment Required': '残高切れ(402)', 'Free quota exhausted': '無料枠切れ', insufficient_quota: '無料枠切れ', 'rate limit': '混み合い', RESOURCE_EXHAUSTED: '枠切れ', 'quota exceeded': '枠切れ', 'auto-rejecting': '権限で止まった', FreeUsageLimitError: '無料枠切れ', 'Model is unavailable': 'モデルが止まっている' };
 
 function build(runs, P) {
   const recentOf = (brain) => summarizeRuns(runs[brain] || [], 5);
@@ -140,8 +147,8 @@ function build(runs, P) {
   if (nz && nz.totalNeurons > CF_FREE_NEURONS_PER_DAY && cfSt.status === 'ok') cfSt.label = '使えるが、今日は無料枠を超えて使っている';
   brains.push({ id: 'cf', label: 'Cloudflare Workers AI', kind: 'free', role: 'agent', ...S(cfSt), gauges: cfGauges, note: nz ? `今日(UTC)の合計 ${Math.round(nz.totalNeurons).toLocaleString()} ニューロン(最大のモデル: ${nz.topModel || '?'})。無料枠は1日 10,000 で、契約は Workers Paid(2026-10-19 に請求画面で確認。次回更新 10/24)なので、超えた分は従量課金です。` : '1日 10,000 ニューロンの無料枠。今日の使用量はまだ取得できていません(予約タスクが Cloudflare の MCP で取得します)。使えるかどうかだけ確認しています。', lastRun: lastRunOf('cf') });
 
-  // NVIDIA / Mistral
-  for (const [id, label, p, note] of [['nvidia', 'NVIDIA NIM', P.nvidia, '無料の評価枠(毎分40回ほど)。残量は取得できません。'], ['mistral', 'Mistral Codestral', P.mistral, '毎月の無料枠。残量は取得できません。']]) {
+  // Muse / NVIDIA / Mistral
+  for (const [id, label, p, note] of [['muse', 'Meta Muse(OpenCode Zen)', P.muse, '無料(Contributor＝送った内容を Meta が学習に使う)。秘密や外に出せないコードは送らない。残量は取得できません。'], ['nvidia', 'NVIDIA NIM', P.nvidia, '無料の評価枠(毎分40回ほど)。残量は取得できません。'], ['mistral', 'Mistral Codestral', P.mistral, '毎月の無料枠。残量は取得できません。']]) {
     brains.push({ id, label, kind: 'free', role: 'agent', ...S(!p.hasKey ? statusOfBrain({ hasKey: false }) : statusOfBrain({ hasKey: true, probe: p.state })), gauges: [], note, lastRun: lastRunOf(id) });
   }
 
@@ -185,12 +192,12 @@ function build(runs, P) {
 }
 
 async function main() {
-  const [alibaba, gemini, groq, openrouter, nvidia, mistral, cloudflare, local] = await Promise.all([
-    probeAlibaba(), probeGemini(), probeGroq(), probeOpenRouter(),
+  const [alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local] = await Promise.all([
+    probeAlibaba(), probeGemini(), probeGroq(), probeOpenRouter(), probeMuse(),
     probeList('https://integrate.api.nvidia.com/v1/models', E.NVIDIA_API_KEY), probeList('https://api.mistral.ai/v1/models', E.MISTRAL_API_KEY),
     probeCloudflare(), probeLocal(),
   ]);
-  const result = build(recentRuns(), { alibaba, gemini, groq, openrouter, nvidia, mistral, cloudflare, local });
+  const result = build(recentRuns(), { alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local });
   if (process.env.BRAINS_OUT) fs.writeFileSync(process.env.BRAINS_OUT, JSON.stringify(result)); // 画面確認用に全文を書き出す(保存はしない)
   if (process.argv.includes('--dry-run')) {
     console.log(JSON.stringify({ next: result.nextLabels, brains: result.brains.map((b) => ({ id: b.id, status: b.status, label: b.statusLabel, gauges: b.gauges.map((g) => `${g.label} ${g.remaining}/${g.total}${g.unit}`) })) }, null, 1));
