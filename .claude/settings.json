@@ -72,6 +72,12 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-external-actions.mjs\"",
             "timeout": 10,
             "statusMessage": "外向き操作の前提(CLAUDE.md既読・coord・チェック)確認中..."
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-agent-desktop.mjs\"",
+            "timeout": 5,
+            "statusMessage": "agent-desktop の危ない使い方(--force・--headed・clipboard-get・版なし導入)を確認中..."
           }
         ]
       },
