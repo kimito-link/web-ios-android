@@ -52,6 +52,7 @@ git config user.email "222187038+kimito-link@users.noreply.github.com"
 
 人に「押して・貼って・画面を読んで・Enter を押して」と頼む前に、自分でやる道を全部ためす。人に渡すスクリプトは
 Enter 待ちを置かず、状態をファイルに書き、何度実行しても途中から続くようにする。正本: [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](docs/ai-rules/08_NO_HUMAN_HANDS.md)。
+人に渡すもの（貼る文・手順・設定値・まとめ）はファイルにせず、返事の中のコードブロックで渡す。ファイルにするのは AI どうしの引き継ぎと設計書だけ（同 §3.6、2026-11-11）。
 
 ## Web画面を作るとき（2026-10-31）
 
