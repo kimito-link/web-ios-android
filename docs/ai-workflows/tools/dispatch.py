@@ -54,7 +54,9 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # 2026-10-28 OpenCode Zen 実測: 無料モデルの枠切れと、上流(Meta 等)が止まっているときの返事。
               "FreeUsageLimitError", "Model is unavailable",
               # 2026-11-12 Codex CLI 0.147 実測: ChatGPT ログインで使えないモデルは model_not_found(rc=1)。枠切れの返事。
-              "model_not_found", "hit your usage limit"]
+              "model_not_found", "hit your usage limit",
+              # 2026-11-12: the sandbox refused the real .git (Codex then faked a commit in .git-codex).
+              "index.lock': Permission denied"]
 TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
@@ -149,6 +151,14 @@ def spool_task(task, brain):
 
 
 CODEX_DEFAULT_MODEL = "gpt-5.6-sol"  # ChatGPT-login models on 2026-11-12: gpt-5.6-sol / terra / luna
+# Unattended runs must not reach for the screen: on 2026-11-12, when the sandbox refused a write, Codex read its
+# computer-use skill and tried to drive git-gui.exe (it failed to start, so no harm). Extra -c switches go here.
+CODEX_UNATTENDED_ARGS = []
+
+
+def codex_fake_git(cwd):
+    """Codex worked around a refused .git by copying it to .git-codex and committing there (PC 2026-11-12)."""
+    return os.path.exists(os.path.join(os.path.abspath(cwd), ".git-codex"))
 AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTIGRAVITY-HOWTO.md role table)
 # 2026-10-21 PC 実走: allow を regex で書いても、ファイル作成をシェル（リダイレクト・Set-Content）でやったり
 # `a ; b` とつないだりした1手が丸ごと自動拒否され、1ターンで何もせず終わった。Windows では分けられない行は完全一致になる
@@ -187,7 +197,7 @@ def agy_denied(out):
     return re.search(r'"denied_actions"\s*:\s*\[\s*\{', out) is not None
 
 
-def build(brain, task, allowed, model=None):
+def build(brain, task, allowed, model=None, cwd=None):
     env = dict(os.environ)
     task = spool_task(task, brain)
     if brain == "qwen":
@@ -255,7 +265,10 @@ def build(brain, task, allowed, model=None):
         # - Rules reach it through AGENTS.md (repo + ~/.codex/AGENTS.md); it does not read CLAUDE.md.
         # - Each run spends ~1-2 min warming up: send one batched task, not many tiny ones.
         model = model or CODEX_DEFAULT_MODEL
-        cmd = ["codex", "exec", "-m", model, "--sandbox", "workspace-write", "--skip-git-repo-check", task]  # works in the subprocess cwd (= --cwd)
+        # -C is required (PC 2026-11-12): without it the sandbox refused .git/index.lock, and Codex "committed" into a
+        # copied .git-codex instead while reporting success. With -C the commit landed in the real repo.
+        cmd = ["codex", "exec", "-m", model, "--sandbox", "workspace-write", "--skip-git-repo-check",
+               "-C", os.path.abspath(cwd or os.getcwd())] + CODEX_UNATTENDED_ARGS + [task]
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
@@ -325,7 +338,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_gemini_model(model)
         if not model:
             return None, "all Gemini free quotas exhausted for today", "", None
-    cmd, env, model = build(brain, task, allowed, model)
+    cmd, env, model = build(brain, task, allowed, model, cwd)
     # opencode は subprocess の cwd より環境変数 PWD を作業場所に使う（2026-10-18 実測）。Git Bash から呼ぶと
     # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
     env["PWD"] = os.path.abspath(cwd)
@@ -348,6 +361,9 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
     if brain == "agy" and (agy_status(out) != AGY_OK_STATUS or agy_denied(out)):
         failed = True
+    if brain == "codex" and codex_fake_git(cwd):
+        failed = True
+        out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
 

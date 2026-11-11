@@ -22,6 +22,18 @@ class CodexBuild(unittest.TestCase):
         for bad in ("--dangerously-bypass-approvals-and-sandbox", "danger-full-access", "--yolo"):
             self.assertNotIn(bad, cmd)
 
+    def test_runs_in_the_real_repo_with_C(self):
+        # -C が無いと .git への書き込みを断られ、Codex が .git-codex に偽のコミットを作って「済み」と言った（2026-11-12 PC）。
+        with tempfile.TemporaryDirectory() as d:
+            cmd, _, _ = dispatch.build("codex", "do x", "", None, d)
+            self.assertEqual(cmd[cmd.index("-C") + 1], os.path.abspath(d))
+
+    def test_fake_git_copy_is_a_failure(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertFalse(dispatch.codex_fake_git(d))
+            os.mkdir(os.path.join(d, ".git-codex"))
+            self.assertTrue(dispatch.codex_fake_git(d))
+
     def test_first_in_auto_chain(self):
         # 2026-11-12: Claude の週枠を空けるため、定額で別財布の Codex を先頭に置く。
         self.assertEqual(dispatch.AUTO_CHAIN[0], "codex")
