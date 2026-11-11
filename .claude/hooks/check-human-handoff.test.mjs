@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { findHumanHandoff } from "./check-human-handoff.mjs";
+import { findHumanHandoff, findTextFileAttachments } from "./check-human-handoff.mjs";
 
 const HOOK = fileURLToPath(new URL("./check-human-handoff.mjs", import.meta.url));
 const run = (input, env = {}) =>
@@ -40,5 +40,21 @@ describe("hook", () => {
     expect(decision(run({ tool_name: "Bash", tool_input: { command: "echo 貼って実行して Git Bash" } }))).toBeUndefined();
     expect(decision(run(post("Git Bash に貼って実行してください"), { HUMAN_HANDOFF_CHECK_OFF: "1" }))).toBeUndefined();
     expect(run("not json").status).toBe(0);
+  });
+});
+
+describe("テキストのファイルの添付（08 §3.6、2026-11-11）", () => {
+  const attach = (text, outs) => ({ tool_name: "mcp__hearthbot__post_message", tool_input: { text, attached_outputs: outs } });
+  it(".md / .txt の添付だけを拾う", () => {
+    expect(findTextFileAttachments({ attached_outputs: [{ kind: "file", ref: "/mnt/project-files/x/plan.md" }, { kind: "file", ref: "/mnt/project-files/a.png" }] })).toEqual(["/mnt/project-files/x/plan.md"]);
+    expect(findTextFileAttachments({ attached_outputs: [{ kind: "link", ref: "https://claude.ai/artifact/x.md" }] })).toEqual([]);
+    expect(findTextFileAttachments({ text: "x" })).toEqual([]);
+  });
+  it("理由なしの .md 添付は deny、理由ありは通す", () => {
+    expect(decision(run(attach("手順をまとめました。", [{ kind: "file", ref: "/mnt/project-files/x/steps.md" }])))).toBe("deny");
+    expect(decision(run(attach("設計書です。ファイルにする理由: 次のAIへの引き継ぎの正本", [{ kind: "file", ref: "/mnt/project-files/x/DESIGN.md" }])))).toBeUndefined();
+  });
+  it("画像・Artifact・リンクの添付は止めない", () => {
+    expect(decision(run(attach("画面です。", [{ kind: "file", ref: "/mnt/project-files/x/shot.png" }, { kind: "frame", ref: "https://claude.ai/artifact/abc" }])))).toBeUndefined();
   });
 });

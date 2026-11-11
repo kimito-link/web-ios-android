@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse ガード（拒否・fail-open）: 人に「コマンドを貼って実行して」「画面を送って」と頼む文を、
 // 理由の一行なしでは送らせない。正本: docs/ai-rules/08_NO_HUMAN_HANDS.md §2・§6。
+// もう1つ（2026-11-11）: 人への返信に .md/.txt を添付するのを「ファイルにする理由:」なしでは通さない（同 §3.6）。
 //
 // なぜ要るか（2026-11-10 りんく「極力人間の手を使わないルールが守られていない気がする」）:
 //   ルール本文（08・CLAUDE.md 核の ★★★）は 10/28 からあるのに、プロジェクトのスレッドが
@@ -33,6 +34,19 @@ const ASK_RE = /(貼って|貼り付けて|コピペして|打って|入力し�
 // 画面を送ってもらう依頼（これ単独で依頼とみなす）
 const SCREEN_RE = /(スクショ|スクリーンショット|画面|黒い画面の(中身|最後|下))を?(撮って|とって|送って|貼って|見せて|教えて)/;
 export const REASON_RE = /人に頼む理由[:：]\s*\S/;
+
+// 人に渡す返信へテキストのファイルを添付するとき（docs/ai-rules/08_NO_HUMAN_HANDS.md §3.6、2026-11-11）。
+// 貼る文・手順・設定値はチャットのコードブロックで渡す。ファイルにする理由の一行があれば通す。
+export const FILE_REASON_RE = /ファイルにする理由[:：]\s*\S/;
+const TEXT_FILE_RE = /\.(md|markdown|txt)$/i;
+
+/** attached_outputs の中の、テキストのファイル（.md / .txt）の ref を返す。無ければ []。 */
+export function findTextFileAttachments(toolInput) {
+  const outs = toolInput && Array.isArray(toolInput.attached_outputs) ? toolInput.attached_outputs : [];
+  return outs
+    .filter((o) => o && o.kind === 'file' && typeof o.ref === 'string' && TEXT_FILE_RE.test(o.ref))
+    .map((o) => o.ref);
+}
 
 /** tool_input の中の文字列を全部集める（ツールごとの形の違いを気にしない）。 */
 export function collectTexts(value, out = []) {
@@ -71,6 +85,23 @@ function main() {
   if (!input || !WATCHED_TOOLS.has(input.tool_name)) process.exit(0);
 
   const texts = collectTexts(input.tool_input);
+
+  const files = findTextFileAttachments(input.tool_input);
+  if (files.length > 0 && !texts.some((t) => FILE_REASON_RE.test(t))) {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason:
+          '人に渡す返信にテキストのファイル（' + files.join(', ').slice(0, 120) + '）を添付しているので止めました。' +
+          'docs/ai-rules/08_NO_HUMAN_HANDS.md §3.6: 貼る文・手順・設定値・まとめは、ファイルにせず返信の中のコードブロック（```）で渡す。' +
+          'ファイルにするのは AI どうしの引き継ぎ・正本の設計書だけ（作ってよいが、人への返信には使う部分をコードブロックで写す）。' +
+          'それでも添付するなら（長すぎて返信に入らない・本人がファイルを名指しした等）、本文に「ファイルにする理由: …」を一行書いて送り直す。',
+      },
+    }));
+    process.exit(0);
+  }
+
   if (texts.some((t) => REASON_RE.test(t))) process.exit(0);
   const hit = findHumanHandoff(texts);
   if (!hit) process.exit(0);
