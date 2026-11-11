@@ -159,6 +159,8 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    ★Antigravity は CLAUDE.md を読まない（読むのは [`AGENTS.md`](AGENTS.md)）・Turbo は push も止まらない。拒否リスト・
    モデル別の役割分担・自動で投げる運用への移行（段階2）は正本 [`ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
    予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
+   ★Claude どうしの使い分けは「**同じ会話で、まず Fable 5.2 に計画を文章で出させ、計画ができたら Opus 5.5 に切り替えて作業する**」が既定
+   （2026-11-11 りんく「全体採用に」）。Fable の週枠は計画の数ターンだけに使う。小さな直しは最初から Opus。手順と注意: [`FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
 
 ## 実装着手前の非交渉ルール（NON-NEGOTIABLE、2026-09-02追記）
 
