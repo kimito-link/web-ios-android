@@ -1,4 +1,9 @@
 {
+  "model": "opusplan",
+  "env": {
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-fable-5-2",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-opus-5-5"
+  },
   "hooks": {
     "PreToolUse": [
       {

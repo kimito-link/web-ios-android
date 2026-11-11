@@ -79,6 +79,29 @@
    Opus は会話に残っている計画をそのまま手本にして実装・テスト・PR まで進める。
 4. 作業中に設計を大きく変える必要が出たら、そこで一度だけ Fable に戻して計画を直させ、また Opus に戻す。
 
+### 自動で切り替える設定（2026-11-11 りんく「自動適用して質が上がるのはどんどん採用」）
+
+Claude Code の公式の別名 `opusplan`（プランモードの間だけ上位モデル、抜けたら作業用モデル）の中身を、
+公式の環境変数で「プラン＝Fable 5.2／作業＝Opus 5.5」に差し替える。これで**プランモードに入るだけで Fable が計画し、
+プランを承認してプランモードを抜けると Opus が作業する**。人がモデルを選び直す手間がなくなる。
+
+```json
+{
+  "model": "opusplan",
+  "env": {
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-fable-5-2",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-opus-5-5"
+  }
+}
+```
+
+- 置き場所: このリポは `.claude/settings.json` に入れてある。全プロジェクトに効かせるには PC の `~/.claude/settings.json` にも同じ3つを足す。
+- 実測（2026-11-11、Claude Code 2.1.322、クラウド）: この設定で `--permission-mode plan` は `claude-fable-5-2`、通常モードは `claude-opus-5-5` が答えた（`--output-format json` の `modelUsage` で確認）。
+- 出典: 公式 [model-config](https://code.claude.com/docs/en/model-config)（opusplan）・[env-vars](https://code.claude.com/docs/en/env-vars)（`ANTHROPIC_DEFAULT_OPUS_MODEL`＝「opusplan がプランモード中に使う」、`ANTHROPIC_DEFAULT_SONNET_MODEL`＝「プランモード外で使う」）。
+- AI の動き方: 深い設計が要るお題は、AI が自分でプランモードに入って（EnterPlanMode）計画を出す。小さな直しはプランモードに入らない（＝最初から Opus）。
+- 副作用（知って使う）: この設定の中では別名 `opus` が Fable を、`sonnet` が Opus を指す。サブエージェントに `model: "opus"` を渡すと Fable 枠を使うので、Opus を名指しするときは `claude-opus-5-5` と正式名で書く。
+- 効かない所: `claude --model …` で起動したセッション（クラウドのプロジェクトのスレッドなど）は起動時の指定が勝つので、下の「気をつけること」のスレッドの項に従う。
+
 ### なぜこれが良いか（何が本当で、何が言い過ぎか）
 
 - **本当**: モデルを切り替えても会話（計画・やりとり・読んだファイル）は残る。だから Opus は「良い下書き」を持った状態で
