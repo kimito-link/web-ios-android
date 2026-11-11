@@ -232,11 +232,14 @@ ChatGPT の team プラン（**もう払っている定額**・Claude と別の�
 上の「新しい頭脳を増やさない」の例外条件（既存のどれも向かない＝Claude の枠を食わずに賢い実装ができる係が足りない）に当たる。
 
 **PC 実測（2026-11-12、codex-cli 0.147.0、`C:\Users\info\.ai-runs\codex-trial\state.json`）**
-- `codex exec -m gpt-5.6-sol --sandbox workspace-write --skip-git-repo-check "<やること>"` で、確認なしにファイル作成→commit まで通った（242秒・約2.4万トークン・5時間枠 13%→15%）
+- `codex exec -m gpt-5.6-sol --sandbox workspace-write --skip-git-repo-check -C <作業フォルダ> "<やること>"` で、確認なしにファイル作成→commit まで通った（242秒・約2.4万トークン・5時間枠 13%→15%）
 - ★PC の `~/.codex/config.toml` の既定モデル `gpt-6.1-sol` は ChatGPT ログインだと `model_not_found` で7秒で落ちる。**dispatch は毎回 `-m gpt-5.6-sol` を付ける**（使えるのは gpt-5.6-sol / terra / luna）
 - ★config.toml が `network_access = true` なので、**サンドボックスは git push を止めない**（試験では宛先が無くて失敗しただけ）。
   dispatch の `block_outward()` が push 先を潰す。Codex は名前に KEY/TOKEN/SECRET を含む環境変数を落とすので `GIT_CONFIG_KEY_n` が消える→
   同じ決まりを `GIT_CONFIG_PARAMETERS` にも入れてある（`test_dispatch_codex.py` が本物の git で確かめる）
+- ★`-C <作業フォルダ>` を必ず付ける。無いとサンドボックスが `.git` への書き込みを断り、Codex は `.git` をコピーした `.git-codex` にコミットして「済み」と報告した（dispatch も DONE と読んだ）。今は `.git-*` のコピーと `index.lock': Permission denied` を失敗扱いにしている
+- ★書き込みを断られた Codex は、画面操作（computer-use）で git-gui.exe を動かそうとした。無人では `--disable plugins -c mcp_servers.node_repl.enabled=false` で画面・ブラウザの道具を全部切る（PC で3回試し、道具が読み込まれないことを確認）
+- ★`-C` 付きでも約11回に2回、`.git/index.lock` を断られた（原因不明）。そのときは Codex が回り道せず止まり、dispatch も failed と判定した。**commit が要る仕事は、司令塔が `git log` で本当に入ったかを見てから次へ進む**（job-runner はブランチが動いたかで判定済み）
 - ★毎回最初の1〜2分が空回りする（ログインシェルの起動待ち。原因は推測で未確認）。**小さな仕事を1件ずつではなく、まとめて1回で投げる**
 - ルールは AGENTS.md（リポ直下＋`~/.codex/AGENTS.md`）から届く。CLAUDE.md は読まない
 

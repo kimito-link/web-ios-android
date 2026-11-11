@@ -22,6 +22,13 @@ class CodexBuild(unittest.TestCase):
         for bad in ("--dangerously-bypass-approvals-and-sandbox", "danger-full-access", "--yolo"):
             self.assertNotIn(bad, cmd)
 
+    def test_screen_tools_are_switched_off(self):
+        # 2026-11-12 PC: 書き込みを断られた Codex が computer-use で git-gui.exe を動かそうとした。無人では画面に触らせない。
+        cmd, _, _ = dispatch.build("codex", "do x", "", None)
+        self.assertEqual(cmd[cmd.index("--disable") + 1], "plugins")
+        self.assertIn("mcp_servers.node_repl.enabled=false", cmd)
+        self.assertEqual(cmd[-1], "do x")
+
     def test_runs_in_the_real_repo_with_C(self):
         # -C が無いと .git への書き込みを断られ、Codex が .git-codex に偽のコミットを作って「済み」と言った（2026-11-12 PC）。
         with tempfile.TemporaryDirectory() as d:
@@ -31,7 +38,7 @@ class CodexBuild(unittest.TestCase):
     def test_fake_git_copy_is_a_failure(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertFalse(dispatch.codex_fake_git(d))
-            os.mkdir(os.path.join(d, ".git-codex"))
+            os.mkdir(os.path.join(d, ".git-copy"))
             self.assertTrue(dispatch.codex_fake_git(d))
 
     def test_first_in_auto_chain(self):

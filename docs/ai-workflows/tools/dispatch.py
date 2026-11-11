@@ -152,13 +152,19 @@ def spool_task(task, brain):
 
 CODEX_DEFAULT_MODEL = "gpt-5.6-sol"  # ChatGPT-login models on 2026-11-12: gpt-5.6-sol / terra / luna
 # Unattended runs must not reach for the screen: on 2026-11-12, when the sandbox refused a write, Codex read its
-# computer-use skill and tried to drive git-gui.exe (it failed to start, so no harm). Extra -c switches go here.
-CODEX_UNATTENDED_ARGS = []
+# computer-use skill and tried to drive git-gui.exe (it failed to start, so no harm). PC-measured the same day:
+# "--disable plugins" removes every computer/browser/chrome/cua tool and skill (per-plugin -c did not remove cua_repl),
+# and node_repl (the base the screen tools run on) is a config.toml MCP server, switched off for this run only.
+CODEX_UNATTENDED_ARGS = ["--disable", "plugins", "-c", "mcp_servers.node_repl.enabled=false"]
 
 
 def codex_fake_git(cwd):
     """Codex worked around a refused .git by copying it to .git-codex and committing there (PC 2026-11-12)."""
-    return os.path.exists(os.path.join(os.path.abspath(cwd), ".git-codex"))
+    d = os.path.abspath(cwd)
+    try:
+        return any(n.startswith(".git-") and os.path.isdir(os.path.join(d, n)) for n in os.listdir(d))
+    except OSError:
+        return False
 AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTIGRAVITY-HOWTO.md role table)
 # 2026-10-21 PC 実走: allow を regex で書いても、ファイル作成をシェル（リダイレクト・Set-Content）でやったり
 # `a ; b` とつないだりした1手が丸ごと自動拒否され、1ターンで何もせず終わった。Windows では分けられない行は完全一致になる
