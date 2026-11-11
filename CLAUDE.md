@@ -76,7 +76,7 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 ③作った後は自分でスクリーンショットを撮って見直す。取り込みの経緯・更新手順: [`_docs/DESIGN-frontend-design-skill-2026-10-31.md`](_docs/DESIGN-frontend-design-skill-2026-10-31.md)。
 
 ★★**ストアの入力欄は、任意でも言われなくても全部埋める（2026-11-09 本人指示「CVRにも影響しそう」）**。提出・更新の前に
-`node scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
+`node templates/scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
 欄の正本は `templates/scripts/lib/store-fields.json`、ストア側で欄が増えたら `watch-store-fields.mjs` が週1で知らせる。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
 
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
