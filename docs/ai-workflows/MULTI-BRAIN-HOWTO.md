@@ -247,8 +247,15 @@ ChatGPT の team プラン（**もう払っている定額**・Claude と別の�
 | 深い設計・方針の判断（間違えると高くつく） | Fable 5.2（プランモード） | 計画の文章だけ。小さな直しでは入らない |
 | 計画の確定後の検品・PR・マージ・りんくへの報告 | Opus 5.5（司令塔） | 差分を見て外へ出す判断は司令塔だけ |
 | 実装・テスト追加・定型修正・調査のまとめ | **Codex**（`--brain codex`、auto の先頭） | 定額・別財布・賢い |
-| Codex の枠切れ・失敗時 | grok → qwen → …（auto が自動で次へ） | 既存の順番のまま |
+| Codex の枠切れ・失敗時 | grok → qwen → oc → cf → nvidia → mistral（無料API）→ glm → local（auto が自動で次へ） | 既存の順番のまま |
+| 文章だけの仕事（要約・翻訳・下書き・SNS文・調べた結果のまとめ） | **無料API**（`--text`＝Gemini 無料枠 → Groq 無料枠 → Qwen） | ファイルを触らない仕事に Codex の枠を使わない |
+| 外に出せないもの（鍵・顧客データ・未公開の中身） | **ローカルLLM**（`--brain local`、会社PCの Ollama・RTX 4070 Ti） | 無料APIは送った内容が学習に使われるものがある。手元から出さない |
+| 量が多くて急がないもの（夜の一括・大量の下書き） | **ローカルLLM**（ジョブに `brain: local`、夜に job-runner が回す） | 無料・無制限。遅い分は寝ている間に回す |
+| 新しいモデルの試験 | Colab 無料版（[`COLAB-HOWTO.md`](COLAB-HOWTO.md)）・レッツノート | 本番の順番には入れない |
 | 判断込みの重い実装で Codex が2回失敗 | Antigravity（§1c） | Google 側の枠 |
+
+- 2台目PC（レッツノート）で dispatch を回すときは、環境変数 `DISPATCH_OLLAMA_URL=http://<会社PCの Tailscale 名>:11434` で会社PCの GPU を借りる（レッツノート内蔵GPUの Qwen3-8B は 8.4tok/s と遅い）。
+- 無料APIの枠を増やすための複数アカウントは規約違反なので使わない。
 
 **枠を見る目安**（「設定 > 使用量」 https://claude.ai/settings/usage ）
 - Claude 全体が週 50% を超えたら: 司令塔は自分で手を動かさず、実装は全部 `--brain codex` に投げる

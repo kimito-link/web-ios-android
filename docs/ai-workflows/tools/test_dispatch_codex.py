@@ -32,6 +32,19 @@ class CodexBuild(unittest.TestCase):
             self.assertTrue(any(m in msg for m in dispatch.FAIL_MARKS), msg)
 
 
+class LocalOllamaUrl(unittest.TestCase):
+    def test_default_is_this_pc_and_can_point_at_the_company_gpu(self):
+        os.environ.pop("DISPATCH_OLLAMA_URL", None)
+        _, env, _ = dispatch.build("local", "do x", "", None)
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "http://127.0.0.1:11434")
+        os.environ["DISPATCH_OLLAMA_URL"] = "http://besttrust:11434"
+        try:
+            _, env, _ = dispatch.build("local", "do x", "", None)
+            self.assertEqual(env["ANTHROPIC_BASE_URL"], "http://besttrust:11434")
+        finally:
+            os.environ.pop("DISPATCH_OLLAMA_URL", None)
+
+
 class PushBlockSurvivesEnvFilter(unittest.TestCase):
     def test_git_config_parameters_alone_blocks_push(self):
         # Codex は名前に KEY を含む環境変数（GIT_CONFIG_KEY_n）を落としてからコマンドを打つ。

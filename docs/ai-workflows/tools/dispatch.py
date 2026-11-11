@@ -195,7 +195,10 @@ def build(brain, task, allowed, model=None):
         cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
     elif brain == "local":
         model = model or "qwen3.6:35b-a3b"
-        env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL="http://127.0.0.1:11434", ANTHROPIC_AUTH_TOKEN="ollama", ANTHROPIC_MODEL=model)
+        # DISPATCH_OLLAMA_URL: run on the second PC (Let's note) and borrow the company PC's GPU over Tailscale,
+        # e.g. http://<company-pc-tailscale-name>:11434 (2026-11-11: reachable from other devices). Default = this PC.
+        env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL=os.environ.get("DISPATCH_OLLAMA_URL", "http://127.0.0.1:11434"),
+                   ANTHROPIC_AUTH_TOKEN="ollama", ANTHROPIC_MODEL=model)
         cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
     elif brain == "oc":
         model = model or "alibaba/qwen3.8-27b"
