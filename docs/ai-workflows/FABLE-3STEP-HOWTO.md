@@ -99,6 +99,7 @@ Claude Code の公式の別名 `opusplan`（プランモードの間だけ上位
 - 実測（2026-11-11、Claude Code 2.1.322、クラウド）: この設定で `--permission-mode plan` は `claude-fable-5-2`、通常モードは `claude-opus-5-5` が答えた（`--output-format json` の `modelUsage` で確認）。
 - 出典: 公式 [model-config](https://code.claude.com/docs/en/model-config)（opusplan）・[env-vars](https://code.claude.com/docs/en/env-vars)（`ANTHROPIC_DEFAULT_OPUS_MODEL`＝「opusplan がプランモード中に使う」、`ANTHROPIC_DEFAULT_SONNET_MODEL`＝「プランモード外で使う」）。
 - AI の動き方: 深い設計が要るお題は、AI が自分でプランモードに入って（EnterPlanMode）計画を出す。小さな直しはプランモードに入らない（＝最初から Opus）。
+- ★Fable を使いすぎない（2026-11-12、Fable が上限の 76% で週の途中に詰まりかけた）: Fable が上限の 70% を超えたら、プランモードは「方針が割れていて、間違えると戻すのが大変な設計」だけにする。計画のあとの実装は Opus が自分でやらず `--brain codex` に投げる。目安と振り分けの正本は [`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1e。
 - 副作用（知って使う）: この設定の中では別名 `opus` が Fable を、`sonnet` が Opus を指す。サブエージェントに `model: "opus"` を渡すと Fable 枠を使うので、Opus を名指しするときは `claude-opus-5-5` と正式名で書く。
 - 効かない所: `claude --model …` で起動したセッション（クラウドのプロジェクトのスレッドなど）は起動時の指定が勝つので、下の「気をつけること」のスレッドの項に従う。
 

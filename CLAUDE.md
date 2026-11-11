@@ -153,10 +153,10 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    書き戻すところまでが作業の完了。
 5. **本物のClaudeは「考える・判断する・検品する」だけ。手を動かす仕事は他の頭脳へ投げる**（2026-09-15
    本人指示で確定）。ファイル作成・定型修正・調査・文章量産・テスト追加は、自分でやらずに
-   `python docs/ai-workflows/tools/dispatch.py --brain <grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
+   `python docs/ai-workflows/tools/dispatch.py --brain <codex|grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
    で投げ、返ってきたログの要点だけ読んで検品する。スクリーンショットは文章の何倍も上限を消費するので、
    画面の内容は本人に文字で貼ってもらう。頭脳の使い分けと財布は正本 [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。
-   ★判断＋実装＋テストまで一貫の重い仕事は **Grok Build を優先**する。Google Antigravity（Claude の週間上限とは別の枠）は、
+   ★実装・テスト・定型作業は **Codex（`--brain codex`・ChatGPT の定額＝Claude と別の財布）を先頭**に、次に Grok Build（2026-11-12、同 HOWTO §1e）。Google Antigravity（Claude の週間上限とは別の枠）は、
    同 HOWTO §1c の条件に当たるときだけ、理由とモデルを添えて本人に提案する（本人が手で投げる）。
    ★Antigravity は CLAUDE.md を読まない（読むのは [`AGENTS.md`](AGENTS.md)）・Turbo は push も止まらない。拒否リスト・
    モデル別の役割分担・自動で投げる運用への移行（段階2）は正本 [`ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
