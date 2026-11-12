@@ -1,7 +1,8 @@
 """
 dispatch.py - run one task headlessly on a free/cheap brain, with automatic fallback.
 
-  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (grok -> qwen -> ... -> local)
+  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (codex -> grok -> qwen -> ... -> local)
+  python dispatch.py --brain codex --cwd <dir> "task"    # OpenAI Codex CLI (ChatGPT plan quota, separate from Claude's weekly limit)
   python dispatch.py --brain grok  --cwd <dir> "task"    # Grok Build headless (--always-approve so file edits do not block)
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
   python dispatch.py --brain oc    --cwd <dir> "task"    # OpenCode + Alibaba qwen3.8-27b (direct)
@@ -36,7 +37,9 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # muse (OpenCode Zen free Muse Spark) is NOT in the chain yet: on 2026-10-28 the PC test with a valid key got
 # "Model is unavailable". Only brains that actually answered go in. When the usage page shows it "ok", put it 2nd
 # (after grok): it is free and a strong agentic coder, ahead of Alibaba and Cloudflare (which bills overage here).
-AUTO_CHAIN = ["grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# codex first (2026-11-12): ChatGPT team plan = flat fee already paid, a wallet separate from Claude's weekly limit,
+# and the strongest coder in the chain. PC-measured: commit OK in 242s, 5h window 13%->15% for one small task.
+AUTO_CHAIN = ["codex", "grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
@@ -49,8 +52,12 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # 2026-10-21 agy 実測: headless で許可の無いコマンドを自動拒否しても status=SUCCESS・rc=0 で終わる。
               "so it was auto-denied",
               # 2026-10-28 OpenCode Zen 実測: 無料モデルの枠切れと、上流(Meta 等)が止まっているときの返事。
-              "FreeUsageLimitError", "Model is unavailable"]
-TIMEOUTS = {"agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
+              "FreeUsageLimitError", "Model is unavailable",
+              # 2026-11-12 Codex CLI 0.147 実測: ChatGPT ログインで使えないモデルは model_not_found(rc=1)。枠切れの返事。
+              "model_not_found", "hit your usage limit",
+              # 2026-11-12: the sandbox refused the real .git (Codex then faked a commit in .git-codex).
+              "index.lock': Permission denied"]
+TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -143,6 +150,21 @@ def spool_task(task, brain):
     return "Read the file %s (UTF-8) and carry out the task written in it exactly." % path
 
 
+CODEX_DEFAULT_MODEL = "gpt-5.6-sol"  # ChatGPT-login models on 2026-11-12: gpt-5.6-sol / terra / luna
+# Unattended runs must not reach for the screen: on 2026-11-12, when the sandbox refused a write, Codex read its
+# computer-use skill and tried to drive git-gui.exe (it failed to start, so no harm). PC-measured the same day:
+# "--disable plugins" removes every computer/browser/chrome/cua tool and skill (per-plugin -c did not remove cua_repl),
+# and node_repl (the base the screen tools run on) is a config.toml MCP server, switched off for this run only.
+CODEX_UNATTENDED_ARGS = ["--disable", "plugins", "-c", "mcp_servers.node_repl.enabled=false"]
+
+
+def codex_fake_git(cwd):
+    """Codex worked around a refused .git by copying it to .git-codex and committing there (PC 2026-11-12)."""
+    d = os.path.abspath(cwd)
+    try:
+        return any(n.startswith(".git-") and os.path.isdir(os.path.join(d, n)) for n in os.listdir(d))
+    except OSError:
+        return False
 AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTIGRAVITY-HOWTO.md role table)
 # 2026-10-21 PC 実走: allow を regex で書いても、ファイル作成をシェル（リダイレクト・Set-Content）でやったり
 # `a ; b` とつないだりした1手が丸ごと自動拒否され、1ターンで何もせず終わった。Windows では分けられない行は完全一致になる
@@ -181,7 +203,7 @@ def agy_denied(out):
     return re.search(r'"denied_actions"\s*:\s*\[\s*\{', out) is not None
 
 
-def build(brain, task, allowed, model=None):
+def build(brain, task, allowed, model=None, cwd=None):
     env = dict(os.environ)
     task = spool_task(task, brain)
     if brain == "qwen":
@@ -189,7 +211,10 @@ def build(brain, task, allowed, model=None):
         cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
     elif brain == "local":
         model = model or "qwen3.6:35b-a3b"
-        env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL="http://127.0.0.1:11434", ANTHROPIC_AUTH_TOKEN="ollama", ANTHROPIC_MODEL=model)
+        # DISPATCH_OLLAMA_URL: run on the second PC (Let's note) and borrow the company PC's GPU over Tailscale,
+        # e.g. http://<company-pc-tailscale-name>:11434 (2026-11-11: reachable from other devices). Default = this PC.
+        env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL=os.environ.get("DISPATCH_OLLAMA_URL", "http://127.0.0.1:11434"),
+                   ANTHROPIC_AUTH_TOKEN="ollama", ANTHROPIC_MODEL=model)
         cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
     elif brain == "oc":
         model = model or "alibaba/qwen3.8-27b"
@@ -237,6 +262,19 @@ def build(brain, task, allowed, model=None):
         # so the allow list must be set on the PC first. Not in AUTO_CHAIN: paid quota, and the allow list is per-PC.
         model = model or AGY_DEFAULT_MODEL
         cmd = [agy_exe(), "-p", AGY_PREAMBLE + task, "--model", model, "--output-format", "json"]
+    elif brain == "codex":
+        # OpenAI Codex CLI headless (PC-measured 2026-11-12, codex-cli 0.147.0, ChatGPT team login).
+        # - The PC's config.toml default model (gpt-6.1-sol) answers model_not_found on a ChatGPT login: always pass -m.
+        # - exec never asks for approval. workspace-write lets it edit only inside the working directory (subprocess cwd = --cwd). --dangerously-bypass-* is never used.
+        # - config.toml has network_access=true, so the sandbox does NOT stop git push. block_outward() stops it instead
+        #   (GIT_CONFIG_PARAMETERS survives Codex's default env filter, which drops names containing KEY/TOKEN/SECRET).
+        # - Rules reach it through AGENTS.md (repo + ~/.codex/AGENTS.md); it does not read CLAUDE.md.
+        # - Each run spends ~1-2 min warming up: send one batched task, not many tiny ones.
+        model = model or CODEX_DEFAULT_MODEL
+        # -C is required (PC 2026-11-12): without it the sandbox refused .git/index.lock, and Codex "committed" into a
+        # copied .git-codex instead while reporting success. With -C the commit landed in the real repo.
+        cmd = ["codex", "exec", "-m", model, "--sandbox", "workspace-write", "--skip-git-repo-check",
+               "-C", os.path.abspath(cwd or os.getcwd())] + CODEX_UNATTENDED_ARGS + [task]
     elif brain == "grok":
         model = model or "grok-build"
         cmd = [os.path.expanduser("~/.grok/bin/grok.exe"), "-p", task, "--always-approve"]
@@ -306,7 +344,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_gemini_model(model)
         if not model:
             return None, "all Gemini free quotas exhausted for today", "", None
-    cmd, env, model = build(brain, task, allowed, model)
+    cmd, env, model = build(brain, task, allowed, model, cwd)
     # opencode は subprocess の cwd より環境変数 PWD を作業場所に使う（2026-10-18 実測）。Git Bash から呼ぶと
     # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
     env["PWD"] = os.path.abspath(cwd)
@@ -329,6 +367,9 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
     if brain == "agy" and (agy_status(out) != AGY_OK_STATUS or agy_denied(out)):
         failed = True
+    if brain == "codex" and codex_fake_git(cwd):
+        failed = True
+        out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
 
@@ -348,6 +389,10 @@ def block_outward(env):
         env["GIT_CONFIG_KEY_%d" % (base + i)] = k
         env["GIT_CONFIG_VALUE_%d" % (base + i)] = v
     env["GIT_CONFIG_COUNT"] = str(base + len(pairs))
+    # Codex CLI drops env vars whose names contain KEY/TOKEN/SECRET before running shell commands, which removes
+    # GIT_CONFIG_KEY_n. GIT_CONFIG_PARAMETERS carries the same rule under a name that survives that filter.
+    params = " ".join("'%s'='%s'" % (k, v) for k, v in pairs)
+    env["GIT_CONFIG_PARAMETERS"] = (env.get("GIT_CONFIG_PARAMETERS", "") + " " + params).strip()
     for k in ("GH_TOKEN", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "VERCEL_TOKEN"):
         env[k] = "blocked-by-dispatch"
     env["GH_PROMPT_DISABLED"] = "1"
@@ -394,7 +439,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")

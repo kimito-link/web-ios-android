@@ -26,9 +26,9 @@ Grok Bot（常駐アプリ・SpaceXAI製）      … 進行役。ファイル読
         ▼
 実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し、本当に済んだものだけ done・それ以外は failed に結果を返す
         ▼
-dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は `AUTO_CHAIN`（grok→qwen→oc→cf→nvidia→mistral→glm→local）を自動フォールバック
+dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は `AUTO_CHAIN`（codex→grok→qwen→oc→cf→nvidia→mistral→glm→local）を自動フォールバック
         ▼
-grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を動かす。文章は gemini/groq(--text)
+codex(ChatGPT定額) / grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を動かす。文章は gemini/groq(--text)
 ```
 
 **なぜ Grok Bot を挟むか**: Grok Bot はPCに常駐して「ずっと動いてくれる」（本人の要望 2026-09-16）。ただし
@@ -154,6 +154,8 @@ Qwen / Cloudflare / ローカルへ振り分ける**前**に、まずこの段�
 | 本物の Claude（会話の司令塔） | 計画する・判断する・出来を検品する。**自分では手を動かさない** |
 | 他の頭脳（下表） | ファイル作成、定型修正、調査、文章量産、テスト追加。**司令塔が `dispatch` で投げる** |
 
+★司令塔の中の使い分け（2026-11-11 全体採用）: 深い設計が要るお題は、同じ会話でまず Fable 5.2 に計画させ、計画ができたら Opus 5.5 に切り替えて作業する。手順と注意は [`FABLE-3STEP-HOWTO.md`](FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
+
 司令塔が仕事を投げる道具（正本 [`tools/dispatch.py`](tools/dispatch.py)。PC 側はデスクトップの `dispatch.cmd` がこれを呼ぶだけ。コピーを作らない）:
 
 ```
@@ -222,6 +224,46 @@ Antigravity には `agy -p` で1回実行して終わるコマンドライン版
 足りないかを確認する。既存の`--brain`ラインナップ（grok/qwen/oc/cf/local/gemini/groq）で
 賄える仕事に、契約や配線が要る新しい頭脳を増やさない。増やす価値があるのは、既存のどれも
 向いていない仕事の型が実際に見つかったときだけ。
+
+### 1e. Codex（OpenAI Codex CLI）を「手を動かす係」の先頭にする（2026-11-12）
+
+**なぜ**: 2026-11-12 朝、Claude Ultra の週枠が 58%・Fable が上限の 76% で「土曜の夜に上限」の警告。Codex は
+ChatGPT の team プラン（**もう払っている定額**・Claude と別の財布）で動き、同日の枠は 5時間 15%・週 19%（11/18 21:32 に戻る）と空いていた。
+上の「新しい頭脳を増やさない」の例外条件（既存のどれも向かない＝Claude の枠を食わずに賢い実装ができる係が足りない）に当たる。
+
+**PC 実測（2026-11-12、codex-cli 0.147.0、`C:\Users\info\.ai-runs\codex-trial\state.json`）**
+- `codex exec -m gpt-5.6-sol --sandbox workspace-write --skip-git-repo-check -C <作業フォルダ> "<やること>"` で、確認なしにファイル作成→commit まで通った（242秒・約2.4万トークン・5時間枠 13%→15%）
+- ★PC の `~/.codex/config.toml` の既定モデル `gpt-6.1-sol` は ChatGPT ログインだと `model_not_found` で7秒で落ちる。**dispatch は毎回 `-m gpt-5.6-sol` を付ける**（使えるのは gpt-5.6-sol / terra / luna）
+- ★config.toml が `network_access = true` なので、**サンドボックスは git push を止めない**（試験では宛先が無くて失敗しただけ）。
+  dispatch の `block_outward()` が push 先を潰す。Codex は名前に KEY/TOKEN/SECRET を含む環境変数を落とすので `GIT_CONFIG_KEY_n` が消える→
+  同じ決まりを `GIT_CONFIG_PARAMETERS` にも入れてある（`test_dispatch_codex.py` が本物の git で確かめる）
+- ★`-C <作業フォルダ>` を必ず付ける。無いとサンドボックスが `.git` への書き込みを断り、Codex は `.git` をコピーした `.git-codex` にコミットして「済み」と報告した（dispatch も DONE と読んだ）。今は `.git-*` のコピーと `index.lock': Permission denied` を失敗扱いにしている
+- ★書き込みを断られた Codex は、画面操作（computer-use）で git-gui.exe を動かそうとした。無人では `--disable plugins -c mcp_servers.node_repl.enabled=false` で画面・ブラウザの道具を全部切る（PC で3回試し、道具が読み込まれないことを確認）
+- ★`-C` 付きでも約11回に2回、`.git/index.lock` を断られた（原因不明）。そのときは Codex が回り道せず止まり、dispatch も failed と判定した。**commit が要る仕事は、司令塔が `git log` で本当に入ったかを見てから次へ進む**（job-runner はブランチが動いたかで判定済み）
+- ★毎回最初の1〜2分が空回りする（ログインシェルの起動待ち。原因は推測で未確認）。**小さな仕事を1件ずつではなく、まとめて1回で投げる**
+- ルールは AGENTS.md（リポ直下＋`~/.codex/AGENTS.md`）から届く。CLAUDE.md は読まない
+
+**振り分け（Claude の枠を空けるための既定）**
+
+| 仕事 | 誰が | 理由 |
+|---|---|---|
+| 深い設計・方針の判断（間違えると高くつく） | Fable 5.2（プランモード） | 計画の文章だけ。小さな直しでは入らない |
+| 計画の確定後の検品・PR・マージ・りんくへの報告 | Opus 5.5（司令塔） | 差分を見て外へ出す判断は司令塔だけ |
+| 実装・テスト追加・定型修正・調査のまとめ | **Codex**（`--brain codex`、auto の先頭） | 定額・別財布・賢い |
+| Codex の枠切れ・失敗時 | grok → qwen → oc → cf → nvidia → mistral（無料API）→ glm → local（auto が自動で次へ） | 既存の順番のまま |
+| 文章だけの仕事（要約・翻訳・下書き・SNS文・調べた結果のまとめ） | **無料API**（`--text`＝Gemini 無料枠 → Groq 無料枠 → Qwen） | ファイルを触らない仕事に Codex の枠を使わない |
+| 外に出せないもの（鍵・顧客データ・未公開の中身） | **ローカルLLM**（`--brain local`、会社PCの Ollama・RTX 4070 Ti） | 無料APIは送った内容が学習に使われるものがある。手元から出さない |
+| 量が多くて急がないもの（夜の一括・大量の下書き） | **ローカルLLM**（ジョブに `brain: local`、夜に job-runner が回す） | 無料・無制限。遅い分は寝ている間に回す |
+| 新しいモデルの試験 | Colab 無料版（[`COLAB-HOWTO.md`](COLAB-HOWTO.md)）・レッツノート | 本番の順番には入れない |
+| 判断込みの重い実装で Codex が2回失敗 | Antigravity（§1c） | Google 側の枠 |
+
+- 2台目PC（レッツノート）で dispatch を回すときは、環境変数 `DISPATCH_OLLAMA_URL=http://<会社PCの Tailscale 名>:11434` で会社PCの GPU を借りる（レッツノート内蔵GPUの Qwen3-8B は 8.4tok/s と遅い）。
+- 無料APIの枠を増やすための複数アカウントは規約違反なので使わない。
+
+**枠を見る目安**（「設定 > 使用量」 https://claude.ai/settings/usage ）
+- Claude 全体が週 50% を超えたら: 司令塔は自分で手を動かさず、実装は全部 `--brain codex` に投げる
+- Fable が上限の 70% を超えたら: プランモードは「方針が割れていて、間違えると戻すのが大変な設計」だけ。それ以外は Opus のまま計画する
+- Fable が 100% になったら: 無料の「Fable リセット」（期限 2027-03-09、3件）を使うかは**りんくに一言で聞く**（AI が勝手に使わない）
 
 ### 1d. Workflowツール（dynamic workflow）は使わないのが既定（2026-09-25確定）
 

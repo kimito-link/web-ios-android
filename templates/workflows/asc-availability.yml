@@ -1,0 +1,31 @@
+# App Store の配信地域を「すべての国と地域」にする（配信設定だけ。ビルドも提出もしない）。
+# 審査に通ったのに「App Store の配信から削除されました」と出たときに手動で回す。何度回しても同じ結果。
+name: asc-availability
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asc-availability
+  cancel-in-progress: false
+
+jobs:
+  ensure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Ensure all territories are available
+        run: node scripts/asc-ensure-availability.mjs
+        env:
+          APPSTORE_CONNECT_KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          APPSTORE_CONNECT_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+          APPSTORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8_BASE64 }}
