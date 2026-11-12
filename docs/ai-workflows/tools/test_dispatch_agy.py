@@ -40,6 +40,25 @@ class AgyBuild(unittest.TestCase):
         self.assertIn("pushInsteadOf", " ".join(v for k, v in env.items() if k.startswith("GIT_CONFIG_KEY_")))
 
 
+class AgyQuota(unittest.TestCase):
+    # 2026-11-12 PC 実測の枠切れの文（全モデル同じ残り時間）。分かっている枠切れで毎回 20 秒使わず、すぐ次の頭脳へ回す。
+    OUT = "Individual quota reached for this model. Resets in 76h3m. (429 RESOURCE_EXHAUSTED)"
+
+    def test_parse_reset(self):
+        self.assertEqual(dispatch.agy_reset_seconds(self.OUT), 76 * 3600 + 3 * 60)
+        self.assertEqual(dispatch.agy_reset_seconds("Resets in 45m"), 45 * 60)
+        self.assertIsNone(dispatch.agy_reset_seconds("some other error"))
+
+    def test_remember_then_skip_until_reset(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "q.json")
+            self.assertEqual(dispatch.agy_quota_wait(now=1000, path=path), 0)  # 記録なし＝止めない
+            dispatch.agy_remember_reset(self.OUT, now=1000, path=path)
+            self.assertEqual(dispatch.agy_quota_wait(now=1000 + 3600, path=path), 75 * 3600 + 3 * 60)
+            self.assertEqual(dispatch.agy_quota_wait(now=1000 + 77 * 3600, path=path), 0)  # 戻ったら通す
+
+
 class AgyStatus(unittest.TestCase):
     def test_success(self):
         self.assertEqual(dispatch.agy_status('{"status": "SUCCESS", "result": "ok"}'), "SUCCESS")

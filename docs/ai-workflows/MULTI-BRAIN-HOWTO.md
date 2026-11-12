@@ -255,7 +255,11 @@ ChatGPT の team プラン（**もう払っている定額**・Claude と別の�
 | 外に出せないもの（鍵・顧客データ・未公開の中身） | **ローカルLLM**（`--brain local`、会社PCの Ollama・RTX 4070 Ti） | 無料APIは送った内容が学習に使われるものがある。手元から出さない |
 | 量が多くて急がないもの（夜の一括・大量の下書き） | **ローカルLLM**（ジョブに `brain: local`、夜に job-runner が回す） | 無料・無制限。遅い分は寝ている間に回す |
 | 新しいモデルの試験 | Colab 無料版（[`COLAB-HOWTO.md`](COLAB-HOWTO.md)）・レッツノート | 本番の順番には入れない |
-| 判断込みの重い実装で Codex が2回失敗 | Antigravity（§1c） | Google 側の枠 |
+| 判断込みの重い実装で Codex が2回失敗 | Antigravity（§1c、`--brain agy`） | Google 側の枠（Claude の週枠を使わない作り） |
+
+- ★Antigravity の枠（2026-11-12 PC 実測、agy 1.5.1）: Opus・Argon・Flash・GPT-OSS がどれも同じ「Resets in 76h」で 429 ＝ **全モデル共通の1つの枠**に見える（推測）。使い切ると3日ほど戻らない。dispatch は 429 の残り時間を `%LOCALAPPDATA%\llm-proxy\runs\agy-quota.json` に覚え、戻るまで agy を数秒で飛ばす。
+  使えるモデル slug: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-*`・`gemini-4-argon-*`・`gemini-3.8-flash-*`・`gpt-oss-120b-medium`。
+  自動の順番（`AUTO_CHAIN`）には、枠が戻って commit と push 止めを PC で確かめてから Codex の次に入れる（返事が来た頭脳だけ順番に入れる決まり）
 
 - 2台目PC（レッツノート）で dispatch を回すときは、環境変数 `DISPATCH_OLLAMA_URL=http://<会社PCの Tailscale 名>:11434` で会社PCの GPU を借りる（レッツノート内蔵GPUの Qwen3-8B は 8.4tok/s と遅い）。
 - 無料APIの枠を増やすための複数アカウントは規約違反なので使わない。
