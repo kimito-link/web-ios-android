@@ -24,7 +24,7 @@
 > 会議のモデル名提案は幻覚が混じる（実例: `llama-3.3-70b-instant` は実在しない）。**採用前に必ず `/models` か実呼び出しで実在確認**すること。
 > weight は小さいほど先に選ばれる（1=主力、3=予備、4=最後の砦）。
 
-**クラウド（17体・2026-11-11 時点）**
+**クラウド（18体・2026-11-12 時点）**
 
 | メンバー | 役割 | weight | 備考 |
 |---|---|---|---|
@@ -43,7 +43,8 @@
 | nvidia/diffusiongemma-26b | 汎用 | 3 | liveProbe。`google/diffusiongemma-26b-a4b-it`（Google の拡散型・26B/4B有効）。2026-11-11 追加（本番条件の実測で3/3 OK・約7秒・推論オフ指定は不要）。nemotron 系と系譜の違う汎用役。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | openrouter/nemotron-3-ultra-550b | 統括 | 3 | 無料枠で429が出やすい予備 |
 | mistral/codestral | 実装レビュー | 3 | |
-| gemini-2.5-flash | 汎用 | 1 | ★2026-12-01 から Google が gemini-3.5-flash-lite へ自動転送する予定（[公式](https://aistudio.google.com/docs/deprecations)）。統合の2番手でもあるので、12/1 より前に後継へ入れ替える |
+| gemini-2.5-flash | 汎用 | 1 | ★2026-12-01 から Google が gemini-3.5-flash-lite へ自動転送する予定（[公式](https://aistudio.google.com/docs/deprecations)）。統合の2番手でもある。受け皿として gemini-3.5-flash-lite を統合3番手に入れた（11/12）。12/1 以降この枠をどうするかは実会議の統合を見て決める |
+| gemini-3.5-flash-lite | 汎用 | 3 | 2026-11-12 追加。12/1 から gemini-2.5-flash の転送先になるモデル。11/12 実測で普段3/3（2.7秒）・統合2/2合格（4秒前後）。統合役の3番手・分類器の2番目にも入れた。字数は 2.5-flash の約6割 |
 | gemini-3.8-flash | 汎用 | 3 | 2026-11-11 に 3.7-flash から入れ替え（Google 公式で 3.7 は 3.8 へ自動転送されていた）。混む時間帯は100秒以上かかることがある |
 
 **2026-11-03 に試して見送った新顔**（`tsuioku-no-kirameki.com/scripts/council-trial.mjs` で本番条件の実測。詳細は `council-lineup.mjs` のコメント）: Gemini 4 Argon・3.1 Pro（無料枠では呼べない）、gemini-3.8-flash（4回とも混雑503。空いたら 3.7-flash と入れ替え候補）、Mistral Large 4（本文空・タイムアウト）、Kimi K2.6/K2.7・GLM 5.3・MiniMax M3.1・Step 5（推論で上限を使い切り空）、cloudflare/glm-5.2（推論オフなら合格だが、無料で呼べているか未確認のため保留）。
