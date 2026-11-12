@@ -183,6 +183,41 @@ def agy_pool_exhausted(out, model):
     return "RESOURCE_EXHAUSTED" in out and not (model or "").startswith("gemini-")  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
 
 
+AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")
+
+
+def agy_reset_seconds(out):
+    """Seconds until the Antigravity quota comes back, from its 429 text ("... Resets in 76h3m"), or None.
+    2026-11-12 PC: every model (Opus/Argon/Flash/GPT-OSS) answered the same remaining time = one shared pool."""
+    import re
+    m = re.search(r"Resets in (?:(\d+)h)?(?:(\d+)m)?", out)
+    if not m or not (m.group(1) or m.group(2)):
+        return None
+    return int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60
+
+
+def agy_remember_reset(out, now=None, path=None):
+    sec = agy_reset_seconds(out)
+    if sec is None:
+        return
+    try:
+        with open(path or AGY_QUOTA_FILE, "w", encoding="utf-8") as f:
+            json.dump({"until": (now or time.time()) + sec}, f)
+    except OSError:
+        pass
+
+
+def agy_quota_wait(now=None, path=None):
+    """Seconds left before the shared Antigravity quota resets, or 0. Lets dispatch skip agy in seconds instead of
+    spending ~20s per run on a known 429 (and a second 429 on the Gemini retry)."""
+    try:
+        with open(path or AGY_QUOTA_FILE, encoding="utf-8") as f:
+            until = json.load(f).get("until", 0)
+    except (OSError, ValueError):
+        return 0
+    return max(0, int(until - (now or time.time())))
+
+
 def agy_exe():
     p = os.path.join(os.environ.get("LOCALAPPDATA", ""), "agy", "bin", "agy.exe")
     return p if os.path.exists(p) else "agy"
@@ -328,6 +363,10 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         reason = cf_over_budget()
         if reason:
             return None, reason, "", None
+    if brain == "agy":
+        wait = agy_quota_wait()
+        if wait:
+            return None, "Antigravity quota spent, resets in %dh%02dm" % (wait // 3600, wait % 3600 // 60), "", None
     if brain == "qwen":
         if not ensure_relay():
             return None, "relay down", "", None
@@ -367,6 +406,8 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     failed = rc != 0 or any(m in out for m in FAIL_MARKS)
     if brain == "agy" and (agy_status(out) != AGY_OK_STATUS or agy_denied(out)):
         failed = True
+    if brain == "agy" and failed:
+        agy_remember_reset(out)
     if brain == "codex" and codex_fake_git(cwd):
         failed = True
         out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"

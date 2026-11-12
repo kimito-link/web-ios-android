@@ -91,6 +91,12 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
   - ★IDE・アプリの Turbo プリセットで deny が効くかは未確認（CLI の `--dangerously-skip-permissions` と同じとは限らない）。**効くと思わない**。
   - **だから守りは3つ重ねる**: ①`--dangerously-skip-permissions` を使わない（dispatch でも付けない）②Antigravity に任せる作業ではリモートへ届かないようにする（`dispatch.py` が他の頭脳にしている `pushInsteadOf` で送り先を潰す方式を、agy にも同じく使う）③AGENTS.md（モデルが自分で断る。ただし外すと効かない＝最後の網）。deny は「入れておくが頼らない」。
 - ★その PC の初期設定は `artifactReviewMode=TURBO`・自動実行 `EAGER`・terminal sandbox off で、allow に過去の `git push origin <ブランチ>` が1行残っていた。新しい PC でも同じ形になりやすいので、allow に残った push 系は見直す。
+- ★**Turbo を使わなくても承認が少ない設定（2026-11-12、りんく「ターボにしないと承認もとめられすぎてしんどい」）**: アプリ側 `config.json` に allow 30件・deny 30件、CLI 側 `settings.json` に allow 16件・deny 23件を入れた（Windows は完全一致なので `regex:` 書式）。
+  - 聞かずに通す: git の status/diff/log/show/branch/fetch/add/commit/stash/switch/checkout -b/pull --ff-only、npm・pnpm の run build/lint/test/typecheck と引数なし install/ci、npx vitest run・tsc --noEmit・node --test・python -m unittest/pytest、読むだけのコマンド、github フォルダ内のファイルの読み書き
+  - 止める: git push の全形・reset --hard・clean・branch -D・stash drop/clear、gh 全部、vercel・wrangler・publish・deploy、再帰削除、curl/Invoke-WebRequest の送信系。前に残っていた push の allow 1行は消した
+  - `;` `|` `&` `>` `$` をはさんだつなぎコマンドには allow が効かない（＝聞かれる・止まる）。`npm install <名前>` も聞かれる（知らない部品を勝手に入れさせない）
+  - 入れたもの・元に戻す用・生成スクリプト: PC の `C:\Users\info\.ai-runs\agy-perms\`（`.bak-20261112` を元の場所へ戻せば元どおり）。★PC の Claude Code の安全装置は AI による `~/.gemini` の書き換えを止めるので、最後の写しは本人が1行で行った
+  - Turbo を外して承認が本当に減ったかは未確認（次に使ったときに見る）
 - 「AI Credit Overages」は **Never** のままにする（自動で呼ぶ以上、枠切れで止まる方が安全。`ai-generic-rules/docs/policies/COST_SAFETY_POLICY.md` と同じ考え方）。★設定ファイル（config.json・user_settings.pb）には見当たらず、値は画面か `/usage` で確かめる。
 
 ## 段階2: Claude Code から自動で呼ぶ（dispatch 側は実装済み・PC の allow と実走が残り）
