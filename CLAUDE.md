@@ -81,6 +81,10 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 `node templates/scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
 欄の正本は `templates/scripts/lib/store-fields.json`、ストア側で欄が増えたら `watch-store-fields.mjs` が週1で知らせる。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
 
+★★**AIの修正で、元々動いていた機能を消さない（2026-11-14 本人指示「これがおこらないようにして」「サイト全体で」）**。直すのは頼まれた所だけ（丸ごと書き直さない）。
+頼まれて消すものはコミット/PR に `消してよい: 名前（理由）` を1件ずつ書く。書いていない削除（ボタン・リンク・関数・テスト・ファイル・大きな削除）は
+`guard-unrequested-removal` hook が commit・push 前に**拒否**し、CI `no-regression` が赤にする。消えたら困る機能はリポ直下の `features.json` に書き、直した後は全部通してから報告する。正本: [`docs/ai-rules/11_NO_REGRESSION.md`](docs/ai-rules/11_NO_REGRESSION.md)。
+
 ### 知見の地図（「web-ios-androidを開けば全部の所在が分かる」の実体、2026-09-07追記）
 
 github/配下に散らばっていたルール文書・ノウハウ・手順を、公開可否で仕分けてここに集約している。

@@ -1,0 +1,56 @@
+# ★AIの修正で「元々動いていた機能」が消えたまま main に入るのを止める（2026-11-14 りんく「これがおこらないようにして」）。
+#
+# ■ 何を見るか（正本: docs/ai-rules/11_NO_REGRESSION.md）
+#   1. 頼まれていない削除 … PR の差分から、消えたボタン・リンク・ルート・公開関数・テスト・コードのファイル・
+#      大きな削除を拾う。PR 本文かコミットメッセージに「消してよい: 名前（理由）」が無いものがあれば赤。
+#   2. 機能の一覧 … features.json に書いた「消えたら困る機能」の目印が全部残っているか。
+#   3. 本番の確かめ（週1・手動）… features.json の smoke のページが本番で開けるか。
+#
+# ■ ★判定しないこと
+#   消さずに中身を書き換えて壊したもの（それはテストの仕事）／一覧に書いていない機能。
+
+name: no-regression (頼まれていない削除を止める)
+
+on:
+  pull_request:
+    # ★PR 本文に宣言を書き足したら、もう一度走らせる（edited）。
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  schedule:
+    - cron: '30 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: no-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  no-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # ★分かれ目(merge-base)とコミットメッセージを読むので、浅い clone では測れない。
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 頼まれていない削除が無いか
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node templates/diagnostics/check-unrequested-removal.mjs . --base "origin/${{ github.base_ref }}" --declare-env PR_BODY
+
+      - name: 機能の一覧が全部そろっているか
+        run: node templates/diagnostics/check-features-alive.mjs .
+
+      - name: 本番で各ページが開けるか（週1・手動のときだけ）
+        if: github.event_name != 'pull_request'
+        run: node templates/diagnostics/check-features-alive.mjs . --smoke https://kimito-skill.link

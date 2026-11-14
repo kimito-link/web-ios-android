@@ -500,6 +500,26 @@
         "templates/scripts/check-store-fields.mjs",
         "templates/scripts/watch-store-fields.mjs"
       ]
+    },
+    {
+      "at": "2026-11-14T13:25:55.065Z",
+      "responsibility": "unrequested-removal-guard",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-unrequested-removal.mjs",
+        ".claude/hooks/guard-unrequested-removal.mjs",
+        ".claude/hooks/guard-unrequested-removal.test.mjs"
+      ]
+    },
+    {
+      "at": "2026-11-14T13:25:55.107Z",
+      "responsibility": "features-alive-registry",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-features-alive.mjs"
+      ]
     }
   ]
 }

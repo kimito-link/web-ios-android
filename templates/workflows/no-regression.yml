@@ -1,0 +1,65 @@
+# ★配布用: AIの修正で「元々動いていた機能」が消えたまま main に入るのを止める（2026-11-14）。
+#   正本: https://github.com/kimito-link/web-ios-android/blob/main/docs/ai-rules/11_NO_REGRESSION.md
+#
+# ■ 入れ方（各リポで）
+#   1. このファイルを .github/workflows/no-regression.yml に置く。
+#   2. リポ直下に features.json（消えたら困る機能の一覧）を置く。形は 11_NO_REGRESSION.md §3。
+#   3. 本番の URL を下の SMOKE_URL に書く（無ければ空のまま。本番の確かめだけ飛ばす）。
+#
+# ■ ★検査の中身はコピーしない
+#   判定のスクリプトは web-ios-android（公開リポ）から毎回取ってくる。
+#   各リポに写すと、片方だけ直って割れる（このキットが一番嫌う形）。
+
+name: no-regression (頼まれていない削除を止める)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  schedule:
+    - cron: '30 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: no-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SMOKE_URL: ''   # 例: https://example.com
+
+jobs:
+  no-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 検査の正本を取ってくる（web-ios-android）
+        uses: actions/checkout@v6
+        with:
+          repository: kimito-link/web-ios-android
+          path: .no-regression-kit
+          sparse-checkout: templates/diagnostics
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 頼まれていない削除が無いか
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node .no-regression-kit/templates/diagnostics/check-unrequested-removal.mjs . --base "origin/${{ github.base_ref }}" --declare-env PR_BODY
+
+      - name: 機能の一覧が全部そろっているか
+        run: node .no-regression-kit/templates/diagnostics/check-features-alive.mjs .
+
+      - name: 本番で各ページが開けるか（週1・手動のときだけ）
+        if: github.event_name != 'pull_request' && env.SMOKE_URL != ''
+        run: node .no-regression-kit/templates/diagnostics/check-features-alive.mjs . --smoke "$SMOKE_URL"

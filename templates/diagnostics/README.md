@@ -26,6 +26,8 @@ fail-closedではなく`skip`として扱う（対象外を機械的に確定で
 | `check-secrets-not-tracked.mjs` | `.env`・鍵/証明書ファイル等の秘密情報が誤ってgit追跡されていないか | git管理下のみ |
 | `check-large-tracked-files.mjs` | 巨大ファイル（既定5MB超）の誤追跡 | git管理下のみ。閾値は第2引数で変更可 |
 | `check-deletion-coverage.mjs` | ★退会時の削除漏れ（ユーザー別の保存先が削除に入っているか）。`--mode redis`（キー接頭辞）/ `--mode sql`（drizzle のテーブル）| 要 `--deletion` と `--scan`。意図的に消さないものは `--exclude`（★削除ファイルに理由が書かれていることまで検査する）|
+| `check-unrequested-removal.mjs` | ★**AIの修正で頼まれていない機能が消えていないか**（既定ブランチとの差分から、消えたボタン・リンク・ルート・公開関数・テスト・コードのファイル・大きな削除・features.json の目印を拾う）。コミット/PR に `消してよい: 名前（理由）` があるものだけ通す。正本: [`../../docs/ai-rules/11_NO_REGRESSION.md`](../../docs/ai-rules/11_NO_REGRESSION.md) | git管理下。差分が取れなければ2(測れず)。hook `guard-unrequested-removal.mjs` が commit/push 前に同じ判定を使う |
+| `check-features-alive.mjs` | ★**「今動いている機能の一覧」（`features.json`）が全部そろっているか**。`--smoke <URL>` で本番/プレビューのページも開く | `features.json` が無ければ2(測れず)。一覧に書いていない機能は見ない |
 | `check-external-constants-freshness.mjs` | ★**外の誰かが決めた数字を写したまま古くなっていないか**（API単価・無料枠・審査期限）。値そのものは取りに行かず「最後に人が確かめた日」を見る | 設定 `external-constants.json`。対象に `export const X = "YYYY-MM-DD"` が要る。★実際の値が変わったかは判定しない |
 | `check-selftest-coverage.mjs` | ★検査自身が「サボると赤くなるか」を確かめているか（メタ検査） | このキット自身を見る |
 | `check-symptom-index.mjs` | 症状の言葉から原因の索引を引けるか | `SYMPTOMS.md` 等。無ければskip |
