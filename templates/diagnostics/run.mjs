@@ -201,6 +201,13 @@ const CHECKS = [
   // ★指示書(CLAUDE.md)の「必読の核」が肥大化していないか(2026-10-19追加)。核の宣言(<!-- core:end)が無いリポは対象外。
   //   1300行超の指示書を全文読ませる判定が高コストだった実損から、核を小さく保つ上限(既定450行)を機械で守る。
   { name: 'check-claude-md-budget', path: join(__dirname, 'check-claude-md-budget.mjs') },
+  // ★AIの修正で「頼まれていない機能」が消えていないか(2026-11-14追加・りんく「これがおこらないようにして」「サイト全体で」)。
+  //   実損の形: AI にバグを直させたら、元々動いていたログイン・検索・設定が消えた。
+  //   既定ブランチとの差分から、消えたボタン・リンク・関数・テスト・ファイル・大きな削除を拾い、
+  //   コミット/PR に「消してよい: 名前（理由）」が無いものを赤にする。正本: docs/ai-rules/11_NO_REGRESSION.md。
+  { name: 'check-unrequested-removal', path: join(__dirname, 'check-unrequested-removal.mjs') },
+  // ★「今動いている機能の一覧」(features.json)が全部そろっているか(同日追加)。一覧が無いリポは 2(測れず)。
+  { name: 'check-features-alive', path: join(__dirname, 'check-features-alive.mjs') },
 ];
 
 console.log(`[diagnostics] 対象: ${TARGET_DIR}`);

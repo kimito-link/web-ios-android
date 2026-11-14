@@ -274,6 +274,15 @@
         </tr>
         <!-- 出典: templates/diagnostics/check-human-script-no-wait.mjs:6-11（2026-10-28実損） -->
         <tr>
+          <td><code>check-unrequested-removal</code></td>
+          <td>★<b>AIに「直して」と頼んだら、元々動いていた別の機能（ログイン・検索・設定など）が消えていた</b>ものを赤にします。変更の中から、消えたボタン・リンク・関数・テスト・ファイル・大きな削除を拾い、コミットか PR に「消してよい: 名前（理由）」と書かれていないものを止めます。名前の変更や別のファイルへの移動は消えた扱いにしません。</td>
+        </tr>
+        <!-- 出典: templates/diagnostics/check-unrequested-removal.mjs（2026-11-14 りんく「これがおこらないようにして」） -->
+        <tr>
+          <td><code>check-features-alive</code></td>
+          <td>★<b>「消えたら困る機能の一覧」（features.json）に書いた入口が、修正の後も全部残っているか</b>を確かめます。本番の URL を渡すと、各ページが開けて目印の文字が出ているかまで見ます。一覧が無いリポは「測れなかった」と出します（緑にはしません）。</td>
+        </tr>
+        <tr>
           <td><code>check-timing-instrumented</code></td>
           <td>★<b>「遅い」と言われる経路に、時間を測る計器が無い</b>もの。件数だけの計器では「何msかかったか」が分からず、遅さの報告に答えられません。実損として、計器の無い経路を推測で3回直そうとして3回とも外しました（増えたときだけ赤）。</td>
         </tr>

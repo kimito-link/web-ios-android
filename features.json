@@ -1,0 +1,57 @@
+{
+  "$comment": "今動いていて、消えたら困る機能の一覧（正本: docs/ai-rules/11_NO_REGRESSION.md）。修正のたびに check-features-alive.mjs が全部そろっているか確かめる。新しい機能を作ったらここに足す。消すときは外して PR 本文に「消してよい: 機能名（理由）」を書く。",
+  "features": [
+    {
+      "name": "サイトのトップページ（AIへの最初の指示をコピーする箱）",
+      "anchors": [
+        { "file": "site/index.html", "contains": "id=\"starter-prompt\"" },
+        { "file": "site/index.html", "contains": "id=\"ai-start\"" },
+        { "file": "site/index.html", "contains": "id=\"site-header\"" },
+        { "file": "site/index.html", "contains": "id=\"site-footer\"" },
+        { "file": "site/scripts/ai-box.js", "contains": "function composeCopyText" }
+      ],
+      "smoke": [{ "path": "/", "contains": "AI開発の総合ルール" }]
+    },
+    {
+      "name": "はじめる前の準備（ガイド）",
+      "anchors": [{ "file": "site/guide/index.html", "contains": "はじめる前の準備" }],
+      "smoke": [{ "path": "/guide/", "contains": "はじめる前の準備" }]
+    },
+    {
+      "name": "実証知見まとめ（事故と教訓）",
+      "anchors": [{ "file": "site/learnings/index.html", "contains": "実証知見まとめ" }],
+      "smoke": [{ "path": "/learnings/", "contains": "実証知見まとめ" }]
+    },
+    {
+      "name": "公開でつまずいたら（よくある罠）",
+      "anchors": [{ "file": "site/troubleshooting/index.html", "contains": "公開でつまずいたら" }],
+      "smoke": [{ "path": "/troubleshooting/", "contains": "公開でつまずいたら" }]
+    },
+    {
+      "name": "検査を1本で全部走らせる入口（npm run verify）",
+      "anchors": [
+        { "file": "package.json", "contains": "\"verify\": \"node scripts/verify-all.mjs\"" },
+        { "file": ".github/workflows/verify.yml", "contains": "npm run verify" }
+      ]
+    },
+    {
+      "name": "外向き・取り消せない操作の前で止める hook",
+      "anchors": [
+        { "file": ".claude/settings.json", "contains": "guard-external-actions.mjs" },
+        { "file": ".claude/hooks/guard-external-actions.mjs", "contains": "git push" }
+      ]
+    },
+    {
+      "name": "頼まれていない削除を止める仕組み（この一覧そのものを守る）",
+      "anchors": [
+        { "file": ".claude/settings.json", "contains": "guard-unrequested-removal.mjs" },
+        { "file": ".github/workflows/no-regression.yml", "contains": "check-unrequested-removal.mjs" },
+        { "file": ".github/workflows/no-regression.yml", "contains": "check-features-alive.mjs" }
+      ]
+    },
+    {
+      "name": "サイトの本番反映（npm run deploy:site）",
+      "anchors": [{ "file": "package.json", "contains": "\"deploy:site\":" }]
+    }
+  ]
+}

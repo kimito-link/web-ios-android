@@ -66,6 +66,14 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 ストアに出すときは、必須の欄だけでなく任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も、
 言われなくても素材を作って入れる。空きは `node scripts/check-store-fields.mjs` で出る。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
 
+## 直すときに、元々動いていた機能を消さない（2026-11-14）
+
+直すのは頼まれた所だけ。ファイルを丸ごと書き直さない。頼まれて消すもの（ボタン・リンク・関数・テスト・ファイル）は、
+コミットメッセージか PR 本文に `消してよい: 名前（理由）` を1件ずつ書く。書いていない削除は CI `no-regression` が赤にする
+（Claude Code では hook が commit・push の前に止める）。テストを消す・`.skip` で止めるのも同じ扱い。
+消えたら困る機能はリポ直下の `features.json` に書き、直した後は `node templates/diagnostics/check-features-alive.mjs .` とテストを全部通してから報告する。
+正本: [`docs/ai-rules/11_NO_REGRESSION.md`](docs/ai-rules/11_NO_REGRESSION.md)。
+
 ## PC のアプリを見る・触る（2026-11-01）
 
 ブラウザ以外の PC のアプリ（Windows の設定・常駐ランチャー・インストーラー等）は、人にスクショを頼まず `agent-desktop` で

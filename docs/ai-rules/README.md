@@ -38,6 +38,8 @@ project-root/
    言われなくても素材を作って入れる。空きは `check-store-fields.mjs`、ストア側で欄が増えたら `watch-store-fields.mjs` が知らせる
 9. ★**AI ツールの内蔵ブラウザ・知らないリポ**は `09_AI_TOOL_BROWSER_SAFETY.md`。内蔵ブラウザでローカルの HTML（`file://`）を開かない／
    知らないリポを README の通りに丸投げしない（先に読むだけ）／鍵は使い回さず、漏れたら1本だけすぐ止められる形にする
+10. ★**AI が何かを直すときは** `11_NO_REGRESSION.md`。直すのは頼まれた所だけ／消すならコミット・PR に `消してよい: 名前（理由）`／
+   消えたら困る機能は `features.json` に書いて毎回ぜんぶ確かめる。書いていない削除は hook（commit・push 前）と CI が止める
 
 ## 固定のWebルール
 

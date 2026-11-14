@@ -41,6 +41,12 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 - 状態: 下書きPR（ブランチ claude/project-thread-hjnnu3）。参照切れ・古い数字の修正と、Fable 5.1→5.2 の書き換えまで。
 - 承認の表は 2026-11-10 にりんくのOKで核へ入れた。NEXT_ACTION: PR のマージ（りんくのOK）。核の経緯を外へ移す作業は別PRで分けて行う。
 
+### スレE: AIの修正で他の機能を壊さない仕組み（2026-11-14）
+- 本人指示「これがおこらないようにして」「サイト全体で」（AIにバグを直させたらログイン・検索・設定が消えた、という話を受けて）。
+- 正本 `docs/ai-rules/11_NO_REGRESSION.md`＋CLAUDE.md 冒頭★★。判定 `templates/diagnostics/check-unrequested-removal.mjs`（消えたボタン・リンク・関数・テスト・ファイル・大きな削除を拾い、`消してよい: 名前（理由）` の無いものを赤）と `check-features-alive.mjs`（`features.json` の機能一覧）。
+- 止める場所: hook `guard-unrequested-removal.mjs`（commit・push・PR作成の前に拒否）／CI `no-regression.yml`（PR・週1で本番 smoke）／配布用 `templates/workflows/no-regression.yml`（判定は web-ios-android から毎回取る）。
+- NEXT_ACTION: ①PC とクラウドの `~/.claude/settings.json` へ hook を配線（全リポで効かせる）②各サービスのリポへ `features.json` と workflow を入れる。
+
 ### 据え置き（意図的・順序原則。蒸し返さない）
 - P1 バッチ2(これ以上): 2026-11-10 に「経緯の移設」を実施（核 396 → 320 行・上限 450。規範は核に残し、経緯の原文は `_docs/DESIGN-claude-md-decay-2026-09-24.md`「移設（2026-11-10）」へ）。
 - P8（commit-verification を block 昇格）: P3 台帳に deny 実データ0件＝FP率が出ないため、データが溜まるまで保留。

@@ -40,6 +40,8 @@ node "C:/Users/info/OneDrive/デスクトップ/Resilio/github/web-ios-android/t
 | `check-inline-script-syntax` | ★**HTMLの中に直接書いたJSが壊れている**もの（lintが見ておらず、壊れると画面が真っ白になる） |
 | `check-extension-verify-wired` | ★**Chrome拡張なのに「本物のブラウザに読み込んで全画面を自動で確かめる」仕組みが入っていない**もの（AIが自分で確かめず人に再読み込みを頼む原因） |
 | `check-human-script-no-wait` | ★**人に渡す黒い画面が「Enter を押して」で止まる**もの、日本語が入っていてダブルクリックで即閉じる `.cmd`（AIから中身が見えず、人に画面を読ませる原因） |
+| `check-unrequested-removal` | ★**AIの修正で、頼まれていない機能（ボタン・リンク・関数・テスト・ファイル）が消えた**もの。コミット/PR に `消してよい: 名前（理由）` が書かれた削除だけ通す |
+| `check-features-alive` | ★**「消えたら困る機能の一覧」（`features.json`）の入口が修正の後も全部残っているか**。`--smoke <URL>` で本番のページも開く |
 | `check-timing-instrumented` | **「遅い」と言われる経路に時間を測る計器が無い**もの |
 | `check-heartbeat-present` | **製品が「異常なし」を自分で名乗れない**もの（沈黙と正常を区別できない） |
 | `check-instruments-reachable` | 計器が**あるのに動かない**もの（try に飲まれて1件も記録されない等） |
