@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse ガード（拒否・fail-open）: 人に「コマンドを貼って実行して」「画面を送って」と頼む文を、
 // 理由の一行なしでは送らせない。正本: docs/ai-rules/08_NO_HUMAN_HANDS.md §2・§6。
+// もう1つ（2026-11-16）: 人に確認・許可・選択を求める文と request_decision／AskUserQuestion を、「確認が要る理由: お金／消す／戻せない」なしでは通さない。
 // もう1つ（2026-11-11）: 人への返信に .md/.txt を添付するのを「ファイルにする理由:」なしでは通さない（同 §3.6）。
 //
 // なぜ要るか（2026-11-10 りんく「極力人間の手を使わないルールが守られていない気がする」）:
@@ -34,6 +35,20 @@ const ASK_RE = /(貼って|貼り付けて|コピペして|打って|入力し�
 // 画面を送ってもらう依頼（これ単独で依頼とみなす）
 const SCREEN_RE = /(スクショ|スクリーンショット|画面|黒い画面の(中身|最後|下))を?(撮って|とって|送って|貼って|見せて|教えて)/;
 export const REASON_RE = /人に頼む理由[:：]\s*\S/;
+
+// 人に確認・許可・選択を求める文（2026-11-16 りんく「全体設定として人間に確認をもとめさせない」、CLAUDE.md 核の表）。
+// 止まってよいのは お金がかかる・消す・戻せない 操作だけ。その一行「確認が要る理由: …」があれば通す。
+const CONFIRM_RE = /(と(一言|ひとこと)?(書いて|言って|返信して|返事して|伝えて)|(OK|ＯＫ|許可|承認|了承|ゴーサイン|返事|返答|ご判断|ご確認)を?(ください|下さい|お願い|いただけ|もらえ|ほしい)|(よろしい|いい|良い|大丈夫)(ですか|でしょうか)|(進めて|マージして|続けて|やって)(も)?(よい|いい|良い)(ですか|でしょうか)|どちら(に|が)(しますか|よいですか|いいですか)|どれ(に|が)(しますか|よいですか|いいですか)|ご指示(を|ください)|待っています|お待ちしています)/;
+export const CONFIRM_REASON_RE = /確認が要る理由[:：]\s*\S*(お金|課金|費用|有料|契約|消す|削除|停止|戻せない|取り消せない|secret|シークレット|審査|提出|外への送信|投稿|自動の安全確認)/i;
+const ALWAYS_CONFIRM_TOOLS = new Set(['AskUserQuestion', 'mcp__hearthbot__request_decision']);
+
+/** 人に確認を求める文を見つけたら、その文を返す。選択肢カード・質問ツールは文が無くても確認とみなす。 */
+export function findConfirmationAsk(toolName, texts) {
+  if (ALWAYS_CONFIRM_TOOLS.has(toolName)) return '(' + toolName + ')';
+  const body = stripQuotes(texts.join('\n').replace(/```[\s\S]*?```/g, ' ').replace(/~~[\s\S]*?~~/g, ' '));
+  for (const s of body.split(/[。\n？?]/)) if (CONFIRM_RE.test(s)) return s.trim();
+  return null;
+}
 
 // 人に渡す返信へテキストのファイルを添付するとき（docs/ai-rules/08_NO_HUMAN_HANDS.md §3.6、2026-11-11）。
 // 貼る文・手順・設定値はチャットのコードブロックで渡す。ファイルにする理由の一行があれば通す。
@@ -100,6 +115,25 @@ function main() {
       },
     }));
     process.exit(0);
+  }
+
+  if (!texts.some((t) => CONFIRM_REASON_RE.test(t))) {
+    const ask = findConfirmationAsk(input.tool_name, texts);
+    if (ask) {
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          permissionDecision: 'deny',
+          permissionDecisionReason:
+            '人に確認・許可・選択を求めているので止めました（該当: 「' + ask.slice(0, 80) + '」）。' +
+            'CLAUDE.md 核「確認なしでやってよいこと」表とプロジェクト指示7番（2026-11-16 りんく「人間に確認をもとめさせない」）: ' +
+            '迷ったら判断の軸で自分で決めて実行し、決めた中身と理由をあとで報告する。マージはチェックが緑なら聞かずに行う。' +
+            '自動の安全確認（auto mode）が止める所は templates/auto-mode/README.md の手順で本人の言葉を先に入れておく。' +
+            '聞いてよいのは お金がかかる・消す・戻せない 操作だけ。その場合は本文に「確認が要る理由: <お金／消す／戻せない のどれか・何を>」を一行書いて送り直す。',
+        },
+      }));
+      process.exit(0);
+    }
   }
 
   if (texts.some((t) => REASON_RE.test(t))) process.exit(0);
