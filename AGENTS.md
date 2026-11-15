@@ -35,7 +35,8 @@
 
 worktree は `github\_worktrees\<リポ名>\<作業名>` に作る。`github` 直下に `<リポ>-wt-*` や `_wt-*` を作らない。
 例: `git -C line-bot worktree add ../_worktrees/line-bot/consult -b codex/consult origin/main`。
-動かすときは `git worktree move` を使う（`mv` だと git の記録が壊れる）。正本: `CLAUDE.md`「作業分担の原則」。
+動かすときは `git worktree move` を使う（`mv` だと git の記録が壊れる）。
+一時ファイル・ログ・パッチ・調査用フォルダは `github\_scratch\`、退避コピーは `github\_archive\` に置く（`github` 直下に置かない）。正本: `CLAUDE.md`「作業分担の原則」。
 
 ## コミットの名前とメール（2026-11-05）
 

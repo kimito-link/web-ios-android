@@ -319,7 +319,8 @@ canonical HEADが意図したshaになっている・remoteと一致している
 ★★**git worktree は `github\_worktrees\<リポ名>\<作業名>` に作る**（2026-11-16 りんく「github直下にたくさんできたのをまとめたい」）。
 `github` 直下に `<リポ>-wt-*`・`_wt-*` を作らない（直下が190近く並び、本物のリポが探せなくなった）。例:
 `git -C line-bot worktree add ../_worktrees/line-bot/consult -b claude/consult origin/main`。既存のものを寄せるときは
-`git worktree move`（`mv` は使わない）で、未commitの変更があるもの・使用中のもの（移動が Permission denied になる）は動かさない。
+`git worktree move`（`mv` は使わない。未commitの変更ごと移る）で、使用中のもの（移動が Permission denied になる）だけ残す。
+一時ファイル・ログ・パッチ・調査用フォルダ（`_tmp_*` など）も `github` 直下に置かず `github\_scratch\` に、退避コピーは `github\_archive\` に置く。
 
 ## 判断の軸
 
