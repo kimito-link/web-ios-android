@@ -29,8 +29,16 @@ claude auto-mode config                       # 入ったか確かめる（kimit
 
 - 何度走らせても同じ（marker `[kimito-link standing rule]` の古い文は入れ替える）。
 - 置き場所: 会社PC（besttrust）・レッツノート（besttrust-note）・クラウドの「デフォルト」環境（setup script が main から取って走らせる）。
-- ★初回だけ、auto mode が「設定の自己変更（Self-Modification）」として止めることがある。そのときだけ、りんくの言葉
-  「~/.claude/settings.json の autoMode に kimito-link の常設ルールを入れてよい」が一度要る（以後は不要）。
+- ★**PC では AI が自分で入れられない**（2026-11-16 実測）。AI が install.mjs を走らせると、チャットでりんくが操作と場所を名指しして
+  承認した後でも、auto mode が「Undermining Oversight（監督を弱める操作）」で必ず拒否した（会社PC・クラウドとも）。
+  だから PC では、りんくが PowerShell で次の1行を1回だけ実行する（会社PC・レッツノートは 11/16 実行済み）。AI は承認を集め直さず、この1行を渡す。
+
+  ```
+  $d="$env:USERPROFILE\.claude\auto-mode"; mkdir -Force $d | Out-Null; $b="https://raw.githubusercontent.com/kimito-link/web-ios-android/main/templates/auto-mode"; curl.exe -fsSL "$b/install.mjs" -o "$d\install.mjs"; curl.exe -fsSL "$b/rules.json" -o "$d\rules.json"; node "$d\install.mjs"
+  ```
+
+  入ったかの確認（読むだけ）は AI が Remote Control で `claude auto-mode config` を読めば通る。
+- クラウドは「デフォルト」環境の setup script が新しいコンテナで install.mjs を走らせる（人の操作なし）。
 
 ## 守らせる側
 
