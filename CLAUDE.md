@@ -316,6 +316,11 @@ canonical HEADが意図したshaになっている・remoteと一致している
 
 迷ったら直列。並列は「止める場所が空いているとき」だけ使う。
 
+★★**git worktree は `github\_worktrees\<リポ名>\<作業名>` に作る**（2026-11-16 りんく「github直下にたくさんできたのをまとめたい」）。
+`github` 直下に `<リポ>-wt-*`・`_wt-*` を作らない（直下が190近く並び、本物のリポが探せなくなった）。例:
+`git -C line-bot worktree add ../_worktrees/line-bot/consult -b claude/consult origin/main`。既存のものを寄せるときは
+`git worktree move`（`mv` は使わない）で、未commitの変更があるもの・使用中のもの（移動が Permission denied になる）は動かさない。
+
 ## 判断の軸
 
 詳細・実損エピソードは [`docs/claude-md/09-ai-guidelines.md`](docs/claude-md/09-ai-guidelines.md) 参照。判断が割れたらこの順で決めて実行する:

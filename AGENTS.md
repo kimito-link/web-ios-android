@@ -31,6 +31,12 @@
 **作業ブランチで commit したところで止める。** push・PR・マージ・デプロイは Claude Code が
 差分を実際に動かして検品してから行う（[`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)）。
 
+## 作業用の別フォルダ（git worktree）の置き場所（2026-11-16）
+
+worktree は `github\_worktrees\<リポ名>\<作業名>` に作る。`github` 直下に `<リポ>-wt-*` や `_wt-*` を作らない。
+例: `git -C line-bot worktree add ../_worktrees/line-bot/consult -b codex/consult origin/main`。
+動かすときは `git worktree move` を使う（`mv` だと git の記録が壊れる）。正本: `CLAUDE.md`「作業分担の原則」。
+
 ## コミットの名前とメール（2026-11-05）
 
 commit する前に、作者がりんくの GitHub アカウントに結びつくメールになっているか確かめる。無ければこう設定する:
