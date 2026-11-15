@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { findHumanHandoff, findTextFileAttachments } from "./check-human-handoff.mjs";
+import { findHumanHandoff, findTextFileAttachments, findConfirmationAsk } from "./check-human-handoff.mjs";
 
 const HOOK = fileURLToPath(new URL("./check-human-handoff.mjs", import.meta.url));
 const run = (input, env = {}) =>
@@ -56,5 +56,29 @@ describe("テキストのファイルの添付（08 §3.6、2026-11-11）", () =
   });
   it("画像・Artifact・リンクの添付は止めない", () => {
     expect(decision(run(attach("画面です。", [{ kind: "file", ref: "/mnt/project-files/x/shot.png" }, { kind: "frame", ref: "https://claude.ai/artifact/abc" }])))).toBeUndefined();
+  });
+});
+
+describe("人に確認を求めない（2026-11-16 りんく「全体設定として人間に確認をもとめさせない」）", () => {
+  it("2026-11-15 の実例（マージの一言をお願い）を拾う", () => {
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["りんくさんへのお願い: このスレッドに「tsuioku の #650 をマージして」と書いてください"])).not.toBeNull();
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["このまま進めてよいですか？"])).not.toBeNull();
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["A案とB案、どちらにしますか"])).not.toBeNull();
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["OKをください。"])).not.toBeNull();
+  });
+  it("ふつうの報告・取り消し線・引用は拾わない", () => {
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["2本ともマージしました。チェックは全部緑です。"])).toBeNull();
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["~~このスレッドに一言と書いてください~~ 不要になりました"])).toBeNull();
+    expect(findConfirmationAsk("mcp__hearthbot__post_message", ["「よろしいですか」と聞くのをやめました。"])).toBeNull();
+  });
+  it("選択肢カード・質問ツールは理由なしなら deny、お金／消す／戻せない の理由つきなら通す", () => {
+    const card = (reason) => run({ tool_name: "mcp__hearthbot__request_decision", tool_input: { question: "有料プランにしますか", reason, options: [{ label: "はい", consequence: "月$20" }, { label: "いいえ", consequence: "無料のまま" }] } });
+    expect(decision(card("おすすめ"))).toBe("deny");
+    expect(decision(card("確認が要る理由: お金がかかる（月$20の有料プラン）"))).toBeUndefined();
+    expect(decision(run({ tool_name: "AskUserQuestion", tool_input: { questions: [{ question: "どの色？" }] } }))).toBe("deny");
+  });
+  it("確認が要る理由が お金／消す／戻せない 以外なら通さない", () => {
+    expect(decision(run(post("進めてよいですか。確認が要る理由: 念のため")))).toBe("deny");
+    expect(decision(run(post("本番DBを消してよいですか。確認が要る理由: 消す操作（本番DBの削除）")))).toBeUndefined();
   });
 });

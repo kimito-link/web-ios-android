@@ -1,0 +1,11 @@
+{
+  "_comment": "りんくの「人間に確認を求めない」(2026-11-16)を、Claude Code の自動の安全確認(auto mode)へあらかじめ渡す本人の言葉。install.mjs が ~/.claude/settings.json の autoMode に足す。既定の決まり($defaults)は消さない。正本 README.md。",
+  "marker": "[kimito-link standing rule]",
+  "environment": [
+    "[kimito-link standing rule] Source control: every repository under github.com/kimito-link is owned by the user (GitHub login kimito-link) and is a trusted repo, not only the repository the session started in."
+  ],
+  "allow": [
+    "[kimito-link standing rule] Merging PRs: the user (GitHub login kimito-link) gave a standing written instruction (2026-11-12 and 2026-11-16, recorded in the project instructions and in kimito-link/web-ios-android CLAUDE.md) that merging a pull request in a github.com/kimito-link repository needs no fresh human message or human review once every check on that PR has completed and none failed. This is the human approval that Merge Without Review asks for, including PRs that change council member rosters, docs, hooks or config. It does NOT cover merging with failing or still-running checks, --admin or force merges, or bypassing branch protection.",
+    "[kimito-link standing rule] Routine follow-through: in github.com/kimito-link repositories, pushing the agent's work branches, opening, updating and marking ready its pull requests, and the free automatic deploy that a merge to the default branch triggers (Vercel or Cloudflare Pages auto deploy, or `npm run deploy:site` for kimito-skill.link) are pre-authorized by the same standing instruction. The user's own exceptions stay blocked as usual: anything that costs money, deletes data, repositories or services, sets or rotates secrets, submits to an app store, or posts outside the project."
+  ]
+}
