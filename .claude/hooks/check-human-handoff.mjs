@@ -3,6 +3,7 @@
 // 理由の一行なしでは送らせない。正本: docs/ai-rules/08_NO_HUMAN_HANDS.md §2・§6。
 // もう1つ（2026-11-16）: 人に確認・許可・選択を求める文と request_decision／AskUserQuestion を、「確認が要る理由: お金／消す／戻せない」なしでは通さない。
 // もう1つ（2026-11-11）: 人への返信に .md/.txt を添付するのを「ファイルにする理由:」なしでは通さない（同 §3.6）。
+// もう1つ（2026-11-16）: 人に渡すコマンドのコードブロックに「どこで（フォルダ・PC・シェル）」が無ければ通さない（同 §3.7）。
 //
 // なぜ要るか（2026-11-10 りんく「極力人間の手を使わないルールが守られていない気がする」）:
 //   ルール本文（08・CLAUDE.md 核の ★★★）は 10/28 からあるのに、プロジェクトのスレッドが
@@ -61,6 +62,31 @@ export function findTextFileAttachments(toolInput) {
   return outs
     .filter((o) => o && o.kind === 'file' && typeof o.ref === 'string' && TEXT_FILE_RE.test(o.ref))
     .map((o) => o.ref);
+}
+
+// 人に渡すコマンドには、どこで走らせるかを必ず入れる（docs/ai-rules/08_NO_HUMAN_HANDS.md §3.7、2026-11-16 りんく
+// 「コマンド出すときは、ディレクトリの位置も必ずいれるようにルール化し方がいいかも」）。
+// コードブロックの中身がコマンドらしく見えるとき、①ブロックの中に cd / Set-Location / pushd / git -C で場所が入っているか、
+// 本文に「場所はどこでもよい」がある ②本文にPC（会社PC／レッツノート／どちらのPCでも）がある ③シェル（PowerShell 等）が本文か
+// ブロックの言語名にある、の3つを見る。
+const COMMAND_LINE_RE = /^\s*(?:[$>]\s*|PS [^>]*>\s*)?(git|npm|npx|pnpm|yarn|node|wrangler|vercel|gh|python3?|py|pip|winget|choco|cd|Set-Location|pushd|powershell|pwsh|claude|ollama|agy|tailscale|curl|docker|code|start|explorer|\.[\\/][\w.-]+)(\s|$)/im;
+const LOCATION_IN_BLOCK_RE = /^\s*(?:[$>]\s*)?(cd|Set-Location|sl|pushd)\s+\S|\bgit\s+-C\s+\S|--prefix[ =]\S|--cwd[ =]\S/im;
+const LOCATION_ANY_RE = /(場所|フォルダ|ディレクトリ)(は|:|：)?\s*(どこでも|どのフォルダでも|問わない|関係ない)|どの(フォルダ|ディレクトリ|場所)で(実行して|走らせて|開いて)?も(よい|いい|同じ|大丈夫|動く)/;
+const PC_RE = /(会社の?PC|besttrust|レッツノート|let'?s ?note|2台目のPC|どちらのPCでも|どのPCでも|両方のPC)/i;
+const SHELL_RE = /(PowerShell|pwsh|Git ?Bash|コマンドプロンプト|cmd(\.exe)?|ターミナル|WSL|bash|zsh)/i;
+
+/** 人に渡すコマンドのコードブロックで、どこで走らせるかが欠けていれば欠けているものの一覧を返す。無ければ null。 */
+export function findCommandWithoutPlace(texts) {
+  const all = texts.join('\n');
+  const blocks = [...all.matchAll(/```([\w-]*)[^\S\n]*\n?([\s\S]*?)```/g)];
+  const cmdBlocks = blocks.filter((m) => COMMAND_LINE_RE.test(m[2]));
+  if (cmdBlocks.length === 0) return null;
+  const outside = all.replace(/```[\s\S]*?```/g, ' ');
+  const missing = [];
+  if (!LOCATION_ANY_RE.test(outside) && !cmdBlocks.every((m) => LOCATION_IN_BLOCK_RE.test(m[2]))) missing.push('フォルダ（cd "<場所>"）');
+  if (!PC_RE.test(outside)) missing.push('PC（会社PC／レッツノート）');
+  if (!SHELL_RE.test(outside) && !cmdBlocks.every((m) => SHELL_RE.test(m[1]))) missing.push('シェル（PowerShell 等）');
+  return missing.length ? missing : null;
 }
 
 /** tool_input の中の文字列を全部集める（ツールごとの形の違いを気にしない）。 */
@@ -134,6 +160,22 @@ function main() {
       }));
       process.exit(0);
     }
+  }
+
+  const placeMissing = findCommandWithoutPlace(texts);
+  if (placeMissing && (texts.some((t) => REASON_RE.test(t)) || findHumanHandoff(texts))) {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason:
+          '人に渡すコマンドに「どこで走らせるか」が欠けているので止めました（欠けているもの: ' + placeMissing.join('・') + '）。' +
+          'docs/ai-rules/08_NO_HUMAN_HANDS.md §3.7（2026-11-16 りんく「コマンド出すときは、ディレクトリの位置も必ずいれる」）: ' +
+          'コードブロックの1行目を cd "C:\\Users\\info\\OneDrive\\デスクトップ\\Resilio\\github\\<リポ>" にし、' +
+          '本文に「会社PC（またはレッツノート）の PowerShell で」と一言添える。場所に関係ないコマンドなら本文に「場所はどこでもよい」と書く。',
+      },
+    }));
+    process.exit(0);
   }
 
   if (texts.some((t) => REASON_RE.test(t))) process.exit(0);

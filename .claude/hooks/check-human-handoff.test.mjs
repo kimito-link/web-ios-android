@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { findHumanHandoff, findTextFileAttachments, findConfirmationAsk } from "./check-human-handoff.mjs";
+import { findHumanHandoff, findTextFileAttachments, findConfirmationAsk, findCommandWithoutPlace } from "./check-human-handoff.mjs";
 
 const HOOK = fileURLToPath(new URL("./check-human-handoff.mjs", import.meta.url));
 const run = (input, env = {}) =>
@@ -80,5 +80,30 @@ describe("人に確認を求めない（2026-11-16 りんく「全体設定と�
   it("確認が要る理由が お金／消す／戻せない 以外なら通さない", () => {
     expect(decision(run(post("進めてよいですか。確認が要る理由: 念のため")))).toBe("deny");
     expect(decision(run(post("本番DBを消してよいですか。確認が要る理由: 消す操作（本番DBの削除）")))).toBeUndefined();
+  });
+});
+
+describe("人に渡すコマンドには場所を入れる（08 §3.7、2026-11-16 りんく「ディレクトリの位置も必ずいれる」）", () => {
+  const F = "```";
+  const good = `会社PCの PowerShell で、下を貼ってください。人に頼む理由: 本人のログイン画面での承認が要るため\n${F}powershell\ncd "C:\\Users\\info\\OneDrive\\デスクトップ\\Resilio\\github\\web-ios-android"\nnpm run deploy:site\n${F}`;
+  it("場所・PC・シェルがそろっていれば null", () => {
+    expect(findCommandWithoutPlace([good])).toBeNull();
+    expect(findCommandWithoutPlace([`どちらのPCでも、PowerShell で。場所はどこでもよいです。\n${F}\nwinget upgrade --all\n${F}`])).toBeNull();
+    expect(findCommandWithoutPlace([`会社PCで\n${F}powershell\ngit -C "C:\\x\\tsuioku" pull\n${F}`])).toBeNull();
+  });
+  it("欠けているものを返す", () => {
+    expect(findCommandWithoutPlace([`${F}\nnpm run deploy:site\n${F}`])).toEqual(["フォルダ（cd \"<場所>\"）", "PC（会社PC／レッツノート）", "シェル（PowerShell 等）"]);
+    expect(findCommandWithoutPlace([`会社PCの PowerShell で\n${F}\nnpm run deploy:site\n${F}`])).toEqual(["フォルダ（cd \"<場所>\"）"]);
+  });
+  it("コマンドでないコードブロック（Chrome の Claude に貼る文など）は見ない", () => {
+    expect(findCommandWithoutPlace([`${F}\nApp Store Connect の「App のプライバシー」を開いて…\n${F}`])).toBeNull();
+    expect(findCommandWithoutPlace(["コードブロックなし"])).toBeNull();
+  });
+  it("hook: 人に頼むコマンドで場所が無ければ deny、そろえば通す", () => {
+    expect(decision(run(post(`PowerShell で実行してください。人に頼む理由: 本人のログインが要るため\n${F}\nnpm run deploy:site\n${F}`)))).toBe("deny");
+    expect(decision(run(post(good)))).toBeUndefined();
+  });
+  it("hook: 自分で走らせた報告のコードブロックは止めない", () => {
+    expect(decision(run(post(`本番に反映しました。\n${F}\nnpm run deploy:site\n${F}`)))).toBeUndefined();
   });
 });
