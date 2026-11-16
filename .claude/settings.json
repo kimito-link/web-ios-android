@@ -102,6 +102,17 @@
             "statusMessage": "内蔵ブラウザでローカルHTMLを開かないかチェック中..."
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit|Read|Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-fable-manual-work.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Fable が手作業をしていないか確認中..."
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

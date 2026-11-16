@@ -127,6 +127,35 @@ Claude Code の公式の別名 `opusplan`（プランモードの間だけ上位
 
 ---
 
+## Fable は頭脳労働専用（2026-11-16 りんく指定「全体設定にいれて」）
+
+Fable 5.2 の週枠は Claude 全体とは別の上限で限られている（11/16 時点で上限 50% のうち 36% を使用）。
+だから Fable に頼むのは**計画・設計・判断の文章を出すこと**だけにする。
+
+| Fable がやる（頭脳労働） | Fable がやらない（手作業）→ 回す先 |
+|---|---|
+| お題の整理・方針の比較・計画（結論／手順／捨てた案／完了判定） | ファイルを何十個も読み回す → Opus 5.5 のサブエージェント（Explore など） |
+| 設計書・`handoff.md`・プランファイルなど文章の下書き | コマンドの繰り返し・テストの走らせ直し → Opus 5.5 |
+| 渡された要約・差分を見ての判断 | コード・設定ファイルを書く → `--brain codex`（先頭）か Opus 5.5 |
+
+- サブエージェントに回すときは、**Opus 5.5 を指す名前を必ず渡す**。指定しないと親の Fable を引き継ぐ。
+  opusplan 設定の中では `model: "sonnet"` が Opus 5.5（`"opus"` は Fable になる）。opusplan でないセッションでは `"opus"`。
+- 読む材料は「先に Opus が集めて要約 → Fable はその要約を読む」の順にする。Fable が自分で Grep を回すより枠の減りが小さい。
+
+### 気づける仕組み: `guard-fable-manual-work` hook
+
+[`.claude/hooks/guard-fable-manual-work.mjs`](../../.claude/hooks/guard-fable-manual-work.mjs)（PreToolUse、Edit・Write・Read・Grep・Glob・Bash）。
+
+- 会話ログの最後の assistant 行のモデル名で「今 Fable か」を見る。サブエージェントは子の会話ログ
+  （`<会話ログ>/subagents/agent-<id>.jsonl`）を見るので、Fable が Opus の子に回した作業は止めない。
+- Fable が `.md`・`.txt`・プランファイル以外（コード・設定）を書こうとしたら**拒否**し、回し方を返す。
+- 人の最後の発言から数えて、Fable の読む・走らせる作業が **8回目で注意、16回目で拒否**。`dispatch.py`・`codex` など別の頭脳へ投げるコマンドは数えない。
+- 止めたいとき: `FABLE_GUARD_OFF=1`。Opus が使えず Fable しか無い日は `FABLE_MANUAL_WORK_OK=1`。
+- 効かない所: `claude -p` は会話ログをターンの終わりにまとめて書くので素通しになる（2026-11-16 実測。ふつうのセッションでは tool_use が hook より先に載る）。
+- 配線: このリポは `.claude/settings.json`。全体設定は PC の `~/.claude/settings.json`（`web-ios-android-relay.mjs guard-fable-manual-work.mjs`）と、クラウドの「デフォルト」環境の setup script（main から取って `~/.claude/settings.json` へ足す）。
+
+---
+
 ## 汎用プロンプト（お題を差し替えて使う）
 
 ```

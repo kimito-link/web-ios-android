@@ -167,6 +167,8 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
    ★Claude どうしの使い分けは「**同じ会話で、まず Fable 5.2 に計画を文章で出させ、計画ができたら Opus 5.5 に切り替えて作業する**」が既定
    （2026-11-11 りんく「全体採用に」）。`.claude/settings.json` の `opusplan` 設定で、プランモード中は Fable・抜けたら Opus に自動で切り替わる。Fable の週枠は計画だけに使い、小さな直しはプランモードに入らない。手順と注意: [`FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
+   ★★**Fable 5.2 は頭脳労働専用**（2026-11-16 りんく指定）。Fable が出すのは計画・設計・判断の文章だけ。ファイルを読み回す・コマンドを繰り返す・コードを書く手作業は Opus 5.5 か Codex に回す（調べ物は Opus のサブエージェント、実装は `--brain codex`）。
+   `guard-fable-manual-work` hook が、Fable のコード・設定の編集を**拒否**し、1ターンの読む・走らせる作業が8回で注意・16回で拒否する（正本: 同 HOWTO「Fable は頭脳労働専用」）。
 
 ## 実装着手前の非交渉ルール（NON-NEGOTIABLE、2026-09-02追記）
 
