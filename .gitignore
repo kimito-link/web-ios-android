@@ -75,3 +75,5 @@ site/hub/matrix.json
 _loop/
 # hook の結末台帳(record-outcome.mjs)。_ 始まりだと Chrome が拡張を読み込まないので . 始まりに置く
 .loop/
+
+site/dist/
