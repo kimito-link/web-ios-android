@@ -24,6 +24,10 @@ LLM生成段は**Groq→Gemini→Cloudflare Workers AIの3プロバイダをフ�
 | `worker/src/services/incoming-image.ts` / `incoming-media.ts` | LINE Content APIから受信メディアを取得しR2に保存 | 無改変 |
 | `worker/src/routes/images.ts` | 保存済みメディアの配信ルート（`GET /images/:key`） | 無改変 |
 | `migrations/001_init.sql` | 最小スキーマ（friends/messages_log/llm_response_cache/kb_articles/groq_usage_daily） | 無改変 |
+| `migrations/002_e2e.sql` | LINEシミュレーションの記録 `e2e_capture`・置き場所 `e2e_files` | 無改変 |
+| `worker/src/services/e2e-capture.ts` | LINEシミュレーション部品（偽の利用者だけ送信を記録・LINEの中身を差し替え） | 無改変 |
+| `worker/src/services/pptx-text.ts` | PowerPoint の文字を自前で読む（Workers AI の toMarkdown は .pptx 非対応） | 無改変 |
+| `e2e/` | LINEシミュレーションの送る側の道具・台本のひな型・workflow | 台本はアプリ固有 |
 | `bot.config.json` | モデル名・チェーン構成・日次予算・キャッシュ設定 | アプリごとに調整可（`dailyCallBudget`・`llm.chain`等） |
 | `knowledge-pack/persona.md` | キャラの人格・トーン | **アプリ固有**。`{{botCharacterName}}`/`{{appDisplayName}}`を置換し、導入手順等を書き足す |
 | `knowledge-pack/guardrails.md` | 禁止事項・エスカレーション条件 | **アプリ固有**。未対応機能を書き足す |
@@ -81,6 +85,11 @@ Gemini無料枠を使うには`GEMINI_API_KEY`（Google AI Studioで無料発行
 - LINEアプリの音声メッセージは実測で`audio/x-m4a`というcontent-typeを返す（`audio/mp4`ではない）。
   これが未対応だと全件`unsupported content-type`でfail-closedし、**音声にだけ一切反応しない**という
   分かりにくい不具合になる（`media-describe.ts`の`CONTENT_TYPE_TO_AUDIO_FORMAT`で対応済み）。
+
+## LINEシミュレーション（スマホなしで本番のまま確かめる、2026-11-16）
+
+直したら「スマホで押して確かめて」と人に頼まず、偽の利用者で本番 webhook に署名して送り、返事を記録から読む。
+`worker/src/routes/webhook.ts` には配線済み（`E2E_USER_ID` が未設定なら何もしない）。入れ方: [`e2e/README.md`](e2e/README.md)、決まり: `docs/ai-rules/12_LINE_SIMULATION.md`。
 
 ## 使い方（新しいアプリにLINE botを追加する） — やることこれだけ
 

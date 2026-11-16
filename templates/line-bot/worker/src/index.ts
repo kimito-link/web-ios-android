@@ -19,6 +19,9 @@ export interface Env {
     // [[r2_buckets]] bindingで注入される。未設定ならメディア認識は静かにスキップされる。
     IMAGES?: R2Bucket;
     WORKER_URL?: string;
+    // LINEシミュレーション用の偽の利用者ID（U + 32桁の16進）。未設定なら E2E の差し替えは誰にも効かない。
+    // 正本: docs/ai-rules/12_LINE_SIMULATION.md。秘密ではないが [vars] は置かない決まりなので `wrangler secret put E2E_USER_ID`。
+    E2E_USER_ID?: string;
   };
 }
 

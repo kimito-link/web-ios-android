@@ -3,3 +3,4 @@ site/download/web-ios-android-template.zip export-ignore
 _drafts/ export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
+templates/line-bot/e2e/fixtures/** -text

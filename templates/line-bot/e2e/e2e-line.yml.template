@@ -1,0 +1,32 @@
+# LINEシミュレーション（本番の webhook に偽の利用者として送り、返事を記録から確かめる）。
+# 正本: docs/ai-rules/12_LINE_SIMULATION.md（web-ios-android）。.github/workflows/e2e-line.yml にコピーする。
+# 偽の利用者（E2E_USER_ID）だけ。LINEへは送らずD1に記録。お支払いはしない。終わったら全部消す。
+name: E2E LINE simulation (production, fake user)
+on:
+  workflow_dispatch:
+  # デプロイの後に自動で回すなら（デプロイ workflow の name に合わせる）:
+  # workflow_run:
+  #   workflows: ["Deploy {{shortName}} LINE bot"]
+  #   types: [completed]
+# ★記録の置き場所（e2e_capture）は1つなので、E2E は1本ずつ順番に走らせる。取り消しもしない（途中で止まると後片付けが飛ぶ）。
+concurrency: { group: e2e-line-capture, cancel-in-progress: false }
+permissions:
+  contents: read
+jobs:
+  e2e:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Run
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          D1_DATABASE_NAME: {{shortName}}-line-db
+          WEBHOOK_URL: ${{ vars.LINE_WEBHOOK_URL }}
+          E2E_USER_ID: ${{ vars.LINE_E2E_USER_ID }}
+        run: node line-bot/e2e/e2e-line.mjs

@@ -46,6 +46,8 @@
 4. **AI が自分で見て・読んで・続けられるか** — 画面は AI が自分で見る（ウェブは専用プロフィールのブラウザ、PC のアプリは
    [`agent-desktop`](../ai-workflows/AGENT-DESKTOP-HOWTO.md)、それで読めないものだけ computer-use）。
    黒い画面の中身は、スクリプトが**状態ファイルに書き**、AI がフォルダ接続で読む。人に「いちばん下の行を送って」と頼まない。
+   ★LINE Bot の挙動（押す・送る・返事）は [12_LINE_SIMULATION.md](12_LINE_SIMULATION.md) の LINEシミュレーションで AI が自分で確かめる
+   （偽の利用者で本番 webhook に署名して送り、返事は記録から読む）。人に「スマホで押してみて」と頼まない（2026-11-16）。
 5. **自分で直る・自分で入れ替わる形にできるか** — 拡張は [`templates/extension-self-update/`](../../templates/extension-self-update/README.md)、
    無料 DB の休止は定期の起こし役（cron / workflow）、期限切れは期限の前に CI が知らせて自動で差し替え。
 6. **ここまで全部だめなときだけ、本人に頼む** — 頼むのは §3 の形にしたものだけ。頼んだ理由（どの順番でだめだったか）を一行添える。

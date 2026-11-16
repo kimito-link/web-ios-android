@@ -8,6 +8,7 @@ import { describeImage } from '../services/vision-describe.js';
 import { describeVideo, describeAudio } from '../services/media-describe.js';
 import { fetchAndStoreIncomingImage } from '../services/incoming-image.js';
 import { fetchAndStoreIncomingMedia } from '../services/incoming-media.js';
+import { captureLineClient, e2eFileFetch, isE2eUser } from '../services/e2e-capture.js';
 import type { Env } from '../index.js';
 
 const webhook = new Hono<Env>();
@@ -142,8 +143,10 @@ webhook.post('/webhook', async (c) => {
   // LINEは~1秒以内のレスポンスを要求する。処理は非同期化してwaitUntilに逃がす。
   const processingPromise = (async () => {
     for (const event of body.events) {
+      // LINEシミュレーション（docs/ai-rules/12_LINE_SIMULATION.md）: 偽の利用者だけ、送信を記録に・LINEの中身を置いたものに差し替える
+      const e2e = isE2eUser(event.source?.userId, c.env.E2E_USER_ID);
       try {
-        await handleEvent(db, lineClient, event, {
+        await handleEvent(db, e2e ? captureLineClient(lineClient, db) : lineClient, event, {
           groqApiKey: c.env.GROQ_API_KEY,
           receivedAt,
           geminiApiKey: c.env.GEMINI_API_KEY,
@@ -151,6 +154,7 @@ webhook.post('/webhook', async (c) => {
           r2: c.env.IMAGES,
           workerUrl,
           channelAccessToken: c.env.LINE_CHANNEL_ACCESS_TOKEN,
+          fetch: e2e ? e2eFileFetch(db) : undefined,
         });
       } catch (err) {
         console.error('[webhook] error handling event:', err instanceof Error ? err.stack : String(err));
@@ -172,6 +176,8 @@ interface HandleEventOptions {
   r2: R2Bucket | undefined;
   workerUrl: string;
   channelAccessToken: string;
+  /** LINE の content API を呼ぶ fetch。偽の利用者のときだけ e2eFileFetch が入る。未指定なら本物の fetch。 */
+  fetch?: typeof fetch;
 }
 
 async function handleEvent(
@@ -346,6 +352,7 @@ async function handleMediaMessage(
       channelAccessToken,
       accountId: 'default',
       messageId: lineMessageId,
+      fetch: opts.fetch,
     });
     if (refs) {
       contentUrl = refs.originalContentUrl;
@@ -361,6 +368,7 @@ async function handleMediaMessage(
       accountId: 'default',
       messageId: lineMessageId,
       kind: messageType,
+      fetch: opts.fetch,
     });
     if (refs) {
       contentUrl = refs.originalContentUrl;

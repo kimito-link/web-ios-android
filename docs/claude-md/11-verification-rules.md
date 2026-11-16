@@ -49,6 +49,10 @@ Android なら AVD を AI が起動→APKビルド→install→adb で操作→s
 自作 Capacitor プラグインが実機で値を返す・弱点時の相談導線」を端から端まで確認し、ズレをゼロにした）。
 これが「iOS/Android の動作確認を AI がやればズレのないものができる」の実体。
 
+★★**LINE Bot の確認は「スマホで押して」と頼まず、LINEシミュレーションで AI が自分でやる**（2026-11-16、linebot で本番E2E 39/39 実証）。
+偽の利用者IDで本番 webhook に署名して送り（文字・ボタン・ファイル・友だち追加）、Bot が返すはずだった返信・push を D1 の記録から読んで確かめる。
+実在の人には何も届かない。正本: [`docs/ai-rules/12_LINE_SIMULATION.md`](../ai-rules/12_LINE_SIMULATION.md)、部品: [`templates/line-bot/e2e/`](../../templates/line-bot/e2e/README.md)。
+
 ★★**Windows常駐アプリ（AutoHotkey・PowerToys連携ランチャー等、Browser paneで開けないネイティブUI）
 の確認は、人間に「Ctrl+Win+Gを押してスクショを撮って」と頼むのではなく、AI自身が見る**（2026-09-27実損）。
 ★2026-11-01から第一手段は **`agent-desktop`**（Vercel Labs・どのAIからもコマンドで使える・マウスを奪わず裏で動く・部品一覧を読んで押して読み直す）。
