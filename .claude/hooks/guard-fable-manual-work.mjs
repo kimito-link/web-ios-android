@@ -22,6 +22,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { join } from 'node:path';
 
 export const WARN_AT = 8;
 export const DENY_AT = 16;
@@ -52,7 +53,8 @@ export function transcriptFor(input) {
   const main = input && input.transcript_path;
   if (typeof main !== 'string') return null;
   if (input.agent_id) {
-    const sub = main.replace(/\.jsonl$/, '') + `/subagents/agent-${input.agent_id}.jsonl`;
+    // path.join で OS の区切りにそろえる（Windows で '/' 混じりになりテストの比較が割れた、2026-11-16 会社PC実測）
+    const sub = join(main.replace(/\.jsonl$/, ''), 'subagents', `agent-${input.agent_id}.jsonl`);
     return existsSync(sub) ? sub : null; // 子のログが見つからなければ判定しない（親のモデルで子を止めない）
   }
   return main;
