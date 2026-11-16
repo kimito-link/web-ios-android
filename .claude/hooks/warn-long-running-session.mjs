@@ -130,8 +130,8 @@ async function readFirstTimestamp(transcriptPathRaw) {
   });
 }
 
-// web-ios-androidリポジトリの実パスを探す。web-ios-android-relay.mjsと同じ
-// candidateRoots探索パターン（PC固有の配置ゆらぎを吸収する）。
+// web-ios-androidリポジトリの実パスを探す。web-ios-android-relay.mjs
+// （正本: templates/hooks-relay/、同期対象）と同じcandidateRoots探索パターン（PC固有の配置ゆらぎを吸収する）。
 // ★意図的な複製: このhookはgrepでweb-ios-androidの外(他リポジトリのセッション)
 //   からも呼ばれるため、web-ios-android-relay.mjs自身をimportできない
 //   （リレー先がこのファイル自身になる循環を避けるため）。

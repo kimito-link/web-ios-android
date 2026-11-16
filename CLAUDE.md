@@ -136,36 +136,35 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 - ★サブエージェント（Agent で起動した子）からの外向き操作は**常に拒否**する（2026-10-07）。子は commit までで止め、
   push・マージ・デプロイは**親が差分とチェックを確かめてから代行**する。
 - 配線: このリポのセッションは `.claude/settings.json`、他プロジェクトのセッションは `~/.claude/settings.json`
-  （`web-ios-android-relay.mjs guard-external-actions.mjs`）。後者は git に載らないので、**新しい PC では手で足す**
-  （確認は `npx vitest run .claude/hooks/guard-external-actions.test.mjs`）。
+  （`web-ios-android-relay.mjs guard-external-actions.mjs`）。後者は、**新しい PC では `node templates/hooks-relay/install.mjs` を1回**
+  （relay の正本と説明は [`templates/hooks-relay/`](templates/hooks-relay/README.md)。確認は `npx vitest run .claude/hooks/guard-external-actions.test.mjs`）。
 
 経緯・実損・判定部品の作り: [`_docs/DESIGN-claude-md-decay-2026-09-24.md`](_docs/DESIGN-claude-md-decay-2026-09-24.md)「移設（2026-11-10）」。
 
 ## セッション開始時の必須アクション（この順で・作業に入る前に）
 
-0. **最初の応答の冒頭で「正本を読み込み済みです」と自己申告し、中身を要約する**（2026-09-16確立）。
-   このファイルの内容（非交渉ルール・4基準・このキットが何かの一言説明のいずれか）を、実際に**要約して**
-   最初の発言に含める（定型文だけでは、本当に読めている証拠にならない）。ユーザーは最初の1発言で正本が
-   届いているか判断できる。要約できない場合は正直にそう報告し、`web-ios-android/CLAUDE.md`を明示的にReadしてから始める。
-1. `Read ../CLAUDE.md`（横断の入口。正本1つ・コピー散らさないの原則を再確認）
-2. `Read ../ai-hub/CLAUDE.md`（正本ポインタの所在。find/doctor/harvestコマンドを確認）
+0. **最初の応答で「正本を読み込み済みです」と、このキットが何かの一言（1行）を添える**（2026-09-16確立、2026-11-16 短縮）。長い要約は要らない
+   （既読は `guard-external-actions` hook が外向き操作の前に機械判定する）。司令塔から起こされたスレッド・サブエージェント・定期実行では省いてよい（人が最初の発言を読まないため）。
+   要約できない／読めていないと気づいたら、正直にそう言って `web-ios-android/CLAUDE.md` を明示的に Read してから始める。
+1. `Read ../CLAUDE.md`（横断の入口。正本1つ・コピー散らさないの原則を再確認）。あれば読む。無い環境（クラウド）では飛ばして先へ進む
+2. `Read ../ai-hub/CLAUDE.md`（正本ポインタの所在。find/doctor/harvestコマンドを確認）。同じく、あれば読む
 3. 何かを新規実装する前は必ず
    `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` または `--sig "<関連キーワード>"`
    を実行し、**同じものが既に他プロジェクトに無いか確認する**（`docs/ai-rules/01_CORE_RULES.md`
    「同機能の重複実装をしない」の実行手段はこれ）。ヒット0は正常（fail-closedでexit 1が返るだけ）。
+   `hub.mjs` が無い環境（クラウド）では `Grep`/`Glob` と `gh api -X GET search/code -f q='<語> org:kimito-link'` で代える。
 4. 非自明な地雷を踏んで解決したら、終わる前に`ai-hub`のharvestの掟に従って書き戻す
    （`ai-hub/CLAUDE.md`「harvestの掟」節）。**「良い場所に書いてある」だけでは次のAIは読みに来ない**。
    書き戻すところまでが作業の完了。
-5. **本物のClaudeは「考える・判断する・検品する」だけ。手を動かす仕事は他の頭脳へ投げる**（2026-09-15
-   本人指示で確定）。ファイル作成・定型修正・調査・文章量産・テスト追加は、自分でやらずに
-   `python docs/ai-workflows/tools/dispatch.py --brain <codex|grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
-   で投げ、返ってきたログの要点だけ読んで検品する。スクリーンショットは文章の何倍も上限を消費するので、
-   画面の内容は本人に文字で貼ってもらう。頭脳の使い分けと財布は正本 [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。
-   ★実装・テスト・定型作業は **Codex（`--brain codex`・ChatGPT の定額＝Claude と別の財布）を先頭**に、次に Grok Build（2026-11-12、同 HOWTO §1e）。Google Antigravity（Claude の週間上限とは別の枠）は、
-   同 HOWTO §1c の条件に当たるときだけ、理由とモデルを添えて本人に提案する（本人が手で投げる）。
+5. **本物のClaudeは「考える・判断する・検品する」が本分。量のある手作業は他の頭脳へ投げる**（2026-09-15 本人指示、2026-11-16 目安を追加）。
+   ファイル作成・定型修正・調査・文章量産・テスト追加は `python docs/ai-workflows/tools/dispatch.py --brain <codex|grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
+   で投げ、返ってきたログの要点だけ読んで検品する。dispatch の先（Codex 等の CLI）が無い環境（クラウド）では Opus のサブエージェントに回す。
+   ★投げる目安（Opus が司令塔のとき）: 1〜2ファイル・10分ほどで終わる直しは自分でやる。投げるのは量の多い定型作業・3ファイル以上にまたがる実装・長い調査。
+   投げる費用（起動・説明・検品）が直しより高くなるものは投げない。Fable のときは下の「頭脳労働専用」が勝つ（小さな直しも Opus へ）。細目・財布は正本 [`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。スクリーンショットは文章の何倍も上限を消費するので、画面の内容は本人に文字で貼ってもらう。
+   ★実装・テスト・定型作業は **Codex（`--brain codex`・ChatGPT の定額＝Claude と別の財布）を先頭**に、次に Grok Build（2026-11-12、同 HOWTO §1e）。予備は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
+   Google Antigravity（Claude の週間上限とは別の枠）は、同 HOWTO §1c の条件に当たるときだけ、理由とモデルを添えて本人に提案する（本人が手で投げる）。
    ★Antigravity は CLAUDE.md を読まない（読むのは [`AGENTS.md`](AGENTS.md)）・Turbo は push も止まらない。拒否リスト・
    モデル別の役割分担・自動で投げる運用への移行（段階2）は正本 [`ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
-   予備の頭脳は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
    ★Claude どうしの使い分けは「**同じ会話で、まず Fable 5.2 に計画を文章で出させ、計画ができたら Opus 5.5 に切り替えて作業する**」が既定
    （2026-11-11 りんく「全体採用に」）。`.claude/settings.json` の `opusplan` 設定で、プランモード中は Fable・抜けたら Opus に自動で切り替わる。Fable の週枠は計画だけに使い、小さな直しはプランモードに入らない。手順と注意: [`FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
    ★★**Fable 5.2 は頭脳労働専用**（2026-11-16 りんく指定）。Fable が出すのは計画・設計・判断の文章だけ。ファイルを読み回す・コマンドを繰り返す・コードを書く手作業は Opus 5.5 か Codex に回す（調べ物は Opus のサブエージェント、実装は `--brain codex`）。
@@ -182,7 +181,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    言いかけた瞬間こそ、この1番を踏んでいるか自問する。否定的な結論を出す前は、肯定的な結論を出す前と同じ強度で検索する。
    ★`.claude/hooks/check-write-preceded-by-search.mjs`（非ブロッキング）が、新規関数定義らしきものを書く前に
    Grep/Glob が無ければ警告する。
-2. **`ai-hub`で共通部品を確認する** — `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` / `--sig "<キーワード>"`（「セッション開始時の必須アクション」3番目と同じコマンド。実装着手の直前にもう一度確認する）
+2. **`ai-hub`で共通部品を確認する** — `node ../ai-hub/bin/hub.mjs find --tag <関連タグ>` / `--sig "<キーワード>"`（「セッション開始時の必須アクション」3番目と同じコマンド・無い環境での代わりも同じ。実装着手の直前にもう一度確認する）
 2.5. **CANONICAL CHECKを通す** — 既存候補が見つかったら「それを信じてよいか」を判定する
    （同じ責務か・同じ意味か・置き場所は適切か・依存方向は逆転していないか）。判定結果は
    REUSE / ESTABLISH_REHOME / CONTRACT / SYNC / KEEP_SEPARATE / LOCAL の6種類のいずれかで、
