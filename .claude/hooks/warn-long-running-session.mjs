@@ -145,6 +145,8 @@ function findWebIosAndroidRoot() {
     join(home, 'Documents', ...relative),
     join(home, 'repos', 'web-ios-android'),
     join(home, 'projects', 'web-ios-android'),
+    // hook 専用の浅い clone（作業用の取り込みが無い PC 用。2026-11-16 レッツノートで relay と同じ置き場所に）
+    join(home, '.claude', 'web-ios-android'),
   ];
   for (const p of candidates) {
     if (existsSync(join(p, 'CLAUDE.md'))) return p;
