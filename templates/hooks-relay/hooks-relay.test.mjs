@@ -1,7 +1,7 @@
 // hooks-relay のテスト。一時ディレクトリを HOME・~/.claude に見立てる（本物の ~/.claude には触らない）。
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -59,9 +59,12 @@ describe('relay: 引数', () => {
 
 describe('relay: checkout を探す', () => {
   it('環境変数 → cwd の祖先と兄弟 → 記録 → 決まった置き場所 → ~/.claude/web-ios-android の順', () => {
+    // 期待値も relay と同じく resolve()/join() で組み立てる（Windows では '/x/wia' が 'C:\x\wia' になるため）。
     const c = candidateRoots({ env: { WEB_IOS_ANDROID_DIR: '/x/wia' }, cwds: ['/g/line-bot'], home: '/h', relayDir: null });
-    expect(c[0]).toBe('/x/wia');
-    expect(c.indexOf('/g/web-ios-android')).toBeGreaterThan(c.indexOf('/g/line-bot'));
+    expect(c[0]).toBe(resolve('/x/wia'));
+    const lineBot = c.indexOf(resolve('/g/line-bot'));
+    expect(lineBot).toBeGreaterThan(0);
+    expect(c.indexOf(join(resolve('/g'), 'web-ios-android'))).toBeGreaterThan(lineBot);
     expect(c.at(-1)).toBe(join('/h', '.claude', 'web-ios-android'));
   });
   it('兄弟リポの形（github/line-bot から github/web-ios-android）で見つかる', () => {
