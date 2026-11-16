@@ -3,6 +3,7 @@
 // 理由の一行なしでは送らせない。正本: docs/ai-rules/08_NO_HUMAN_HANDS.md §2・§6。
 // もう1つ（2026-11-16）: 人に確認・許可・選択を求める文と request_decision／AskUserQuestion を、「確認が要る理由: お金／消す／戻せない」なしでは通さない。
 // もう1つ（2026-11-11）: 人への返信に .md/.txt を添付するのを「ファイルにする理由:」なしでは通さない（同 §3.6）。
+// もう1つ（2026-11-16）: 「スマホ／LINEで押して確かめて」も手作業の依頼として扱う（docs/ai-rules/12_LINE_SIMULATION.md）。
 // もう1つ（2026-11-16）: 人に渡すコマンドのコードブロックに「どこで（フォルダ・PC・シェル）」が無ければ通さない（同 §3.7）。
 //
 // なぜ要るか（2026-11-10 りんく「極力人間の手を使わないルールが守られていない気がする」）:
@@ -35,6 +36,9 @@ const TERMINAL_RE = /(Git ?Bash|PowerShell|ターミナル|コマンドプロン
 const ASK_RE = /(貼って|貼り付けて|コピペして|打って|入力して|叩いて|実行して|走らせて|動かして|最新にして|Enter ?(キー)?を?押して|エンターを?押して)(ください|下さい|ほしい|欲しい|もらえ|いただけ|くれ|ね|。|$)/i;
 // 画面を送ってもらう依頼（これ単独で依頼とみなす）
 const SCREEN_RE = /(スクショ|スクリーンショット|画面|黒い画面の(中身|最後|下))を?(撮って|とって|送って|貼って|見せて|教えて)/;
+// スマホ・LINE で押して／送って確かめてもらう依頼（これ単独で依頼とみなす。2026-11-16）。
+// LINE Bot の確認は docs/ai-rules/12_LINE_SIMULATION.md の LINEシミュレーションで AI が自分でやる。
+const PHONE_RE = /(スマホ|携帯|iPhone|Android|LINE|ライン|トーク画面)[^。\n]{0,30}(押して|送って|タップして|確かめて|確認して|試して|話しかけて)(みて)?(ください|下さい|ほしい|欲しい|もらえ|いただけ|くれ|ね|。|$)/i;
 export const REASON_RE = /人に頼む理由[:：]\s*\S/;
 
 // 人に確認・許可・選択を求める文（2026-11-16 りんく「全体設定として人間に確認をもとめさせない」、CLAUDE.md 核の表）。
@@ -110,6 +114,7 @@ export function findHumanHandoff(texts) {
   const sentences = body.split(/[。\n]/);
   for (const s of sentences) {
     if (SCREEN_RE.test(s)) return s.trim();
+    if (PHONE_RE.test(s)) return s.trim();
     if (ASK_RE.test(s) && (TERMINAL_RE.test(s) || (hasCodeBlock && /\[code\]|これ|下の|次の|以下/.test(s)))) return s.trim();
   }
   return null;
@@ -193,6 +198,7 @@ function main() {
         '(3) PCで走らせるコマンド（git pull・npm・wrangler・拡張の入れ替え等）は、クラウドのスレッドなら ' +
         'mcp__hearthbot__start_remote_control（Remote Control）で自分で実行する／フォルダ接続があれば device_* で読む・書く ' +
         '(4) 画面は自分でスクリーンショット（computer_*）を撮る・状態ファイルを読む。' +
+        'LINE Bot の挙動（押す・送る・返事）は docs/ai-rules/12_LINE_SIMULATION.md の LINEシミュレーション（偽の利用者で本番 webhook に署名して送り、返事を記録から読む）で自分で確かめる。' +
         '人に残すのは、本人のログイン画面での操作・鍵の発行・課金・OKの一言だけ。' +
         'それでも頼むなら、文の中に「人に頼む理由: <§2のどこでだめだったか>」を一行書いて送り直す。',
     },

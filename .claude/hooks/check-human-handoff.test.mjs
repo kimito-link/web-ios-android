@@ -17,6 +17,9 @@ describe("findHumanHandoff", () => {
     expect(findHumanHandoff(["Git Bash に次の1行を貼って実行してください\n```\nnpx wrangler deploy\n```"])).not.toBeNull();
     expect(findHumanHandoff(["wrangler login を実行してください。"])).not.toBeNull();
     expect(findHumanHandoff(["画面を送ってください"])).not.toBeNull();
+    // 2026-11-16: LINE Bot の確認をスマホで頼む（LINEシミュレーションで AI がやる）
+    expect(findHumanHandoff(["スマホのLINEでメニューを押して確かめてください"])).not.toBeNull();
+    expect(findHumanHandoff(["LINEで「分身をつくる」と送ってみてください"])).not.toBeNull();
     expect(findHumanHandoff(["PCで tsuioku を git pull で最新にしてから会議を動かしてください"])).not.toBeNull();
     expect(findHumanHandoff(["下のコマンドを実行してください\n```\nnode scripts/x.mjs\n```"])).not.toBeNull();
   });
@@ -24,6 +27,7 @@ describe("findHumanHandoff", () => {
     expect(findHumanHandoff(["wrangler deploy まで自分で実行し、本番で確認しました。"])).toBeNull();
     expect(findHumanHandoff(["これからは「Git Bash に貼って実行して」と頼む前に止まります。"])).toBeNull();
     expect(findHumanHandoff(["マージしてよいか教えてください。"])).toBeNull();
+    expect(findHumanHandoff(["LINEシミュレーションで本番の webhook に送って確かめました。39/39 です。"])).toBeNull();
   });
 });
 
