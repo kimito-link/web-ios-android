@@ -52,6 +52,14 @@
     {
       "name": "サイトの本番反映（npm run deploy:site）",
       "anchors": [{ "file": "package.json", "contains": "\"deploy:site\":" }]
+    },
+    {
+      "name": "他プロジェクトのセッションへ hook を効かせる中継（hooks-relay）",
+      "anchors": [
+        { "file": "templates/hooks-relay/web-ios-android-relay.mjs", "contains": "export function findHook" },
+        { "file": "templates/hooks-relay/install.mjs", "contains": "export function applyHooks" },
+        { "file": "CLAUDE.md", "contains": "templates/hooks-relay/install.mjs" }
+      ]
     }
   ]
 }

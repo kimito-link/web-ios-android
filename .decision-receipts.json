@@ -520,6 +520,27 @@
       "scopePaths": [
         "templates/diagnostics/check-features-alive.mjs"
       ]
+    },
+    {
+      "at": "2026-11-16T04:24:30.957Z",
+      "responsibility": "web-ios-android の hook を他プロジェクトのセッションから呼ぶ中継（relay）とその配線インストーラ。PC の ~/.claude/hooks にだけあった実体をリポの正本へ",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/hooks-relay/web-ios-android-relay.mjs",
+      "scopePaths": [
+        "templates/hooks-relay/web-ios-android-relay.mjs",
+        "templates/hooks-relay/install.mjs",
+        "templates/hooks-relay/hooks-relay.test.mjs"
+      ]
+    },
+    {
+      "at": "2026-11-16T04:24:30.988Z",
+      "responsibility": "web-ios-android checkout の候補パス一覧（relay と warn-long-running-session の両方に置く。後者は relay 経由で呼ばれるため import できない＝意図的な複製・同期対象）",
+      "decision": "KEEP_SEPARATE",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/hooks-relay/web-ios-android-relay.mjs",
+        ".claude/hooks/warn-long-running-session.mjs"
+      ]
     }
   ]
 }

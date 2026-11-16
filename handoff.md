@@ -40,6 +40,7 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 - 結果の正本: [`_docs/DESIGN-fable-5-2-review-2026-11-10.md`](_docs/DESIGN-fable-5-2-review-2026-11-10.md)。
 - 状態: 下書きPR（ブランチ claude/project-thread-hjnnu3）。参照切れ・古い数字の修正と、Fable 5.1→5.2 の書き換えまで。
 - 承認の表は 2026-11-10 にりんくのOKで核へ入れた。NEXT_ACTION: PR のマージ（りんくのOK）。核の経緯を外へ移す作業は別PRで分けて行う。
+- 2026-11-16: §4 の 1〜4 を反映（1=#137 で経緯移設済み、2=委譲の目安を核5番と MULTI-BRAIN-HOWTO §1b へ、3=0〜3番を短縮、4=`templates/hooks-relay/` に relay とインストーラ）。ブランチ claude/project-thread-vhchvh。
 
 ### スレE: AIの修正で他の機能を壊さない仕組み（2026-11-14）
 - 本人指示「これがおこらないようにして」「サイト全体で」（AIにバグを直させたらログイン・検索・設定が消えた、という話を受けて）。
