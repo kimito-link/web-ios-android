@@ -40,7 +40,9 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # (after grok): it is free and a strong agentic coder, ahead of Alibaba and Cloudflare (which bills overage here).
 # codex first (2026-11-12): ChatGPT team plan = flat fee already paid, a wallet separate from Claude's weekly limit,
 # and the strongest coder in the chain. PC-measured: commit OK in 242s, 5h window 13%->15% for one small task.
-AUTO_CHAIN = ["codex", "grok", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# hydrogen after grok (2026-11-18): free pro-class helper, PC run committed in 250s. Ahead of qwen/oc (Alibaba quotas
+# often spent) and cf (bills overage here), never ahead of codex/grok: slow (about a minute per call) and 503-prone.
+AUTO_CHAIN = ["codex", "grok", "hydrogen", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
@@ -287,11 +289,16 @@ def build(brain, task, allowed, model=None, cwd=None):
         model = model or "mistral/codestral-latest"
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "hydrogen":
-        # OpenCode + Google AI Studio gemini-4-hydrogen (models.dev: google/gemini-4-hydrogen; OpenCode reads GEMINI_API_KEY).
+        # OpenCode + Google AI Studio gemini-4-hydrogen (models.dev: google/gemini-4-hydrogen).
+        # PC-measured 2026-11-18 (OpenCode 1.18.35): the google provider reads ONLY GOOGLE_GENERATIVE_AI_API_KEY, not
+        # GEMINI_API_KEY ("API key is missing", rc=1 in 5s). So hand the existing GEMINI_API_KEY over under that name.
+        # With it: Write -> run -> git commit done in 250s, no 503.
         # A free helper, NOT a replacement for codex/grok: pro-class on the free tier, but thinking cannot be switched off
         # (low is the floor), one call took 57-89s under council conditions and 2-3 calls in 10 got 503 (2026-11-15).
         # So: long timeout, and a 503 falls through to the next brain via FAIL_MARKS. Same key's gemini-4-argon is 429
         # (paid only) - never default to argon here. Free-tier prompts may be used by Google: no secrets, no private code.
+        if env.get("GEMINI_API_KEY"):
+            env.setdefault("GOOGLE_GENERATIVE_AI_API_KEY", env["GEMINI_API_KEY"])
         model = model or "google/gemini-4-hydrogen"
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "groq":
@@ -384,7 +391,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_alibaba_model(model)
         if not model:
             return None, "all Alibaba quotas exhausted", "", None
-    if brain == "hydrogen" and not os.environ.get("GEMINI_API_KEY"):
+    if brain == "hydrogen" and not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY")):
         return None, "GEMINI_API_KEY not set", "", None
     if brain == "groq" and not os.environ.get("GROQ_API_KEY"):
         return None, "GROQ_API_KEY not set", "", None

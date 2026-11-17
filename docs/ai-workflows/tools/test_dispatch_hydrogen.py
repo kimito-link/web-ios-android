@@ -17,6 +17,22 @@ class HydrogenBuild(unittest.TestCase):
         self.assertEqual(cmd[:4], ["opencode", "run", "-m", model])
         self.assertNotIn("argon", model)
 
+    def test_gemini_key_is_handed_to_opencode_under_its_name(self):
+        # 2026-11-18 PC: OpenCode 1.18.35 の google は GOOGLE_GENERATIVE_AI_API_KEY しか読まず、5秒で失敗した。
+        old = {k: os.environ.pop(k, None) for k in ("GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY")}
+        os.environ["GEMINI_API_KEY"] = "test-key"
+        try:
+            _, env, _ = dispatch.build("hydrogen", "do x", "", None)
+            self.assertEqual(env["GOOGLE_GENERATIVE_AI_API_KEY"], "test-key")
+        finally:
+            for k, v in old.items():
+                os.environ.pop(k, None)
+                if v is not None:
+                    os.environ[k] = v
+
+    def test_in_auto_chain_right_after_grok(self):
+        self.assertEqual(dispatch.AUTO_CHAIN.index("hydrogen"), dispatch.AUTO_CHAIN.index("grok") + 1)
+
     def test_long_timeout_because_one_call_takes_about_a_minute(self):
         self.assertGreaterEqual(dispatch.TIMEOUTS["hydrogen"], 1800)
 
@@ -32,14 +48,15 @@ class HydrogenBuild(unittest.TestCase):
             self.assertTrue(any(m in msg for m in dispatch.FAIL_MARKS), msg)
 
     def test_skipped_without_key(self):
-        old = os.environ.pop("GEMINI_API_KEY", None)
+        old = {k: os.environ.pop(k, None) for k in ("GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY")}
         try:
             ok, info, _, _ = dispatch.run_one("hydrogen", "do x", os.getcwd(), "", 1)
             self.assertIsNone(ok)
             self.assertIn("GEMINI_API_KEY", info)
         finally:
-            if old is not None:
-                os.environ["GEMINI_API_KEY"] = old
+            for k, v in old.items():
+                if v is not None:
+                    os.environ[k] = v
 
 
 if __name__ == "__main__":
