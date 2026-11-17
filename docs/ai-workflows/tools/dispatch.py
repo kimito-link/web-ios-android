@@ -10,6 +10,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain muse  --cwd <dir> "task"    # OpenCode Zen + Meta Muse Spark 1.3 Contributor (free; prompts may train Meta's models)
   python dispatch.py --brain nvidia --cwd <dir> "task"   # OpenCode + NVIDIA NIM DeepSeek V4.1 Flash (free, 80-model catalog)
   python dispatch.py --brain mistral --cwd <dir> "task"  # OpenCode + Mistral Codestral (free monthly, coding-specialised)
+  python dispatch.py --brain hydrogen --cwd <dir> "task" # OpenCode + Google AI Studio gemini-4-hydrogen (free pro-class helper; slow)
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
   python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
@@ -56,8 +57,10 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # 2026-11-12 Codex CLI 0.147 実測: ChatGPT ログインで使えないモデルは model_not_found(rc=1)。枠切れの返事。
               "model_not_found", "hit your usage limit",
               # 2026-11-12: the sandbox refused the real .git (Codex then faked a commit in .git-codex).
-              "index.lock': Permission denied"]
-TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "glm": 900, "local": 1800}
+              "index.lock': Permission denied",
+              # 2026-11-17 hydrogen: Gemini API が混雑(503)のときの返事。会議の実測で10本中2〜3本出る。次の頭脳へ回す。
+              "The model is overloaded", '"status": "UNAVAILABLE"']
+TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "hydrogen": 1800, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -283,6 +286,14 @@ def build(brain, task, allowed, model=None, cwd=None):
         # After nvidia in AUTO_CHAIN. Free tier is non-commercial / monthly-capped; can 429 when the month's used up.
         model = model or "mistral/codestral-latest"
         cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "hydrogen":
+        # OpenCode + Google AI Studio gemini-4-hydrogen (models.dev: google/gemini-4-hydrogen; OpenCode reads GEMINI_API_KEY).
+        # A free helper, NOT a replacement for codex/grok: pro-class on the free tier, but thinking cannot be switched off
+        # (low is the floor), one call took 57-89s under council conditions and 2-3 calls in 10 got 503 (2026-11-15).
+        # So: long timeout, and a 503 falls through to the next brain via FAIL_MARKS. Same key's gemini-4-argon is 429
+        # (paid only) - never default to argon here. Free-tier prompts may be used by Google: no secrets, no private code.
+        model = model or "google/gemini-4-hydrogen"
+        cmd = ["opencode", "run", "-m", model, task]
     elif brain == "groq":
         # Groq free tier caps tokens per minute (8000 on gpt-oss-120b, similar on qwen3.8-27b), so an agent's
         # system prompt does not fit. Use it as a text-only brain: one chat completion, answer goes to the log.
@@ -373,6 +384,8 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         model = pick_alibaba_model(model)
         if not model:
             return None, "all Alibaba quotas exhausted", "", None
+    if brain == "hydrogen" and not os.environ.get("GEMINI_API_KEY"):
+        return None, "GEMINI_API_KEY not set", "", None
     if brain == "groq" and not os.environ.get("GROQ_API_KEY"):
         return None, "GROQ_API_KEY not set", "", None
     if brain == "gemini":
@@ -480,7 +493,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
