@@ -134,6 +134,11 @@ function build(runs, P) {
   if (grokSt.status === 'degraded' && lastReason('grok')) grokSt.label = `直近の実行は失敗: Grok Build ${lastReason('grok')}`;
   brains.push({ id: 'grok', label: 'Grok Build', kind: 'subscription', role: 'agent', ...S(grokSt), gauges: [], note: '残量を調べる口が無いので、実行ログの最新結果で判定しています。', lastRun: lastRunOf('grok') });
 
+  // Gemini 4 Hydrogen(OpenCode・無料の手伝い役): 考える段階を切れず1回1分ほどかかるので、1トークンの確認はしない。鍵の有無と実行ログで判定
+  const hySt = statusOfBrain({ hasKey: !!P.gemini?.hasKey, recent: recentOf('hydrogen') });
+  if (hySt.status === 'degraded' && lastReason('hydrogen')) hySt.label = `直近の実行は失敗: ${lastReason('hydrogen')}`;
+  brains.push({ id: 'hydrogen', label: 'Gemini 4 Hydrogen(OpenCode)', kind: 'free', role: 'agent', ...S(hySt), gauges: [], note: 'Gemini API の無料枠(GEMINI_API_KEY)。1回1分ほどかかり、混雑(503)のときは次の頭脳へ回します。残量は取得できません。', lastRun: lastRunOf('hydrogen') });
+
   // Alibaba(qwen / oc)
   const a = P.alibaba;
   const aOk = (a.models || []).filter((m) => m.state === 'ok').length;
