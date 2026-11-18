@@ -9,11 +9,11 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 完了（Issue #160: watch-store-fields.mjs による Apple クリエイティブ素材の新仕様 Art Safe Area / Auxiliary Art Area の検知対応。commit 済み、push せず待機）
-ROOT_CAUSE: Apple が公式仕様ページ（creative-assets-specifications）に Art Safe Area（アートセーフエリア）および Auxiliary Art Area（補助アートエリア）の設計ガイドライン・寸法を追加したため、watch-store-fields.mjs が差分を検知。
-LAST_WORKED_ON: 2026-11-18T17:15:00+09:00
-WORKED_BY: antigravity / Gemini 3.8 Flash（ブランチ agy/store-fields-art-safe-area）
-MACHINE_NOTES: PCローカル（Windows PowerShell）。外部 push・マージ・デプロイは行わず作業ブランチで commit して停止。
+STATUS: 進行中（2026-11-10 更新: 下の「開いているスレッド」のうち A・B・C はマージ済み。新しく D を追加）。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
+ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
+LAST_WORKED_ON: 2026-11-10T00:00:00Z
+WORKED_BY: claude-cloud／ブランチ claude/project-thread-hjnnu3（Fable 5.2 による全体設計の見直し）
+MACHINE_NOTES: ★このセッションはクラウド（/home/user）。ここからは deploy 不可（`../ai-hub` 無し・Cloudflare/Wrangler 認証無し・wrangler 無し）＝本番反映と `~/.claude/skills/` の読取りは PC 側でしかできない。
 
 ## Issue #160 対応概要
 - Apple の creative-assets-specifications 仕様ページを精査: 新ラベル「Art Safe Area」「Auxiliary Art Area」「Art safe area」はストアの独立した入力欄（フォーム）ではなく、既存のヘッダー・検索結果素材（creativeHeader / creativeSearch）内のセーフエリア・背景領域の設計基準であることを確認。
