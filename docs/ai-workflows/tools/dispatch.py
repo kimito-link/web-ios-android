@@ -11,6 +11,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain nvidia --cwd <dir> "task"   # OpenCode + NVIDIA NIM DeepSeek V4.1 Flash (free, 80-model catalog)
   python dispatch.py --brain mistral --cwd <dir> "task"  # OpenCode + Mistral Codestral (free monthly, coding-specialised)
   python dispatch.py --brain hydrogen --cwd <dir> "task" # OpenCode + Google AI Studio gemini-4-hydrogen (free pro-class helper; slow)
+  python dispatch.py --brain sakura --cwd <dir> "task"   # OpenCode + さくらのAI Engine DeepSeek-V4.1-Flash-1017 (free 3,000 req/month, stops at the cap)
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
   python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
@@ -61,8 +62,10 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               # 2026-11-12: the sandbox refused the real .git (Codex then faked a commit in .git-codex).
               "index.lock': Permission denied",
               # 2026-11-17 hydrogen: Gemini API が混雑(503)のときの返事。会議の実測で10本中2〜3本出る。次の頭脳へ回す。
-              "The model is overloaded", '"status": "UNAVAILABLE"']
-TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "hydrogen": 1800, "glm": 900, "local": 1800}
+              "The model is overloaded", '"status": "UNAVAILABLE"',
+              # 2026-11-18 sakura: 無償プランは月3,000回を超えると課金でなく 429 で止まる（公式 manual 02-howto）。次の頭脳へ。
+              "Too Many Requests"]
+TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "hydrogen": 1800, "sakura": 900, "glm": 900, "local": 1800}
 
 
 def say(msg):
@@ -243,6 +246,18 @@ def agy_denied(out):
     return re.search(r'"denied_actions"\s*:\s*\[\s*\{', out) is not None
 
 
+SAKURA_BASE_URL = "https://api.ai.sakura.ad.jp/v1"
+SAKURA_DEFAULT_MODEL = "sakura/preview/DeepSeek-V4.1-Flash-1017"
+
+
+def sakura_opencode_config(model_id):
+    """OpenCode config that defines the sakura provider (OpenAI-compatible). The token is referenced, never inlined."""
+    return {"$schema": "https://opencode.ai/config.json",
+            "provider": {"sakura": {"npm": "@ai-sdk/openai-compatible", "name": "SAKURA AI Engine",
+                                    "options": {"baseURL": SAKURA_BASE_URL, "apiKey": "{env:SAKURA_AI_ENGINE_TOKEN}"},
+                                    "models": {model_id: {"name": model_id}}}}}
+
+
 def build(brain, task, allowed, model=None, cwd=None):
     env = dict(os.environ)
     task = spool_task(task, brain)
@@ -300,6 +315,18 @@ def build(brain, task, allowed, model=None, cwd=None):
         if env.get("GEMINI_API_KEY"):
             env.setdefault("GOOGLE_GENERATIVE_AI_API_KEY", env["GEMINI_API_KEY"])
         model = model or "google/gemini-4-hydrogen"
+        cmd = ["opencode", "run", "-m", model, task]
+    elif brain == "sakura":
+        # OpenCode + さくらのAI Engine (OpenAI-compatible, https://api.ai.sakura.ad.jp/v1). 2026-11-18 契約: 基盤モデル無償プラン。
+        # Why this one: chat completions 3,000 requests/month free, and past that the free plan answers 429 instead of
+        # billing (manual.sakura.ad.jp/cloud/ai-engine/02-howto.html). cf bills overage here; this one cannot.
+        # An agent task spends one request per tool step, so this is a helper for small/medium tasks, not a main hand.
+        # Models (chat-models.html 11/18): preview/DeepSeek-V4.1-Flash-1017, preview/GLM-5.3-Flash, preview/Kimi-K2.7-Code,
+        # all max_tokens 32,000, 1 request <= about 5 min. "preview/" models may change or end without notice.
+        # Key: user env SAKURA_AI_ENGINE_TOKEN ("<UUID>:<secret>", Bearer). The provider is not in models.dev, so it is
+        # defined inline through OPENCODE_CONFIG_CONTENT ({env:...} keeps the token out of the config text and argv).
+        model = model or SAKURA_DEFAULT_MODEL
+        env["OPENCODE_CONFIG_CONTENT"] = json.dumps(sakura_opencode_config(model.split("/", 1)[1]))
         cmd = ["opencode", "run", "-m", model, task]
     elif brain == "groq":
         # Groq free tier caps tokens per minute (8000 on gpt-oss-120b, similar on qwen3.8-27b), so an agent's
@@ -393,6 +420,8 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
             return None, "all Alibaba quotas exhausted", "", None
     if brain == "hydrogen" and not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY")):
         return None, "GEMINI_API_KEY not set", "", None
+    if brain == "sakura" and not os.environ.get("SAKURA_AI_ENGINE_TOKEN"):
+        return None, "SAKURA_AI_ENGINE_TOKEN not set", "", None
     if brain == "groq" and not os.environ.get("GROQ_API_KEY"):
         return None, "GROQ_API_KEY not set", "", None
     if brain == "gemini":
@@ -500,7 +529,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "sakura", "glm", "local"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
