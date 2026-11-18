@@ -52,6 +52,13 @@ class AgyQuota(unittest.TestCase):
     # 2026-11-12 PC 実測の枠切れの文（全モデル同じ残り時間）。分かっている枠切れで毎回 20 秒使わず、すぐ次の頭脳へ回す。
     OUT = "Individual quota reached for this model. Resets in 76h3m. (429 RESOURCE_EXHAUSTED)"
 
+    def test_pools_are_recorded_separately(self):
+        # 2026-11-18 PC: Claude pool 429 while Gemini answered; the Gemini fallback must not be skipped by the Claude record.
+        self.assertEqual(dispatch.agy_pool("claude-sonnet-5-5-medium"), "claude")
+        self.assertEqual(dispatch.agy_pool("gemini-4-argon-medium"), "gemini")
+        self.assertEqual(dispatch.agy_pool(None), "claude")
+        self.assertNotEqual(dispatch.agy_quota_file("claude-opus-5-5-medium"), dispatch.agy_quota_file("gemini-4-argon-medium"))
+
     def test_parse_reset(self):
         self.assertEqual(dispatch.agy_reset_seconds(self.OUT), 76 * 3600 + 3 * 60)
         self.assertEqual(dispatch.agy_reset_seconds("Resets in 45m"), 45 * 60)

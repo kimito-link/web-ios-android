@@ -188,7 +188,18 @@ def agy_pool_exhausted(out, model):
     return "RESOURCE_EXHAUSTED" in out and not (model or "").startswith("gemini-")  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
 
 
-AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")
+AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")  # legacy single file (before 2026-11-18); no longer read
+
+
+def agy_pool(model):
+    """Which Antigravity quota a model draws from. 2026-11-18 PC: Claude Sonnet answered 429 "Resets in 4h50m" while
+    gemini-3.8-flash and gemini-4-argon answered SUCCESS in the same minute = the pools are separate (the 11-12 note
+    of one shared pool no longer holds). A single record made the Gemini fallback skip itself."""
+    return "gemini" if (model or "").startswith("gemini-") else "claude"
+
+
+def agy_quota_file(model):
+    return os.path.join(RUNS, "agy-quota-%s.json" % agy_pool(model))
 
 
 def agy_reset_seconds(out):
@@ -201,22 +212,22 @@ def agy_reset_seconds(out):
     return int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60
 
 
-def agy_remember_reset(out, now=None, path=None):
+def agy_remember_reset(out, now=None, path=None, model=None):
     sec = agy_reset_seconds(out)
     if sec is None:
         return
     try:
-        with open(path or AGY_QUOTA_FILE, "w", encoding="utf-8") as f:
+        with open(path or agy_quota_file(model), "w", encoding="utf-8") as f:
             json.dump({"until": (now or time.time()) + sec}, f)
     except OSError:
         pass
 
 
-def agy_quota_wait(now=None, path=None):
+def agy_quota_wait(now=None, path=None, model=None):
     """Seconds left before the shared Antigravity quota resets, or 0. Lets dispatch skip agy in seconds instead of
     spending ~20s per run on a known 429 (and a second 429 on the Gemini retry)."""
     try:
-        with open(path or AGY_QUOTA_FILE, encoding="utf-8") as f:
+        with open(path or agy_quota_file(model), encoding="utf-8") as f:
             until = json.load(f).get("until", 0)
     except (OSError, ValueError):
         return 0
@@ -389,7 +400,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         if reason:
             return None, reason, "", None
     if brain == "agy":
-        wait = agy_quota_wait()
+        wait = agy_quota_wait(model=model or AGY_DEFAULT_MODEL)
         if wait:
             return None, "Antigravity quota spent, resets in %dh%02dm" % (wait // 3600, wait % 3600 // 60), "", None
     if brain == "qwen":
@@ -434,7 +445,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     if brain == "agy" and (agy_status(out) != AGY_OK_STATUS or agy_denied(out)):
         failed = True
     if brain == "agy" and failed:
-        agy_remember_reset(out)
+        agy_remember_reset(out, model=model)
     if brain == "codex" and codex_fake_git(cwd):
         failed = True
         out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"
