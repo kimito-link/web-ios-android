@@ -9,11 +9,48 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 進行中（2026-11-10 更新: 下の「開いているスレッド」のうち A・B・C はマージ済み。新しく D を追加）。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
-ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
-LAST_WORKED_ON: 2026-11-10T00:00:00Z
-WORKED_BY: claude-cloud／ブランチ claude/project-thread-hjnnu3（Fable 5.2 による全体設計の見直し）
-MACHINE_NOTES: ★このセッションはクラウド（/home/user）。ここからは deploy 不可（`../ai-hub` 無し・Cloudflare/Wrangler 認証無し・wrangler 無し）＝本番反映と `~/.claude/skills/` の読取りは PC 側でしかできない。
+STATUS: 完了（Issue #160: watch-store-fields.mjs による Apple クリエイティブ素材の新仕様 Art Safe Area / Auxiliary Art Area の検知対応。commit 済み、push せず待機）
+ROOT_CAUSE: Apple が公式仕様ページ（creative-assets-specifications）に Art Safe Area（アートセーフエリア）および Auxiliary Art Area（補助アートエリア）の設計ガイドライン・寸法を追加したため、watch-store-fields.mjs が差分を検知。
+LAST_WORKED_ON: 2026-11-18T17:15:00+09:00
+WORKED_BY: antigravity / Gemini 3.8 Flash（ブランチ agy/store-fields-art-safe-area）
+MACHINE_NOTES: PCローカル（Windows PowerShell）。外部 push・マージ・デプロイは行わず作業ブランチで commit して停止。
+
+## Issue #160 対応概要
+- Apple の creative-assets-specifications 仕様ページを精査: 新ラベル「Art Safe Area」「Auxiliary Art Area」「Art safe area」はストアの独立した入力欄（フォーム）ではなく、既存のヘッダー・検索結果素材（creativeHeader / creativeSearch）内のセーフエリア・背景領域の設計基準であることを確認。
+- `templates/scripts/lib/store-fields.json`:
+  - `watch.pages` の `apple-creative` known に検出された 3 ラベル（`Art Safe Area`, `Art safe area`, `Auxiliary Art Area`）を反映（`watch-store-fields.mjs --update` による自動更新）。
+  - `creativeHeader` および `creativeSearch` の `note` にアートセーフエリア寸法・配置要件（ヘッダー: 1646x661, x:1097, y:493 / 検索結果: 最大 2168x1030, x:836, y:765）を明記。
+- `_docs/creative-assets-header-search.md`:
+  - アートセーフエリア (Art Safe Area) と補助アートエリア (Auxiliary Art Area) の定義、各配置ごとの寸法一覧を追加。
+- `templates/scripts/lib/store-fields.test.mjs`:
+  - `apple-creative` の known labels にこれらが含まれていることを検証するテストケースを追加。
+
+## FILES_CHANGED
+- `templates/scripts/lib/store-fields.json`
+- `templates/scripts/lib/store-fields.test.mjs`
+- `_docs/creative-assets-header-search.md`
+- `handoff.md`
+
+## TESTS_RUN
+- `node templates/scripts/watch-store-fields.mjs --selftest`
+- `node templates/scripts/watch-store-fields.mjs`
+- `node -e "process.env.STORE_TARGETS='appstore'; import('./templates/scripts/check-store-fields.mjs')"`
+- `npx vitest run templates/scripts/lib/store-fields.test.mjs`
+- `node templates/diagnostics/check-unrequested-removal.mjs .`
+- `node templates/diagnostics/check-features-alive.mjs .`
+
+## TEST_RESULT
+- `watch-store-fields.mjs --selftest`: PASS (8/8)
+- `watch-store-fields.mjs`: PASS (全7ソース「変化なし」)
+- `store-fields.test.mjs`: PASS (8/8 tests passed)
+- `check-unrequested-removal.mjs`: PASS (未要求の削除 0 件)
+- `check-features-alive.mjs`: PASS (全 9 機能 19 マーカー残存)
+
+## REMAINING_RISKS
+- なし。ASC API 4.6 にはクリエイティブアセットのアップロードエンドポイントは依然存在しないため、引き続き ASC 画面から手動アップロードする運用となる。
+
+## NEXT_ACTION
+- Claude Code による検品、PR 作成・マージ。
 
 ## このプロジェクトは何か（1行）
 AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張/Web/iOS/Android のストア申請自動化キットを束ねた横断開発基盤。設計方針 = 事業指標の最大化（北極星 LTV÷CPA・正本 docs/ai-rules/07_GROWTH_METRICS.md） × 100年メンテナンスフリー（コード構成は 01_CORE_RULES §2-1） × 商品インパクト。

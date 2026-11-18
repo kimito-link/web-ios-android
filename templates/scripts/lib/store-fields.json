@@ -1,7 +1,7 @@
 {
   "_README": "ストアの入力欄の対応表（正本）。各ストアの画面にある入力欄を、必須か任意かを問わず全部並べ、このリポのどこに素材を置くか・何で入れるかを書く。check-store-fields.mjs と lint-pre-submission の CHECK 35 がこの表で『埋まっていない欄』を出し、watch-store-fields.mjs が各ストアの公式の項目一覧（API 定義・仕様ページ）とこの表の watch を比べて『増えた欄』を知らせる。ルールの本文: docs/ai-rules/10_STORE_FIELDS.md",
   "schema": 1,
-  "checkedAt": "2026-11-09",
+  "checkedAt": "2026-11-18",
   "levels": {
     "required": "無いと提出・公開できない",
     "cvr": "任意だが商品ページの見え方・CVR に効く。言われなくても入れる",
@@ -175,7 +175,7 @@
             ]
           },
           "make": "generate-store-assets.mjs --creative",
-          "note": "3840x1646(21:9)・透明不可。版が編集できる間だけ上げられる。ASC API 4.6 に無いので画面で上げる"
+          "note": "3840x1646(21:9)・透明不可。主要要素はアートセーフエリア(1646x661, x:1097, y:493)内に収め、外側の補助アートエリアは背景を延ばす。版が編集できる間だけ上げられる。ASC API 4.6 に無いので画面で上げる"
         },
         {
           "id": "creativeSearch",
@@ -192,7 +192,7 @@
             ]
           },
           "make": "generate-store-assets.mjs --creative",
-          "note": "3:2・1920x1280〜3840x2560・透明不可"
+          "note": "3:2・1920x1280〜3840x2560・透明不可。主要要素はアートセーフエリア(最大2168x1030, x:836, y:765)内に収める"
         },
         {
           "id": "productPageOptimization",
@@ -658,7 +658,10 @@
         "end": "Developer Footer",
         "known": {
           "labels": [
+            "Art Safe Area",
+            "Art safe area",
             "Aspect ratio",
+            "Auxiliary Art Area",
             "Frames per second",
             "Image specifications for In-App Event cards",
             "Image specifications for product page header and search results",

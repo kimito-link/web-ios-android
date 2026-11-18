@@ -21,6 +21,10 @@ describe("対応表（store-fields.json）", () => {
     const ids = inventory.stores.appstore.fields.filter((f) => f.level === "cvr").map((f) => f.id);
     expect(ids).toEqual(expect.arrayContaining(["creativeHeader", "creativeSearch", "screenshotsIphoneDuo"]));
   });
+  it("apple-creative の見張り known に Art Safe Area / Auxiliary Art Area が含まれる", () => {
+    const src = inventory.watch.pages.find((p) => p.id === "apple-creative");
+    expect(src.known.labels).toEqual(expect.arrayContaining(["Art Safe Area", "Art safe area", "Auxiliary Art Area"]));
+  });
 });
 
 describe("isFieldFilled", () => {
