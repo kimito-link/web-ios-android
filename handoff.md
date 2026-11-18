@@ -9,10 +9,10 @@
 
 # Handoff — web-ios-android（AI開発総合ルール正本＋ストア申請自動化キット）
 
-STATUS: 進行中（2026-11-10 更新: 下の「開いているスレッド」のうち A・B・C はマージ済み。新しく D を追加）。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。下の「開いているスレッド」は 2026-10-21 時点の別件。
-ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群）
-LAST_WORKED_ON: 2026-11-10T00:00:00Z
-WORKED_BY: claude-cloud／ブランチ claude/project-thread-hjnnu3（Fable 5.2 による全体設計の見直し）
+STATUS: 進行中（2026-11-18 更新: Issue #13/#14「AIトリアージ共有モジュールの新設と PAIRS 登録」をブランチ `agy/ai-triage-shared` で実装・テスト完了）。2026-11-10 更新分: 下の「開いているスレッド」のうち A・B・C はマージ済み。診断結果シェルはブランチ `cursor/diagnosis-shell-surfaces-6fd9` のドラフト PR。Xserver の回答により取次店コードは出さない。共有リンクの識別子は共有者の LINE だけ。`DISTRIBUTION_SURFACE` が app / extension の描画には紹介・有料・LINEの文言を出さない。ストア提出の凍結ファイルとリリースジョブは未変更。
+ROOT_CAUSE: -（バグ修正ではなく「全体設計の会議→実装」と派生タスク群／Issue #13・#14 は `henshin-hisho` と `gmail-secretary-extension` に重複コピーされていた JSON修復関数・トーン定義の共通化）
+LAST_WORKED_ON: 2026-11-18T17:38:00+09:00
+WORKED_BY: antigravity / Gemini 4 Argon (Medium)（ブランチ agy/ai-triage-shared）
 MACHINE_NOTES: ★このセッションはクラウド（/home/user）。ここからは deploy 不可（`../ai-hub` 無し・Cloudflare/Wrangler 認証無し・wrangler 無し）＝本番反映と `~/.claude/skills/` の読取りは PC 側でしかできない。
 
 ## Issue #160 対応概要
@@ -84,6 +84,32 @@ AI開発の総合ルール（CLAUDE.md＝設計の心臓部）と、Chrome拡張
 - 正本 `docs/ai-rules/11_NO_REGRESSION.md`＋CLAUDE.md 冒頭★★。判定 `templates/diagnostics/check-unrequested-removal.mjs`（消えたボタン・リンク・関数・テスト・ファイル・大きな削除を拾い、`消してよい: 名前（理由）` の無いものを赤）と `check-features-alive.mjs`（`features.json` の機能一覧）。
 - 止める場所: hook `guard-unrequested-removal.mjs`（commit・push・PR作成の前に拒否）／CI `no-regression.yml`（PR・週1で本番 smoke）／配布用 `templates/workflows/no-regression.yml`（判定は web-ios-android から毎回取る）。
 - NEXT_ACTION: ①PC とクラウドの `~/.claude/settings.json` へ hook を配線（全リポで効かせる）②各サービスのリポへ `features.json` と workflow を入れる。
+
+### スレF: Issue #13/#14 AIトリアージ共有モジュールの新設と PAIRS 登録（2026-11-18）
+- 設計の正本: [`_docs/DESIGN-ai-triage-shared-module-2026-09-08.md`](_docs/DESIGN-ai-triage-shared-module-2026-09-08.md) / [`_docs/IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md`](_docs/IMPLEMENTATION-HANDOFF-ai-triage-shared-module-2026-09-08.md)（C-1・C-2節）。
+- 状態: **本リポ側の正本作成・単体テスト・PAIRS登録まで完了（ブランチ `agy/ai-triage-shared` で commit 済み・push 待ち）**。
+- FILES_CHANGED（本スレッド分）:
+  - `templates/shared/ai-triage/json-repair.mjs`（新設: `henshin-hisho/backend/src/triage.js` から7関数を外部依存ゼロの純粋関数として抽出）
+  - `templates/shared/ai-triage/draft-tone.mjs`（新設: `henshin-hisho/backend/src/draft-gen.js` から `DRAFT_TONE_INSTRUCTIONS` と `pickTone` を抽出）
+  - `templates/shared/ai-triage/ai-triage.test.mjs`（新設: 8項目の単体テスト＋外部依存ゼロ契約の検証）
+  - `_docs/instruments/check-drift.mjs`（PAIRS に `json-repair.mjs`・`draft-tone.mjs` の2組を `copies: []` で登録）
+  - `package.json`（`ai-triage:selftest` を追加）
+  - `.decision-receipts.json`（`ESTABLISH_REHOME` を記録）
+- PAIRS の `copies` を空配列（`copies: []`）にした理由（Issue #14 の指示どおり）:
+  - `henshin-hisho/backend/src/` は現在フラットな構成で `shared/` サブディレクトリが未作成（置き場所が `backend/src/shared/` か `backend/src/` 直下か未確定・未配布）。`gmail-secretary-extension/sw/features/gmail-inbox/` 側も同様に未配布。
+  - 実ファイルが配布される前に `copies` へパスを書くと `check-drift.mjs` が `inconclusive`（比較できたコピーが0本）になるため、今の時点では正本の存在確認と `check-drift-coverage.mjs` の監視対象名供給として `copies: []` で登録した。
+- TESTS_RUN / TEST_RESULT（本スレッド分）:
+  - `node --test templates/shared/ai-triage/ai-triage.test.mjs` → 8 tests pass (0 fail)
+  - `node _docs/instruments/check-drift.mjs` → 新規追加した2組（`AIトリアージ共有: JSON修復（json-repair）` / `AIトリアージ共有: 返信下書きトーン定義（draft-tone）`）ともに `✅ pass`（`{"正本":1,"コピー":0}`）
+  - `node _docs/instruments/check-drift-coverage.mjs` → `✅ pass`（`{"走査":331,"登録済み":57,"未登録":0,"除外":274}`）
+  - `node templates/scripts/check-decision-receipt.mjs` → `✅ 合格 (根拠あり 3件)`
+  - `node templates/diagnostics/check-file-header-comment.mjs` → `OK（新規の検査対象 2 件・先頭コメント不足 0 件）`
+  - `node templates/diagnostics/check-unrequested-removal.mjs .` / `node templates/diagnostics/check-features-alive.mjs .` → ともに `✅`
+- REMAINING_RISKS（本スレッド分）:
+  - `henshin-hisho` と `gmail-secretary-extension` への実ファイル配布（C-3）および各リポの `triage.js`・`draft-gen.js` の `import` 書き換え（C-4）はまだ行っていない（今回のスコープは `henshin-hisho` 側を読むだけ・変更しない指示）。
+- NEXT_ACTION（本スレッド分）:
+  1. Claude Code がブランチ `agy/ai-triage-shared` の差分を検品し、push・PR作成・マージを行う。
+  2. `henshin-hisho` と `gmail-secretary-extension` 側で配置先パス（例: `backend/src/shared/` 等）を確定して `rollout-workflow.mjs` で配布し、`triage.js` / `draft-gen.js` を `import` に置き換えたうえで、`check-drift.mjs` の `PAIRS` の `copies` に実在パスを追記する。
 
 ### 据え置き（意図的・順序原則。蒸し返さない）
 - P1 バッチ2(これ以上): 2026-11-10 に「経緯の移設」を実施（核 396 → 320 行・上限 450。規範は核に残し、経緯の原文は `_docs/DESIGN-claude-md-decay-2026-09-24.md`「移設（2026-11-10）」へ）。
