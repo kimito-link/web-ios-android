@@ -458,8 +458,12 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     # opencode は subprocess の cwd より環境変数 PWD を作業場所に使う（2026-10-18 実測）。Git Bash から呼ぶと
     # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
     env["PWD"] = os.path.abspath(cwd)
+    heads_before = None
     if not ALLOW_OUTWARD:
         block_outward(env)
+        if cmd and cmd[0] == "opencode":
+            opencode_guard(env)
+        heads_before = remote_heads(cwd)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     log = os.path.join(RUNS, f"{stamp}-{brain}.log")
     t0 = time.time()
@@ -479,6 +483,11 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
         failed = True
     if brain == "agy" and failed:
         agy_remember_reset(out, model=model)
+    if heads_before is not None:
+        leaked = pushed_from_here(heads_before, remote_heads(cwd), cwd)
+        if leaked:
+            failed = True
+            out += "\n# FAILED: OUTWARD PUSH DETECTED - the brain pushed %s itself. Check for PRs/merges it made before trusting anything.\n" % ", ".join(leaked)
     if brain == "codex" and codex_fake_git(cwd):
         failed = True
         out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"
@@ -508,6 +517,58 @@ def block_outward(env):
     for k in ("GH_TOKEN", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "VERCEL_TOKEN"):
         env[k] = "blocked-by-dispatch"
     env["GH_PROMPT_DISABLED"] = "1"
+
+
+# 2026-11-18 事故: --brain sakura（OpenCode・Kimi-K2.7-Code）が `git remote set-url --push` と `env -u GH_TOKEN` で
+# block_outward を自分で外し、push・PR 作成・マージまで行った（検品より先に main へ入った。web-health-check-app#172）。
+# 環境変数での止め方は、シェルを握る頭脳には外せる。OpenCode の権限設定（ツール側で判定・頭脳には外せない）でも止める。
+# 最後に勝つ規則が効くので "*": "allow" を先頭に置き、外向き・止め外しの形を後ろで deny する。
+OPENCODE_BASH_DENY = [
+    "*git push*", "*git remote*", "*git config*", "*git credential*", "*pushInsteadOf*",
+    "gh", "gh *", "* gh *", "*;gh *", "*&gh *", "*|gh *", "*gh.exe*",
+    "*env -u*", "*unset *", "*GIT_CONFIG*", "*GH_TOKEN*", "*GITHUB_TOKEN*", "*Remove-Item Env:*", "*$env:*",
+    "*wrangler*", "*vercel*", "*npm publish*", "*deploy*",
+    "*curl *", "*Invoke-WebRequest*", "*Invoke-RestMethod*", "*iwr *", "*irm *",
+]
+
+
+def opencode_guard(env):
+    """OpenCode の頭脳に、外向き操作と止め外しのシェルを権限で拒否させる（OPENCODE_CONFIG_CONTENT に重ねる）。
+    inline の設定は OpenCode の設定の中で最後に読まれるので、作業フォルダの opencode.json では上書きできない。"""
+    try:
+        conf = json.loads(env.get("OPENCODE_CONFIG_CONTENT") or "{}")
+    except ValueError:
+        conf = {}
+    bash = {"*": "allow"}
+    bash.update({pat: "deny" for pat in OPENCODE_BASH_DENY})
+    perm = conf.setdefault("permission", {})
+    perm["bash"] = bash
+    conf.setdefault("$schema", "https://opencode.ai/config.json")
+    env["OPENCODE_CONFIG_CONTENT"] = json.dumps(conf)
+
+
+def remote_heads(cwd):
+    """origin のブランチの先頭 {ref: sha}。読めなければ None（ネットが無い等で作業を止めない）。"""
+    try:
+        r = subprocess.run(["git", "ls-remote", "--heads", "origin"], cwd=cwd, capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            return None
+        return dict((ln.split("\t")[1], ln.split("\t")[0]) for ln in r.stdout.splitlines() if "\t" in ln)
+    except Exception:
+        return None
+
+
+def pushed_from_here(before, after, cwd):
+    """実行中に origin で増えた・動いたブランチのうち、その先頭がこの手元にある（＝ここから push された）もの。
+    同じ時間に別のセッションが push したブランチは、手元に無い sha なので数えない。"""
+    if before is None or after is None:
+        return []
+    moved = [ref for ref, sha in after.items() if before.get(ref) != sha]
+    hits = []
+    for ref in moved:
+        if subprocess.run(["git", "cat-file", "-e", after[ref] + "^{commit}"], cwd=cwd, capture_output=True).returncode == 0:
+            hits.append(ref)
+    return hits
 
 
 def groq_chat(model, task):
