@@ -26,6 +26,14 @@ class AgyBuild(unittest.TestCase):
         prompt = cmd[cmd.index("-p") + 1]
         self.assertTrue(prompt.startswith(dispatch.AGY_PREAMBLE) and prompt.endswith("do x"))
 
+    def test_prompt_is_one_line_for_cmd_exe(self):
+        # 2026-11-18: cmd.exe cut the prompt at the first newline; the task body and --model never reached agy.
+        cmd, _, _ = dispatch.build("agy", "line1\nline2\r\nline3", "", None)
+        prompt = cmd[cmd.index("-p") + 1]
+        self.assertNotIn("\n", prompt)
+        self.assertNotIn("\r", prompt)
+        self.assertTrue(prompt.endswith("line3"))
+
     def test_model_override(self):
         cmd, _, model = dispatch.build("agy", "do x", "", "gemini-4-argon-medium")
         self.assertEqual(model, "gemini-4-argon-medium")

@@ -175,7 +175,7 @@ AGY_DEFAULT_MODEL = "claude-opus-5-5-medium"  # role: heavy implementation (ANTI
 # `a ; b` とつないだりした1手が丸ごと自動拒否され、1ターンで何もせず終わった。Windows では分けられない行は完全一致になる
 # （https://antigravity.google/docs/permissions?tab=cli）。ファイルは編集ツールで、コマンドは1つずつ出させる。
 AGY_PREAMBLE = ("Headless run. Create and edit files only with your file-editing tools, never with shell commands or redirects. "
-                "Run shell commands one per tool call; never chain them with ; && || or pipes.\n\n")
+                "Run shell commands one per tool call; never chain them with ; && || or pipes. ")
 AGY_OK_STATUS = "SUCCESS"
 # Antigravity の枠は「Claude・GPT」と「Gemini」で別（各5時間＋週）。2026-10-21 実測で Claude 側が週の上限に達し
 # RESOURCE_EXHAUSTED(429, 残り81時間)になった。そのときは Gemini 側の一番賢いモデルで1回だけやり直す。
@@ -221,6 +221,11 @@ def agy_quota_wait(now=None, path=None):
     except (OSError, ValueError):
         return 0
     return max(0, int(until - (now or time.time())))
+
+
+def agy_one_line(text):
+    """cmd.exe (shell=True on Windows) cuts the command line at the first newline, so agy must get one line."""
+    return " ".join(text.replace("\r", "\n").split("\n")).strip()
 
 
 def agy_exe():
@@ -314,7 +319,9 @@ def build(brain, task, allowed, model=None, cwd=None):
         # Headless auto-denies anything not in userSettings.globalPermissionGrants.allow (~/.gemini/config/config.json),
         # so the allow list must be set on the PC first. Not in AUTO_CHAIN: paid quota, and the allow list is per-PC.
         model = model or AGY_DEFAULT_MODEL
-        cmd = [agy_exe(), "-p", AGY_PREAMBLE + task, "--model", model, "--output-format", "json"]
+        # 2026-11-18 PC 実走: Windows の shell=True(cmd.exe) は引数の改行でコマンドラインを打ち切る。前置きの改行で
+        # 本文と --model 以降が消え、agy は前置き1行だけを受け取って止まった。改行は空白にして1行で渡す。
+        cmd = [agy_exe(), "-p", agy_one_line(AGY_PREAMBLE + task), "--model", model, "--output-format", "json"]
     elif brain == "codex":
         # OpenAI Codex CLI headless (PC-measured 2026-11-12, codex-cli 0.147.0, ChatGPT team login).
         # - The PC's config.toml default model (gpt-6.1-sol) answers model_not_found on a ChatGPT login: always pass -m.
