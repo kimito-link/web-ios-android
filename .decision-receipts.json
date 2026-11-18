@@ -541,6 +541,17 @@
         "templates/hooks-relay/web-ios-android-relay.mjs",
         ".claude/hooks/warn-long-running-session.mjs"
       ]
+    },
+    {
+      "at": "2026-11-18T08:36:00.000Z",
+      "responsibility": "henshin-hisho と gmail-secretary-extension に重複コピーされていたAI応答JSON修復関数群とトーン定義を templates/shared/ai-triage/ に正本として抽出（Issue #13/#14、設計: _docs/DESIGN-ai-triage-shared-module-2026-09-08.md）",
+      "decision": "ESTABLISH_REHOME",
+      "canonicalSource": "templates/shared/ai-triage/json-repair.mjs",
+      "scopePaths": [
+        "templates/shared/ai-triage/json-repair.mjs",
+        "templates/shared/ai-triage/draft-tone.mjs",
+        "templates/shared/ai-triage/ai-triage.test.mjs"
+      ]
     }
   ]
 }

@@ -46,6 +46,7 @@
     "config:schema": "node templates/scripts/verify-app-config-schema.mjs",
     "config:schema:selftest": "node templates/scripts/verify-app-config-schema.mjs --selftest",
     "diagnosis-shell:selftest": "node --test templates/diagnosis-shell/diagnosis-shell.test.mjs",
+    "ai-triage:selftest": "node --test templates/shared/ai-triage/ai-triage.test.mjs",
     "assetlinks:check": "node templates/scripts/verify-assetlinks-published.mjs",
     "assetlinks:check:selftest": "node templates/scripts/verify-assetlinks-published.mjs --selftest",
     "twa:signing:check": "node templates/scripts/verify-twa-signing-matches-assetlinks.mjs",

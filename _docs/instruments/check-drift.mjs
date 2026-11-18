@@ -704,6 +704,26 @@ export const PAIRS = [
       // ★2026-10-14: Voice の copies は外した。#56「配線が無い check-pwa-splash.mjs を削除」で
       //   ファイルごと消えており、登録したままだと ⚠ 未存在 が出続ける（配っていない実体）。
     ]
+  },
+  {
+    /*
+     * ★2026-11-18 追加（Issue #13/#14）。henshin-hisho と gmail-secretary-extension の
+     *   triage.js / draft-gen.js に別々にコピーされていた JSON修復関数群とトーン定義を
+     *   templates/shared/ai-triage/ に正本として抽出した（設計:
+     *   _docs/DESIGN-ai-triage-shared-module-2026-09-08.md）。
+     *   ★henshin-hisho 側（backend/src/ 直下がフラット構成か shared/ を切るか）および
+     *   gmail-secretary-extension 側への実際のファイル配布・置き場所確定は別作業のため、
+     *   現時点では `copies: []`（正本の存在確認と check-drift-coverage の監視名供給）として登録する。
+     *   配布先パスが確定して配布した時点で copies に追加する（handoff.md に記録）。
+     */
+    label: 'AIトリアージ共有: JSON修復（json-repair）',
+    canonical: resolve(KIT_ROOT, 'templates/shared/ai-triage/json-repair.mjs'),
+    copies: []
+  },
+  {
+    label: 'AIトリアージ共有: 返信下書きトーン定義（draft-tone）',
+    canonical: resolve(KIT_ROOT, 'templates/shared/ai-triage/draft-tone.mjs'),
+    copies: []
   }
 ];
 
