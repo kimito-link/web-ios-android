@@ -43,7 +43,9 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # and the strongest coder in the chain. PC-measured: commit OK in 242s, 5h window 13%->15% for one small task.
 # hydrogen after grok (2026-11-18): free pro-class helper, PC run committed in 250s. Ahead of qwen/oc (Alibaba quotas
 # often spent) and cf (bills overage here), never ahead of codex/grok: slow (about a minute per call) and 503-prone.
-AUTO_CHAIN = ["codex", "grok", "hydrogen", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# sakura after hydrogen (2026-11-18): PC run committed in 22s, function calling OK on all 3 models. Free plan stops at
+# 3,000 requests/month with 429 (no billing), but that pool is shared with the council seats, so it comes after hydrogen.
+AUTO_CHAIN = ["codex", "grok", "hydrogen", "sakura", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
@@ -322,7 +324,9 @@ def build(brain, task, allowed, model=None, cwd=None):
         # billing (manual.sakura.ad.jp/cloud/ai-engine/02-howto.html). cf bills overage here; this one cannot.
         # An agent task spends one request per tool step, so this is a helper for small/medium tasks, not a main hand.
         # Models (chat-models.html 11/18): preview/DeepSeek-V4.1-Flash-1017, preview/GLM-5.3-Flash, preview/Kimi-K2.7-Code,
-        # all max_tokens 32,000, 1 request <= about 5 min. "preview/" models may change or end without notice.
+        # all max_tokens 32,000, 1 request <= about 5 min. PC 2026-11-18: hello.py -> run -> commit in 22s (default model);
+        # raw API at max_tokens 1600: DeepSeek 4.0s / GLM 9.6s / Kimi 8.6s, body never empty (reasoning comes apart in
+        # message.reasoning), tool_calls returned by all three. "preview/" models may change or end without notice.
         # Key: user env SAKURA_AI_ENGINE_TOKEN ("<UUID>:<secret>", Bearer). The provider is not in models.dev, so it is
         # defined inline through OPENCODE_CONFIG_CONTENT ({env:...} keeps the token out of the config text and argv).
         model = model or SAKURA_DEFAULT_MODEL

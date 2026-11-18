@@ -46,3 +46,11 @@ class SakuraBuild(unittest.TestCase):
         ok, info, _, _ = dispatch.run_one("sakura", "do x", os.getcwd(), "", 1)
         self.assertIsNone(ok)
         self.assertIn("SAKURA_AI_ENGINE_TOKEN", info)
+
+
+class SakuraChain(unittest.TestCase):
+    def test_after_hydrogen_before_paid_or_overage_brains(self):
+        c = dispatch.AUTO_CHAIN
+        self.assertEqual(c.index("sakura"), c.index("hydrogen") + 1)
+        self.assertLess(c.index("sakura"), c.index("cf"))
+        self.assertLess(c.index("sakura"), c.index("glm"))
