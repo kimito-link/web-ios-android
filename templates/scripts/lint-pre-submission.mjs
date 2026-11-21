@@ -40,6 +40,7 @@ import {
 import { checkListingSourceFiles, REQUIRED_LISTING_FILES } from './lib/listing-source-files.mjs';
 import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creative-asset-specs.mjs';
 import { storeFieldsReport } from './check-store-fields.mjs';
+import { trademarkReport } from './check-trademark.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
@@ -1264,6 +1265,20 @@ function hasDistinctionObject(d) {
       warn('store-fields', r.level === 'required' ? 'required' : 'CVR', `${r.storeLabel}「${r.label}」の素材が無い${r.make ? `。作り方: ${r.make}` : ''}${r.fill === 'screen' ? '（API に無い欄。画面で上げる）' : ''}`);
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 36 — アプリ名の商標確認の記録(store-assets/trademark-check.json)。
+//   App Store・Google Play には商標侵害の申し立て窓口があり、通るとアプリの削除・改名になる。名前は公開後に変えるほど高い。
+//   りんくの指示(2026-11-21「これも全体設定に」)。J-PlatPat で第9類・第42類を調べた記録が無い／名前が古い／conflict なら止める。
+//   ルールは docs/ai-rules/14_TRADEMARK_CHECK.md、雛形は `node scripts/check-trademark.mjs --init`。
+// ----------------------------------------------------------------------------
+{
+  const r = trademarkReport(ROOT);
+  if (r.status === 'ok') ok(r.name, r.detail);
+  else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
+  else if (r.status === 'warn') warn(r.name, r.guideline, r.detail);
+  else skip(r.name, r.detail);
 }
 
 // ----------------------------------------------------------------------------

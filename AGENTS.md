@@ -73,6 +73,13 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 ストアに出すときは、必須の欄だけでなく任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も、
 言われなくても素材を作って入れる。空きは `node scripts/check-store-fields.mjs` で出る。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
 
+## 名前を決めたら、ストアに出す前に商標を調べる（2026-11-21）
+
+アプリ・拡張・サービスの名前（改名を含む）を決めたら、J-PlatPat <https://www.j-platpat.inpit.go.jp/t0100> の商標検索で
+第9類・第42類（必要なら35類）に同じ・似た名前（読みが似ているものも）が無いかを調べ、`store-assets/trademark-check.json` に残す。
+かぶったら名前を変える。出願は費用がかかるので提案まで。J-PlatPat はロボットアクセス禁止なので、検索スクリプトは作らない。
+点検は `node scripts/check-trademark.mjs`。正本: [`docs/ai-rules/14_TRADEMARK_CHECK.md`](docs/ai-rules/14_TRADEMARK_CHECK.md)。
+
 ## 直すときに、元々動いていた機能を消さない（2026-11-14）
 
 直すのは頼まれた所だけ。ファイルを丸ごと書き直さない。頼まれて消すもの（ボタン・リンク・関数・テスト・ファイル）は、

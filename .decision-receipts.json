@@ -552,6 +552,17 @@
         "templates/shared/ai-triage/draft-tone.mjs",
         "templates/shared/ai-triage/ai-triage.test.mjs"
       ]
+    },
+    {
+      "at": "2026-11-21T21:22:22.724Z",
+      "responsibility": "アプリ名の商標確認の記録(store-assets/trademark-check.json)の点検。既存に商標を扱う部品は無い(grep 商標/trademark/J-PlatPat で apple-reject-KB の2.3.7注記のみ)。check-store-fields/listing-source-files と同じ『純関数lib＋CLI＋lint CHECK』の型に揃えた",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/trademark-check.mjs",
+        "templates/scripts/check-trademark.mjs",
+        "templates/scripts/lib/trademark-check.test.mjs"
+      ]
     }
   ]
 }
