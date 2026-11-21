@@ -99,6 +99,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
 | 金型・出荷ゲート | [`templates/`](templates/) | 公開 |
 | ロゴ運用ルール | [`docs/brand/LOGO-RULES.md`](docs/brand/LOGO-RULES.md) | 公開 |
 | 発信ルーティン（集客→教育→影響力・SNS/LINE） | [`docs/DISTRIBUTION-ROUTINE.md`](docs/DISTRIBUTION-ROUTINE.md)（数字は `../best-trust/docs/distribution/LOG.md`=非公開） | 公開 |
+| ★集客の設計（インフルエンサーファースト＝「宣伝して」と頼まず、発信者をファンにしてから一緒に売る。新サービス・集客の企画で必ず通す、2026-11-21） | [`docs/ai-rules/13_INFLUENCER_FIRST.md`](docs/ai-rules/13_INFLUENCER_FIRST.md) | 公開 |
 | 事故と教訓（実証知見） | [`site/learnings/`](site/learnings/index.html) | 公開 |
 | ★同じ画面を別の面にも出すときの掟（鏡写し） | [`_docs/DESIGN-ui-mirror-to-another-surface.md`](_docs/DESIGN-ui-mirror-to-another-surface.md) | 公開 |
 | 自己改善ループ（症状→ローカルAIの提案→人間が承認→いつもの出荷手順。全プログラム共通・設計のみ） | [`_docs/DESIGN-self-improvement-loop-2026-10-18.md`](_docs/DESIGN-self-improvement-loop-2026-10-18.md) | 公開 |
