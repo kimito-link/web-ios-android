@@ -563,6 +563,15 @@
         "templates/scripts/check-trademark.mjs",
         "templates/scripts/lib/trademark-check.test.mjs"
       ]
+    },
+    {
+      "at": "2026-11-22T05:15:31.818Z",
+      "responsibility": "ルール・手順書の本文に残った人の手順(本人が貼る・手で投げる等)の検出。既存の check-human-handoff は人に話す瞬間、check-human-script-no-wait は .cmd/.ps1 だけを見ており、文書本文を見る検査は無かった。同じ形(純関数＋selftest＋run.mjs 登録)で別責務として足す",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/diagnostics/check-docs-no-human-steps.mjs"
+      ]
     }
   ]
 }

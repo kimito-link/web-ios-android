@@ -88,6 +88,8 @@
     "check:hooks-wired:selftest": "node templates/diagnostics/check-hooks-wired.mjs --selftest",
     "check:human-script-no-wait": "node templates/diagnostics/check-human-script-no-wait.mjs .",
     "check:human-script-no-wait:selftest": "node templates/diagnostics/check-human-script-no-wait.mjs --selftest",
+    "check:docs-no-human-steps": "node templates/diagnostics/check-docs-no-human-steps.mjs .",
+    "check:docs-no-human-steps:selftest": "node templates/diagnostics/check-docs-no-human-steps.mjs --selftest",
     "hands-free-runner:selftest": "node templates/hands-free-runner/runner.test.mjs",
     "site:claims": "node scripts/verify-claims-coverage.mjs",
     "site:links": "node scripts/verify-internal-links.mjs",

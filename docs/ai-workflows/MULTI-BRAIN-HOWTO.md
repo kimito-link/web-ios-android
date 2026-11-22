@@ -195,7 +195,7 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 結果は `%LOCALAPPDATA%\llm-proxy\runs\<日時>-<brain>.log` に全文、画面には末尾だけ。司令塔はログの要点だけ読む（自分の文脈を太らせない）。
 実測（2026-09-15、同じ「ファイルを1つ作る」）: grok 8秒 / qwen 11秒 / oc 11秒。
 
-司令塔側の節約則: **スクリーンショットは文章の何倍も消費する**。画面の内容は本人に文字で貼ってもらう方を優先する。
+司令塔側の節約則: **スクリーンショットは文章の何倍も消費する**。画面の内容は AI が文字で読み取る（`read_page`・`get_page_text`・状態ファイル）方を優先する。
 
 「Alibaba Model Studio」= Qwen を作っている Alibaba Cloud の AI サービス。OpenAI 互換と Anthropic 互換の両方の口がある。
 「OpenCode」= 無料のオープンソース版 Claude Code（好きなモデルを差し替えられる）。「Ollama」= 自分のPCでモデルを動かす土台。
@@ -204,7 +204,7 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 
 Grok Build（`--brain grok`）と Antigravity は、どちらも「難しい実装」を任せられる先頭集団の頭脳だが、
 **呼び出し方が非対称**: Grok Buildは司令塔（本物のClaude）が`dispatch.py`で自動的に呼べる＝人間は
-何もしなくていい。Antigravityは本人がIDEを手で開いて指示を貼り付ける必要がある＝人手が要る。
+何もしなくていい。Antigravityも2026-11-18から、司令塔が Remote Control で PC の `dispatch.py --brain agy` を走らせて呼べる（人手は要らない。ただし Google 枠・PC が要る）。
 
 この非対称性を主軸に、**Grok Buildを常に優先**する。Antigravityへ回すのは次のいずれかに該当するときだけ:
 

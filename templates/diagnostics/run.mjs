@@ -65,6 +65,11 @@ const CHECKS = [
   //   人に「いちばん下の行を送って」と頼んでいた／日本語入りの .cmd がダブルクリックで即閉じた。
   //   意図的な待ち(本人の OK 等)は human-wait-ok: <理由> で外す。.cmd/.ps1 が無いリポは pass。
   { name: 'check-human-script-no-wait', path: join(__dirname, 'check-human-script-no-wait.mjs') },
+  // ★ルール・手順書(CLAUDE.md/AGENTS.md/docs の .md)に「本人が貼る・押す・実行する」が理由なしで残っていないか
+  //   (2026-11-22追加・りんく「コマンドの実行をさせるのではなくて、人間の手がかかるのでやって欲しい」)。
+  //   実損: 11/18 に AI が回せるようになった後も CLAUDE.md に「本人が手で投げる」が残り、読んだ AI が人に頼んでいた。
+  //   本当に人しかできない行は同じ行に「人の手: <理由>」を書いて外す。docs が無いリポは pass。
+  { name: 'check-docs-no-human-steps', path: join(__dirname, 'check-docs-no-human-steps.mjs') },
   // ★症状の言葉で原因索引を引けるか。引数が無ければ対象から自動で探す。
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
