@@ -21,7 +21,7 @@
 
 ## 2026-10 時点の事実（公式ドキュメントで確認、2026-10-21）
 
-9月時点の前提（「IDE に人が貼るしかない」「Opus 4.6/Sonnet 4.6」）は古くなった。出典は各行のリンク。
+9月時点の前提（「IDE へ手で貼り付けるしかない」「Opus 4.6/Sonnet 4.6」）は古くなった。出典は各行のリンク。
 
 | 項目 | 事実 |
 |---|---|
@@ -51,7 +51,7 @@ Claude の週間上限は「判断・検品・外へ出す操作」だけに使�
 ## 引き継ぎの流れ（新しい形式は作らない）
 
 1. **Claude Code が引き継ぎ書を書く**: 下の「実例1」の7項目＋[`FABLE-3STEP-HOWTO.md`](FABLE-3STEP-HOWTO.md)「ハンドオフ契約」（事実・ゴール・制約は渡す／未確証の見立ては渡さない・冒頭1文）＋機械判定できる完了チェックリスト＋**使うモデル名**。
-2. **Antigravity を専用ブランチで動かす**: 今は本人が引き継ぎ書のパスを貼る。段階2では Claude Code が `agy -p` で自動で呼ぶ。
+2. **Antigravity を専用ブランチで動かす**: Claude Code が Remote Control で PC の `dispatch.py --brain agy`（中身は `agy -p`）を走らせて自動で呼ぶ（2026-11-18 に一括投入で実走済み）。IDE を開いて手で貼り付ける形には戻さない。
 3. **Antigravity は commit で止まる**: push 等は下の「鍵」で拒否。終わったら `handoff.md` の STATUS・TESTS_RUN・TEST_RESULT・REMAINING_RISKS を埋める（リポ直下の [`AGENTS.md`](../../AGENTS.md) がそう指示する）。
 4. **Claude Code が検品して外へ出す**: 差分を読むだけでなく実行する。ここで初めて `guard-external-actions` 等の hook が効く。
 5. **設計が割れたら Argon に反対意見を出させる**: 同じ事実を渡して「この設計の一番弱い所は」と聞き、Claude Code か Fable が裁定する。
