@@ -81,6 +81,11 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 かぶったら名前を変える。出願は費用がかかるので提案まで。J-PlatPat はロボットアクセス禁止なので、検索スクリプトは作らない。
 点検は `node scripts/check-trademark.mjs`。正本: [`docs/ai-rules/14_TRADEMARK_CHECK.md`](docs/ai-rules/14_TRADEMARK_CHECK.md)。
 
+## アプリがある Web には、アプリへの導線を必ず入れる（2026-11-22）
+iPhone / Android のアプリがストアで公開中のサービスの Web（LP・サイト・Web 版の画面）には、自分のアプリの App Store・Google Play の
+公式バッジ（端末で出し分け）と Safari 用バナー `<meta name="apple-itunes-app">` を金型 `templates/web/` で置く。新しいアプリは
+`templates/scripts/lib/app-links.json` に1行足す。点検は `node scripts/check-app-link.mjs`（lint CHECK 37）。正本: [`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](docs/ai-rules/15_APP_LINK_FROM_WEB.md)。
+
 ## 直すときに、元々動いていた機能を消さない（2026-11-14）
 
 直すのは頼まれた所だけ。ファイルを丸ごと書き直さない。頼まれて消すもの（ボタン・リンク・関数・テスト・ファイル）は、

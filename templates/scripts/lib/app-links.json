@@ -1,0 +1,86 @@
+{
+  "_readme": "アプリがある Web サービスの一覧(正本)。check-app-link.mjs --registry と週1の app-link-watch.yml が、各 web のページに自分のアプリの App Store / Google Play への導線があるかを本番で見る。新しいアプリを出したら(ストアの枠を作ったら)1行足す。公開前のストアは自動で問わない(公開されたら自動で問う)。決まり: docs/ai-rules/15_APP_LINK_FROM_WEB.md",
+  "_updated": "2026-11-22",
+  "services": [
+    {
+      "id": "web-health-check",
+      "name": "君斗りんくのWEBサイト健康診断",
+      "repo": "kimito-link/web-health-check-lp",
+      "web": ["https://web-health-check.link/", "https://app.web-health-check.link/"],
+      "ascAppId": "6779860644",
+      "playPackageName": "com.kimito.link.webhealthcheck"
+    },
+    {
+      "id": "malwarecheck",
+      "name": "サイト侵害チェック",
+      "repo": "kimito-link/malwarecheck.site",
+      "web": ["https://malwarecheck.site/"],
+      "ascAppId": "6785846826",
+      "playPackageName": "com.reversehack.malwarecheck"
+    },
+    {
+      "id": "voice",
+      "name": "Kimito Link Voice",
+      "repo": "kimito-link/kimito-link-voice.com",
+      "web": ["https://voice.kimito.link/"],
+      "ascAppId": "6809058070",
+      "playPackageName": "com.kimito.link.voice"
+    },
+    {
+      "id": "yukkuri-exosome",
+      "name": "ゆっくりエクソソーム",
+      "repo": "kimito-link/yukkuri-exosome.link",
+      "web": ["https://yukkuri-exosome.link/"],
+      "ascAppId": "6775201794",
+      "playPackageName": "com.kimito.link.yukkuriexosome"
+    },
+    {
+      "id": "doin",
+      "name": "君斗りんくの動員ちゃれんじ",
+      "repo": "kimito-link/doin-challenge.com",
+      "web": ["https://doin.kimito.link/", "https://doin.kimito.link/lp"],
+      "ascAppId": "6808515868",
+      "playPackageName": "com.kimito.link.doinchallenge"
+    },
+    {
+      "id": "reversehack-partner",
+      "name": "リバースハック",
+      "repo": "kimito-link/partnership_program_website",
+      "web": ["https://partner.reverse-re-birth-hack.com/"],
+      "ascAppId": "6769407908",
+      "playPackageName": "com.reversehack.partner"
+    },
+    {
+      "id": "kimito-link",
+      "name": "kimito.link（キミトリンク）",
+      "repo": "kimito-link/kimitolink-linktree",
+      "web": ["https://kimito.link/"],
+      "ascAppId": "6782380276",
+      "playPackageName": "com.kimito.link.linktree"
+    },
+    {
+      "id": "surechigai",
+      "name": "君斗りんくのすれ違ひ通信",
+      "repo": "kimito-link/surechigai-romi.link",
+      "web": ["https://surechigai.kimito.link/"],
+      "ascAppId": "6796909175",
+      "playPackageName": "com.kimito.link.surechigai"
+    },
+    {
+      "id": "tsuioku",
+      "name": "追憶のきらめき ライブビュー",
+      "repo": "kimito-link/tsuioku-no-kirameki.com",
+      "web": ["https://tsuioku-no-kirameki.com/"],
+      "ascAppId": "6826728669",
+      "playPackageName": "com.kimito.link.tsuioku"
+    },
+    {
+      "id": "henshin-hisho",
+      "name": "君斗りんくのAI返信秘書",
+      "repo": "kimito-link/henshin-hisho",
+      "web": ["https://henshin-hisho.link/"],
+      "ascAppId": null,
+      "playPackageName": "jp.besttrust.henshinhisho"
+    }
+  ]
+}

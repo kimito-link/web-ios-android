@@ -3,6 +3,7 @@
 ホームページ/LP から iOS・Android アプリの **インストールを最大化** するための導線設計KB。
 対象: 日本市場・日本語UX中心、無料（課金なし）のセルフケア/健康習慣系アプリ。
 金型は [`../templates/web/`](../templates/web/)。
+**アプリがある Web には導線を必ず置く**のが全体ルール（[`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](../docs/ai-rules/15_APP_LINK_FROM_WEB.md)、点検は `check-app-link.mjs`）。
 
 > **出典の質**: バッジ規定（Apple/Google公式）・Firebase Dynamic Links停止・健康アプリ要件は
 > **一次情報（Apple/Google公式）で確証**。CTA配置/反復/単一化/スティッキー/PWA摩擦は
