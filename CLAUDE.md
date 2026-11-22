@@ -87,6 +87,10 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 第9類・第42類（必要なら35類）で同じ・似た名前を探して `store-assets/trademark-check.json` に残す。かぶったら名前を変える。出願はお金がかかるので提案まで。
 記録が無い・古い名前のまま・conflict なら `check-trademark.mjs`（lint CHECK 36）が止める。正本: [`docs/ai-rules/14_TRADEMARK_CHECK.md`](docs/ai-rules/14_TRADEMARK_CHECK.md)。
 
+★★**アプリがある Web サービスには、必ずアプリへの導線を入れる（2026-11-22 本人「web系のもので、アプリがあるものは必ずアプリへの導線を入れて欲しい」）**。LP・サイト・Web 版の画面に、自分のアプリの
+App Store・Google Play の公式バッジ（端末で出し分け）と Safari 用バナー `apple-itunes-app` を金型 [`templates/web/`](templates/web/README.md) で置く。新しいアプリを出したら `templates/scripts/lib/app-links.json` に1行足す。
+公開中なのに無ければ `check-app-link.mjs`（lint CHECK 37）が止め、週1の `app-link-watch.yml` が本番を開いて Issue にする。正本: [`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](docs/ai-rules/15_APP_LINK_FROM_WEB.md)。
+
 ★★**AIの修正で、元々動いていた機能を消さない（2026-11-14 本人指示「これがおこらないようにして」「サイト全体で」）**。直すのは頼まれた所だけ（丸ごと書き直さない）。
 頼まれて消すものはコミット/PR に `消してよい: 名前（理由）` を1件ずつ書く。書いていない削除（ボタン・リンク・関数・テスト・ファイル・大きな削除）は
 `guard-unrequested-removal` hook が commit・push 前に**拒否**し、CI `no-regression` が赤にする。消えたら困る機能はリポ直下の `features.json` に書き、直した後は全部通してから報告する。正本: [`docs/ai-rules/11_NO_REGRESSION.md`](docs/ai-rules/11_NO_REGRESSION.md)。

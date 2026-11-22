@@ -41,6 +41,7 @@ import { checkListingSourceFiles, REQUIRED_LISTING_FILES } from './lib/listing-s
 import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creative-asset-specs.mjs';
 import { storeFieldsReport } from './check-store-fields.mjs';
 import { trademarkReport } from './check-trademark.mjs';
+import { appLinkReport } from './check-app-link.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
@@ -1275,6 +1276,20 @@ function hasDistinctionObject(d) {
 // ----------------------------------------------------------------------------
 {
   const r = trademarkReport(ROOT);
+  if (r.status === 'ok') ok(r.name, r.detail);
+  else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
+  else if (r.status === 'warn') warn(r.name, r.guideline, r.detail);
+  else skip(r.name, r.detail);
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 37 — アプリがある Web サービスに、アプリ(App Store・Google Play)への導線があるか。
+//   りんくの指示(2026-11-22「web系のもので、アプリがあるものは必ずアプリへの導線を入れて欲しい」)。
+//   公開中のストアへの導線がこのリポの Web のソースに無ければ止める。公開前のストアは問わない。Safari 用バナーが無ければ warn。
+//   ルールは docs/ai-rules/15_APP_LINK_FROM_WEB.md、入れ方は templates/web/。Web のページが無いリポは skip。
+// ----------------------------------------------------------------------------
+{
+  const r = await appLinkReport(ROOT, { offline: process.env.LINT_OFFLINE === '1' });
   if (r.status === 'ok') ok(r.name, r.detail);
   else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
   else if (r.status === 'warn') warn(r.name, r.guideline, r.detail);

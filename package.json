@@ -100,7 +100,8 @@
     "store-fields:check": "node templates/scripts/check-store-fields.mjs",
     "store-fields:watch": "node templates/scripts/watch-store-fields.mjs",
     "store-fields:watch:selftest": "node templates/scripts/watch-store-fields.mjs --selftest",
-    "trademark:check": "node templates/scripts/check-trademark.mjs"
+    "trademark:check": "node templates/scripts/check-trademark.mjs",
+    "app-link:check": "node templates/scripts/check-app-link.mjs --registry"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

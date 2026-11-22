@@ -572,6 +572,18 @@
       "scopePaths": [
         "templates/diagnostics/check-docs-no-human-steps.mjs"
       ]
+    },
+    {
+      "at": "2026-11-22T23:48:59.548Z",
+      "responsibility": "アプリがあるWebにアプリへの導線(App Store/Google Play・Safariバナー)があるかの判定。既存の templates/web/(導線の金型)と KB は入れ方だけで判定は無し、audit-native-cta はアプリ内の購入導線を隠す逆向きの検査で別責務。check-trademark と同じ『純関数lib＋CLI＋lint CHECK』＋watch-store-fields と同じ週1見張りの型に揃えた",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/app-link-check.mjs",
+        "templates/scripts/check-app-link.mjs",
+        "templates/scripts/lib/app-link-check.test.mjs",
+        "templates/scripts/lib/app-links.json"
+      ]
     }
   ]
 }

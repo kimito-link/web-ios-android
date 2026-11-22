@@ -1,0 +1,88 @@
+# ★アプリがある Web サービスに、アプリへの導線(App Store・Google Play)があるかを本番で見張る（2026-11-22）。
+#
+# ■ なぜ要るか
+#   りんくの指示「web系のもので、アプリがあるものは必ずアプリへの導線を入れて欲しい」。
+#   2026-11-22 に本番で実測したら、ストアに出ているアプリのうち Web のトップに自分のアプリへのリンクがあったのは3件だけだった。
+#   各リポの提出前の点検（lint CHECK 37）だけでは、Web だけ別リポのサービスや、作り直しで消えた導線に気づけない。
+#   ⟹ 週1で一覧（templates/scripts/lib/app-links.json）の全ページをブラウザで開き、導線が無ければ Issue（ai-task）を立てる。
+#
+# ■ 何をするか
+#   check-app-link.mjs --registry: 0=全部あり（バナー無しの warn は含む） / 1=公開中のアプリへの導線が無いページがある / 2=一覧が読めない
+#   1 のときだけ Issue を立てる（同じ題の Issue が開いていれば、コメントを足すだけにする）。
+#
+# ■ 費用: このリポは公開なので Actions は無料。週1・2分ほど（ブラウザの用意を含む）。
+#
+# ■ ★この workflow が判定しないこと
+#   導線の置き場所・文言・見た目の良し悪し（金型 templates/web/ と KB _docs/web-to-app-install-best-practices.md）。
+#   一覧に無いサービスは見ない → 新しいアプリを出したら app-links.json に1行足す（決まり: docs/ai-rules/15_APP_LINK_FROM_WEB.md）。
+
+name: app-link-watch (Webからアプリへの導線の見張り)
+
+on:
+  schedule:
+    - cron: '30 1 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'templates/scripts/lib/app-links.json'
+      - 'templates/scripts/check-app-link.mjs'
+      - 'templates/scripts/lib/app-link-check.mjs'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: ブラウザを用意する（JavaScript で描くページも見るため）
+        run: |
+          npm install --no-save --no-package-lock playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: 一覧の全ページで導線を見る
+        id: watch
+        run: |
+          set +e
+          node templates/scripts/check-app-link.mjs --registry --json app-link-result.json | tee watch-output.txt
+          echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: 導線が無いページがあれば Issue にする
+        if: steps.watch.outputs.code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create ai-task --color 5319e7 --description "AI が受け持つ作業" --force >/dev/null
+          title="アプリがあるのに Web にアプリへの導線が無い（app-link-watch）"
+          {
+            echo "週1の見張り（\`check-app-link.mjs --registry\`）が、アプリが公開中なのに Web のページから App Store / Google Play へ行けないページを見つけました。"
+            echo ""
+            echo "やること: ✗ の行の「直す場所」のリポで、金型 \`templates/web/\`（公式バッジ・端末で出し分け・Smart App Banner）を入れて PR → 本番で \`--registry\` が ✓ になるのを確かめる。"
+            echo "決まり: [docs/ai-rules/15_APP_LINK_FROM_WEB.md](../blob/main/docs/ai-rules/15_APP_LINK_FROM_WEB.md)"
+            echo ""
+            echo '```'
+            cat watch-output.txt
+            echo '```'
+          } > body.md
+          num=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body-file body.md
+          else
+            gh issue create --title "$title" --label ai-task --body-file body.md
+          fi
+
+      - name: 一覧が読めなければ赤にする
+        if: steps.watch.outputs.code == '2'
+        run: exit 1

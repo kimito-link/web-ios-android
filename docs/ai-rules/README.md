@@ -46,6 +46,8 @@ project-root/
    発信者に「宣伝して」と頼まず、まず使ってもらい、気に入った人とだけ専用ページ・専用コードで数えながら長く組む（候補はフォロワー数でなく信頼密度で選ぶ）
 13. ★**アプリ・拡張・サービスの名前を決めたら** `14_TRADEMARK_CHECK.md`。ストアに出す前に J-PlatPat で第9類・第42類（必要なら35類）の
    同じ・似た名前を調べて `store-assets/trademark-check.json` に残す。かぶったら名前を変える。出願は提案まで（費用がかかる）。点検は `check-trademark.mjs`
+14. ★**アプリがある Web サービスには** `15_APP_LINK_FROM_WEB.md`。自分のアプリの App Store・Google Play の公式バッジ（端末で出し分け）と
+   Safari 用バナーを金型 `templates/web/` で置く。新しいアプリは `templates/scripts/lib/app-links.json` に足す。点検は `check-app-link.mjs`（lint CHECK 37・週1の本番見張り）
 
 ## 固定のWebルール
 
