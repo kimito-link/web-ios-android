@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { isValidHookName, candidateRoots, findHook } from './web-ios-android-relay.mjs';
-import { projectHookEntries, applyHooks, install, REPO_ROOT } from './install.mjs';
+import { projectHookEntries, applyHooks, install, repoSkillNames, REPO_ROOT } from './install.mjs';
 
 const RELAY = fileURLToPath(new URL('./web-ios-android-relay.mjs', import.meta.url));
 
@@ -161,6 +161,25 @@ describe('install: 配線', () => {
     const r2 = install({ claudeDir, log: quiet });
     expect(r2.added).toEqual([]);
     expect(readFileSync(join(claudeDir, 'settings.json'), 'utf8')).toBe(after1);
+  });
+  it('リポの .claude/skills/ を ~/.claude/skills/ へ写す（その PC だけの個人スキルには触らない・--dry-run は写さない）', () => {
+    const claudeDir = join(tmp, 'home', '.claude');
+    mkdirSync(join(claudeDir, 'skills', 'my-own'), { recursive: true });
+    writeFileSync(join(claudeDir, 'skills', 'my-own', 'SKILL.md'), 'mine');
+    const names = repoSkillNames(REPO_ROOT);
+    expect(names).toContain('frontend-design');
+    expect(names).toContain('anything-frontend-art-direction');
+
+    const dry = install({ claudeDir, dryRun: true, log: () => {} });
+    expect(dry.skills).toEqual(names);
+    expect(existsSync(join(claudeDir, 'skills', 'frontend-design'))).toBe(false);
+
+    install({ claudeDir, log: () => {} });
+    for (const n of names) {
+      expect(readFileSync(join(claudeDir, 'skills', n, 'SKILL.md'), 'utf8')).toBe(readFileSync(join(REPO_ROOT, '.claude', 'skills', n, 'SKILL.md'), 'utf8'));
+    }
+    expect(existsSync(join(claudeDir, 'skills', 'anything-frontend-art-direction', 'references', 'visual-direction.md'))).toBe(true);
+    expect(readFileSync(join(claudeDir, 'skills', 'my-own', 'SKILL.md'), 'utf8')).toBe('mine');
   });
   it('入れた relay が、このリポの本物の hook を起動できる（記録した checkout の場所を使う）', () => {
     const claudeDir = join(tmp, 'home', '.claude');
