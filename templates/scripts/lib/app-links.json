@@ -1,6 +1,6 @@
 {
   "_readme": "アプリがある Web サービスの一覧(正本)。check-app-link.mjs --registry と週1の app-link-watch.yml が、各 web のページに自分のアプリの App Store / Google Play への導線があるかを本番で見る。新しいアプリを出したら(ストアの枠を作ったら)1行足す。公開前のストアは自動で問わない(公開されたら自動で問う)。決まり: docs/ai-rules/15_APP_LINK_FROM_WEB.md",
-  "_updated": "2026-11-22",
+  "_updated": "2026-11-23",
   "services": [
     {
       "id": "web-health-check",
@@ -77,7 +77,8 @@
     {
       "id": "henshin-hisho",
       "name": "君斗りんくのAI返信秘書",
-      "repo": "kimito-link/henshin-hisho",
+      "repo": "kimito-link/kimito-link-reply-suggest",
+      "_source": "トップ(henshin-hisho.link/)の元は kimito-link-reply-suggest の henshin-hisho-lp.html(+henshin-hisho-lp.js)。Vercel へは GitHub 連携でなくローカルの henshin-hisho-lp-deploy フォルダから CLI で出している(GitHub にそのリポは無い)。kimito-link/henshin-hisho は本体(/app/ と backend)で、トップの元ではない(2026-11-23 確認・Issue #180)",
       "web": ["https://henshin-hisho.link/"],
       "ascAppId": null,
       "playPackageName": "jp.besttrust.henshinhisho"

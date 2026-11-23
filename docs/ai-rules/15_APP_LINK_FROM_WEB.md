@@ -70,6 +70,6 @@ iPhone の Safari には `<meta name="apple-itunes-app">` の1行で純正バナ
 | kimito.link | kimito.link | 両方なし |
 | すれ違ひ通信 | surechigai.kimito.link | Google Play が無い（iPhone 版は公開前） |
 | 追憶のきらめき ライブビュー | tsuioku-no-kirameki.com | Google Play が無い（iPhone 版は公開前） |
-| AI返信秘書 | henshin-hisho.link | Google Play が無い（iPhone 版はまだ無い） |
+| AI返信秘書 | henshin-hisho.link | Google Play が無い（iPhone 版はまだ無い）。直す場所はトップの元 `kimito-link-reply-suggest` の `henshin-hisho-lp.html`（本体リポ `henshin-hisho` ではない。Issue #180） |
 
 直すのは各リポの PR（または Issue ai-task）で進める。最新の状態は週1の見張りの出力を見る。
