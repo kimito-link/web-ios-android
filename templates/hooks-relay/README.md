@@ -43,3 +43,8 @@ npx vitest run templates/hooks-relay/
 ```
 
 一時ディレクトリを HOME・`~/.claude` に見立てる。本物の `~/.claude` には触らない。
+
+## スキルもそろえる（2026-11-23）
+
+`install.mjs` は hook の配線と一緒に、このリポの `.claude/skills/<名前>/` を `~/.claude/skills/<名前>/` へ丸ごと写す（正本はリポ側なので上書き。その PC だけの個人スキルには触らない）。
+リポにスキルを足したら、各PCで走らせ直すだけで全プロジェクトに効く（AI が Remote Control で走らせる）。経緯: `_docs/DESIGN-anything-frontend-skill-2026-11-23.md`。

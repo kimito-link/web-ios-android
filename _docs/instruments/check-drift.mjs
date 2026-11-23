@@ -691,6 +691,26 @@ export const PAIRS = [
   },
   {
     /*
+     * ★2026-11-23追加。anything-frontend-art-direction（RNA4219、MIT）を無改変で取り込んだ。
+     *   参考資料が多いスキルなので、ずれの目印は SKILL.md と UPSTREAM.md（取り込んだ版の記録）の2つ。
+     *   ~側へは templates/hooks-relay/install.mjs がスキル一式を写す
+     *   （手順: _docs/DESIGN-anything-frontend-skill-2026-11-23.md）。
+     */
+    label: 'anything-frontend-art-directionスキル（SKILL.md）',
+    canonical: resolve(KIT_ROOT, '.claude/skills/anything-frontend-art-direction/SKILL.md'),
+    copies: [
+      resolve(homedir(), '.claude/skills/anything-frontend-art-direction/SKILL.md')
+    ]
+  },
+  {
+    label: 'anything-frontend-art-directionスキル（取り込んだ版 UPSTREAM.md）',
+    canonical: resolve(KIT_ROOT, '.claude/skills/anything-frontend-art-direction/UPSTREAM.md'),
+    copies: [
+      resolve(homedir(), '.claude/skills/anything-frontend-art-direction/UPSTREAM.md')
+    ]
+  },
+  {
+    /*
      * ★2026-10-05追加。PWA起動画面の検査。旧説（background_color を外す）を反転し、
      *   「background_color があり --expect-bg と一致」を合格にした金型。
      *   surechigai は APP_BASE_BG を埋め込んだ特化コピーをやめ、無改変コピー＋

@@ -68,6 +68,8 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 [`.claude/skills/frontend-design/SKILL.md`](.claude/skills/frontend-design/SKILL.md)（Anthropic 公式スキル）を読み、
 方向性（色・書体・配置・原則）を決めて「AIのありがちな見た目」と比べて直してから書く。方向は自分で決めて報告する（人を待たない）。
 ブランド規定（`docs/brand/LOGO-RULES.md`・キャラ）がある所ではそちらが勝つ。
+続けて [`.claude/skills/anything-frontend-art-direction/SKILL.md`](.claude/skills/anything-frontend-art-direction/SKILL.md)（MIT）で、
+方向の根拠を実在の作品と制作者の理由から取り、和文の書体と採用条件（同じ中身の2案比較）で詰める（2026-11-23）。
 
 ## ストアの入力欄は全部埋める（2026-11-09）
 

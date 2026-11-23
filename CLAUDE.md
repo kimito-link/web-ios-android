@@ -78,6 +78,7 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 （人を待たない。曖昧な依頼の言語化には [`DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md) を使ってよい）
 ②各リポのブランド規定（[`LOGO-RULES.md`](docs/brand/LOGO-RULES.md)・キャラ・既存のデザイン部品）がある所ではそちらが勝つ
 ③作った後は自分でスクリーンショットを撮って見直す。取り込みの経緯・更新手順: [`_docs/DESIGN-frontend-design-skill-2026-10-31.md`](_docs/DESIGN-frontend-design-skill-2026-10-31.md)。
+★続けて [`anything-frontend-art-direction`](.claude/skills/anything-frontend-art-direction/SKILL.md)（MIT・無改変）で**方向の根拠を実在の作品と制作者の理由から取り**、和文の書体・採用条件（同じ中身の2案比較）で詰める。frontend-design＝方向とありがちさの点検、こちら＝見本の根拠・書体・a11y等の仕様出典。併用する（2026-11-23。経緯: [`_docs/DESIGN-anything-frontend-skill-2026-11-23.md`](_docs/DESIGN-anything-frontend-skill-2026-11-23.md)）。
 
 ★★**ストアの入力欄は、任意でも言われなくても全部埋める（2026-11-09 本人指示「CVRにも影響しそう」）**。提出・更新の前に
 `node templates/scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
