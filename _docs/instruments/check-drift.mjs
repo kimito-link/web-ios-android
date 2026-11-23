@@ -715,15 +715,22 @@ export const PAIRS = [
      *   gmail-secretary-extension 側への実際のファイル配布・置き場所確定は別作業のため、
      *   現時点では `copies: []`（正本の存在確認と check-drift-coverage の監視名供給）として登録する。
      *   配布先パスが確定して配布した時点で copies に追加する（handoff.md に記録）。
+     * ★2026-11-23（Issue #14）: henshin-hisho#3（PR henshin-hisho#9）で
+     *   backend/src/shared/ai-triage/ に配布したので copies に登録した。
+     *   gmail-secretary-extension は git リポジトリではない（置き場所が人の PC ごとに違う）ため登録しない。
      */
     label: 'AIトリアージ共有: JSON修復（json-repair）',
     canonical: resolve(KIT_ROOT, 'templates/shared/ai-triage/json-repair.mjs'),
-    copies: []
+    copies: [
+      resolve(GH_ROOT, 'henshin-hisho/backend/src/shared/ai-triage/json-repair.mjs')
+    ]
   },
   {
     label: 'AIトリアージ共有: 返信下書きトーン定義（draft-tone）',
     canonical: resolve(KIT_ROOT, 'templates/shared/ai-triage/draft-tone.mjs'),
-    copies: []
+    copies: [
+      resolve(GH_ROOT, 'henshin-hisho/backend/src/shared/ai-triage/draft-tone.mjs')
+    ]
   }
 ];
 
