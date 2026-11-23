@@ -7,6 +7,9 @@
     {{ascAppId}}        = stores.ascAppId        例: 6775201794
     {{playPackageName}} = stores.playPackageName 例: com.kimito.link.yukkuriexosome
     {{productionUrl}}   = https://{{identity.productionDomain}} 例: https://yukkuri-exosome.link/
+  ★片方のストアにしか無いアプリ（例: Google Play だけ公開中の henshin-hisho）は、無い方を空文字 '' に置換する。
+    無い方のバッジは出さず、その端末（例: iPhone）では導線ごと出さない（他OSのストアへ送らない）。
+    App Store に無いなら、下の Smart App Banner メタも置かない。
 
   前提:
     1. css/app-download.css を読み込んでおく。
@@ -44,19 +47,25 @@
   var playBadge = '<a href="' + PLAY + '" target="_blank" rel="noopener" class="store-badge store-badge--play" aria-label="Google Playで手に入れよう">'
     + '<img src="images/store-badges/google-play-ja.png" alt="Google Playで手に入れよう"></a>';
 
+  // 片方のストアにしか無いアプリは、無い方を '' にしておく（置換し忘れの {{...}} も「無い」扱い）
+  var hasApple = /^\d{6,12}$/.test(ASC_APP_ID);
+  var hasPlay = /^[A-Za-z]\w*(\.[A-Za-z_]\w*)+$/.test(PLAY_PACKAGE);
+
   var badges, note = '';
-  if (isIOS) { badges = appleBadge; }
-  else if (isAndroid) { badges = playBadge; }
+  if (isIOS) { badges = hasApple ? appleBadge : ''; }
+  else if (isAndroid) { badges = hasPlay ? playBadge : ''; }
   else {
-    badges = appleBadge + playBadge;
-    note = '<p class="app-download__note">スマホで開くと、お使いの端末に合ったストアが表示されます</p>';
+    badges = (hasApple ? appleBadge : '') + (hasPlay ? playBadge : '');
+    if (hasApple && hasPlay) note = '<p class="app-download__note">スマホで開くと、お使いの端末に合ったストアが表示されます</p>';
   }
+  if (!badges) return; // この端末向けのアプリが無い（例: Play だけのアプリを iPhone で開いた）
+  var platforms = hasApple && hasPlay ? 'iPhone・Android アプリ' : (hasApple ? 'iPhone アプリ' : 'Android アプリ');
 
   document.getElementById('app-download-mount').innerHTML =
       '<div class="app-download">'
     +   '<div class="app-download__chip">Download</div>'
     +   '<h2 class="app-download__title">アプリでもっと便利に</h2>'
-    +   '<p class="app-download__lead">iPhone・Android アプリをリリースしました。完全無料・登録不要。</p>'
+    +   '<p class="app-download__lead">' + platforms + 'をリリースしました。完全無料・登録不要。</p>'
     +   '<div class="app-download__badges">' + badges + '</div>'
     +   note
     + '</div>';
