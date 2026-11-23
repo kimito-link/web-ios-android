@@ -67,3 +67,11 @@
     color: #9a8f88;
     margin: 14px 0 0;
 }
+
+/* Google Play の公式 PNG（646x250）は周りに余白が入っている。48px のままだと見える部分が約32px になり、
+   App Store より小さく見える（Google の「他のバッジと同寸以上」に反する）。72px で置いて余白ぶん(約12px)を
+   負のマージンで相殺し、見える高さを App Store と同じ 48px にそろえる（2026-11-22 kimito-link-voice で実測して還流）。 */
+.store-badge--play img {
+    height: 72px;
+    margin: -12px;
+}

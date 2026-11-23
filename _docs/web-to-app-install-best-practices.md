@@ -111,7 +111,7 @@
 ## 適用チェックリスト（新規アプリで Web 導線を作るとき）
 
 - [ ] `fetch-store-badges.mjs` で公式バッジを取得（改変しない）
-- [ ] CSS で両バッジ 48px 統一（Google ≧ Apple）
+- [ ] 見える高さを 48px にそろえる（Google の PNG は余白込みなので 72px＋負のマージン＝金型の `.store-badge--play`。Google ≧ Apple）
 - [ ] `<head>` に `apple-itunes-app` メタ（app-id / app-argument）
 - [ ] UA 出し分け（iOS/Android/PC）＋ Capacitor内は非表示
 - [ ] 主要CTAは1つ。機能/社会的証明/プライバシーの各節後に反復配置
