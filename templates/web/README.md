@@ -10,7 +10,7 @@
 | ファイル | 役割 | アプリ固有値の扱い |
 | --- | --- | --- |
 | `app-download-section.html` | DL導線本体（Capacitor判定・UA出し分け・公式バッジ・mountスクリプト） | `{{ascAppId}}` / `{{playPackageName}}` / `{{productionUrl}}` を置換 |
-| `app-download.css` | バッジ・カードのスタイル（48px統一でGoogle要件を満たす） | `{{primaryColor}}` / `{{accentColor}}` を置換 |
+| `app-download.css` | バッジ・カードのスタイル（見える高さを48pxにそろえる。Google の PNG は余白込みで72px） | `{{primaryColor}}` / `{{accentColor}}` を置換 |
 | `fetch-store-badges.mjs` | 公式の日本語バッジ（Apple SVG / Google PNG）を公式ソースから取得 | 無改変（出力先だけ引数で指定可） |
 
 ## 使い方
@@ -41,13 +41,13 @@
 ## 守ること（ガイドライン由来・破ると規約違反リスク）
 
 - **公式バッジを使う。自作ダウンロードボタンで代替しない。** バッジ画像は無改変。
-- **Google バッジを App Store バッジより小さくしない**（同寸以上）。CSS は 48px で統一済み。
+- **Google バッジを App Store バッジより小さくしない**（同寸以上）。Google の公式 PNG は周りに余白があるので、48px にすると見える部分が約32pxになり小さく見える。CSS は Google だけ 72px＋負のマージンで、見える高さを 48px にそろえている（`.store-badge--play`）。
 - **Apple バッジの "App Store" は英語のまま**。日本語化は「で入手」部分のみ（公式アセットがそうなっている）。
 - **アプリ内（Capacitorネイティブ）では非表示**。導線HTMLが自動でそうする。
 - **健康/医療系アプリ**は、プライバシー（端末内のみ・第三者提供なし等）を導線の安心材料として明記する。
 
 ## 検証（Exosome での実測）
 
-- 両バッジが 48px で正しくレンダリング（Apple 131px / Google 124px 幅）→ Google が小さくならない。
+- 両バッジが 48px で正しくレンダリング（Apple 131px / Google 124px 幅）。★ただし Google は余白込みの高さなので、見える部分は約32pxで小さく見えていた → 2026-11-22 に `.store-badge--play`（72px＋負のマージン）で見える高さを 48px にそろえた。
 - UA 出し分け: iPhone/iPad→App Store単独 / Android→Play単独 / Windows/Mac→両方+案内文。
 - コンソールエラーなし。Capacitor 実行時は非表示。
