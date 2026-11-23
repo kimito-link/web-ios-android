@@ -33,6 +33,9 @@
    - `{{ascAppId}}` = `stores.ascAppId`
    - `{{playPackageName}}` = `stores.playPackageName`
    - `{{productionUrl}}` = `https://` + `identity.productionDomain` + `/`
+   - **片方のストアにしか無いアプリ**（例: Google Play だけ公開中）は、無い方を空文字 `''` にする。
+     無い方のバッジは出ず、その端末（Play だけなら iPhone）では導線ごと出ない（他OSのストアへ送らない）。
+     App Store に無いなら手順3の Smart App Banner メタも置かない。
 
    置き場所は **ファーストビュー固執より、機能説明・社会的証明・プライバシー訴求の
    各セクション後に置く / 反復する** 方がインストールに効く（健康・セルフケア系は
