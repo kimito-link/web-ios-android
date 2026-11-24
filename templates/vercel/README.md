@@ -32,9 +32,16 @@
 | 最後のコミットが14日より古いブランチ | 作る | 省く |
 | `vercel.json` か、この判定そのものが変わった | 作る | 作る |
 | ブランチの最初のデプロイ（前回の SHA が空） | — | 本番ブランチとの差分で上の行と同じに決める |
+| 前回の SHA は来たが、浅い clone の中に無い | 作る | 作る |
 | 比べる相手が見つからない・git が使えない | 作る | 作る |
 
 「省く」は Vercel 上で `Canceled (Ignored Build Step)` と出るだけで、前の本番はそのまま残る。
+
+★「作る」に倒れたとき、ログの理由は3つに分かれる（2026-11-24、#196）:
+`no previous deploy sha`（Vercel が渡していない）／`previous deploy sha <7桁> is not in the clone`（渡されたが深さ10の clone の外。
+本番を省いた後や merge commit で大きく進んだ後に起きる。origin が無いので取りにも行けない）／`git diff ... failed`。
+続く `[vercel-ignore-build] facts: ...` 行（`previous_sha`・`commits_in_clone`・`head_parents` 等）で原因を追う。
+以前は2つ目も1つ目と同じ文で出ていたので、古いログの「no previous deploy sha」は「来ていない」とは限らない。
 
 ## 確かめ方
 
