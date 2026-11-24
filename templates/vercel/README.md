@@ -16,6 +16,8 @@
 `vercel.json` を Root Directory の中に置いている場合、スクリプトのパスはそこからの相対になる（`../scripts/...`）。
 見張るパス（引数）は**いつもリポ直下から**書く（`git diff --name-only` がリポ直下からのパスを返すため）。
 本番ブランチが `main`・`master` 以外なら `--base=<ブランチ名>` を足す（ブランチの最初のデプロイで比べる相手）。
+同じリポ・同じブランチが2つ以上の Vercel プロジェクトにつながっているなら `--only-project=<正本の prj_ID>`（カンマ区切り・本番ドメインも可）を足す。
+`VERCEL_PROJECT_ID`（無ければ `VERCEL_PROJECT_PRODUCTION_URL`）がどれとも違うプロジェクトは、本番もプレビューも省く（理由 `duplicate project`）。どちらも取れなければ判断せず作る。
 
 ★ブランチの最初のデプロイでは Vercel が前回の SHA を渡さない（docs: "It's empty on a branch's first deployment"）。
 そのときは本番ブランチ（`main`/`master`。浅い clone で無ければ `git fetch --depth=1` で先頭だけ取る）との差分で決める。
