@@ -272,7 +272,7 @@ ChatGPT の team プラン（**もう払っている定額**・Claude と別の�
 | 量が多くて急がないもの（夜の一括・大量の下書き） | **ローカルLLM**（ジョブに `brain: local`、夜に job-runner が回す） | 無料・無制限。遅い分は寝ている間に回す |
 | 新しいモデルの試験 | Colab 無料版（[`COLAB-HOWTO.md`](COLAB-HOWTO.md)）・レッツノート | 本番の順番には入れない |
 | 判断込みの重い実装で Codex が2回失敗 | Antigravity（§1c、`--brain agy`） | Google 側の枠（Claude の週枠を使わない作り） |
-| PC が切れている間・夜の調べ物、GitHub の見張り、Issue の整理、PC が要らない小さな実装の下書きPR | **ChatGPT の dot**（§1f、Issue に `dot` ラベル） | dot との会話はプレビュー中は使用量に数えない。クラウドに自分のPCを持つので会社PCが止まっていても動く |
+| PC が切れている間・夜の調べ物、GitHub の見張り、Issue の整理、PC が要らない小さな実装の下書きPR | **ChatGPT の dot**（§1f、Issue に `dot` ラベルだけ） | dot との会話はプレビュー中は使用量に数えない。クラウドに自分のPCを持つので会社PCが止まっていても動く |
 
 - ★Antigravity の枠（2026-11-12 PC 実測、agy 1.5.1）: Opus・Argon・Flash・GPT-OSS がどれも同じ「Resets in 76h」で 429 ＝ **全モデル共通の1つの枠**に見える（推測）。使い切ると3日ほど戻らない。dispatch は 429 の残り時間を `%LOCALAPPDATA%\llm-proxy\runs\agy-quota.json` に覚え、戻るまで agy を数秒で飛ばす。
   使えるモデル slug: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-*`・`gemini-4-argon-*`・`gemini-3.8-flash-*`・`gpt-oss-120b-medium`。
@@ -302,7 +302,8 @@ Claude の週枠を空けるために、既存の頭脳で埋まらない穴だ�
 
 **だから決めたこと**
 - dot は「PC の要らない見張り役・調べ役・下書き役」。PC が動いているときの実装は今までどおり `--brain codex`（push 止めを PC で実測済み）を先に使う。dot で実装すると Codex の枠を使うので、同じ仕事を両方に投げない。
-- 仕事の渡し方は **GitHub の Issue**（API が無いので、dot の定期チェックに Issue を読ませる）。司令塔は Issue を立ててラベル `ai-task` と `dot` を付ける。dot は1日数回それを拾い、終わったら Issue にコメントするか下書きPRを出す。司令塔が差分とチェックを見てからマージする（他のAIと同じ）。
+- 仕事の渡し方は **GitHub の Issue**（API が無いので、dot の定期チェックに Issue を読ませる）。司令塔は Issue を立ててラベル **`dot` だけ**を付け、本文の1行目に「担当AI: dot」と書く。dot は1日数回それを拾い、終わったら Issue にコメントするか下書きPRを出す。司令塔が差分とチェックを見てからマージする（他のAIと同じ）。
+  ★`ai-task` は付けない。`ai-task` は `idea-to-pr.yml`（Claude が Issue を自動で実装する仕組み）の合図で、2026-11-24 の最初の試験（#188）では dot より先に Claude が1分で拾い、Claude の枠と Actions の分を使ってしまった。今は `idea-to-pr.yml` 側も `dot` ラベルの Issue では走らない（同じ Issue で2〜3回走っていた件も、`labeled` だけで起動する形に直した）。
 - dot の定期チェックの設定は、AI が Claude in Chrome で dot の画面に下の文を貼って1回だけ行う（人の手は使わない。Chrome が使えないときは後で AI がやり直す）。
 
 **dot に回してよい仕事**
@@ -320,14 +321,16 @@ Claude の週枠を空けるために、既存の頭脳で埋まらない穴だ�
 **dot に1回だけ貼る文**（定期チェックの設定。AI が Claude in Chrome で貼る）
 
 ```text
-これから kimito-link の GitHub で、ラベル「dot」と「ai-task」が付いた open の Issue を、毎日 9時・13時・18時・22時（日本時間）に見回ってください。
+これから kimito-link の GitHub で、ラベル「dot」が付いた open の Issue を、毎日 9時・13時・18時・22時（日本時間）に見回ってください。
 見つけたら、そのリポの AGENTS.md と CLAUDE.md（先頭から core:end まで）を読んでから、Issue に書かれた仕事だけをしてください。
 - 読むだけの調べ物は、結果を Issue にコメントする
 - ファイルを直す仕事は、ブランチ dot/<短い作業名> を作り、下書きPR（draft）にして Issue にリンクする。PR本文の最初に「担当AI: dot / 目的 / 状態 / 次にすること」の4行
 - 終わったら Issue に「dot: 済み」とコメントし、ラベル dot を外す（Issue は閉じない）
 してはいけないこと: main への push、PR のマージ、ほかのブランチや PR の書き換え、secret・鍵・.env を読む・書く、デプロイ、課金、削除、メールや SNS への送信。迷ったらその Issue にコメントして止まってください。
+Codex の枠が切れているときは、ファイルを直す仕事には手をつけず、Issue に「Codex の枠切れで待ち」とコメントして止まってください。
 ```
 
+- ★dot で実装すると Codex の枠を使うので、Codex が切れているとき（11/24 りんくの画面で「使用制限に達しました」を確認）は dot の会話（調べ物・コメント）だけが動く。だから dot には調べ物を中心に渡す。
 - ★最初の1件で、dot が本当に下書きPRまでで止まるか（push 先が `dot/` だけか）を司令塔が確かめる。確かめるまでは「調べ物・コメント」の Issue だけを渡す。
 - ★`main` はブランチ保護あり（11/24 GitHub の API で確認）なので、dot が間違えても `main` へ直接は入りにくい。それでもマージは司令塔だけがする（dot の決まりと司令塔の検品の二重で止める）。
 
