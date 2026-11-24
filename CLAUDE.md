@@ -171,7 +171,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    ファイル作成・定型修正・調査・文章量産・テスト追加は `python docs/ai-workflows/tools/dispatch.py --brain <codex|grok|qwen|oc|cf|local> --cwd <dir> "<やること>"`
    で投げ、返ってきたログの要点だけ読んで検品する。dispatch の先（Codex 等の CLI）が無い環境（クラウド）では Opus のサブエージェントに回す。
    ★投げる目安（Opus が司令塔のとき）: 1〜2ファイル・10分ほどで終わる直しは自分でやる。投げるのは量の多い定型作業・3ファイル以上にまたがる実装・長い調査。
-   投げる費用（起動・説明・検品）が直しより高くなるものは投げない。Fable のときは下の「頭脳労働専用」が勝つ（小さな直しも Opus へ）。細目・財布は正本 [`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。スクリーンショットは文章の何倍も上限を消費するので、画面の内容は AI が文字で読み取る（`read_page`・`get_page_text`・状態ファイル）。
+   投げる費用（起動・説明・検品）が直しより高くなるものは投げない。Fable のときは下の「頭脳労働専用」が勝つ（小さな直しも Opus へ）。細目・財布は正本 [`MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1b。スクリーンショットは文章の何倍も上限を消費するので、画面の内容は AI が文字で読み取る（`read_page`・`get_page_text`・状態ファイル）。大きな出力も grep・jq・スクリプトで要る所だけ絞ってから読む（同 §1b「コードで絞ってから読む」、`warn-large-tool-output` hook が知らせる）。
    ★実装・テスト・定型作業は **Codex（`--brain codex`・ChatGPT の定額＝Claude と別の財布）を先頭**に、次に Grok Build（2026-11-12、同 HOWTO §1e）。予備は AWS Kiro Free（カード不要・Sonnet 4.5・薄い）→ Ollama×Claude Code（構築済み・機密用）の順。
    Google Antigravity（Claude の週間上限とは別の枠）は、同 HOWTO §1c の条件に当たるときだけ、AI が Remote Control で PC の `dispatch.py --brain agy` を走らせて回す（2026-11-18 実走済み。人に投げさせない）。
    ★Antigravity は CLAUDE.md を読まない（読むのは [`AGENTS.md`](AGENTS.md)）・Turbo は push も止まらない。拒否リスト・
