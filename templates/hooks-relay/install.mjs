@@ -125,7 +125,8 @@ export function install({ claudeDir, dryRun = false, repoRoot = REPO_ROOT, log =
   let userSettings = {};
   if (existsSync(target)) {
     try {
-      userSettings = JSON.parse(readFileSync(target, 'utf8'));
+      // 先頭の BOM（PowerShell の Set-Content/Out-File で書いた settings.json に付く）を外してから読む。Claude Code 本体は BOM 付きでも読める。
+      userSettings = JSON.parse(readFileSync(target, 'utf8').replace(/^﻿/, ''));
     } catch (e) {
       throw new Error(`${target} が JSON として読めないので触りません: ${e.message}`);
     }
