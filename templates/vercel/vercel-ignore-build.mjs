@@ -86,16 +86,19 @@ function git(args, timeout = 20000) {
  */
 function firstDeployBase(baseArg) {
   const names = baseArg ? [baseArg] : ['main', 'master'];
+  const head = git(['rev-parse', 'HEAD']);
+  // ★ローカルのブランチ名(main/master)は見ない。Vercel の clone では、いまビルドする commit が
+  //   ローカルの "master" として置かれている(2026-11-24 実測: "vs master merge-base" で差分0件になった)。
+  //   リモートの origin/<name> だけを使い、HEAD と同じものは比べる相手にしない。
   for (const name of names) {
-    for (const r of [`origin/${name}`, name]) {
-      if (git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`])) return { sha: r, label: r };
-    }
+    const sha = git(['rev-parse', '--verify', '--quiet', `refs/remotes/origin/${name}^{commit}`]);
+    if (sha && sha !== head) return { sha, label: `origin/${name}` };
   }
   // Vercel は depth=10 の浅い clone で、本番ブランチを持っていないことがある。先頭だけ取ってくる。
   for (const name of names) {
     if (git(['fetch', '--quiet', '--no-tags', '--depth=1', 'origin', name]) != null) {
       const sha = git(['rev-parse', '--verify', '--quiet', 'FETCH_HEAD^{commit}']);
-      if (sha) return { sha, label: `origin/${name} (fetched)` };
+      if (sha && sha !== head) return { sha, label: `origin/${name} (fetched)` };
     }
   }
   return null;
