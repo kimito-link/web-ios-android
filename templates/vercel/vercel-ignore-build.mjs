@@ -44,15 +44,16 @@ const norm = (p) => p.replace(/\\/g, '/').replace(/^\.\//, '');
  * @param {string[]|null} o.changed 前回のデプロイから変わったファイル(リポ直下から)。分からなければ null
  * @param {number|null} [o.ageDays] 最後のコミットから何日たったか。分からなければ null
  * @param {string[]} [o.watch] サイトに効くパス(前方一致)。空なら「docs だけの変更」だけを省く
+ * @param {string} [o.unknownWhy] changed が null のとき、なぜ分からないか(ログ用。判定は変えない)
  * @returns {{build: boolean, reason: string}}
  */
-export function decide({ env = '', ref = '', changed = null, ageDays = null, watch = [] }) {
+export function decide({ env = '', ref = '', changed = null, ageDays = null, watch = [], unknownWhy = 'no previous deploy sha' }) {
   const production = env === 'production';
   if (!production && BOT_BRANCH.test(ref)) return { build: false, reason: `bot branch (${ref})` };
   if (!production && ageDays != null && ageDays > STALE_DAYS) {
     return { build: false, reason: `last commit is ${Math.floor(ageDays)} days old (${ref})` };
   }
-  if (changed == null) return { build: true, reason: 'changed files unknown (no previous deploy sha) -> build' };
+  if (changed == null) return { build: true, reason: `changed files unknown (${unknownWhy}) -> build` };
   const files = changed.map(norm).filter(Boolean);
   if (files.length === 0) return { build: true, reason: 'no diff info -> build' };
   if (files.some((f) => ALWAYS_BUILD.some((re) => re.test(f)))) return { build: true, reason: 'vercel config changed' };
@@ -129,9 +130,20 @@ function main(argv) {
   }
   let changed = null;
   let from = 'no base';
+  let unknownWhy = 'no previous deploy sha';
   if (prev) {
-    const out = git(['diff', '--name-only', prev, 'HEAD']);
-    if (out != null) { changed = out.split('\n').filter(Boolean); from = `vs previous deploy ${prev.slice(0, 7)}`; }
+    // ★PREVIOUS_SHA は「このプロジェクト・ブランチで最後に成功したデプロイ」の SHA(Vercel docs)。
+    //   本番を省いた(Canceled)後や、merge commit で多くの commit が入った後は、深さ10の浅い clone の外にあることがある。
+    //   以前はそのとき git diff が黙って失敗し「no previous deploy sha」と同じ文になって、来ないのか clone に無いのか
+    //   見分けられなかった(#196: reply-suggest-link・kimitolink-linktree の本番)。ここで分けて出す。
+    //   clone に無いときは origin が無く取りにも行けない(#193)ので、分からない=作るのまま。
+    if (git(['cat-file', '-e', `${prev}^{commit}`]) == null) {
+      unknownWhy = `previous deploy sha ${prev.slice(0, 7)} is not in the clone`;
+    } else {
+      const out = git(['diff', '--name-only', prev, 'HEAD']);
+      if (out != null) { changed = out.split('\n').filter(Boolean); from = `vs previous deploy ${prev.slice(0, 7)}`; }
+      else unknownWhy = `git diff vs previous deploy ${prev.slice(0, 7)} failed`;
+    }
   } else if (env !== 'production') {
     const base = firstDeployBase(baseArg);
     if (base) {
@@ -142,8 +154,22 @@ function main(argv) {
   }
   const ct = Number(git(['log', '-1', '--format=%ct']));
   const ageDays = Number.isFinite(ct) && ct > 0 ? (Date.now() / 1000 - ct) / 86400 : null;
-  const r = decide({ env, ref, changed, ageDays, watch });
+  const r = decide({ env, ref, changed, ageDays, watch, unknownWhy });
   console.log(`[vercel-ignore-build] ${r.build ? 'BUILD' : 'SKIP'}: ${r.reason} [${from}]`);
+  // 比べられなかったときだけ、原因を追うための事実を1行足す(秘密は出さない。SHA は先頭7文字)。
+  if (changed == null) {
+    const parents = (git(['rev-list', '--parents', '-n', '1', 'HEAD']) || '').split(' ').length - 1;
+    const facts = [
+      `env=${env || '-'}`,
+      `ref=${ref || '-'}`,
+      `previous_sha=${prev ? prev.slice(0, 7) : '(empty)'}`,
+      `commits_in_clone=${git(['rev-list', '--count', 'HEAD']) ?? '?'}`,
+      `shallow=${git(['rev-parse', '--is-shallow-repository']) ?? '?'}`,
+      `head_parents=${parents}`,
+      `provider=${process.env.VERCEL_GIT_PROVIDER || '-'}`,
+    ];
+    console.log(`[vercel-ignore-build] facts: ${facts.join(' ')}`);
+  }
   return r.build ? 1 : 0;
 }
 
@@ -159,13 +185,16 @@ function selftest() {
     [{ env: 'preview', ref: 'claude/x', changed: ['vercel.json'], watch: ['site/'] }, true],
     [{ env: 'preview', ref: 'old', changed: ['a.js'], ageDays: 30 }, false],
     [{ env: 'production', ref: 'main', changed: ['a.js'], ageDays: 30 }, true],
+    [{ env: 'production', ref: 'main', changed: null, unknownWhy: 'previous deploy sha abc1234 is not in the clone' }, true],
   ];
   let ng = 0;
   for (const [input, want] of cases) {
     const got = decide(input).build;
     if (got !== want) { ng++; console.error('NG', JSON.stringify(input), 'want', want, 'got', got); }
   }
-  console.log(ng ? `selftest: ${ng} NG` : `selftest: ${cases.length} ok`);
+  const why = decide({ env: 'production', changed: null, unknownWhy: 'previous deploy sha abc1234 is not in the clone' }).reason;
+  if (!why.includes('not in the clone')) { ng++; console.error('NG unknownWhy not in reason:', why); }
+  console.log(ng ? `selftest: ${ng} NG` : `selftest: ${cases.length + 1} ok`);
   return ng ? 1 : 0;
 }
 
