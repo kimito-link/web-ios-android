@@ -44,9 +44,17 @@ const norm = (p) => p.replace(/\\/g, '/').replace(/^\.\//, '');
  * @param {string[]|null} o.changed 前回のデプロイから変わったファイル(リポ直下から)。分からなければ null
  * @param {number|null} [o.ageDays] 最後のコミットから何日たったか。分からなければ null
  * @param {string[]} [o.watch] サイトに効くパス(前方一致)。空なら「docs だけの変更」だけを省く
+ * @param {string[]} [o.onlyProjects] このリポの正本の Vercel プロジェクト(prj_ID か本番ドメイン)。空なら判定しない
+ * @param {string[]} [o.project] いまビルドしているプロジェクトの識別子(VERCEL_PROJECT_ID・VERCEL_PROJECT_PRODUCTION_URL のうち取れたもの)
  * @returns {{build: boolean, reason: string}}
  */
-export function decide({ env = '', ref = '', changed = null, ageDays = null, watch = [] }) {
+export function decide({ env = '', ref = '', changed = null, ageDays = null, watch = [], onlyProjects = [], project = [] }) {
+  // 1リポ1ブランチを2つの Vercel プロジェクトにつないだときの二重ビルドを止める(docs/ai-rules/16 §2-3)。
+  // いまのプロジェクトが分からなければ判断しない(=作る側に倒す)。
+  const known = project.filter(Boolean);
+  if (onlyProjects.length > 0 && known.length > 0 && !known.some((p) => onlyProjects.includes(p))) {
+    return { build: false, reason: `duplicate project (${known[0]} is not ${onlyProjects.join('/')})` };
+  }
   const production = env === 'production';
   if (!production && BOT_BRANCH.test(ref)) return { build: false, reason: `bot branch (${ref})` };
   if (!production && ageDays != null && ageDays > STALE_DAYS) {
@@ -122,6 +130,8 @@ function main(argv) {
   const ref = process.env.VERCEL_GIT_COMMIT_REF || '';
   const prev = process.env.VERCEL_GIT_PREVIOUS_SHA || '';
   const baseArg = (argv.find((a) => a.startsWith('--base=')) || '').slice('--base='.length);
+  const onlyProjects = argv.filter((a) => a.startsWith('--only-project=')).flatMap((a) => a.slice('--only-project='.length).split(',')).filter(Boolean);
+  const project = [process.env.VERCEL_PROJECT_ID || '', process.env.VERCEL_PROJECT_PRODUCTION_URL || ''];
   let watch = argv.filter((a) => !a.startsWith('--'));
   if (watch.length === 0) {
     const prefix = git(['rev-parse', '--show-prefix']);
@@ -142,8 +152,9 @@ function main(argv) {
   }
   const ct = Number(git(['log', '-1', '--format=%ct']));
   const ageDays = Number.isFinite(ct) && ct > 0 ? (Date.now() / 1000 - ct) / 86400 : null;
-  const r = decide({ env, ref, changed, ageDays, watch });
-  console.log(`[vercel-ignore-build] ${r.build ? 'BUILD' : 'SKIP'}: ${r.reason} [${from}]`);
+  const r = decide({ env, ref, changed, ageDays, watch, onlyProjects, project });
+  const who = onlyProjects.length ? ` project=${project.filter(Boolean).join('|') || '(unknown)'}` : '';
+  console.log(`[vercel-ignore-build] ${r.build ? 'BUILD' : 'SKIP'}: ${r.reason} [${from}]${who}`);
   return r.build ? 1 : 0;
 }
 
@@ -159,6 +170,10 @@ function selftest() {
     [{ env: 'preview', ref: 'claude/x', changed: ['vercel.json'], watch: ['site/'] }, true],
     [{ env: 'preview', ref: 'old', changed: ['a.js'], ageDays: 30 }, false],
     [{ env: 'production', ref: 'main', changed: ['a.js'], ageDays: 30 }, true],
+    [{ env: 'production', ref: 'main', changed: ['vercel.json'], onlyProjects: ['prj_A'], project: ['prj_B', 'b.vercel.app'] }, false],
+    [{ env: 'production', ref: 'main', changed: ['a.js'], onlyProjects: ['prj_A'], project: ['prj_A', 'a.com'] }, true],
+    [{ env: 'production', ref: 'main', changed: ['a.js'], onlyProjects: ['prj_A', 'a.com'], project: ['', 'a.com'] }, true],
+    [{ env: 'production', ref: 'main', changed: ['a.js'], onlyProjects: ['prj_A'], project: ['', ''] }, true],
   ];
   let ng = 0;
   for (const [input, want] of cases) {
