@@ -302,8 +302,8 @@ Claude の週枠を空けるために、既存の頭脳で埋まらない穴だ�
 
 **だから決めたこと**
 - dot は「PC の要らない見張り役・調べ役・下書き役」。PC が動いているときの実装は今までどおり `--brain codex`（push 止めを PC で実測済み）を先に使う。dot で実装すると Codex の枠を使うので、同じ仕事を両方に投げない。
-- 仕事の渡し方は **GitHub の Issue**（API が無いので、dot の定期チェックに Issue を読ませる）。司令塔は Issue を立ててラベル **`dot` だけ**を付け、本文の1行目に「担当AI: dot」と書く。
-  ★`ai-task` は付けない。`ai-task` は `idea-to-pr.yml`（Claude が Issue を自動で実装する仕組み）の合図で、2026-11-24 の最初の試験（#188）では dot より先に Claude が1分で拾い、Claude の枠と Actions の分を使ってしまった。今は `idea-to-pr.yml` 側も `dot` ラベルの Issue では走らない。dot は1日数回それを拾い、終わったら Issue にコメントするか下書きPRを出す。司令塔が差分とチェックを見てからマージする（他のAIと同じ）。
+- 仕事の渡し方は **GitHub の Issue**（API が無いので、dot の定期チェックに Issue を読ませる）。司令塔は Issue を立ててラベル **`dot` だけ**を付け、本文の1行目に「担当AI: dot」と書く。dot は1日数回それを拾い、終わったら Issue にコメントするか下書きPRを出す。司令塔が差分とチェックを見てからマージする（他のAIと同じ）。
+  ★`ai-task` は付けない。`ai-task` は `idea-to-pr.yml`（Claude が Issue を自動で実装する仕組み）の合図で、2026-11-24 の最初の試験（#188）では dot より先に Claude が1分で拾い、Claude の枠と Actions の分を使ってしまった。今は `idea-to-pr.yml` 側も `dot` ラベルの Issue では走らない（同じ Issue で2〜3回走っていた件も、`labeled` だけで起動する形に直した）。
 - dot の定期チェックの設定は、AI が Claude in Chrome で dot の画面に下の文を貼って1回だけ行う（人の手は使わない。Chrome が使えないときは後で AI がやり直す）。
 
 **dot に回してよい仕事**
