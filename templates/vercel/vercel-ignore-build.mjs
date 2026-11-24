@@ -67,32 +67,67 @@ export function decide({ env = '', ref = '', changed = null, ageDays = null, wat
   return { build: true, reason: 'site may be affected' };
 }
 
-function git(args) {
+function git(args, timeout = 20000) {
   try {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout }).trim();
   } catch {
     return null;
   }
+}
+
+/**
+ * ブランチの最初のデプロイ(VERCEL_GIT_PREVIOUS_SHA が空)で、比べる相手=本番ブランチの先頭を探す。
+ * なぜ要るか: Vercel の docs で PREVIOUS_SHA は「It's empty on a branch's first deployment」
+ *   (https://vercel.com/docs/environment-variables/system-environment-variables)。
+ *   2026-10-25〜11-24 の実測で、プレビューの3〜6割がブランチの最初のデプロイだった(claude/ は1PR1ブランチのため)。
+ *   ここで比べられないと、その全部が「分からない→作る」に倒れて省けない。
+ * 本番ブランチ(先頭か merge-base)と比べた差分は、ブランチで変えたファイルを必ず含む(=省きすぎる側には倒れない)。
+ * 見つからなければ null(=作る)。本番ブランチ名が main/master 以外なら引数 --base=<名前> で渡す。
+ */
+function firstDeployBase(baseArg) {
+  const names = baseArg ? [baseArg] : ['main', 'master'];
+  for (const name of names) {
+    for (const r of [`origin/${name}`, name]) {
+      if (git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`])) return { sha: r, label: r };
+    }
+  }
+  // Vercel は depth=10 の浅い clone で、本番ブランチを持っていないことがある。先頭だけ取ってくる。
+  for (const name of names) {
+    if (git(['fetch', '--quiet', '--no-tags', '--depth=1', 'origin', name]) != null) {
+      const sha = git(['rev-parse', '--verify', '--quiet', 'FETCH_HEAD^{commit}']);
+      if (sha) return { sha, label: `origin/${name} (fetched)` };
+    }
+  }
+  return null;
 }
 
 function main(argv) {
   const env = process.env.VERCEL_ENV || '';
   const ref = process.env.VERCEL_GIT_COMMIT_REF || '';
   const prev = process.env.VERCEL_GIT_PREVIOUS_SHA || '';
+  const baseArg = (argv.find((a) => a.startsWith('--base=')) || '').slice('--base='.length);
   let watch = argv.filter((a) => !a.startsWith('--'));
   if (watch.length === 0) {
     const prefix = git(['rev-parse', '--show-prefix']);
     if (prefix) watch = [prefix];
   }
   let changed = null;
+  let from = 'no base';
   if (prev) {
     const out = git(['diff', '--name-only', prev, 'HEAD']);
-    if (out != null) changed = out.split('\n').filter(Boolean);
+    if (out != null) { changed = out.split('\n').filter(Boolean); from = `vs previous deploy ${prev.slice(0, 7)}`; }
+  } else if (env !== 'production') {
+    const base = firstDeployBase(baseArg);
+    if (base) {
+      const mb = git(['merge-base', base.sha, 'HEAD']);
+      const out = git(['diff', '--name-only', mb || base.sha, 'HEAD']);
+      if (out != null) { changed = out.split('\n').filter(Boolean); from = `first deploy of branch, vs ${base.label} ${mb ? 'merge-base' : 'tip'}`; }
+    }
   }
   const ct = Number(git(['log', '-1', '--format=%ct']));
   const ageDays = Number.isFinite(ct) && ct > 0 ? (Date.now() / 1000 - ct) / 86400 : null;
   const r = decide({ env, ref, changed, ageDays, watch });
-  console.log(`[vercel-ignore-build] ${r.build ? 'BUILD' : 'SKIP'}: ${r.reason}`);
+  console.log(`[vercel-ignore-build] ${r.build ? 'BUILD' : 'SKIP'}: ${r.reason} [${from}]`);
   return r.build ? 1 : 0;
 }
 
