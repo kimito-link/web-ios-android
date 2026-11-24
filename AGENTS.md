@@ -31,6 +31,12 @@
 **作業ブランチで commit したところで止める。** push・PR・マージ・デプロイは Claude Code が
 差分を実際に動かして検品してから行う（[`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)）。
 
+## ChatGPT の dot だけの例外（2026-11-24）
+
+dot はクラウドで動き、司令塔に commit を渡せないので、`dot/<作業名>` ブランチへの push と**下書きPR（draft）**までは行ってよい。
+それより先（`main` への push・マージ・ほかのブランチや PR の書き換え・上の「絶対にしないこと」）は他の AI と同じく禁止。
+仕事は GitHub の Issue（ラベル `dot` と `ai-task`）で受け取る。正本: [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1f。
+
 ## 作業用の別フォルダ（git worktree）の置き場所（2026-11-16）
 
 worktree は `github\_worktrees\<リポ名>\<作業名>` に作る。`github` 直下に `<リポ>-wt-*` や `_wt-*` を作らない。
