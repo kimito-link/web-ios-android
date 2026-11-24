@@ -95,11 +95,24 @@ function firstDeployBase(baseArg) {
     if (sha && sha !== head) return { sha, label: `origin/${name}` };
   }
   // Vercel は depth=10 の浅い clone で、本番ブランチを持っていないことがある。先頭だけ取ってくる。
+  let fetchErr = '';
   for (const name of names) {
-    if (git(['fetch', '--quiet', '--no-tags', '--depth=1', 'origin', name]) != null) {
+    try {
+      execFileSync('git', ['fetch', '--quiet', '--no-tags', '--depth=1', 'origin', name], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 20000 });
       const sha = git(['rev-parse', '--verify', '--quiet', 'FETCH_HEAD^{commit}']);
       if (sha && sha !== head) return { sha, label: `origin/${name} (fetched)` };
+    } catch (e) {
+      // 原因をログに残す(URL の認証情報は伏せる)。2026-11-24 実測で Vercel 上の fetch は通らなかった。
+      if (!fetchErr) fetchErr = String(e.stderr || e.message || '').split('\n').find((l) => l.trim()) || 'fetch failed';
     }
+  }
+  // 最後の手段: 浅い clone の中にある一番古い commit と比べる。差分は「ブランチの変更 ＋ その下の本番の変更」で、
+  // ブランチの commit が clone の深さ(10)より多くなければ、ブランチの変更を全部含む。
+  const roots = (git(['rev-list', '--max-parents=0', 'HEAD']) || '').split('\n').filter(Boolean);
+  const n = Number(git(['rev-list', '--count', 'HEAD']));
+  if (roots.length > 0 && roots[roots.length - 1] !== head) {
+    const why = fetchErr ? `; fetch: ${fetchErr.replace(/https?:\/\/[^@\s]*@/g, 'https://***@').slice(0, 120)}` : '';
+    return { sha: roots[roots.length - 1], label: `oldest commit in shallow clone (${n} commits)${why}` };
   }
   return null;
 }
