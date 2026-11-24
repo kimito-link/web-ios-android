@@ -13,7 +13,14 @@
 | 拡張・アプリと LP が同居（LP は `site/` など） | `node scripts/vercel-ignore-build.mjs site/ package.json` ← サイトに効くパスを並べる |
 | Vercel の Root Directory を `site` などにしている | `node ../scripts/vercel-ignore-build.mjs`（引数を省くと Root Directory を見張る） |
 
-`vercel.json` を Root Directory の中に置いている場合、パスはそこからの相対になる（`../scripts/...`）。
+`vercel.json` を Root Directory の中に置いている場合、スクリプトのパスはそこからの相対になる（`../scripts/...`）。
+見張るパス（引数）は**いつもリポ直下から**書く（`git diff --name-only` がリポ直下からのパスを返すため）。
+本番ブランチが `main`・`master` 以外なら `--base=<ブランチ名>` を足す（ブランチの最初のデプロイで比べる相手）。
+
+★ブランチの最初のデプロイでは Vercel が前回の SHA を渡さない（docs: "It's empty on a branch's first deployment"）。
+そのときは本番ブランチ（`main`/`master`。浅い clone で無ければ `git fetch --depth=1` で先頭だけ取る）との差分で決める。
+2026-10-25〜11-24 の実測でプレビューの3〜6割がブランチの最初のデプロイだったため、ここを比べないと省けない。
+ログの `[...]` に何と比べたかが出る（`first deploy of branch, vs origin/main (fetched) merge-base` など）。
 
 ## 何を省くか
 
@@ -24,7 +31,8 @@
 | `dependabot/`・`renovate/` のブランチ | 作る | 省く |
 | 最後のコミットが14日より古いブランチ | 作る | 省く |
 | `vercel.json` か、この判定そのものが変わった | 作る | 作る |
-| 前回の SHA が分からない・git が使えない | 作る | 作る |
+| ブランチの最初のデプロイ（前回の SHA が空） | — | 本番ブランチとの差分で上の行と同じに決める |
+| 比べる相手が見つからない・git が使えない | 作る | 作る |
 
 「省く」は Vercel 上で `Canceled (Ignored Build Step)` と出るだけで、前の本番はそのまま残る。
 
