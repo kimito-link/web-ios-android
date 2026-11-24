@@ -70,6 +70,10 @@ const CHECKS = [
   //   実損: 11/18 に AI が回せるようになった後も CLAUDE.md に「本人が手で投げる」が残り、読んだ AI が人に頼んでいた。
   //   本当に人しかできない行は同じ行に「人の手: <理由>」を書いて外す。docs が無いリポは pass。
   { name: 'check-docs-no-human-steps', path: join(__dirname, 'check-docs-no-human-steps.mjs') },
+  // ★Vercel にビルドさせるリポが、サイトに関係ないビルドを省く ignoreCommand を入れているか(2026-11-24追加・
+  //   りんく「Vercelのビルド費用を減らす」)。実損: 1か月の Vercel 請求 $99.58 のうち $77.70 がビルド代で、
+  //   ビルド代は回数で決まるのに省く仕組みが入っていたのは2リポだけだった。vercel.json が無いリポは pass。
+  { name: 'check-vercel-build-skip', path: join(__dirname, 'check-vercel-build-skip.mjs') },
   // ★症状の言葉で原因索引を引けるか。引数が無ければ対象から自動で探す。
   //   2026-08-23: ページに名前は載っていたのに★ここに登録されておらず、
   //   引数も要るため【一度も走らない】状態だった(配ったのに届いていない型)。
