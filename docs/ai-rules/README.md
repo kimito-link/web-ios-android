@@ -48,6 +48,8 @@ project-root/
    同じ・似た名前を調べて `store-assets/trademark-check.json` に残す。かぶったら名前を変える。出願は提案まで（費用がかかる）。点検は `check-trademark.mjs`
 14. ★**アプリがある Web サービスには** `15_APP_LINK_FROM_WEB.md`。自分のアプリの App Store・Google Play の公式バッジ（端末で出し分け）と
    Safari 用バナーを金型 `templates/web/` で置く。新しいアプリは `templates/scripts/lib/app-links.json` に足す。点検は `check-app-link.mjs`（lint CHECK 37・週1の本番見張り）
+15. ★**Vercel にビルドさせるリポは** `16_VERCEL_BUILD_COST.md`。ビルド代は回数で決まるので、共通の `templates/vercel/vercel-ignore-build.mjs` を
+   `vercel.json` の `ignoreCommand` で呼び、サイトに関係ない変更・docs・dependabot・古いブランチではビルドしない。点検は `check-vercel-build-skip.mjs`
 
 ## 固定のWebルール
 

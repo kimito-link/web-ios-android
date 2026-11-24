@@ -94,6 +94,11 @@ iPhone / Android のアプリがストアで公開中のサービスの Web（LP
 公式バッジ（端末で出し分け）と Safari 用バナー `<meta name="apple-itunes-app">` を金型 `templates/web/` で置く。新しいアプリは
 `templates/scripts/lib/app-links.json` に1行足す。点検は `node scripts/check-app-link.mjs`（lint CHECK 37）。正本: [`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](docs/ai-rules/15_APP_LINK_FROM_WEB.md)。
 
+## Vercel は「サイトが変わるときだけ」ビルドする（2026-11-24）
+ビルド代は回数で決まる（1回ごとに分切り上げ×4 vCPU）。Vercel にビルドさせるリポは `templates/vercel/vercel-ignore-build.mjs` を `scripts/` に写し、
+`vercel.json` の `ignoreCommand` で呼ぶ（拡張やアプリと同居するサイトは見張るパスを引数で渡す）。1つのリポ・ブランチを2つの Vercel プロジェクトにつながない。
+点検は `node templates/diagnostics/check-vercel-build-skip.mjs`。正本: [`docs/ai-rules/16_VERCEL_BUILD_COST.md`](docs/ai-rules/16_VERCEL_BUILD_COST.md)。
+
 ## 直すときに、元々動いていた機能を消さない（2026-11-14）
 
 直すのは頼まれた所だけ。ファイルを丸ごと書き直さない。頼まれて消すもの（ボタン・リンク・関数・テスト・ファイル）は、
