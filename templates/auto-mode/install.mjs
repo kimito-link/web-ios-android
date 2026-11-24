@@ -34,7 +34,8 @@ function main() {
   let settings = {};
   if (existsSync(target)) {
     try {
-      settings = JSON.parse(readFileSync(target, 'utf8'));
+      // PowerShell で書かれた settings.json は先頭に BOM が付く。JSON.parse が落ちるので外す（hooks-relay/install.mjs と同じ直し、2026-11-24）。
+      settings = JSON.parse(readFileSync(target, 'utf8').replace(/^\uFEFF/, ''));
     } catch (e) {
       console.error(`[auto-mode] ${target} が JSON として読めないので触りません: ${e.message}`);
       process.exit(1);
