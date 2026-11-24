@@ -51,7 +51,10 @@ name: idea-to-pr
 
 on:
   issues:
-    types: [opened, labeled]
+    # ★labeled だけで起動する（2026-11-24）。ラベル付きで Issue を作ると opened と labeled（ラベルの数だけ）が
+    #   同時に飛び、opened も拾うと同じ Issue で Claude が2〜3回走っていた（#188 で3回起動を実測）。
+    #   ラベル付きで作っても、あとからラベルを付けても labeled は必ず飛ぶので、opened は要らない。
+    types: [labeled]
 
 concurrency:
   group: idea-to-pr-${{ github.event.issue.number }}
@@ -61,7 +64,10 @@ jobs:
   implement:
     # 既定: "ai-task" ラベルが付いたIssueだけ対象にする（誰でもIssueを開けるリポジトリでの暴発防止）。
     # ラベル運用をしない場合は `if:` の行を削除する。
-    if: contains(github.event.issue.labels.*.name, 'ai-task')
+    # ★付いたラベルが ai-task のときだけ（他のラベルの labeled では走らない）。
+    # ★`dot` ラベルの Issue は ChatGPT の dot に渡した仕事なので走らせない（2026-11-24。ここで Claude が先に
+    #   拾うと Claude の枠と Actions の分を使い、dot に回して節約する意味が無くなる。正本 MULTI-BRAIN-HOWTO §1f）。
+    if: github.event.label.name == 'ai-task' && !contains(github.event.issue.labels.*.name, 'dot')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

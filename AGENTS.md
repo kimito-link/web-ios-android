@@ -35,7 +35,7 @@
 
 dot はクラウドで動き、司令塔に commit を渡せないので、`dot/<作業名>` ブランチへの push と**下書きPR（draft）**までは行ってよい。
 それより先（`main` への push・マージ・ほかのブランチや PR の書き換え・上の「絶対にしないこと」）は他の AI と同じく禁止。
-仕事は GitHub の Issue（ラベル `dot` と `ai-task`）で受け取る。正本: [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1f。
+仕事は GitHub の Issue（ラベル `dot`）で受け取る（`ai-task` は Claude の自動実装の合図なので付けない）。正本: [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) §1f。
 
 ## 作業用の別フォルダ（git worktree）の置き場所（2026-11-16）
 
