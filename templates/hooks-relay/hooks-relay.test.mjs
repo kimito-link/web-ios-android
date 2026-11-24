@@ -162,6 +162,18 @@ describe('install: 配線', () => {
     expect(r2.added).toEqual([]);
     expect(readFileSync(join(claudeDir, 'settings.json'), 'utf8')).toBe(after1);
   });
+  it('先頭に BOM が付いた settings.json（PowerShell で書いたもの）も読めて、書き戻すと BOM が外れる', () => {
+    const claudeDir = join(tmp, 'home-bom', '.claude');
+    mkdirSync(claudeDir, { recursive: true });
+    writeFileSync(join(claudeDir, 'settings.json'), '﻿' + JSON.stringify({ theme: 'dark' }));
+    const quiet = () => {};
+    expect(install({ claudeDir, dryRun: true, log: quiet }).added.length).toBeGreaterThan(0);
+    install({ claudeDir, log: quiet });
+    const after = readFileSync(join(claudeDir, 'settings.json'), 'utf8');
+    expect(after.charCodeAt(0)).not.toBe(0xfeff);
+    expect(JSON.parse(after).theme).toBe('dark');
+  });
+
   it('リポの .claude/skills/ を ~/.claude/skills/ へ写す（その PC だけの個人スキルには触らない・--dry-run は写さない）', () => {
     const claudeDir = join(tmp, 'home', '.claude');
     mkdirSync(join(claudeDir, 'skills', 'my-own'), { recursive: true });
