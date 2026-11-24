@@ -126,6 +126,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read|Grep|WebFetch|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/warn-large-tool-output.mjs\"",
+            "timeout": 5,
+            "statusMessage": "大きすぎる出力がないか確認中..."
+          }
+        ]
+      }
     ]
   }
 }

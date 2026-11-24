@@ -161,6 +161,15 @@ Qwen / Cloudflare / ローカルへ振り分ける**前**に、まずこの段�
 投げる先の順は `--brain auto` の `AUTO_CHAIN`（codex が先頭、§1e）。dispatch の先（Codex 等の CLI）が無い環境（クラウドのスレッド）では、Opus のサブエージェントに回す。
 Fable 5.2 が動いているときはこの目安を使わず、「Fable は頭脳労働専用」（[`FABLE-3STEP-HOWTO.md`](FABLE-3STEP-HOWTO.md)）が勝つ。小さな直しも Opus か Codex へ回す（`guard-fable-manual-work` hook が機械で止める）。
 
+★**コードで絞ってから読む（2026-11-24 採用、りんく「良ければ採用して」）**。出典は Anthropic 公式の
+[Code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)（2025-11-04。X で出回っている「150k→2k」の要約の一次情報）。
+会話に入れた文字は以後の全ターンで送り直されるので、**大きいデータは丸ごと読まない**:
+- ログ・JSON・CSV・`gh`/API の返り値・長い一覧は、`grep`・`jq`・`head`/`tail`・小さなスクリプトで**要る行・要る項目だけ取り出してから**読む（記事の例: 1万行→5行）。ファイルは `Read` の `offset`/`limit` で要る所だけ。
+- 「終わるまで何度も確かめる」はモデルを毎回通さず、コードのループ（`until` ループ・`Monitor`・状態ファイル）で回し、結果だけ読む。
+- 一度書いて役立った手順は、スキル（`.claude/skills/<名前>/SKILL.md`）にして次から使い回す（記事の「Skills」。既存の運用どおり）。
+- 機械の見張り: `.claude/hooks/warn-large-tool-output.mjs`（PostToolUse・止めない）が、道具の出力が2万文字を超えたら1行だけ知らせる（1セッション3回まで）。全文が本当に要ったかは意味判断なので止めない。
+- **採用しないもの**: ①「道具をファイルにして要る分だけ読む」は Claude Code 本体が既にやっている（MCP の道具は名前だけ並び、使う時に `ToolSearch` で中身を読む＝deferred tools。スキルも説明文だけ先に読む）ので、自前で作り直さない。②個人情報を `[EMAIL_1]` に置き換えてモデルに見せない仕組みは、MCP クライアント側に専用の実行基盤（サンドボックス・監視）が要り、記事自身も「運用の手間と安全面の考慮が増える」と書いている。今の秘密の扱い（クリップボード経由・引数に載せない、判断の軸5）で足りており、作る費用に見合わない。③ X 投稿の「プロンプト」は出所不明なので使わない。
+
 司令塔が仕事を投げる道具（正本 [`tools/dispatch.py`](tools/dispatch.py)。PC 側はデスクトップの `dispatch.cmd` がこれを呼ぶだけ。コピーを作らない）:
 
 ```
