@@ -81,6 +81,7 @@ LP・サイト・アプリの画面を新しく作る／見た目を作り直す
 
 ストアに出すときは、必須の欄だけでなく任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も、
 言われなくても素材を作って入れる。空きは `node scripts/check-store-fields.mjs` で出る。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
+スクショは**明るい背景・短い見出し（1行13字・2行まで）**が既定（2026-11-25、同 §4）。外れると `node scripts/check-screenshot-style.mjs`（lint CHECK 38）が止める。
 
 ## 名前を決めたら、ストアに出す前に商標を調べる（2026-11-21）
 

@@ -16,11 +16,19 @@
     { "slot": 4, "value": "overview", "selector": null, "label": "dashboard", "title": "アプリで管理", "subtitle": "ひと目で把握" }
   ],
 
-  "_framedCaptions": "frame-appstore-screenshots.mjs 用の仕上げキャプション。slot 番号キー。headline 内の {波括弧} はアクセント色(brand.primaryColor)。\\n で改行。",
+  "_framedCaptions": "frame-appstore-screenshots.mjs 用の仕上げキャプション。slot 番号キー。headline 内の {波括弧} はアクセント色(brand.primaryColor を読める濃さにした色)。\\n で改行。★見出しは短く: 1行13字・2行まで、sub は無しか20字まで(docs/ai-rules/10_STORE_FIELDS.md §4、check-screenshot-style.mjs / lint CHECK 38)。title/subtitle(撮影時の帯)も同じ上限。",
   "framedCaptions": {
     "1": { "headline": "ここに{価値}の一言", "sub": "補足の一行" },
     "2": { "headline": "信頼の{根拠}", "sub": "実績・保証など" },
     "3": { "headline": "かんたんな{使い方}", "sub": "相談はワンタップ" },
     "4": { "headline": "アプリで{一元管理}", "sub": "ひと目で把握" }
+  },
+
+  "_framedStyle": "スクショの背景と字の色(任意)。書かなければブランド色を白に寄せた明るい背景・読める濃さの字になる。背景は明るい色だけ(暗い色は CHECK 38 で止まる)。slots で1枚ずつ色を変えられる。自分のアプリの A/B で暗い版が勝ったなら abTestEvidence に結果を書くと warn に下がる。",
+  "framedStyle": {
+    "slots": {
+      "2": { "bgTop": "#E3F2FD", "bgBottom": "#90CAF9" },
+      "3": { "bgTop": "#FFF8E1", "bgBottom": "#FFD54F" }
+    }
   }
 }

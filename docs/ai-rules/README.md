@@ -35,7 +35,8 @@ project-root/
 7. ★**人に押す・貼る・読む・Enter を頼む前に**、`08_NO_HUMAN_HANDS.md` の5段（保管済みか→公式API/MCP→一度だけの許可→
    AIが自分で見て読む→自分で直る形）を試す。残るもの（本番の鍵の発行・課金・OKの一言）だけを「年1回以下・1タップ・画面だけで次が分かる」で渡す
 8. ★**ストアに出すときは**、`10_STORE_FIELDS.md` に従い、任意の欄（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）も
-   言われなくても素材を作って入れる。空きは `check-store-fields.mjs`、ストア側で欄が増えたら `watch-store-fields.mjs` が知らせる
+   言われなくても素材を作って入れる。空きは `check-store-fields.mjs`、ストア側で欄が増えたら `watch-store-fields.mjs` が知らせる。
+   スクショは明るい背景・短い見出し（1行13字・2行まで）が既定（同 §4、点検は `check-screenshot-style.mjs`＝lint CHECK 38）
 9. ★**AI ツールの内蔵ブラウザ・知らないリポ**は `09_AI_TOOL_BROWSER_SAFETY.md`。内蔵ブラウザでローカルの HTML（`file://`）を開かない／
    知らないリポを README の通りに丸投げしない（先に読むだけ）／鍵は使い回さず、漏れたら1本だけすぐ止められる形にする
 10. ★**AI が何かを直すときは** `11_NO_REGRESSION.md`。直すのは頼まれた所だけ／消すならコミット・PR に `消してよい: 名前（理由）`／

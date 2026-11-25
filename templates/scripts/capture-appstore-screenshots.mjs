@@ -31,6 +31,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cfg, productionUrl } from './lib/app-config.mjs';
+// 帯の色は明るい背景・読める濃さの字(lib/screenshot-style.mjs、docs/ai-rules/10_STORE_FIELDS.md §4)。
+import { resolveSlotStyle } from './lib/screenshot-style.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -113,13 +115,13 @@ const HIDE_SOCIAL_CSS = `
 `;
 
 // 撮影直前にキャプション帯を最前面に差し込む(撮影後に外す)。
-async function withCaption(page, { title, subtitle }, shoot) {
+async function withCaption(page, { title, subtitle, slot }, shoot) {
   if (!title) {
     await shoot();
     return;
   }
   await page.evaluate(
-    ({ title, subtitle, primary, accent }) => {
+    ({ title, subtitle, primary, accent, style }) => {
       const id = '__aso_caption__';
       document.getElementById(id)?.remove();
       const el = document.createElement('div');
@@ -128,15 +130,15 @@ async function withCaption(page, { title, subtitle }, shoot) {
         'position:fixed', 'top:0', 'left:0', 'right:0', 'width:100%',
         'box-sizing:border-box', 'z-index:2147483647',
         'padding:64px 26px 40px', 'pointer-events:none',
-        'background:linear-gradient(180deg, #0A0A0F 0%, #0A0A0F 72%, rgba(10,10,15,0.92) 88%, rgba(10,10,15,0) 100%)',
+        `background:linear-gradient(180deg, ${style.bgTop} 0%, ${style.bgBottom} 88%, transparent 100%)`,
         'font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif',
         'text-align:center',
       ].join(';');
       const h = document.createElement('div');
       h.textContent = title;
       h.style.cssText = [
-        'color:#ffffff', 'font-weight:800', 'font-size:24px', 'line-height:1.35',
-        'letter-spacing:0.005em', 'text-shadow:0 2px 12px rgba(0,0,0,0.5)',
+        `color:${style.headlineColor}`, 'font-weight:800', 'font-size:24px', 'line-height:1.35',
+        'letter-spacing:0.005em',
         'white-space:normal', 'overflow-wrap:anywhere', 'word-break:normal',
         'max-width:100%', 'margin:0 auto',
       ].join(';');
@@ -145,7 +147,7 @@ async function withCaption(page, { title, subtitle }, shoot) {
         const p = document.createElement('div');
         p.textContent = subtitle;
         p.style.cssText = [
-          'color:rgba(244,246,251,0.92)', 'font-weight:500', 'font-size:15px',
+          `color:${style.subColor}`, 'font-weight:500', 'font-size:15px',
           'line-height:1.5', 'margin-top:10px',
           'white-space:normal', 'overflow-wrap:anywhere', 'max-width:100%',
         ].join(';');
@@ -159,7 +161,7 @@ async function withCaption(page, { title, subtitle }, shoot) {
       el.appendChild(bar);
       (document.body || document.documentElement).appendChild(el);
     },
-    { title, subtitle, primary: BRAND_PRIMARY, accent: BRAND_ACCENT },
+    { title, subtitle, primary: BRAND_PRIMARY, accent: BRAND_ACCENT, style: resolveSlotStyle({ plan: PLAN, brandPrimary: BRAND_PRIMARY, slot }) },
   );
   await page.waitForTimeout(250);
   await shoot();
@@ -254,7 +256,7 @@ async function captureDevice(browser, dev) {
       }
       await page.waitForTimeout(900);
       const file = path.join(OUT_DIR, `${prefix}-${slot}.png`);
-      await withCaption(page, { title, subtitle }, () => page.screenshot({ path: file, fullPage: false }));
+      await withCaption(page, { title, subtitle, slot }, () => page.screenshot({ path: file, fullPage: false }));
       console.log(`  Saved ${file} (${fs.statSync(file).size} bytes) — ${label}`);
     } catch (e) {
       console.warn(`  WARN: failed ${prefix}-${slot}.png (${label}): ${e.message.slice(0, 200)} — continuing`);
@@ -295,7 +297,7 @@ async function captureDevice(browser, dev) {
           await loc.click({ timeout: 5000 });
           await page.waitForTimeout(2500);
           const file = path.join(OUT_DIR, `${prefix}-${tab.slot}.png`);
-          await withCaption(page, { title: tab.title, subtitle: tab.subtitle }, () => page.screenshot({ path: file, fullPage: false }));
+          await withCaption(page, { title: tab.title, subtitle: tab.subtitle, slot: tab.slot }, () => page.screenshot({ path: file, fullPage: false }));
           console.log(`  Saved ${file} (${fs.statSync(file).size} bytes) — ${tab.label}`);
         } catch (e) {
           console.warn(`  WARN: failed ${prefix}-${tab.slot}.png (${tab.label}): ${e.message.slice(0, 200)} — continuing`);

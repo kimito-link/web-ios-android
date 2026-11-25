@@ -584,6 +584,17 @@
         "templates/scripts/lib/app-link-check.test.mjs",
         "templates/scripts/lib/app-links.json"
       ]
+    },
+    {
+      "at": "2026-11-25T02:32:27.300Z",
+      "responsibility": "ストアのスクショの見た目の決まり(明るい背景・短い見出し・読める字)の判定と色決め。既存は frame/capture の3本がそれぞれ濃い色を直書きしていただけで、判定部品は無かった(grep screenshot/framedCaptions で distinction-checks の語数検査のみ・別責務)。3本と CHECK 38 が同じ lib を使う形にし、trademark-check と同じ『純関数lib＋CLI＋lint CHECK』の型に揃えた",
+      "decision": "LOCAL",
+      "canonicalSource": null,
+      "scopePaths": [
+        "templates/scripts/lib/screenshot-style.mjs",
+        "templates/scripts/check-screenshot-style.mjs",
+        "templates/scripts/lib/screenshot-style.test.mjs"
+      ]
     }
   ]
 }

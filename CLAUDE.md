@@ -82,6 +82,7 @@ Enter・スクショを頼む前に、①もう保管されていないか ②�
 
 ★★**ストアの入力欄は、任意でも言われなくても全部埋める（2026-11-09 本人指示「CVRにも影響しそう」）**。提出・更新の前に
 `node templates/scripts/check-store-fields.mjs` で空き（ヘッダと検索結果・iPhone Duo のスクショ・プレビュー動画・CWS のタイル等）を出し、素材を作って入れる。
+スクショは**明るい背景・短い見出し**が既定（2026-11-25、公開事例1件で転換率 16.66%→21.97%。外れると lint CHECK 38 が止める。正本 10 §4）。
 欄の正本は `templates/scripts/lib/store-fields.json`、ストア側で欄が増えたら `watch-store-fields.mjs` が週1で知らせる。正本: [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md)。
 
 ★★**アプリ・拡張・サービスの名前を決めたら、ストアに出す前に商標を調べる（2026-11-21 本人「これも全体設定に」）**。りんくのPCの内蔵ブラウザで J-PlatPat（クラウドからは弾かれる）を開き、

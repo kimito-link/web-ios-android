@@ -23,7 +23,8 @@
 | `scripts/lint-pre-submission.mjs` | 審査前 lint(実証済み Apple 却下ベクタを CI で検出) | **無改変**(app.config.json + env 駆動。無いファイルは skip) |
 | `scripts/capture-appstore-screenshots.mjs` | App Store スクショ自動撮影(ログイン後・fail-closed) | **無改変**(撮影計画は `store-assets/screenshot-plan.json`) |
 | `scripts/capture-play-screenshots.mjs` | Google Play スクショ自動撮影(Android FHD) | **無改変**(iOS と同じ screenshot-plan.json を共有) |
-| `scripts/frame-appstore-screenshots.mjs` | 生スクショを仕上げ加工(キャプション帯・角丸・影) | **無改変**(キャプションは screenshot-plan.json の framedCaptions) |
+| `scripts/frame-appstore-screenshots.mjs` | 生スクショを仕上げ加工(明るい背景・短い見出し・角丸・影) | **無改変**(キャプションは screenshot-plan.json の framedCaptions、色は framedStyle) |
+| `scripts/check-screenshot-style.mjs` | スクショ計画が「明るい背景・短い見出し」かを点検(lint CHECK 38、`lib/screenshot-style.mjs`) | **無改変** |
 | `scripts/screenshot-plan.example.json` | 撮影計画のひな形 | リポの `store-assets/screenshot-plan.json` にコピーして編集 |
 | `scripts/lib/app-config.mjs` | app.config.json 取得口(`cfg()` / `productionUrl()` / `isPlaceholder()`) | 無改変 |
 | `web/` | **Web→アプリDL導線**(公式バッジ取得・UA出し分け・Smart App Banner・CSS)。詳細は [`web/README.md`](web/README.md) | `{{ascAppId}}`/`{{playPackageName}}`/`{{productionUrl}}`/`{{primaryColor}}`/`{{accentColor}}` を置換 |
