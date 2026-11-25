@@ -4,7 +4,7 @@
 //    ブランド色を app.config.json から、キャプションを screenshot-plan.json から取得。
 //    mock は1種類の汎用プレースホルダに簡素化)。
 //
-// 生の App Store スクショを「グラデ背景 + 日本語キャプション + 角丸+影付き実機画像」の
+// 生の App Store スクショを「明るいグラデ背景 + 短い日本語見出し + 角丸+影付き実機画像」の
 // 仕上げショットに加工する。純粋な画像処理(sharp)のみ — ブラウザ/ネットワーク/外部 upload なし
 // (reviewer ダッシュボードのデータが機外に出ない。SaaS GUI でなく in-repo で組む理由)。
 //
@@ -17,12 +17,18 @@
 //   { "framedCaptions": { "1": { "headline": "…{強調}…", "sub": "…" }, "2": {…} } }
 //   headline 内の {波括弧} はアクセント色になる。\n で改行。無ければ slot 1 のを流用、それも無ければ無地。
 //
+// ★背景は明るい色・見出しは短く(2026-11-25 りんく「全体設計にいれて」、docs/ai-rules/10_STORE_FIELDS.md §4)。
+//   色は lib/screenshot-style.mjs が決める(既定=ブランド色を白に寄せた明るい背景・読める濃さの字)。
+//   変えたいときは screenshot-plan.json の framedStyle(全体)/ framedStyle.slots["N"](1枚ずつ)に bgTop・bgBottom 等を書く。
+//   決まり(暗い背景・薄い字・長い見出し)に外れると、作る前にここで止まる(check-screenshot-style.mjs・lint CHECK 38 と同じ判定)。
+//
 // MOCK=1 で実スクショ前にフレーミング/デザインをプレビュー(汎用プレースホルダを合成)。
 import sharp from 'sharp';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cfg } from './lib/app-config.mjs';
+import { checkScreenshotStyle, resolveSlotStyle } from './lib/screenshot-style.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -31,13 +37,9 @@ const MOCK = process.env.MOCK === '1';
 const IN_DIR = process.env.IN_DIR || (MOCK ? '.preview-raw' : 'ios-screenshots');
 const OUT_DIR = process.env.OUT_DIR || (MOCK ? 'ios-screenshots-framed-preview' : 'ios-screenshots-framed');
 
-// --- DESIGN(自由に調整。compositing ロジックは触らなくてよい) ---
+// --- DESIGN(寸法・書体。色は lib/screenshot-style.mjs と screenshot-plan.json の framedStyle で決める) ---
+const BRAND_PRIMARY = cfg('brand.primaryColor', '#43C251'); // app.config.json brand.primaryColor
 const DESIGN = {
-  bgTop: '#0E2747',
-  bgBottom: '#1E4E8C',
-  headlineColor: '#FFFFFF',
-  headlineAccent: cfg('brand.primaryColor', '#43C251'), // app.config.json brand.primaryColor
-  subColor: '#B9CCE6',
   fontFamily:
     "'Yu Gothic UI','Yu Gothic','Hiragino Kaku Gothic ProN','Noto Sans CJK JP','Meiryo','MS PGothic',sans-serif",
   headlineSizeRatio: 0.052,
@@ -52,14 +54,13 @@ const DESIGN = {
   shadowDy: 24,
 };
 
-// キャプションは screenshot-plan.json の framedCaptions から(コードを触らない)。
-function loadCaptions() {
+// キャプション・色は screenshot-plan.json から(コードを触らない)。
+function loadPlan() {
   const candidates = [process.env.SCREENSHOT_PLAN, path.join(ROOT, 'store-assets', 'screenshot-plan.json')].filter(Boolean);
   for (const p of candidates) {
     try {
       if (fs.existsSync(p)) {
-        const plan = JSON.parse(fs.readFileSync(p, 'utf8'));
-        if (plan.framedCaptions) return plan.framedCaptions;
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
       }
     } catch {
       /* ignore */
@@ -67,7 +68,8 @@ function loadCaptions() {
   }
   return {};
 }
-const CAPTIONS = loadCaptions();
+const PLAN = loadPlan();
+const CAPTIONS = PLAN.framedCaptions || {};
 const appName = cfg('identity.displayName') || cfg('identity.displayNameEn') || 'App';
 
 const SIZES = [
@@ -78,39 +80,39 @@ const SIZES = [
 
 const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function headlineTspans(line) {
+function headlineTspans(line, accent) {
   return line
     .split(/(\{[^}]*\})/)
     .filter(Boolean)
     .map((p) => {
       const m = p.match(/^\{([^}]*)\}$/);
-      return m ? `<tspan fill="${DESIGN.headlineAccent}">${xml(m[1])}</tspan>` : `<tspan>${xml(p)}</tspan>`;
+      return m ? `<tspan fill="${accent}">${xml(m[1])}</tspan>` : `<tspan>${xml(p)}</tspan>`;
     })
     .join('');
 }
 
-function backgroundSvg(W, H, caption) {
+function backgroundSvg(W, H, caption, style) {
   const hSize = Math.round(W * DESIGN.headlineSizeRatio);
   const sSize = Math.round(W * DESIGN.subSizeRatio);
   const lineH = Math.round(hSize * DESIGN.headlineLineHeight);
   const cx = Math.round(W / 2);
   const first = Math.round(H * DESIGN.firstBaselineRatio);
-  const lines = (caption.headline || '').split('\n');
+  const lines = (caption.headline || '').split(/\n|\\n/);
   const headlineEls = lines
     .map(
       (ln, i) =>
-        `<text x="${cx}" y="${first + i * lineH}" text-anchor="middle" font-family="${DESIGN.fontFamily}" font-size="${hSize}" font-weight="800" fill="${DESIGN.headlineColor}">${headlineTspans(ln)}</text>`,
+        `<text x="${cx}" y="${first + i * lineH}" text-anchor="middle" font-family="${DESIGN.fontFamily}" font-size="${hSize}" font-weight="800" fill="${style.headlineColor}">${headlineTspans(ln, style.accentColor)}</text>`,
     )
     .join('');
   const subY = first + lines.length * lineH + Math.round(sSize * 0.2);
   const subEl = caption.sub
-    ? `<text x="${cx}" y="${subY}" text-anchor="middle" font-family="${DESIGN.fontFamily}" font-size="${sSize}" font-weight="500" fill="${DESIGN.subColor}">${xml(caption.sub)}</text>`
+    ? `<text x="${cx}" y="${subY}" text-anchor="middle" font-family="${DESIGN.fontFamily}" font-size="${sSize}" font-weight="500" fill="${style.subColor}">${xml(caption.sub)}</text>`
     : '';
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
       <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${DESIGN.bgTop}"/>
-        <stop offset="1" stop-color="${DESIGN.bgBottom}"/>
+        <stop offset="0" stop-color="${style.bgTop}"/>
+        <stop offset="1" stop-color="${style.bgBottom}"/>
       </linearGradient></defs>
       <rect width="${W}" height="${H}" fill="url(#g)"/>
       ${headlineEls}${subEl}
@@ -123,7 +125,7 @@ const roundedRectSvg = (w, h, r, fill) =>
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" ry="${r}" fill="${fill}"/></svg>`,
   );
 
-async function frameOne(inputPath, outPath, caption) {
+async function frameOne(inputPath, outPath, caption, style) {
   const meta = await sharp(inputPath).metadata();
   const W = meta.width;
   const H = meta.height;
@@ -149,7 +151,7 @@ async function frameOne(inputPath, outPath, caption) {
     .png()
     .toBuffer();
 
-  await sharp(backgroundSvg(W, H, caption))
+  await sharp(backgroundSvg(W, H, caption, style))
     .composite([
       { input: shadow, left: deviceLeft - pad, top: deviceTop - pad + DESIGN.shadowDy },
       { input: rounded, left: deviceLeft, top: deviceTop },
@@ -192,6 +194,15 @@ async function generateMockInputs() {
 }
 // --------------------------------------------------------------------------
 
+// 決まりに外れた計画では作らない(作ってから直すと撮り直しになる)。
+const styleCheck = checkScreenshotStyle({ plan: PLAN, brandPrimary: BRAND_PRIMARY });
+if (styleCheck.status === 'fail') {
+  console.error(`[frame] ${styleCheck.detail}`);
+  console.error('[frame] 見出しを短く・背景を明るくしてから作り直す(docs/ai-rules/10_STORE_FIELDS.md §4)。');
+  process.exit(1);
+}
+if (styleCheck.status === 'warn') console.warn(`[frame] ${styleCheck.detail}`);
+
 if (MOCK) await generateMockInputs();
 
 if (!fs.existsSync(IN_DIR)) {
@@ -214,7 +225,7 @@ for (const file of files) {
   const slot = Number(file.match(/-(\d+)\.png$/i)[1]);
   const caption = CAPTIONS[String(slot)] || fallbackCaption;
   const out = path.join(OUT_DIR, file);
-  await frameOne(path.join(IN_DIR, file), out, caption);
+  await frameOne(path.join(IN_DIR, file), out, caption, resolveSlotStyle({ plan: PLAN, brandPrimary: BRAND_PRIMARY, slot }));
   console.log(`  framed ${file} (slot ${slot}: ${(caption.headline || '(no caption)').replace(/\n/g, ' ')})`);
 }
 console.log(`\nDone. Framed ${files.length} screenshot(s) -> ${OUT_DIR}/`);

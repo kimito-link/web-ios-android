@@ -42,6 +42,7 @@ import { checkCreativeImage, kindFromFileName, readImageInfo } from './lib/creat
 import { storeFieldsReport } from './check-store-fields.mjs';
 import { trademarkReport } from './check-trademark.mjs';
 import { appLinkReport } from './check-app-link.mjs';
+import { screenshotStyleReport } from './check-screenshot-style.mjs';
 import { SURFACE_PATHS, checkNoFormerNames, pathsForSurfaces } from './lib/former-names-check.mjs';
 import {
   findCreativeAssetIssues,
@@ -1290,6 +1291,21 @@ function hasDistinctionObject(d) {
 // ----------------------------------------------------------------------------
 {
   const r = await appLinkReport(ROOT, { offline: process.env.LINT_OFFLINE === '1' });
+  if (r.status === 'ok') ok(r.name, r.detail);
+  else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
+  else if (r.status === 'warn') warn(r.name, r.guideline, r.detail);
+  else skip(r.name, r.detail);
+}
+
+// ----------------------------------------------------------------------------
+// CHECK 38 — ストアのスクショが「明るい背景・短い見出し」か(store-assets/screenshot-plan.json)。
+//   公開事例(1件)で、濃い背景＋説明文の多い版 16.66% → 明るい背景＋短い見出しの版 21.97% と転換率が上がった。
+//   キットの金型が濃い背景を既定にしていたので直し、外れた計画はここで止める。自分のアプリの A/B の記録
+//   (framedStyle.abTestEvidence)があれば warn に下げる。りんくの指示(2026-11-25「全体設計にいれて」)。
+//   ルールは docs/ai-rules/10_STORE_FIELDS.md §4、判定は lib/screenshot-style.mjs。計画が無いリポは skip。
+// ----------------------------------------------------------------------------
+{
+  const r = screenshotStyleReport(ROOT);
   if (r.status === 'ok') ok(r.name, r.detail);
   else if (r.status === 'fail') fail(r.name, r.guideline, r.detail);
   else if (r.status === 'warn') warn(r.name, r.guideline, r.detail);

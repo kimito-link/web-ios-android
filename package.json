@@ -103,6 +103,7 @@
     "store-fields:watch": "node templates/scripts/watch-store-fields.mjs",
     "store-fields:watch:selftest": "node templates/scripts/watch-store-fields.mjs --selftest",
     "trademark:check": "node templates/scripts/check-trademark.mjs",
+    "screenshot-style:check": "node templates/scripts/check-screenshot-style.mjs",
     "app-link:check": "node templates/scripts/check-app-link.mjs --registry"
   },
   "devDependencies": {
