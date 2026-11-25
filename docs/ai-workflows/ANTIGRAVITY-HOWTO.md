@@ -25,10 +25,11 @@
 
 | 項目 | 事実 |
 |---|---|
-| コマンドライン版 | `agy` がある。`agy -p "..."` で1回実行して終わる（headless）。`--model <slug>`・`--output-format json`（`status`/`response`/`usage`）・失敗時は非0終了。slug は `agy models` で見る（[headless](https://antigravity.google/docs/cli/headless/)）。★PC 実測（2026-10-21・agy 1.2.14）: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-{…}`・`gemini-4-argon-{…}`・`gemini-3.8-flash-{…}`・`gpt-oss-120b-medium` |
+| コマンドライン版 | `agy` がある。`agy -p "..."` で1回実行して終わる（headless）。`--model <slug>`・`--output-format json`（`status`/`response`/`usage`）・失敗時は非0終了。slug は `agy models` で見る（[headless](https://antigravity.google/docs/cli/headless/)）。★PC 実測（2026-10-21・agy 1.2.14）: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-{…}`・`gemini-4-argon-{…}`・`gemini-3.8-flash-{…}`・`gpt-oss-120b-medium`。★2026-11-25（agy 1.5.17）: `gemini-4-neon-{low,medium,high,xhigh}`・`gemini-4-carbon-{low,medium,high}`・`gemini-4-hydrogen-{low,medium,high,xhigh}` が増えた。★`-p` は直後の語を本文として読む（`agy -p --model X "..."` は終了コード2）。`-p "本文"` の順で渡す（dispatch はこの順） |
 | 読むルール | `AGENTS.md`・`GEMINI.md`・`.agents/rules/*.md` だけ。**CLAUDE.md は読まない**。触るファイルの階層からワークスペースのルートまで遡って読む。全体用は `~/.gemini/AGENTS.md`。1ファイル24KB・常時ルール合計2万トークンまで（[rules](https://antigravity.google/docs/rules/)） |
-| モデル（Pro・有料・トライアル以外） | Claude Opus 5.5 / Sonnet 5.5（Thinking）、Gemini 4 Argon（**IDE では使えず、アプリと CLI のみ**）、Gemini 3.8 Flash。**Opus 4.6・Sonnet 4.6・GPT-OSS 120B は 2026-11-02 に廃止**（[models](https://antigravity.google/docs/models/)） |
+| モデル（Pro・有料・トライアル以外） | Claude Opus 5.5 / Sonnet 5.5（Thinking）、Gemini 4 Neon（2026-11-18 公開・AI Pro から使える・下の「Neon」行）、Gemini 4 Argon（**IDE では使えず、アプリと CLI のみ**）、Gemini 3.8 Flash。**Opus 4.6・Sonnet 4.6・GPT-OSS 120B は 2026-11-02 に廃止**（[models](https://antigravity.google/docs/models/)） |
 | 使用枠 | 「Gemini」と「Claude・GPT」の2つの財布。それぞれ5時間ごと＋週ごとの上限。**Claude Code の週間上限とは別**。超過は「AI Credit Overages」（Never/Always）で AI クレジット払い（[plans](https://antigravity.google/docs/plans/)）。残りは `/usage` |
+| Neon（2026-11-25 採用） | Gemini 4 世代の中位。Carbon（最上位）を元にした「深さと速さの両立」役で、Google は Argon・3.1 Pro・3.8 Flash の移行先に指定（[発表](https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-neon/)・[開発者ガイド](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-neon)）。考える深さは low/medium/high（既定）/xhigh。**使う道は Antigravity だけ**: ①Antigravity（AI Pro）＝定額の「Gemini」枠で追加料金なし・会社PC で SUCCESS 実測 ②Gemini API＝**有料枠専用**（入力 $3・出力 $15／100万トークン）なので使わない ③Workspace（info@best-trust.biz）の Gemini アプリ＝人が画面で話す用。会話は学習に使われないので、人が Gemini に相談するならこちらを選ぶ。ただし自動では呼べないので振り分けには入れない |
 | Turbo | モデルではなく**権限の設定**。サンドボックス無し・コマンド無制限・全ファイル書き込み可（[permissions](https://antigravity.google/docs/permissions/)） |
 | 権限 | 公式ドキュメントは `~/.gemini/antigravity-cli/settings.json` の `permissions.allow/ask/deny` と書く（書式 `command(...)` 等、優先は Deny > Ask > Allow）。★**PC 実測ではそのファイルは無く、実際の置き場は `~/.gemini/config/config.json` の `userSettings.globalPermissionGrants.allow/deny`**（agy 1.2.14。下の「鍵」）。headless では Ask は自動で拒否され、終了コードは0のまま（[permissions](https://antigravity.google/docs/permissions/)・[headless](https://antigravity.google/docs/cli/headless/)） |
 | 検証向け機能 | `/browser <task>`（ブラウザ担当の子エージェントで画面確認）、`/planning`、`/goal`（[CLI reference](https://antigravity.google/docs/cli/reference/)） |
@@ -44,7 +45,7 @@ Claude の週間上限は「判断・検品・外へ出す操作」だけに使�
 | Fable | 設計だけ（[`FABLE-3STEP-HOWTO.md`](FABLE-3STEP-HOWTO.md)） | コード | Claude 週間上限 |
 | Antigravity × Claude Opus 5.5 | 判断が要る重い実装＋テストまで一貫 | push・デプロイ・秘密の登録 | Google「Claude・GPT」 |
 | Antigravity × Claude Sonnet 5.5 | 中くらいの実装・定型修正・テスト追加。Opus 枠切れの代わり | 同上 | Google「Claude・GPT」 |
-| Antigravity × Gemini 4 Argon | Claude と違う頭脳としての設計レビュー・反対意見、`/browser` で画面確認、大きなコードの読み通し（アプリか CLI で） | 同上 | Google「Gemini」 |
+| Antigravity × Gemini 4 Neon（2026-11-25 Argon から交代） | Claude と違う頭脳としての設計レビュー・反対意見、`/browser` で画面確認、大きなコードの読み通し、Claude 枠切れ時の実装の代わり（アプリか CLI で。普段は `gemini-4-neon-medium`、難所だけ `-high`） | 同上 | Google「Gemini」 |
 | Antigravity × Gemini 3.8 Flash | 文章・ドキュメント・軽い一括修正。Grok/Qwen の枠切れ時の退路 | 判断が要る仕事 | Google「Gemini」 |
 | GPT-OSS 120B | 使わない（2026-11-02 廃止） | — | — |
 
@@ -54,7 +55,7 @@ Claude の週間上限は「判断・検品・外へ出す操作」だけに使�
 2. **Antigravity を専用ブランチで動かす**: Claude Code が Remote Control で PC の `dispatch.py --brain agy`（中身は `agy -p`）を走らせて自動で呼ぶ（2026-11-18 に一括投入で実走済み）。IDE を開いて手で貼り付ける形には戻さない。
 3. **Antigravity は commit で止まる**: push 等は下の「鍵」で拒否。終わったら `handoff.md` の STATUS・TESTS_RUN・TEST_RESULT・REMAINING_RISKS を埋める（リポ直下の [`AGENTS.md`](../../AGENTS.md) がそう指示する）。
 4. **Claude Code が検品して外へ出す**: 差分を読むだけでなく実行する。ここで初めて `guard-external-actions` 等の hook が効く。
-5. **設計が割れたら Argon に反対意見を出させる**: 同じ事実を渡して「この設計の一番弱い所は」と聞き、Claude Code か Fable が裁定する。
+5. **設計が割れたら Neon に反対意見を出させる**: 同じ事実を渡して「この設計の一番弱い所は」と聞き、Claude Code か Fable が裁定する。
 
 ## 守りの設定（Turbo のままでは危ない）
 
@@ -107,7 +108,7 @@ Claude Code の hook（`.claude/hooks/`）は Antigravity には効かない。T
 - 他の頭脳と同じ `block_outward`（`pushInsteadOf` で push 先を潰す・gh 等のトークンを無効化）が掛かる。
 - 終了コード0だけでは成功にしない。JSON の最後の `status` が `SUCCESS` のときだけ成功（opencode が何もせず0で終わった前例）。
 - `auto` の順番には入れない（有料の Google 枠・allow は PC ごと）。明示の `--brain agy` のときだけ動く。
-- Claude・GPT 側の枠が尽きて `RESOURCE_EXHAUSTED`（429）なら、Gemini 側の `gemini-4-argon-medium` で1回だけやり直す（2026-10-21 実測: 週の上限に達し、残り81時間と出た）。★ただし同じ日に `gemini-3.8-flash-medium` も**同じ残り時間**で 429 になった＝この契約では枠が分かれていない可能性がある（公式の「2つの枠」と食い違う。やり直しは1回・数秒で終わるので害は無い）。
+- Claude・GPT 側の枠が尽きて `RESOURCE_EXHAUSTED`（429）なら、Gemini 側の `gemini-4-neon-medium`（2026-11-25 に Argon から交代）で1回だけやり直す（2026-10-21 実測: 週の上限に達し、残り81時間と出た）。★ただし同じ日に `gemini-3.8-flash-medium` も**同じ残り時間**で 429 になった＝この契約では枠が分かれていない可能性がある（公式の「2つの枠」と食い違う。やり直しは1回・数秒で終わるので害は無い）。
 
 使う前の確認:
 
