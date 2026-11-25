@@ -426,6 +426,38 @@ def cf_over_budget(now=None, fetch=None):
 
 ALLOW_CF = False
 
+# 自動の順番(auto)で、ダッシュボードの記録が「枠切れ(quota)」「つながらない(down)」と言っている頭脳は、起動せずに飛ばす。
+# なぜ: 枠切れの頭脳も1つずつ起動して失敗を待つと、1件あたり数十秒〜数分を空費する(2026-10-19 は Grok・Alibaba・OpenRouter が
+# 同時に切れていて Cloudflare に落ちるまで待たされた)。記録は4時間ごとに PC の定期タスクが取る(record-brain-status.mjs)。
+# 古い記録(BRAIN_RECORD_MAX_AGE_SEC 超)・読めない記録では飛ばさない(ダッシュボードの故障で作業を止めない)。明示指定(--brain x)も止めない。
+BRAIN_RECORD_MAX_AGE_SEC = 6 * 3600
+BRAIN_RECORD_ID = {"qwen": "alibaba", "oc": "alibaba"}  # dispatch の名前 → brains.json の id(同じ名前のものは省略)
+_brains_cache = {}
+
+
+def brain_unavailable(brain, now=None, fetch=None):
+    """記録上その頭脳が使えない(枠切れ・停止)なら理由の文字列。分からなければ None。"""
+    import datetime
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        if fetch or "data" not in _brains_cache:
+            raw = (fetch or (lambda u: urllib.request.urlopen(u, timeout=5).read().decode("utf-8")))(BRAINS_JSON_URL)
+            data = json.loads(raw)
+            if not fetch:
+                _brains_cache["data"] = data
+        else:
+            data = _brains_cache["data"]
+        updated = datetime.datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00"))
+        if (now - updated).total_seconds() > BRAIN_RECORD_MAX_AGE_SEC:
+            return None
+        rid = BRAIN_RECORD_ID.get(brain, brain)
+        b = next((x for x in data["brains"] if x.get("id") == rid), None)
+        if b and b.get("status") in ("quota", "down"):
+            return "dashboard says %s: %s (recorded %s)" % (b.get("status"), b.get("statusLabel", ""), data["updatedAt"])
+    except Exception:
+        return None
+    return None
+
 
 def run_one(brain, task, cwd, allowed, timeout, model=None):
     """Returns (ok, info, output, model). ok is None when the brain was skipped before running."""
@@ -633,6 +665,11 @@ def main():
             say(f"[dispatch] WARNING: {warn}")
     chain = (TEXT_CHAIN if a.text else AUTO_CHAIN) if a.brain == "auto" else [a.brain]
     for brain in chain:
+        if a.brain == "auto" and len(chain) > 1:
+            gone = brain_unavailable(brain)
+            if gone:
+                say(f"[dispatch] {brain}: skipped ({gone})")
+                continue
         ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)
         if brain == "agy" and ok is False and agy_pool_exhausted(out, model):
             say(f"[dispatch] agy {model}: quota exhausted ({info}); retrying on the Gemini pool with {AGY_FALLBACK_MODEL}")

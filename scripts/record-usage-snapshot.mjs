@@ -23,6 +23,11 @@ async function main() {
   const raw = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   const snap = normalizeUsage(raw);
   if (!snap) throw new Error('使用量を読めない状態(plan.status が ok ではない)。保存しない');
+  // 枠が返っているのに1つも読めないときは、黙って空を保存しない(2026-11-19〜25 に6日間気づかなかった実損)。
+  const labels = (raw.plan.windows || []).map((w) => w && w.label);
+  if (labels.length && !Object.keys(snap.windows).length) {
+    throw new Error(`枠の名前を読めない(${labels.join(' / ')})。site/hub/usage/usage-history.mjs の windowKeyOf を直す`);
+  }
   const existing = readFile(FILE);
   const merged = mergeSnapshot(existing?.json && existing.json.history ? existing.json : null, snap, Date.now());
   if (process.argv.includes('--dry-run')) {
