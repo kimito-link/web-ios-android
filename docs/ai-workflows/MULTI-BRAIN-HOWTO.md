@@ -275,7 +275,7 @@ ChatGPT の team プラン（**もう払っている定額**・Claude と別の�
 | PC が切れている間・夜の調べ物、GitHub の見張り、Issue の整理、PC が要らない小さな実装の下書きPR | **ChatGPT の dot**（§1f、Issue に `dot` ラベルだけ） | dot との会話はプレビュー中は使用量に数えない。クラウドに自分のPCを持つので会社PCが止まっていても動く |
 
 - ★Antigravity の枠（2026-11-12 PC 実測、agy 1.5.1）: Opus・Argon・Flash・GPT-OSS がどれも同じ「Resets in 76h」で 429 ＝ **全モデル共通の1つの枠**に見える（推測）。使い切ると3日ほど戻らない。dispatch は 429 の残り時間を `%LOCALAPPDATA%\llm-proxy\runs\agy-quota.json` に覚え、戻るまで agy を数秒で飛ばす。
-  使えるモデル slug: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-*`・`gemini-4-argon-*`・`gemini-3.8-flash-*`・`gpt-oss-120b-medium`。
+  使えるモデル slug: `claude-opus-5-5-{low,medium,high}`・`claude-sonnet-5-5-*`・`gemini-4-neon-{low,medium,high,xhigh}`（2026-11-25 追加・Gemini 側の主力）・`gemini-4-carbon-*`・`gemini-4-argon-*`・`gemini-4-hydrogen-*`・`gemini-3.8-flash-*`・`gpt-oss-120b-medium`。
   自動の順番（`AUTO_CHAIN`）には、枠が戻って commit と push 止めを PC で確かめてから Codex の次に入れる（返事が来た頭脳だけ順番に入れる決まり）
 
 - 2台目PC（レッツノート）で dispatch を回すときは、環境変数 `DISPATCH_OLLAMA_URL=http://<会社PCの Tailscale 名>:11434` で会社PCの GPU を借りる（レッツノート内蔵GPUの Qwen3-8B は 8.4tok/s と遅い）。

@@ -185,7 +185,9 @@ AGY_OK_STATUS = "SUCCESS"
 # Antigravity の枠は「Claude・GPT」と「Gemini」で別（各5時間＋週）。2026-10-21 実測で Claude 側が週の上限に達し
 # RESOURCE_EXHAUSTED(429, 残り81時間)になった。そのときは Gemini 側の一番賢いモデルで1回だけやり直す。
 # ★同日 gemini-3.8-flash も同じ残り時間で 429 だった＝枠が共通の可能性あり。やり直しは数秒で失敗するだけなので残す。
-AGY_FALLBACK_MODEL = "gemini-4-argon-medium"
+# 2026-11-25: Argon → Neon。Neon は Carbon 由来の中位モデル（2026-11-18 公開）で、Google の移行案内が Argon の後継に
+# 指定している。会社PC の agy 1.5.17 で gemini-4-neon-{medium,high} が SUCCESS（Argon と同じ「Gemini」枠・約5秒）。
+AGY_FALLBACK_MODEL = "gemini-4-neon-medium"
 
 
 def agy_pool_exhausted(out, model):
@@ -356,7 +358,8 @@ def build(brain, task, allowed, model=None, cwd=None):
     elif brain == "agy":
         # Antigravity CLI headless (PC-measured 2026-10-21, agy 1.2.14). Uses the Google "Claude/GPT" or "Gemini" quota,
         # separate from the Claude Code weekly limit. Model slugs: claude-opus-5-5-{low,medium,high}, claude-sonnet-5-5-*,
-        # gemini-4-argon-*, gemini-3.8-flash-*. Rules reach it through AGENTS.md (it does not read CLAUDE.md).
+        # gemini-4-neon-{low,medium,high,xhigh} (2026-11-25 agy 1.5.17), gemini-4-carbon-*, gemini-4-argon-*, gemini-4-hydrogen-*,
+        # gemini-3.8-flash-*. Rules reach it through AGENTS.md (it does not read CLAUDE.md).
         # NEVER add --dangerously-skip-permissions: measured that it ignores the deny list and pushed (ANTIGRAVITY-HOWTO.md).
         # Headless auto-denies anything not in userSettings.globalPermissionGrants.allow (~/.gemini/config/config.json),
         # so the allow list must be set on the PC first. Not in AUTO_CHAIN: paid quota, and the allow list is per-PC.

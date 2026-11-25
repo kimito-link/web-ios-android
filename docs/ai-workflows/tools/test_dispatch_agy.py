@@ -99,6 +99,8 @@ class AgyStatus(unittest.TestCase):
         self.assertFalse(dispatch.agy_pool_exhausted(out, "gemini-4-argon-medium"))  # Gemini 側も尽きたらやり直さない
         self.assertFalse(dispatch.agy_pool_exhausted('{"status":"ERROR"}', "claude-opus-5-5-medium"))
         self.assertTrue(dispatch.AGY_FALLBACK_MODEL.startswith("gemini-"))
+        # 2026-11-25: Gemini 側のやり直しは Neon（Google が Argon の後継に指定・PC 実測で SUCCESS）。古い Argon に戻さない。
+        self.assertTrue(dispatch.AGY_FALLBACK_MODEL.startswith("gemini-4-neon-"))
 
     def test_no_json_is_none(self):
         self.assertIsNone(dispatch.agy_status("plain text, rc 0"))
