@@ -27,6 +27,22 @@ export const WINDOW_KEYS = Object.freeze({
   "Weekly · Fable": "fable",
 });
 
+/**
+ * label をキーに直す。区切り記号・大文字小文字・空白の違いは無視する。
+ * 実損（2026-11-19〜11-25）: 記録係が label を ASCII だけで書き写し「Weekly · all models」が
+ * 「Weekly - all models」になった。完全一致の表引きでは全部「未知」として黙って捨てられ、
+ * 6日間ダッシュボードの週・Fable の数字が空のまま、だれも気づかなかった。
+ */
+export function windowKeyOf(label) {
+  if (typeof label !== "string") return undefined;
+  if (WINDOW_KEYS[label]) return WINDOW_KEYS[label];
+  const t = label.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (/^5 hour/.test(t)) return "five";
+  if (/^weekly all models?$/.test(t)) return "weekly";
+  if (/^weekly fable$/.test(t)) return "fable";
+  return undefined;
+}
+
 /** 各枠の長さ（ミリ秒）。枠の始まり = resetsAt - WINDOW_MS[key]。 */
 export const WINDOW_MS = Object.freeze({
   five: 5 * 60 * 60 * 1000,
@@ -51,7 +67,7 @@ export function normalizeUsage(raw) {
 
   const windows = {};
   for (const w of plan.windows || []) {
-    const key = w && WINDOW_KEYS[w.label];
+    const key = w && windowKeyOf(w.label);
     if (key === undefined) continue; // 未知の label は無視
     if (typeof w.percentUsed !== "number" || !Number.isFinite(w.percentUsed)) continue; // 数値以外を除く
     windows[key] = { percentUsed: w.percentUsed, resetsAt: w.resetsAt };

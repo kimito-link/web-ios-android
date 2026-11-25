@@ -6,6 +6,7 @@ import {
   normalizeUsage,
   paceOf,
   statusOf,
+  windowKeyOf,
 } from "../../site/hub/usage/usage-history.mjs";
 
 const RAW = {
@@ -188,5 +189,24 @@ describe("statusOf", () => {
 
   it("danger: projectedHitAt が枠の終わりより前 かつ ratio>1.2（経過10%・使用50% → ratio 5）", () => {
     expect(statusOf({ percentUsed: 50, resetsAt }, W, start + 0.1 * W)).toBe("danger");
+  });
+});
+
+describe("windowKeyOf（記号の違いで黙って捨てない）", () => {
+  it("ASCII に書き写された label も読む(2026-11-19〜25 の実損)", () => {
+    expect(windowKeyOf("Weekly - all models")).toBe("weekly");
+    expect(windowKeyOf("Weekly - Fable")).toBe("fable");
+    expect(windowKeyOf("5 hour limit")).toBe("five");
+    expect(windowKeyOf("Weekly · all models")).toBe("weekly");
+    expect(windowKeyOf("Daily something")).toBeUndefined();
+  });
+  it("normalizeUsage も ASCII の label から数字を取る", () => {
+    const raw = { plan: { status: "ok", plan: "Ultra", windows: [
+      { label: "Weekly - all models", percentUsed: 75, resetsAt: "2026-11-29T06:59:59.744Z" },
+      { label: "Weekly - Fable", percentUsed: 98, resetsAt: "2026-11-29T06:59:59.744Z" },
+    ] } };
+    const s = normalizeUsage(raw);
+    expect(s.windows.weekly.percentUsed).toBe(75);
+    expect(s.windows.fable.percentUsed).toBe(98);
   });
 });

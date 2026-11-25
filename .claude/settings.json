@@ -125,6 +125,16 @@
             "statusMessage": "セッション経過時間チェック中..."
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/inject-ai-budget-mode.mjs\"",
+            "timeout": 10,
+            "statusMessage": "AIの残り枠と振り分け先を確認中..."
+          }
+        ]
       }
     ],
     "PostToolUse": [
