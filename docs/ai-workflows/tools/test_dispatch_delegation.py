@@ -3,7 +3,7 @@
 なぜ要るか: 会議の結論は「委譲するかは CI/テストで合否を機械判定できるかだけで決める」。
 - 判定できない仕事（設計・見た目・審査・法令）は Claude に戻す
 - 委譲先がテストを消す・skip を足す・CI を書き換えると --verify が素通りになるので、それも失敗にする
-- 1ファイルの仕事（--out）は無料の Ollama → Groq → Gemini で書かせ、--verify が通るまで1回だけ直させる"""
+- 1ファイルの仕事（--out）は無料の Groq → Ollama → Gemini で書かせ、--verify が通るまで1回だけ直させる"""
 import importlib.util, os, subprocess, tempfile, unittest
 
 spec = importlib.util.spec_from_file_location("dispatch", os.path.join(os.path.dirname(__file__), "dispatch.py"))
@@ -96,10 +96,10 @@ class FileJob(unittest.TestCase):
         self.assertIn("failed this check", calls[1][1])
         self.assertIn("def add", calls[0][1])  # --context reached the brain
 
-    def test_falls_through_to_groq_and_restores_between(self):
-        ok, brain, calls = self.run_job({"ollama": [self.BAD, self.BAD], "groq": [self.GOOD]})
+    def test_falls_through_to_ollama_and_restores_between(self):
+        ok, brain, calls = self.run_job({"groq": [self.BAD, self.BAD], "ollama": [self.GOOD]})
         self.assertTrue(ok)
-        self.assertEqual(brain, "groq")
+        self.assertEqual(brain, "ollama")
 
     def test_all_fail_leaves_no_file(self):
         ok, _, _ = self.run_job({"ollama": [self.BAD, self.BAD], "groq": [self.BAD, self.BAD]})

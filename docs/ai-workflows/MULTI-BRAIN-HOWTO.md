@@ -375,7 +375,7 @@ AI が自分で使用量を見に行かないと効かなかった。同日は�
 2. 合否をコマンドで決められない仕事（設計・方針／見た目・UI／レビュー・審査／法令・規約・商標／ストア提出）は、どの頭脳にも渡さない（同じく終了コード3）。判定は頼む文の中身で見る（`CLAUDE_ONLY_KINDS`）。本人の指定などでどうしても渡すときだけ `--delegate-anyway "<理由>"`
 3. 頭脳が自分を判定する検査をゆるめたら失敗にする（`weakened_checks`）: テストファイルの削除、skip/only/todo・`@ts-ignore`・`--no-verify`・`continue-on-error: true`・`|| true` の追加、テストの assert を減らす、CI・hook・テスト／型の設定を書き換える。仕事そのものが CI や hook の直しなら `--allow-check-edits`
 4. Claude Code で動く頭脳（qwen・local）にも、OpenCode と同じく push・`git remote/config`・`gh`・`env/unset`・デプロイ・curl をツール側で拒否させる（`CLAUDE_DENY_TOOLS`。11/18 さくらが環境変数の止めを自分で外した件の残り）。Codex・Grok・agy は従来どおり push の検知で失敗にする
-5. 1ファイルで済む機械判定の仕事（単体テストを足す・型を付ける・小さな純関数）は `--out` で無料の **Ollama → Groq → Gemini**（`FILE_CHAIN`）に回す。dispatch が答えをファイルに書き、`--verify` を走らせ、落ちたら失敗の出力を渡して1回だけ直させ、それでも駄目なら元に戻して次へ。Codex・Claude の枠を使わない
+5. 1ファイルで済む機械判定の仕事（単体テストを足す・型を付ける・小さな純関数）は `--out` で無料の **Groq → Ollama → Gemini**（`FILE_CHAIN`。会社PCの実走で Groq 1秒・Ollama 110秒＝速い方を先に。外に出せないコードは `--brain ollama`）に回す。dispatch が答えをファイルに書き、`--verify` を走らせ、落ちたら失敗の出力を渡して1回だけ直させ、それでも駄目なら元に戻して次へ。Codex・Claude の枠を使わない
    - Ollama のモデルは毎回 `/api/tags` で**入っているものだけ**から選ぶ（`OLLAMA_CODER_CHAIN`。会議で名前の出た qwen2.5-coder-14b は PC に無く、全部失敗していた）。2台目PCからは `DISPATCH_OLLAMA_URL` で会社PCの GPU を借りる
    - `--context <元のファイル>` を付けると中身を見せる（30,000字まで）。`--out` と `--context` は `--cwd` の中だけ
 

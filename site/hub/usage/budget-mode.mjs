@@ -67,7 +67,7 @@ export function budgetMode(usage, nowMs) {
 const LEVEL_LINES = {
   save: [
     "実装・テスト追加・定型修正は自分で書かず `python docs/ai-workflows/tools/dispatch.py --cwd <dir> --verify \"<合否を決めるコマンド>\" \"<やること>\"`（auto: Codex が先頭、枠切れの頭脳は自動で飛ばす）へ。自分で直すのは1〜2ファイル・10分ほどのものだけ。",
-    "1ファイルで済む単体テスト・型付けは `dispatch.py --out <ファイル> --context <元のファイル> --verify \"<そのテスト>\"`（無料の Ollama → Groq → Gemini。通るまで dispatch が確かめる）へ。",
+    "1ファイルで済む単体テスト・型付けは `dispatch.py --out <ファイル> --context <元のファイル> --verify \"<そのテスト>\"`（無料の Groq → Ollama → Gemini。通るまで dispatch が確かめる。外に出せないコードは `--brain ollama`）へ。",
     "合否をコマンドで決められない仕事（設計・見た目・審査・法令）は渡さない（dispatch も断る）。自分でやる。",
     "文章だけの仕事（要約・翻訳・下書き）は `dispatch.py --text`（Gemini・Groq の無料枠）へ。",
   ],

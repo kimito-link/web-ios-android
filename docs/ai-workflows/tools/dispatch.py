@@ -17,7 +17,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
   python dispatch.py --cwd <dir> --verify "npm test" "task"   # auto needs a pass/fail command ("delegate only what a machine can judge")
   python dispatch.py --cwd <dir> --out tests/x.test.mjs --context src/x.mjs --verify "npx vitest run tests/x.test.mjs" "unit tests for x"
-                                                              # one file, machine-checked: FILE_CHAIN (local Ollama -> Groq -> Gemini, all free)
+                                                              # one file, machine-checked: FILE_CHAIN (Groq -> local Ollama -> Gemini, all free)
 
 Why fallback exists: free quotas die without warning (Alibaba flash and max each ran out within about 1.5 days on
 2026-09-15/16), and a headless brain that blocks on a permission prompt looks like a hang. A failed brain must never
@@ -55,9 +55,11 @@ TEXT_CHAIN = ["gemini", "groq", "qwen"]
 # 2026-11-26 cost council: the company PC's Ollama (RTX 4070 Ti, ~10GB VRAM free) and Groq (1,000 requests/day free)
 # had 0 runs in 30 days, because they were only reachable as the LAST step of AUTO_CHAIN or through --text, where nobody
 # checks the answer. A one-file job that a command can judge suits a fast/weak text model: dispatch writes the file,
-# runs --verify, feeds the failure back once, and moves on if it still fails. Local first (free, nothing leaves the PC),
-# then Groq (fast), then Gemini (free tier). No Codex/Claude quota is spent on these.
-FILE_CHAIN = ["ollama", "groq", "gemini"]
+# runs --verify, feeds the failure back once, and moves on if it still fails. No Codex/Claude quota is spent on these.
+# Order (PC run 2026-11-26, the same add() unit-test job): groq qwen3.8-27b passed in 1s, ollama qwen3.6:35b-a3b in 110s
+# (RTX 4070 Ti, model load included). Both are free, so the fast one goes first; Ollama takes over when Groq's daily
+# quota or rate limit stops it, and is the one to name (--brain ollama) for code that must not leave the PC.
+FILE_CHAIN = ["groq", "ollama", "gemini"]
 # Ollama models for one-file jobs, best first. Only installed ones are used (asked via /api/tags each run): the
 # 11/26 council named qwen2.5-coder-14b, which was not on the PC, and every call failed. Never assume a model exists.
 OLLAMA_CODER_CHAIN = ["qwen3-coder:30b", "qwen2.5-coder:14b", "qwen3.6:35b-a3b", "qwen3:14b", "qwen3:8b"]
@@ -952,6 +954,10 @@ def unspool(task):
 
 
 def main():
+    # PC run 2026-11-26: through a pipe (Remote Control, job-runner without PYTHONIOENCODING) Python on Windows writes
+    # cp932, and the Japanese lines (CLAUDE_ONLY reasons) arrived garbled. Callers read pipes as UTF-8, so write UTF-8.
+    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if len(sys.argv) >= 4 and sys.argv[1] == "--groq-chat":
         sys.exit(groq_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
@@ -965,7 +971,7 @@ def main():
     ap.add_argument("--text", action="store_true", help="text-only task (translation, summary, drafting): gemini -> groq -> qwen")
     ap.add_argument("--allow-outward", action="store_true", help="let the brain git push / use gh / deploy (blocked by default)")
     ap.add_argument("--verify", default=None, help="pass/fail command run in --cwd after the brain; failing it = brain failed (required for auto)")
-    ap.add_argument("--out", default=None, help="one-file job: the file to write (needs --verify). Runs FILE_CHAIN: ollama -> groq -> gemini")
+    ap.add_argument("--out", default=None, help="one-file job: the file to write (needs --verify). Runs FILE_CHAIN: groq -> ollama -> gemini")
     ap.add_argument("--context", action="append", default=[], help="file to show the brain in a --out job (repeatable)")
     ap.add_argument("--allow-check-edits", action="store_true", help="the task itself is to change tests/CI/hooks (otherwise such edits fail the run)")
     ap.add_argument("--delegate-anyway", default=None, metavar="REASON", help="run a job dispatch would keep for Claude; the reason goes to the log")
