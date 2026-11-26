@@ -65,6 +65,13 @@ jobs:
       - name: Install
         run: npm ci
 
+      # ★dispatch.py（ほかの頭脳へ仕事を渡す道具）の決まり（機械で合否を決められる仕事だけ渡す・検査をゆるめたら失敗・
+      #   push を拒否する）は Python のテストで守っている。CI で走らせないと、壊れても誰も気づかない（2026-11-26）。
+      - name: dispatch.py の単体テスト
+        run: python3 -m unittest discover -s docs/ai-workflows/tools -p 'test_*.py'
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+
       - name: verify（門が赤なら落ちる / 報は落とさない）
         run: npm run verify
         env:

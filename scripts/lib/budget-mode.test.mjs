@@ -54,6 +54,8 @@ describe("budgetNotice", () => {
     const t = budgetNotice(budgetMode(usage(75, 98), NOW));
     expect(t).toContain("強い節約");
     expect(t).toContain("dispatch.py");
+    expect(t).toContain("--verify");
+    expect(t).toContain("--out");
     expect(t).toContain("dot");
     expect(t).toContain("プランモードに入らない");
     expect(t).toContain("11/29");

@@ -362,6 +362,31 @@ AI が自分で使用量を見に行かないと効かなかった。同日は�
 - `dispatch.py` の auto は、記録が6時間以内で「枠切れ（quota）」「つながらない（down）」の頭脳を起動せずに飛ばす（`brain_unavailable`・明示の `--brain x` は止めない）
 - しきい値を変えるときは `budget-mode.mjs` の `WEEKLY_STEPS` / `FABLE_STEPS` とこの表をそろえる
 
+### 1h. 機械で合否を決められる仕事だけ渡す・余っている無料枠を使い切る（2026-11-26）
+
+**なぜ**: 2026-11-26 りんく「全体設計で質をおとさず効率よくコーディングするコスパ運用会議して」「全部の資産をいかしきれてないはず」。
+会議（スレッド「会議システムを今日の最新版にする」）の結論は「**委譲するかは、CI・テストで合否を機械判定できるかだけで決める**」。
+直近30日の dispatch は Grok 58・Antigravity 42・Codex 30・さくら 9・hydrogen 4 で、**会社PCの Ollama（RTX 4070 Ti・空き約10GB）と Groq（1日1,000回の無料枠）は0回**だった。
+どちらも AUTO_CHAIN の最後か `--text`（答えを誰も確かめない）からしか呼ばれない作りだったのが原因。
+（会議で出た「成功率85%」などの数字は根拠が無いので使わない。）
+
+**決まり**（`dispatch.py` が機械で守らせる。`test_dispatch_delegation.py`）
+1. `--brain auto` は `--verify "<合否を決めるコマンド>"` が無いと動かない（終了コード3＝「Claude が自分でやる」）。頭脳が終わったあと dispatch がそのコマンドを走らせ、通らなければ次の頭脳へ回す。頭脳の「できました」は結果として数えない
+2. 合否をコマンドで決められない仕事（設計・方針／見た目・UI／レビュー・審査／法令・規約・商標／ストア提出）は、どの頭脳にも渡さない（同じく終了コード3）。判定は頼む文の中身で見る（`CLAUDE_ONLY_KINDS`）。本人の指定などでどうしても渡すときだけ `--delegate-anyway "<理由>"`
+3. 頭脳が自分を判定する検査をゆるめたら失敗にする（`weakened_checks`）: テストファイルの削除、skip/only/todo・`@ts-ignore`・`--no-verify`・`continue-on-error: true`・`|| true` の追加、テストの assert を減らす、CI・hook・テスト／型の設定を書き換える。仕事そのものが CI や hook の直しなら `--allow-check-edits`
+4. Claude Code で動く頭脳（qwen・local）にも、OpenCode と同じく push・`git remote/config`・`gh`・`env/unset`・デプロイ・curl をツール側で拒否させる（`CLAUDE_DENY_TOOLS`。11/18 さくらが環境変数の止めを自分で外した件の残り）。Codex・Grok・agy は従来どおり push の検知で失敗にする
+5. 1ファイルで済む機械判定の仕事（単体テストを足す・型を付ける・小さな純関数）は `--out` で無料の **Ollama → Groq → Gemini**（`FILE_CHAIN`）に回す。dispatch が答えをファイルに書き、`--verify` を走らせ、落ちたら失敗の出力を渡して1回だけ直させ、それでも駄目なら元に戻して次へ。Codex・Claude の枠を使わない
+   - Ollama のモデルは毎回 `/api/tags` で**入っているものだけ**から選ぶ（`OLLAMA_CODER_CHAIN`。会議で名前の出た qwen2.5-coder-14b は PC に無く、全部失敗していた）。2台目PCからは `DISPATCH_OLLAMA_URL` で会社PCの GPU を借りる
+   - `--context <元のファイル>` を付けると中身を見せる（30,000字まで）。`--out` と `--context` は `--cwd` の中だけ
+
+```text
+python docs/ai-workflows/tools/dispatch.py --cwd <dir> --verify "npm test" "<やること>"
+python docs/ai-workflows/tools/dispatch.py --cwd <dir> --out scripts/lib/x.test.mjs --context scripts/lib/x.mjs --verify "npx vitest run scripts/lib/x.test.mjs" "x.mjs の単体テストを書く"
+```
+
+- job-runner のジョブは `verify: <コマンド>` の行で渡す（`brain: auto` のときは必須。明示の頭脳は無くても動くが、dispatch が「確かめていない」と書く）
+- 振り分けの知らせ（§1g の hook）にも同じ書き方を入れた
+
 ### 1d. Workflowツール（dynamic workflow）は使わないのが既定（2026-09-25確定）
 
 Claude Code公式のマルチエージェント編成機能。単語"workflow"で誤発火し得る上、
