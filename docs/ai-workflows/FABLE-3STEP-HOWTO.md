@@ -79,29 +79,19 @@
    Opus は会話に残っている計画をそのまま手本にして実装・テスト・PR まで進める。
 4. 作業中に設計を大きく変える必要が出たら、そこで一度だけ Fable に戻して計画を直させ、また Opus に戻す。
 
-### 自動で切り替える設定（2026-11-11 りんく「自動適用して質が上がるのはどんどん採用」）
+### 自動で切り替える設定はやめた（2026-11-11 採用 → 2026-11-26 撤回）
 
-Claude Code の公式の別名 `opusplan`（プランモードの間だけ上位モデル、抜けたら作業用モデル）の中身を、
-公式の環境変数で「プラン＝Fable 5.2／作業＝Opus 5.5」に差し替える。これで**プランモードに入るだけで Fable が計画し、
-プランを承認してプランモードを抜けると Opus が作業する**。人がモデルを選び直す手間がなくなる。
+2026-11-11 から、公式の別名 `opusplan` と環境変数 `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-fable-5-2`・`ANTHROPIC_DEFAULT_SONNET_MODEL=claude-opus-5-5`
+で「プランモード＝Fable／それ以外＝Opus」に自動で切り替えていた。**2026-11-26 にやめた。**
 
-```json
-{
-  "model": "opusplan",
-  "env": {
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-fable-5-2",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-opus-5-5"
-  }
-}
-```
-
-- 置き場所: このリポは `.claude/settings.json` に入れてある。全プロジェクトに効かせるには PC の `~/.claude/settings.json` にも同じ3つを足す。
-- 実測（2026-11-11、Claude Code 2.1.322、クラウド）: この設定で `--permission-mode plan` は `claude-fable-5-2`、通常モードは `claude-opus-5-5` が答えた（`--output-format json` の `modelUsage` で確認）。
-- 出典: 公式 [model-config](https://code.claude.com/docs/en/model-config)（opusplan）・[env-vars](https://code.claude.com/docs/en/env-vars)（`ANTHROPIC_DEFAULT_OPUS_MODEL`＝「opusplan がプランモード中に使う」、`ANTHROPIC_DEFAULT_SONNET_MODEL`＝「プランモード外で使う」）。
-- AI の動き方: 深い設計が要るお題は、AI が自分でプランモードに入って（EnterPlanMode）計画を出す。小さな直しはプランモードに入らない（＝最初から Opus）。
-- ★Fable を使いすぎない（2026-11-12、Fable が上限の 76% で週の途中に詰まりかけた）: Fable が上限の 70% を超えたら、プランモードは「方針が割れていて、間違えると戻すのが大変な設計」だけにする。計画のあとの実装は Opus が自分でやらず `--brain codex` に投げる。目安と振り分けの正本は [`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1e。
-- 副作用（知って使う）: この設定の中では別名 `opus` が Fable を、`sonnet` が Opus を指す。サブエージェントに `model: "opus"` を渡すと Fable 枠を使うので、Opus を名指しするときは `claude-opus-5-5` と正式名で書く。
-- 効かない所: `claude --model …` で起動したセッション（クラウドのプロジェクトのスレッドなど）は起動時の指定が勝つので、下の「気をつけること」のスレッドの項に従う。
+- **なぜ**: この環境変数は「プランモードのモデル」だけでなく、**別名 `opus` そのものを Fable に差し替える**（公式 [env-vars](https://code.claude.com/docs/en/env-vars):
+  「`opus` の別名が指すモデル ID、かつ opusplan がプランモードで使うもの」）。プランモードのモデルだけを決める公式の設定は無い（[model-config](https://code.claude.com/docs/en/model-config)）。
+  そのため「Opus」を選んだつもりの所が全部 Fable で動いていた。実損（2026-11-25〜26）: 会社PCの Claude Desktop の定期タスク（モデルを指定できない）が Fable で動き、
+  Fable の週上限に当たって `You've hit your Fable limit` の1行で毎回終わり、使用量の記録（record-claude-usage）が丸1日以上止まった。Fable が週の途中で尽きる原因の一つでもあった
+- **いまの既定**: `.claude/settings.json` は `"model": "claude-opus-5-5"`（環境変数なし）。PC の `~/.claude/settings.json` にも差し替えを入れない
+- **Fable を使うとき**: 深い設計が要るお題だけ、その会話で `/model claude-fable-5-2` と正式名で選んで計画を文章で出させ、計画ができたら `/model claude-opus-5-5` に戻す（下の「気をつけること」の1回だけの切り替え）。
+  クラウドのスレッドでは、りんくの言葉でモデルを切り替える決まりのまま
+- 残り枠が減ったときの振り分けは hook `inject-ai-budget-mode`（[`MULTI-BRAIN-HOWTO.md`](MULTI-BRAIN-HOWTO.md) §1g）が知らせる
 
 ### なぜこれが良いか（何が本当で、何が言い過ぎか）
 
@@ -139,7 +129,7 @@ Fable 5.2 の週枠は Claude 全体とは別の上限で限られている（11
 | 渡された要約・差分を見ての判断 | コード・設定ファイルを書く → `--brain codex`（先頭）か Opus 5.5 |
 
 - サブエージェントに回すときは、**Opus 5.5 を指す名前を必ず渡す**。指定しないと親の Fable を引き継ぐ。
-  opusplan 設定の中では `model: "sonnet"` が Opus 5.5（`"opus"` は Fable になる）。opusplan でないセッションでは `"opus"`。
+  正式名 `claude-opus-5-5` で書くのが確実（2026-11-26 に opusplan の差し替えはやめたので、`"opus"` も Opus 5.5 を指す。古い差し替えが残った PC では `"opus"` が Fable になる）。
 - 読む材料は「先に Opus が集めて要約 → Fable はその要約を読む」の順にする。Fable が自分で Grep を回すより枠の減りが小さい。
 
 ### 気づける仕組み: `guard-fable-manual-work` hook

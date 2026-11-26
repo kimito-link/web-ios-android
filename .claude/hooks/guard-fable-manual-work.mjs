@@ -89,8 +89,8 @@ function isDelegation(tool, toolInput) {
 }
 
 const HOW_TO_HAND_OFF =
-  '手作業は Opus 5.5 か Codex に回す: (1) 計画を文章で出し終えたらプランモードを抜ける（opusplan 設定なら抜けると Opus 5.5 になる）、'
-  + '(2) 調べ物は Agent ツールで Explore などのサブエージェントへ（model は Opus 5.5 を指す名前。opusplan 設定の中では "sonnet"、それ以外は "opus"。'
+  '手作業は Opus 5.5 か Codex に回す: (1) 計画を文章で出し終えたら /model claude-opus-5-5 に戻す、'
+  + '(2) 調べ物は Agent ツールで Explore などのサブエージェントへ（model は正式名 "claude-opus-5-5"。'
   + '指定なしだと親の Fable を引き継ぐ）、(3) 実装・定型作業は python docs/ai-workflows/tools/dispatch.py --brain codex。'
   + ' 正本: docs/ai-workflows/FABLE-3STEP-HOWTO.md「Fable は頭脳労働専用」。';
 

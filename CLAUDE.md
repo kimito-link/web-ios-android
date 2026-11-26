@@ -181,7 +181,7 @@ github/配下に散らばっていたルール文書・ノウハウ・手順を�
    ★Antigravity は CLAUDE.md を読まない（読むのは [`AGENTS.md`](AGENTS.md)）・Turbo は push も止まらない。拒否リスト・
    モデル別の役割分担・自動で投げる運用への移行（段階2）は正本 [`ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md)。
    ★Claude どうしの使い分けは「**同じ会話で、まず Fable 5.2 に計画を文章で出させ、計画ができたら Opus 5.5 に切り替えて作業する**」が既定
-   （2026-11-11 りんく「全体採用に」）。`.claude/settings.json` の `opusplan` 設定で、プランモード中は Fable・抜けたら Opus に自動で切り替わる。Fable の週枠は計画だけに使い、小さな直しはプランモードに入らない。手順と注意: [`FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
+   （2026-11-11 りんく「全体採用に」）。切り替えは `/model claude-fable-5-2` → `/model claude-opus-5-5` と正式名で手で行う。★自動切り替え（`opusplan`＋`ANTHROPIC_DEFAULT_OPUS_MODEL`）は別名 `opus` まで Fable にして定期タスク等を Fable で動かし止めたので 2026-11-26 にやめた。既定は `claude-opus-5-5`。Fable の週枠は計画だけに使い、小さな直しでは使わない。手順と注意: [`FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「同じ会話で…切り替える」。
    ★★**Fable 5.2 は頭脳労働専用**（2026-11-16 りんく指定）。Fable が出すのは計画・設計・判断の文章だけ。ファイルを読み回す・コマンドを繰り返す・コードを書く手作業は Opus 5.5 か Codex に回す（調べ物は Opus のサブエージェント、実装は `--brain codex`）。
    `guard-fable-manual-work` hook が、Fable のコード・設定の編集を**拒否**し、1ターンの読む・走らせる作業が8回で注意・16回で拒否する（正本: 同 HOWTO「Fable は頭脳労働専用」）。
 
