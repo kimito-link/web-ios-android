@@ -24,9 +24,9 @@
 > 会議のモデル名提案は幻覚が混じる（実例: `llama-3.3-70b-instant` は実在しない）。**採用前に必ず `/models` か実呼び出しで実在確認**すること。
 > weight は小さいほど先に選ばれる（1=主力、3=予備、4=最後の砦）。
 
-**クラウド（19体・2026-11-26 時点）**
+**クラウド（20体・2026-11-26 時点）**
 
-> ★2026-11-26: NVIDIA の鍵が 11/15 から 403 で切れている（モデルの問題ではないので名簿には残す）。鍵が戻るまで統括は openrouter/nemotron-3-ultra-550b と gemini-4-hydrogen が受け持つ。鍵の作り直しは https://build.nvidia.com/settings/api-keys （tsuioku-no-kirameki.com Issue #724）。
+> 2026-11-26: NVIDIA の鍵が 11/15〜11/26 に 403 で切れていた（モデルの問題ではない）。同日に鍵を作り直して3体が復帰（tsuioku-no-kirameki.com Issue #724 を閉じた）。鍵切れを見分けるには、NVIDIA の全モデルが同時に 403 になるかを見る。
 
 | メンバー | 役割 | weight | 備考 |
 |---|---|---|---|
@@ -40,6 +40,7 @@
 | nvidia/nemotron-3-ultra-550b | 統括 | 2 | 統括の正規枠 |
 | nvidia/nemotron-3.5-super | 汎用 | 3 | liveProbe。`nvidia/nemotron-3.5-super-vl-120b-a12b`（2026-10-15 公開の新世代）。推論オフ(`enable_thinking=false`)必須（既定だと推論で上限を使い切り空/途中切れ）。2026-11-03 追加（本番条件の実測で3/3 OK・5〜33秒）。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | nvidia/nemotron-3.5-lightning | 汎用 | 3 | liveProbe。`nvidia/nemotron-3.5-lightning-30b-a3b`（30B/3B有効の速い型）。推論オフ(`enable_thinking=false`)必須（既定は3/3空返答）。2026-11-05 追加（本番条件の実測で3/3 OK・5.6〜10.8秒）。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
+| nvidia/minimax-m3.1-flash | 汎用 | 3 | liveProbe。NVIDIA Free Endpoint の MiniMax M3.1 Flash。推論オフ(`enable_thinking=false`)必須。2026-11-26 追加（本番条件3/3・32〜62秒・本文734〜967字）。名簿に無かった系統。同日の全員会議では長い入力で aborted が1回あった。昇格は「7日以上空けた実会議2回でFAILEDゼロ」 |
 | openrouter/nemotron-3-ultra-550b | 統括 | 3 | 無料枠で429が出やすい予備 |
 | gemini-3.5-flash-lite | 汎用 | 1 | 汎用の主力。統合の2番手・分類器の1番目でもある。2026-11-12 追加（w3）→ 11-16 に gemini-2.5-flash の役をすべて継いだ（12/1 から 2.5-flash は Google 側でこのモデルへ自動転送される・[公式](https://aistudio.google.com/docs/deprecations)）。11/12 実測で普段3/3（2.7秒）・統合2/2合格（4秒前後・手順と4見出しそろう）。字数は 2.5-flash の約6割。「7日以上空けた実会議2回」を経ない主力化は転送による強制入替の例外 |
 | gemini-3.8-flash | 汎用 | 3 | 2026-11-11 に 3.7-flash から入れ替え（Google 公式で 3.7 は 3.8 へ自動転送されていた）。混む時間帯は100秒以上かかることがある |
@@ -56,7 +57,8 @@
 **2026-11-15 の追加**（tsuioku-no-kirameki.com PR #650）: gemini-4-hydrogen を統括の予備(weight3)に追加。`council-roles.mjs` に `gemini-4-hydrogen`→統括、`gemini-4`→3 を足した（足さないと汎用役の主力 weight1 に落ちる）。thinkingLevel low は35秒まで縮んだが、成功が1回だけなので採らなかった。
 **2026-11-16 の交代**（tsuioku-no-kirameki.com・kimitolink-linktree）: gemini-2.5-flash を名簿から外し、役をすべて gemini-3.5-flash-lite が継いだ（汎用の主力 weight1・統合 `groq/gpt-oss-120b → gemini-3.5-flash-lite → cloudflare/nemotron-120b`・分類器 `gemini-3.5-flash-lite → groq/gpt-oss-20b → groq/gpt-oss-120b → local/qwen3.5:9b`）。理由: 12/1 から 2.5-flash の呼び出しは中身が lite になる＝選べるのは名前を先に合わせるかだけ。lite は統合で試す条件（11/12 に 2/2）を満たし、3.8-flash・3.6-flash は 503 が多く不適。`council-roles.mjs` の weightOf に `gemini-3.5-flash-lite`→1 を `gemini-3`→3 より前に足した。linktree の `design-council.mjs` の Gemini 既定も lite に（`GEMINI_MODEL` で上書き可）。統括は変えない（gemini-4-hydrogen・nemotron-3.5-super は昇格条件をまだ満たさない）。
 **2026-11-18 の追加**（tsuioku-no-kirameki.com PR #672）: さくらのAI Engine の2席を予備(weight3)で追加（上の表）。`meeting.mjs`・`council-lineup.mjs`・`council-trial.mjs`・`scout-models.mjs` に provider `sakura` を足し、`council-roles.mjs` に `sakura/glm`→汎用・`sakura/`→3。見送り: `preview/Kimi-K2.7-Code`（会議の問いでは 1600 で途中切れ、3200・reasoning_effort low でも推論だけで本文0、thinking disabled は効かず、enable_thinking=false は英語の独白が混ざる。短い問いなら答える→別の日に max_tokens 6000 前後で再試験）。
-**2026-11-26 の入れ替え**（tsuioku-no-kirameki.com PR #723）: 撤去 cloudflare/nemotron-120b・qwen3-30b-a3b（11/20 に Cloudflare が提供終了＝410）、nvidia/diffusiongemma-26b（11/12 に提供終了＝410・実会議には一度も出ず）、mistral/codestral（402「サブスクリプションが必要」＝Mistral の無料枠が無くなった。課金はしない）。追加 cloudflare/qwen3.8-27b・sakura/kimi-k2.7-code（上の表）。統合の3番手を nemotron-120b → cloudflare/deepseek-v4.1-flash（1万1千字の入力で2/2・9〜11秒）。見送り: gemini-3.8-flash は 0/4（503・時間切れ。503 は撤去しない決まりなので据え置き、次も混んでいれば gemini-3-flash-preview＝3/3・8〜9秒へ）、gemini-4-hydrogen の thinkingLevel low 1/3、cloudflare/inkling-2-small（3/3 だが Workers 有料専用）、cloudflare/gpt-oss-120b（groq と重複）・glm-4.7-flash（遅い）、openrouter の Gemma 4 26B/31B（429）・ling-3.2-flash（空か429）、SambaNova 全部（402）、Gemini 4 argon・carbon・neon（無料枠の外）。NVIDIA の新顔（GLM 5.3 Flash・MiniMax M3.1 Flash・Step 5 Preview・Kimi K3.1 Pro）は鍵の 403 で未試験→鍵が戻ったら試す。Qwen 4 は一覧に無し。昇格なし（11/15 から実会議の記録が無い）。
+**2026-11-26 の入れ替え**（tsuioku-no-kirameki.com PR #723）: 撤去 cloudflare/nemotron-120b・qwen3-30b-a3b（11/20 に Cloudflare が提供終了＝410）、nvidia/diffusiongemma-26b（11/12 に提供終了＝410・実会議には一度も出ず）、mistral/codestral（402「サブスクリプションが必要」＝Mistral の無料枠が無くなった。課金はしない）。追加 cloudflare/qwen3.8-27b・sakura/kimi-k2.7-code（上の表）。統合の3番手を nemotron-120b → cloudflare/deepseek-v4.1-flash（1万1千字の入力で2/2・9〜11秒）。見送り: gemini-3.8-flash は 0/4（503・時間切れ。503 は撤去しない決まりなので据え置き、次も混んでいれば gemini-3-flash-preview＝3/3・8〜9秒へ）、gemini-4-hydrogen の thinkingLevel low 1/3、cloudflare/inkling-2-small（3/3 だが Workers 有料専用）、cloudflare/gpt-oss-120b（groq と重複）・glm-4.7-flash（遅い）、openrouter の Gemma 4 26B/31B（429）・ling-3.2-flash（空か429）、SambaNova 全部（402）、Gemini 4 argon・carbon・neon（無料枠の外）。Qwen 4 は一覧に無し。昇格なし（11/15 から実会議の記録が無い）。
+**2026-11-26 午後の追加**（tsuioku-no-kirameki.com PR #728）: NVIDIA の鍵を作り直して試験。nemotron-3-ultra 3/3・3.5-super 3/3・3.5-lightning 2/3（1回は長すぎて途中切れ）。追加 nvidia/minimax-m3.1-flash。見送り: GLM 5.3 Flash・Step 5 Preview（推論オフでも本文空か120秒で時間切れ）、Kimi K3.1 Pro・Mistral Large 4（毎回120秒で時間切れ）。
 新顔を探すときは `node scripts/council-trial.mjs`（全カタログの新顔を一斉に試す）か `--models プロバイダ:モデル,...`（指定だけ）。Mistral は `--delay 30000` でも429が出やすい。
 
 **ローカル（Ollama・無料無制限・オフライン保険）**: 12GB VRAM に収まる2体だけ置く（2026-10-12 実測で入れ替え）。VRAM からはみ出す大物は遅くなるだけなので置かない。
