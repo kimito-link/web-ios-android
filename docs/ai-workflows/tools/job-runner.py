@@ -13,6 +13,7 @@ Job file: <root>/_jobs/inbox/<name>.md   (UTF-8 Markdown; the whole file is the 
     expect: commit|no-commit           (default: commit when the task text says "commit" / "コミット", else no-commit)
     isolate: yes|no                    (default: yes when cwd is a git repo)
     base: origin/main                  (what the isolated worktree starts from; default origin/main)
+    verify: npm test                   (pass/fail command run after the brain; required for brain: auto, 2026-11-26)
 Result: <root>/_jobs/done/<name>.md   + <name>.result.md   when the job really did its work
         <root>/_jobs/failed/<name>.md + <name>.result.md   otherwise (the "- status:" line says why)
 Running marker: <root>/_jobs/running/<name>.md while it executes (so a second runner instance skips it).
@@ -92,6 +93,8 @@ def classify(rc, out, needs_commit, before, after):
     new, moved = branch_changes(before, after)
     if moved:
         return False, "touched branches that existed before the job: " + ", ".join(moved)
+    if rc == 3:
+        return False, "dispatch kept this job for Claude (no machine can judge it, or no 'verify:' line) - see dispatch output"
     if rc != 0:
         return False, "dispatch exit %s" % rc
     if needs_commit:
@@ -201,7 +204,10 @@ def main():
                     "- 上で `_docs/...` を読めと書いてあってここに無いときは `.job-context/_docs/...` を読む（本体の最新の写し。読むだけで、書き換えない・コミットしない）。\n"
                     % (task, workdir, base))
     if workdir:
-        cmd = [sys.executable, DISPATCH, "--brain", brain, "--timeout", str(timeout), "--cwd", workdir, task]
+        cmd = [sys.executable, DISPATCH, "--brain", brain, "--timeout", str(timeout), "--cwd", workdir]
+        if meta.get("verify"):
+            cmd += ["--verify", meta["verify"]]
+        cmd.append(task)
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
         try:
             p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=timeout + 120)

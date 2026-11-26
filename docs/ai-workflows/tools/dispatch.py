@@ -15,6 +15,9 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
   python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
+  python dispatch.py --cwd <dir> --verify "npm test" "task"   # auto needs a pass/fail command ("delegate only what a machine can judge")
+  python dispatch.py --cwd <dir> --out tests/x.test.mjs --context src/x.mjs --verify "npx vitest run tests/x.test.mjs" "unit tests for x"
+                                                              # one file, machine-checked: FILE_CHAIN (Groq -> local Ollama -> Gemini, all free)
 
 Why fallback exists: free quotas die without warning (Alibaba flash and max each ran out within about 1.5 days on
 2026-09-15/16), and a headless brain that blocks on a permission prompt looks like a hang. A failed brain must never
@@ -48,6 +51,18 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 AUTO_CHAIN = ["codex", "grok", "hydrogen", "sakura", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
+# One-file jobs with a pass/fail command (--out + --verify): unit tests, type annotations, small pure functions.
+# 2026-11-26 cost council: the company PC's Ollama (RTX 4070 Ti, ~10GB VRAM free) and Groq (1,000 requests/day free)
+# had 0 runs in 30 days, because they were only reachable as the LAST step of AUTO_CHAIN or through --text, where nobody
+# checks the answer. A one-file job that a command can judge suits a fast/weak text model: dispatch writes the file,
+# runs --verify, feeds the failure back once, and moves on if it still fails. No Codex/Claude quota is spent on these.
+# Order (PC run 2026-11-26, the same add() unit-test job): groq qwen3.8-27b passed in 1s, ollama qwen3.6:35b-a3b in 110s
+# (RTX 4070 Ti, model load included). Both are free, so the fast one goes first; Ollama takes over when Groq's daily
+# quota or rate limit stops it, and is the one to name (--brain ollama) for code that must not leave the PC.
+FILE_CHAIN = ["groq", "ollama", "gemini"]
+# Ollama models for one-file jobs, best first. Only installed ones are used (asked via /api/tags each run): the
+# 11/26 council named qwen2.5-coder-14b, which was not on the PC, and every call failed. Never assume a model exists.
+OLLAMA_CODER_CHAIN = ["qwen3-coder:30b", "qwen2.5-coder:14b", "qwen3.6:35b-a3b", "qwen3:14b", "qwen3:8b"]
 FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_failed", "API Error", "Unable to connect",
               "Failed to authenticate", "Unexpected server error", "Open this URL to sign in", "ECONNREFUSED", "rate limit",
               "Opening authentication page", "RESOURCE_EXHAUSTED", "quota exceeded",
@@ -67,7 +82,7 @@ FAIL_MARKS = ["insufficient_quota", "Free quota exhausted", "data_inspection_fai
               "The model is overloaded", '"status": "UNAVAILABLE"',
               # 2026-11-18 sakura: 無償プランは月3,000回を超えると課金でなく 429 で止まる（公式 manual 02-howto）。次の頭脳へ。
               "Too Many Requests"]
-TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "hydrogen": 1800, "sakura": 900, "glm": 900, "local": 1800}
+TIMEOUTS = {"codex": 1800, "agy": 1800, "grok": 900, "gemini": 900, "groq": 600, "qwen": 900, "oc": 900, "cf": 600, "muse": 900, "nvidia": 900, "mistral": 900, "hydrogen": 1800, "sakura": 900, "glm": 900, "local": 1800, "ollama": 900}
 
 
 def say(msg):
@@ -278,19 +293,34 @@ def sakura_opencode_config(model_id):
                                     "models": {model_id: {"name": model_id}}}}}
 
 
+# The Claude Code brains (qwen, local) got only environment-variable blocks, which a brain holding the shell can undo
+# (2026-11-18 sakura did exactly that through `git remote set-url --push` / `env -u GH_TOKEN`). Claude Code checks
+# --disallowedTools itself, per sub-command of a compound command, so the brain cannot switch it off. Same shapes as
+# OPENCODE_BASH_DENY: outward writes, and the commands that would remove the blocks.
+CLAUDE_DENY_TOOLS = [
+    "Bash(git push:*)", "Bash(git remote:*)", "Bash(git config:*)", "Bash(git credential:*)", "Bash(git commit --no-verify:*)",
+    "Bash(gh:*)", "Bash(env:*)", "Bash(unset:*)", "Bash(export:*)", "Bash(wrangler:*)", "Bash(npx wrangler:*)",
+    "Bash(vercel:*)", "Bash(npx vercel:*)", "Bash(npm publish:*)", "Bash(curl:*)", "WebFetch",
+]
+
+
+def claude_deny_args():
+    return ["--disallowedTools", ",".join(CLAUDE_DENY_TOOLS)]
+
+
 def build(brain, task, allowed, model=None, cwd=None):
     env = dict(os.environ)
     task = spool_task(task, brain)
     if brain == "qwen":
         env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL=RELAY, ANTHROPIC_AUTH_TOKEN=env.get("DASHSCOPE_API_KEY", ""), ANTHROPIC_MODEL=model)
-        cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
+        cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else []) + claude_deny_args()
     elif brain == "local":
         model = model or "qwen3.6:35b-a3b"
         # DISPATCH_OLLAMA_URL: run on the second PC (Let's note) and borrow the company PC's GPU over Tailscale,
         # e.g. http://<company-pc-tailscale-name>:11434 (2026-11-11: reachable from other devices). Default = this PC.
         env.update(CLAUDE_COMMON, ANTHROPIC_BASE_URL=os.environ.get("DISPATCH_OLLAMA_URL", "http://127.0.0.1:11434"),
                    ANTHROPIC_AUTH_TOKEN="ollama", ANTHROPIC_MODEL=model)
-        cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else [])
+        cmd = ["claude", "-p", task, "--model", model] + (["--allowedTools", allowed] if allowed else []) + claude_deny_args()
     elif brain == "oc":
         model = model or "alibaba/qwen3.8-27b"
         cmd = ["opencode", "run", "-m", model, task]
@@ -494,6 +524,7 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     # 呼び出し元の PWD が残り、--cwd と別のリポで branch を切って commit した。PWD を cwd に揃えて固定する。
     env["PWD"] = os.path.abspath(cwd)
     heads_before = None
+    base_sha = head_sha(cwd)
     if not ALLOW_OUTWARD:
         block_outward(env)
         if cmd and cmd[0] == "opencode":
@@ -526,6 +557,25 @@ def run_one(brain, task, cwd, allowed, timeout, model=None):
     if brain == "codex" and codex_fake_git(cwd):
         failed = True
         out += "\n# FAILED: .git-codex found - Codex committed into a copy of .git, not the real repo\n"
+    # The brain's own word is not the result (2026-11-26 cost council): the checks it was judged by must be intact, and
+    # the pass/fail command must pass. Both go into the run log so the commander sees why (the usage page still
+    # counts only FAIL_MARKS = availability, not quality).
+    extra = ""
+    if not failed and base_sha and not ALLOW_CHECK_EDITS:
+        weak = weakened_checks(cwd, base_sha)
+        if weak:
+            failed = True
+            extra += "\n# FAILED: CHECKS WEAKENED - %s. A delegated brain must not loosen the checks that judge it.\n" % "; ".join(weak)
+    if not failed and VERIFY_CMD:
+        vrc, vout = run_verify(VERIFY_CMD, cwd)
+        extra += "\n# verify (%s): rc=%s\n%s\n" % (VERIFY_CMD, vrc, vout[-3000:])
+        if vrc != 0:
+            failed = True
+            extra += "# FAILED: VERIFY - the pass/fail command did not pass\n"
+    if extra:
+        out += extra
+        with open(log, "a", encoding="utf-8", errors="replace") as f:
+            f.write(extra)
     return (not failed), f"rc={rc} {time.time() - t0:.0f}s log={log}", out, model
 
 
@@ -606,6 +656,268 @@ def pushed_from_here(before, after, cwd):
     return hits
 
 
+VERIFY_CMD = None
+ALLOW_CHECK_EDITS = False
+VERIFY_TIMEOUT = 900
+
+
+# ---- Delegate only what a machine can judge (2026-11-26 cost council) ------------------------------------------------
+# Conclusion of the council: whether a job goes to another brain is decided by ONE question - can a command (tests,
+# type check, lint, build) say pass or fail? If yes, a cheap brain does it and dispatch checks it. If no (design,
+# look and feel, review, legal wording, store submission), a cheap brain's "done" cannot be trusted and Claude checking
+# it costs as much as doing it, so the job stays with Claude. Matched on what the task ASKS FOR, not on any mention.
+CLAUDE_ONLY_KINDS = [
+    ("design", r"設計(し|を|書|案|して|する)|アーキテクチャ|方針を(決|立)|architect|design (doc|the|a )"),
+    ("look", r"デザイン|見た目|配色|レイアウトを(作|変|直)|画面を(作り直|デザイン)|LP を作|ＬＰを作|UIを(作|作り直|デザイン)|\bUX\b|art direction|look and feel"),
+    ("review", r"レビュー(して|を(して|お願い))|検品(して|を)|審査(して|を)|監査(して|を)|\breview (this|the|my|pr)\b|code review"),
+    ("legal", r"法令|法的|規約(を|の)(作|書|確認)|利用規約|プライバシーポリシー|特商法|特定商取引|商標|景表法|薬機法|legal|terms of service|privacy policy|trademark"),
+    ("store", r"(審査|ストア)に?提出|申請(して|を出)|submit for review|app review"),
+]
+CLAUDE_ONLY_LABEL = {"design": "設計・方針", "look": "見た目・UI", "review": "レビュー・審査", "legal": "法令・規約・商標", "store": "ストア提出"}
+
+
+def delegation_verdict(task, verify, text_only=False, override=None):
+    """("ok", "") / ("claude", reason) / ("need_verify", reason). Pure, so the rule is testable without any brain."""
+    import re
+    if override:
+        return "ok", "delegated anyway: " + override
+    if text_only:
+        return "ok", ""  # text jobs (summaries, drafts) never touch files; the commander reads the answer
+    hits = [k for k, pat in CLAUDE_ONLY_KINDS if re.search(pat, task, re.I)]
+    if hits:
+        return "claude", "「%s」は機械で合否を決められない仕事なので Claude が自分でやる" % "・".join(CLAUDE_ONLY_LABEL[k] for k in hits)
+    if not verify:
+        return "need_verify", "合否を決めるコマンドが無い。--verify \"<テスト・型検査など>\" を付ける（決められないなら Claude が自分でやる）"
+    return "ok", ""
+
+
+def head_sha(cwd):
+    try:
+        r = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cwd, capture_output=True, text=True, timeout=30)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:
+        return None
+
+
+TEST_PATH = r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]*\.py$|_test\.(py|go)$|\.(test|spec)\.[cm]?[jt]sx?$"
+CHECK_PATHS = (".github/workflows/", ".claude/hooks/", ".claude/settings", ".husky/", "lefthook", ".pre-commit-config",
+               "templates/diagnostics/", "vitest.config", "jest.config", "pytest.ini", "tsconfig")
+SKIP_MARKS = r"\.(skip|only|todo)\(|\bx(it|describe|test)\(|@pytest\.mark\.(skip|xfail)|pytest\.skip\(|@unittest\.skip|" \
+             r"--no-verify|continue-on-error:\s*true|@ts-(ignore|nocheck)|eslint-disable|# type:\s*ignore|noqa"
+ASSERT_LINE = r"\bexpect\(|\bassert|\.toBe|\.toEqual|\.toThrow|self\.assert"
+
+
+def weakened_checks(cwd, base):
+    """Ways the brain loosened the checks between base and the working tree. [] when none (or not a git repo).
+    Why: 2026-11-18 sakura removed its own push block. A brain judged by tests can equally skip or delete the tests,
+    and then --verify passes for nothing. Flags: test files deleted, skip/ignore marks added, assertions removed from a
+    test file, or the checking machinery itself (CI, hooks, test/type config) edited. --allow-check-edits lets it through."""
+    import re
+    def git(*a):
+        r = subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+        return r.stdout if r.returncode == 0 else ""
+    found = []
+    for ln in git("diff", "--name-status", "-M", base).splitlines():
+        parts = ln.split("\t")
+        st, path = parts[0], parts[-1]
+        old = parts[1] if len(parts) > 2 else path
+        if st.startswith(("D", "R")) and re.search(TEST_PATH, old) and not (st.startswith("R") and re.search(TEST_PATH, path)):
+            found.append("test file removed: " + old)
+        if any(c in path for c in CHECK_PATHS) or any(c in old for c in CHECK_PATHS):
+            found.append("check machinery edited: " + path)
+    cur, removed, added = None, {}, {}
+    lines = git("diff", "-U0", base).splitlines()
+    # New files the brain did not `git add` are not in the diff; read them as added lines.
+    for path in git("ls-files", "--others", "--exclude-standard").splitlines():
+        if any(c in path for c in CHECK_PATHS):
+            found.append("check machinery edited: " + path)
+        try:
+            with open(os.path.join(cwd, path), encoding="utf-8", errors="replace") as f:
+                lines += ["+++ b/" + path] + ["+" + t for t in f.read(200000).splitlines()]
+        except OSError:
+            pass
+    for ln in lines:
+        if ln.startswith("+++ "):
+            cur = ln[6:] if ln.startswith("+++ b/") else None
+        elif ln.startswith("+") and not ln.startswith("+++") and cur:
+            if re.search(SKIP_MARKS, ln[1:]):
+                found.append("skip/ignore added in %s: %s" % (cur, ln[1:].strip()[:80]))
+            if cur.endswith("package.json") and re.search(r'"(test|lint|typecheck|type-check|verify|check)[^"]*"\s*:', ln):
+                found.append("check script changed in %s: %s" % (cur, ln[1:].strip()[:80]))
+            if re.search(TEST_PATH, cur) and re.search(ASSERT_LINE, ln):
+                added[cur] = added.get(cur, 0) + 1
+        elif ln.startswith("-") and not ln.startswith("---") and cur and re.search(TEST_PATH, cur) and re.search(ASSERT_LINE, ln):
+            removed[cur] = removed.get(cur, 0) + 1
+    for path, n in removed.items():
+        if n > added.get(path, 0):
+            found.append("assertions removed from %s (-%d +%d)" % (path, n, added.get(path, 0)))
+    return sorted(set(found))
+
+
+def run_verify(cmd, cwd, timeout=None):
+    """Run the pass/fail command. (rc, output). A brain's environment blocks are not applied: this is the commander's command."""
+    try:
+        r = subprocess.run(cmd, cwd=cwd, shell=True, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=timeout or VERIFY_TIMEOUT, stdin=subprocess.DEVNULL)
+        return r.returncode, (r.stdout or "") + (r.stderr or "")
+    except subprocess.TimeoutExpired:
+        return -1, "# VERIFY TIMEOUT"
+
+
+# ---- One-file jobs on free text brains (--out) ----------------------------------------------------------------------
+def ollama_url():
+    return os.environ.get("DISPATCH_OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
+
+
+def ollama_models(fetch=None):
+    try:
+        raw = (fetch or (lambda u: urllib.request.urlopen(u, timeout=5).read().decode("utf-8")))(ollama_url() + "/api/tags")
+        return [m.get("name", "") for m in json.loads(raw).get("models", [])]
+    except Exception:
+        return []
+
+
+def pick_ollama_model(preferred=None, installed=None):
+    """First model of the chain that is actually installed. None if Ollama is down or has none of them."""
+    have = installed if installed is not None else ollama_models()
+    norm = lambda n: n if ":" in n else n + ":latest"
+    names = {norm(n) for n in have}
+    for m in ([preferred] if preferred else []) + OLLAMA_CODER_CHAIN:
+        if m and norm(m) in names:
+            return m
+    return None
+
+
+def ollama_chat(model, prompt):
+    body = {"model": model, "messages": [{"role": "user", "content": prompt}], "stream": False,
+            "options": {"temperature": 0.2, "num_ctx": 16384}}
+    req = urllib.request.Request(ollama_url() + "/api/chat", data=json.dumps(body).encode(), headers={"content-type": "application/json"})
+    r = json.load(urllib.request.urlopen(req, timeout=TIMEOUTS["ollama"]))
+    return r["message"]["content"]
+
+
+def groq_text(model, prompt):
+    key = os.environ.get("GROQ_API_KEY", "")
+    body = {"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 6000, "temperature": 0.2}
+    req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(body).encode(),
+                                 headers={"content-type": "application/json", "authorization": "Bearer " + key, "user-agent": "dispatch/1.0"})
+    return json.load(urllib.request.urlopen(req, timeout=TIMEOUTS["groq"]))["choices"][0]["message"]["content"]
+
+
+def gemini_text(model, prompt):
+    key = os.environ.get("GEMINI_API_KEY", "")
+    body = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"maxOutputTokens": 8192, "temperature": 0.2}}
+    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                                 data=json.dumps(body).encode(), headers={"content-type": "application/json", "user-agent": "dispatch/1.0"})
+    r = json.load(urllib.request.urlopen(req, timeout=TIMEOUTS["gemini"]))
+    return "".join(p.get("text", "") for p in r["candidates"][0]["content"]["parts"])
+
+
+def file_brain(brain, model=None):
+    """(ask(prompt)->text, model) for a FILE_CHAIN brain, or (None, reason) when it cannot run here."""
+    if brain == "ollama":
+        m = pick_ollama_model(model)
+        if not m:
+            return None, "Ollama at %s has none of %s" % (ollama_url(), ", ".join(OLLAMA_CODER_CHAIN))
+        return (lambda p: ollama_chat(m, p)), m
+    if brain == "groq":
+        if not os.environ.get("GROQ_API_KEY"):
+            return None, "GROQ_API_KEY not set"
+        m = model or "qwen/qwen3.8-27b"
+        return (lambda p: groq_text(m, p)), m
+    if brain == "gemini":
+        if not os.environ.get("GEMINI_API_KEY"):
+            return None, "GEMINI_API_KEY not set"
+        m = pick_gemini_model(model)
+        if not m:
+            return None, "all Gemini free quotas exhausted for today"
+        return (lambda p: gemini_text(m, p)), m
+    return None, "not a file brain: " + brain
+
+
+def extract_file(answer):
+    """The file body from a model answer: the largest fenced block, else the whole answer without think tags."""
+    import re
+    answer = re.sub(r"<think>.*?</think>", "", answer, flags=re.S)
+    blocks = re.findall(r"```[^\n]*\n(.*?)```", answer, flags=re.S)
+    body = max(blocks, key=len) if blocks else answer
+    return body.strip("\n") + "\n"
+
+
+def file_prompt(task, out_rel, context, existing, failure=None):
+    parts = ["You write exactly one file: %s. Reply with the complete file content in ONE fenced code block and nothing else." % out_rel,
+             "Do not skip, disable or weaken any test. Do not add skip/only/todo marks.", "", "Task:", task]
+    for path, text in context:
+        parts += ["", "--- %s ---" % path, text]
+    if existing is not None:
+        parts += ["", "--- current content of %s ---" % out_rel, existing]
+    if failure:
+        parts += ["", "Your previous version failed this check. Fix the file so it passes:", failure[-3000:]]
+    return "\n".join(parts)
+
+
+def run_file_job(task, cwd, out, verify, context_paths, chain, model=None, ask_for=None):
+    """Write one file with a free text brain until `verify` passes. Returns (ok, brain, model, info).
+    ask_for(brain, model) can replace file_brain() in tests."""
+    root = os.path.abspath(cwd)
+    target = os.path.abspath(os.path.join(root, out))
+    if os.path.commonpath([root, target]) != root:
+        return False, None, None, "--out must be inside --cwd: " + out
+    out_rel = os.path.relpath(target, root).replace(os.sep, "/")
+    context = []
+    for c in context_paths:
+        p = os.path.abspath(os.path.join(root, c))
+        if os.path.commonpath([root, p]) != root:
+            return False, None, None, "--context must be inside --cwd: " + c
+        with open(p, encoding="utf-8", errors="replace") as f:
+            context.append((os.path.relpath(p, root).replace(os.sep, "/"), f.read()[:30000]))
+    existing = open(target, encoding="utf-8").read() if os.path.exists(target) else None
+    base = head_sha(cwd)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    for brain in chain:
+        ask, m = (ask_for or file_brain)(brain, model)
+        if ask is None:
+            say(f"[dispatch] {brain}: skipped ({m})")
+            continue
+        log = os.path.join(RUNS, f"{stamp}-{brain}.log")
+        failure, ok, t0 = None, False, time.time()
+        with open(log, "w", encoding="utf-8", errors="replace") as lf:
+            lf.write(f"# brain={brain} model={m} cwd={cwd} out={out_rel} verify={verify}\n# task: {task}\n\n")
+            for attempt in (1, 2):  # one repair round with the failure fed back
+                try:
+                    answer = ask(file_prompt(task, out_rel, context, existing, failure))
+                except Exception as e:
+                    lf.write("API Error: %s\n" % e)
+                    break
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with open(target, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(extract_file(answer))
+                weak = weakened_checks(cwd, base) if base and not ALLOW_CHECK_EDITS else []
+                if weak:
+                    failure = "Rejected before running: " + "; ".join(weak)
+                    lf.write("# attempt %d: CHECKS WEAKENED - %s\n" % (attempt, failure))
+                    continue
+                vrc, vout = run_verify(verify, cwd)
+                lf.write("# attempt %d verify rc=%s\n%s\n" % (attempt, vrc, vout[-3000:]))
+                if vrc == 0:
+                    ok = True
+                    break
+                failure = vout
+            if not ok:
+                lf.write("# FAILED: VERIFY - file job did not pass\n")
+        if ok:
+            return True, brain, m, "%.0fs log=%s" % (time.time() - t0, log)
+        # put the file back the way it was before the next brain starts
+        if existing is None:
+            if os.path.exists(target):
+                os.remove(target)
+        else:
+            with open(target, "w", encoding="utf-8", newline="\n") as f:
+                f.write(existing)
+        say(f"[dispatch] {brain} ({m}) failed (log={log}); trying next")
+    return False, None, None, "every file brain failed"
+
+
 def groq_chat(model, task):
     """Text-only brain: one chat completion on Groq's OpenAI-compatible API. Prints the answer; exit 1 on API error."""
     key = os.environ.get("GROQ_API_KEY", "")
@@ -642,22 +954,51 @@ def unspool(task):
 
 
 def main():
+    # PC run 2026-11-26: through a pipe (Remote Control, job-runner without PYTHONIOENCODING) Python on Windows writes
+    # cp932, and the Japanese lines (CLAUDE_ONLY reasons) arrived garbled. Callers read pipes as UTF-8, so write UTF-8.
+    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if len(sys.argv) >= 4 and sys.argv[1] == "--groq-chat":
         sys.exit(groq_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "sakura", "glm", "local"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "sakura", "glm", "local", "ollama"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
     ap.add_argument("--timeout", type=int, default=0, help="seconds per brain (0 = per-brain default)")
     ap.add_argument("--text", action="store_true", help="text-only task (translation, summary, drafting): gemini -> groq -> qwen")
     ap.add_argument("--allow-outward", action="store_true", help="let the brain git push / use gh / deploy (blocked by default)")
+    ap.add_argument("--verify", default=None, help="pass/fail command run in --cwd after the brain; failing it = brain failed (required for auto)")
+    ap.add_argument("--out", default=None, help="one-file job: the file to write (needs --verify). Runs FILE_CHAIN: groq -> ollama -> gemini")
+    ap.add_argument("--context", action="append", default=[], help="file to show the brain in a --out job (repeatable)")
+    ap.add_argument("--allow-check-edits", action="store_true", help="the task itself is to change tests/CI/hooks (otherwise such edits fail the run)")
+    ap.add_argument("--delegate-anyway", default=None, metavar="REASON", help="run a job dispatch would keep for Claude; the reason goes to the log")
     ap.add_argument("task")
     a = ap.parse_args()
-    global ALLOW_OUTWARD, ALLOW_CF
+    global ALLOW_OUTWARD, ALLOW_CF, VERIFY_CMD, ALLOW_CHECK_EDITS
     ALLOW_OUTWARD = a.allow_outward
+    VERIFY_CMD = a.verify
+    ALLOW_CHECK_EDITS = a.allow_check_edits
+    # Delegate only what a machine can judge (2026-11-26). Explicit --brain x (job-runner, agy queue) still runs without
+    # --verify, but a job of a kind no command can judge is refused for every brain. Exit 3 = "do it yourself, Claude".
+    verdict, why = delegation_verdict(a.task, a.verify, a.text, a.delegate_anyway)
+    if verdict == "claude" or (verdict == "need_verify" and (a.brain == "auto" or a.out)):
+        say("[dispatch] CLAUDE_ONLY: " + why)
+        return 3
+    if verdict == "need_verify":
+        say("[dispatch] WARNING: no --verify, so nothing checks the result: " + why)
+    if a.brain == "ollama" and not a.out:
+        ap.error("--brain ollama is a one-file brain: give --out and --verify (for agent work on Ollama use --brain local)")
+    if a.out:
+        chain = FILE_CHAIN if a.brain == "auto" else [a.brain]
+        ok, brain, model, info = run_file_job(a.task, a.cwd, a.out, a.verify, a.context, chain, a.model)
+        if ok:
+            say(f"[dispatch] DONE brain={brain} model={model} out={a.out} {info}")
+            return 0
+        say("[dispatch] ALL FILE BRAINS FAILED (%s) - do it with --verify on the agent chain, or yourself" % info)
+        return 1
     ALLOW_CF = a.brain == "cf"  # 明示された cf は止めない(警告だけ)
     if ALLOW_CF:
         warn = cf_over_budget()
