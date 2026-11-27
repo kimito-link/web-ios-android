@@ -1,5 +1,5 @@
 {
-  "_readme": "アプリがある Web サービスの一覧(正本)。check-app-link.mjs --registry と週1の app-link-watch.yml が、各 web のページに自分のアプリの App Store / Google Play への導線があるかを本番で見る。新しいアプリを出したら(ストアの枠を作ったら)1行足す。公開前のストアは自動で問わない(公開されたら自動で問う)。決まり: docs/ai-rules/15_APP_LINK_FROM_WEB.md",
+  "_readme": "アプリがある Web サービスの一覧(正本)。check-app-link.mjs --registry と週1の app-link-watch.yml が、各 web のページに自分のアプリの App Store / Google Play への導線があるかを本番で見る。新しいアプリを出したら(ストアの枠を作ったら)1行足す。公開前のストアは自動で問わない(公開されたら自動で問う)。決まり: docs/ai-rules/15_APP_LINK_FROM_WEB.md。★毎晩の自動デバッグ巡回(auto-debug-watch.yml)も同じ web を歩く。歩かせたくないサービスだけ \"autoDebug\": false (docs/ai-rules/17_AUTO_DEBUG.md)",
   "_updated": "2026-11-23",
   "services": [
     {

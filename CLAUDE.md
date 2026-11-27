@@ -96,6 +96,9 @@ App Store・Google Play の公式バッジ（端末で出し分け）と Safari 
 ★★**Vercel は「サイトが変わるときだけ」ビルドする（2026-11-24 本人「Vercelのビルド費用を減らす」）**。ビルド代は回数で決まる（1回ごとに分切り上げ×4 vCPU）。1か月 $99.58 のうち $77.70 がビルド代で、拡張だけの PR でも LP のプレビューが毎回作られていた。
 Vercel にビルドさせるリポは共通の [`templates/vercel/vercel-ignore-build.mjs`](templates/vercel/README.md) を `vercel.json` の `ignoreCommand` で呼び、同居サイトは見張るパスを渡す。1リポ1ブランチを2プロジェクトにつながない。無ければ `check-vercel-build-skip.mjs` が赤。正本: [`docs/ai-rules/16_VERCEL_BUILD_COST.md`](docs/ai-rules/16_VERCEL_BUILD_COST.md)。
 
+★★**本番の不具合は、人が見る前に機械が見つける（2026-11-27 本人「龍が如くの自動デバッグシステムも活用されてないような」）**。毎晩 `auto-debug-watch.yml` が `app-links.json` の全 web を自動で歩き（書き込みは届けない）、JS の例外・500・真っ白・リンク切れを
+再現手順つきで「エラー報告(自動)」Issue にし、その場で再現を試し、重複数で優先度を上げ、直ったら同じ手順で確かめ、14日出なければ閉じる。直したら「見てください」と人に頼まない。正本: [`docs/ai-rules/17_AUTO_DEBUG.md`](docs/ai-rules/17_AUTO_DEBUG.md)。
+
 ★★**AIの修正で、元々動いていた機能を消さない（2026-11-14 本人指示「これがおこらないようにして」「サイト全体で」）**。直すのは頼まれた所だけ（丸ごと書き直さない）。
 頼まれて消すものはコミット/PR に `消してよい: 名前（理由）` を1件ずつ書く。書いていない削除（ボタン・リンク・関数・テスト・ファイル・大きな削除）は
 `guard-unrequested-removal` hook が commit・push 前に**拒否**し、CI `no-regression` が赤にする。消えたら困る機能はリポ直下の `features.json` に書き、直した後は全部通してから報告する。正本: [`docs/ai-rules/11_NO_REGRESSION.md`](docs/ai-rules/11_NO_REGRESSION.md)。
