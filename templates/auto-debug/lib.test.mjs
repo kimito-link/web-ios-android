@@ -10,6 +10,9 @@ const DAY = 86400000;
 test('同じ画面・同じ種類なら、毎回変わる数字が違っても同じ指紋', () => {
   assert.equal(signatureOf(f()), signatureOf(f({ url: 'https://a.example/item/999?q=1', message: 'x is undefined at 77' })));
   assert.notEqual(signatureOf(f()), signatureOf(f({ type: 'console-error' })));
+  // 呼び出し履歴だけ違う同じ例外は1件にまとめる
+  const e = (stack) => f({ type: 'console-error', message: `Error: Unable to find tRPC Context.\n    at ${stack}` });
+  assert.equal(signatureOf(e('q (https://a.example/x.js:102:9206)')), signatureOf(e('Object.useQuery (https://a.example/y.js:5:1)')));
   assert.notEqual(signatureOf(f()), signatureOf(f({ url: 'https://a.example/cart/1' })));
 });
 
