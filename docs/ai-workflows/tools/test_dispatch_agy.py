@@ -106,5 +106,41 @@ class AgyStatus(unittest.TestCase):
         self.assertIsNone(dispatch.agy_status("plain text, rc 0"))
 
 
+
+class NeonInAutoChain(unittest.TestCase):
+    """2026-11-27: Neon on the AI Pro flat fee goes 2nd in auto (after codex), as an alias of agy with a fixed model."""
+
+    def test_right_after_codex(self):
+        c = dispatch.AUTO_CHAIN
+        self.assertEqual(c.index("neon"), c.index("codex") + 1)
+        self.assertLess(c.index("neon"), c.index("grok"))
+
+    def test_alias_is_agy_on_the_gemini_pool(self):
+        real, model = dispatch.BRAIN_ALIASES["neon"]
+        self.assertEqual(real, "agy")
+        self.assertTrue(model.startswith("gemini-4-neon-"))
+        self.assertEqual(dispatch.agy_pool(model), "gemini")
+        self.assertIn(real, dispatch.TIMEOUTS)
+
+    def test_not_skipped_by_the_claude_pool_record(self):
+        # the dashboard's "agy" row follows the Claude pool; a spent Claude pool must not skip Neon
+        self.assertNotEqual(dispatch.BRAIN_RECORD_ID.get("neon"), "agy")
+
+    def test_main_runs_agy_with_the_neon_model(self):
+        import sys
+        from unittest import mock
+        calls = []
+
+        def fake_run_one(brain, task, cwd, allowed, timeout, model=None):
+            calls.append((brain, model))
+            return True, "ok", "done", model
+
+        argv = ["dispatch.py", "--brain", "neon", "--cwd", os.getcwd(), "--verify", "true", "add a unit test for x"]
+        with mock.patch.object(dispatch, "run_one", fake_run_one), mock.patch.object(sys, "argv", argv):
+            rc = dispatch.main()
+        self.assertEqual(rc, 0)
+        self.assertEqual(calls, [("agy", dispatch.BRAIN_ALIASES["neon"][1])])
+
+
 if __name__ == "__main__":
     unittest.main()

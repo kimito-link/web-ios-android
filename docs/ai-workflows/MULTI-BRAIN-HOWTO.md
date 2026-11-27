@@ -352,8 +352,8 @@ AI が自分で使用量を見に行かないと効かなかった。同日は�
 | 段階 | 条件（週全体） | 振り分け |
 |---|---|---|
 | ふつう | 50%未満 | いつもどおり（§1b の目安） |
-| 節約 | 50%以上 | 実装・テスト・定型修正は `dispatch.py`（auto＝Codex 先頭）へ。文章は `--text`（Gemini・Groq の無料枠）。自分で直すのは1〜2ファイルだけ |
-| 強い節約 | 80%以上 | 上に加え、調べ物もサブエージェントを立てない。読み回しは `--brain codex`、PC の要らない調べ物・見張りは dot、Claude は判断・検品・マージ・報告だけ |
+| 節約 | 50%以上 | 実装・テスト・定型修正は `dispatch.py`（auto＝Codex 先頭・2番目が Neon（§1i））へ。文章は `--text`（Gemini・Groq の無料枠）。自分で直すのは1〜2ファイルだけ |
+| 強い節約 | 80%以上 | 上に加え、調べ物もサブエージェントを立てない。読み回しは `--brain codex`（枠切れなら `--brain neon`）、PC の要らない調べ物・見張りは dot、Claude は判断・検品・マージ・報告だけ |
 | ほぼ空 | 95%以上 | 新しい作業は始めず、dot の Issue か夜の一括（`brain: local`）に積む |
 
 - このペースだと戻る前に尽きる（ダッシュボードの「危険」）ときは一段きつくする。戻り時刻を過ぎた数字では締め付けない
@@ -386,6 +386,22 @@ python docs/ai-workflows/tools/dispatch.py --cwd <dir> --out scripts/lib/x.test.
 
 - job-runner のジョブは `verify: <コマンド>` の行で渡す（`brain: auto` のときは必須。明示の頭脳は無くても動くが、dispatch が「確かめていない」と書く）
 - 振り分けの知らせ（§1g の hook）にも同じ書き方を入れた
+
+### 1i. Gemini 4 Neon を auto の2番目に入れる（2026-11-27）
+
+**なぜ**: 2026-11-27 りんく「無制限なら有効活用したい」（X の「11/26 から Gemini アプリで Neon が無制限」という投稿を見て）。
+**調べた結果、「無制限」は Google の発表が無いうわさ**だった。Google の公式ページ（[Gemini アプリの上限](https://support.google.com/gemini/answer/16275805?hl=en)・[プラン一覧](https://gemini.google/subscriptions/)）は
+今も「計算量で決まる上限・5時間ごとに戻り週の上限あり・AI Pro は無料の4倍」で、Neon を無制限とする文は無い。元の投稿者自身も後で「実質75%近く増えた」と言い直している。
+本当に変わったのは **Antigravity の Neon**: Google の Antigravity チームが X で「キャッシュと土台の改善で、同じ契約で使える Neon が5日で75%近く増えた」（11/22〜25）と書いた（[testingcatalog の記事](https://www.testingcatalog.com/google-stretches-antigravity-neon-quota-with-caching-gains/)）。
+
+**決まり**
+- `dispatch.py` に `--brain neon`（＝ `agy` を `gemini-4-neon-medium` 固定で動かす別名・`BRAIN_ALIASES`）を足し、**auto の2番目（Codex の次・Grok の前）**に入れた。
+  AI Pro の定額＝払い済み、Antigravity の「Gemini」枠は Claude Code の週枠とも Antigravity の Claude 枠とも別（11/18 実測）、会社PC で約5秒で SUCCESS（11/25）
+- 合否は従来どおり `--verify` が決める（§1h）。Neon の「できました」は数えない
+- agy や許可リストの無いPCでは、すぐ失敗して次の頭脳へ進むだけ
+- ダッシュボードの `agy` 行は Claude 枠の記録なので、Neon をそれで飛ばさない（Gemini 枠は `agy_quota_wait` が別に見る）
+- Gemini アプリ（人が話す画面）は自動で呼べないので、振り分けには入れない。Neon の API は有料（$3/$15）なので使わない（11/25 の判断のまま）
+- 「無制限」と前提にしない。枠切れ（429）は agy の記録で自動で飛ばす
 
 ### 1d. Workflowツール（dynamic workflow）は使わないのが既定（2026-09-25確定）
 

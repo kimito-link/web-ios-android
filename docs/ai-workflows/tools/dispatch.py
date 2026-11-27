@@ -1,7 +1,7 @@
 """
 dispatch.py - run one task headlessly on a free/cheap brain, with automatic fallback.
 
-  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (codex -> grok -> qwen -> ... -> local)
+  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (codex -> neon -> grok -> ... -> local)
   python dispatch.py --brain codex --cwd <dir> "task"    # OpenAI Codex CLI (ChatGPT plan quota, separate from Claude's weekly limit)
   python dispatch.py --brain grok  --cwd <dir> "task"    # Grok Build headless (--always-approve so file edits do not block)
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
@@ -15,6 +15,7 @@ dispatch.py - run one task headlessly on a free/cheap brain, with automatic fall
   python dispatch.py --brain glm   --cwd <dir> "task"    # OpenCode + OpenRouter GLM-5.3-Flash (cheap, Opus-class; after free quotas)
   python dispatch.py --brain local --cwd <dir> "task"    # Claude Code + local Ollama (free, slow)
   python dispatch.py --brain agy   --cwd <dir> "task"    # Antigravity CLI headless (Opus 5.5 etc. on the Google quota; explicit only)
+  python dispatch.py --brain neon  --cwd <dir> "task"    # = agy with gemini-4-neon-medium (AI Pro flat fee, Gemini pool; 2nd in auto)
   python dispatch.py --cwd <dir> --verify "npm test" "task"   # auto needs a pass/fail command ("delegate only what a machine can judge")
   python dispatch.py --cwd <dir> --out tests/x.test.mjs --context src/x.mjs --verify "npx vitest run tests/x.test.mjs" "unit tests for x"
                                                               # one file, machine-checked: FILE_CHAIN (Groq -> local Ollama -> Gemini, all free)
@@ -48,7 +49,13 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # often spent) and cf (bills overage here), never ahead of codex/grok: slow (about a minute per call) and 503-prone.
 # sakura after hydrogen (2026-11-18): PC run committed in 22s, function calling OK on all 3 models. Free plan stops at
 # 3,000 requests/month with 429 (no billing), but that pool is shared with the council seats, so it comes after hydrogen.
-AUTO_CHAIN = ["codex", "grok", "hydrogen", "sakura", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# neon after codex (2026-11-27): Antigravity's gemini-4-neon-medium on the Google AI Pro plan = flat fee already paid,
+# its own "Gemini" pool (separate from Antigravity's Claude pool and from Claude Code's weekly limit). PC-measured SUCCESS
+# in about 5s on agy 1.5.17 (2026-11-25). Google's Antigravity team said on X (2026-11-22..25) that caching/harness work
+# stretched Neon's subscription quota by close to 75%. It is NOT unlimited: the "unlimited from 11/26" posts had no
+# Google source (Gemini app limits stay compute-based, Pro = 4x Free). Ahead of grok (paid credits run out with 402).
+# A PC without agy or its allow list just fails fast and the chain moves on; --verify still decides the result.
+AUTO_CHAIN = ["codex", "neon", "grok", "hydrogen", "sakura", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 # One-file jobs with a pass/fail command (--out + --verify): unit tests, type annotations, small pure functions.
@@ -203,6 +210,8 @@ AGY_OK_STATUS = "SUCCESS"
 # 2026-11-25: Argon → Neon。Neon は Carbon 由来の中位モデル（2026-11-18 公開）で、Google の移行案内が Argon の後継に
 # 指定している。会社PC の agy 1.5.17 で gemini-4-neon-{medium,high} が SUCCESS（Argon と同じ「Gemini」枠・約5秒）。
 AGY_FALLBACK_MODEL = "gemini-4-neon-medium"
+# Chain names that run another brain with a fixed model: (real brain, model). Logs and quota records use the real brain.
+BRAIN_ALIASES = {"neon": ("agy", AGY_FALLBACK_MODEL)}
 
 
 def agy_pool_exhausted(out, model):
@@ -461,7 +470,7 @@ ALLOW_CF = False
 # 同時に切れていて Cloudflare に落ちるまで待たされた)。記録は4時間ごとに PC の定期タスクが取る(record-brain-status.mjs)。
 # 古い記録(BRAIN_RECORD_MAX_AGE_SEC 超)・読めない記録では飛ばさない(ダッシュボードの故障で作業を止めない)。明示指定(--brain x)も止めない。
 BRAIN_RECORD_MAX_AGE_SEC = 6 * 3600
-BRAIN_RECORD_ID = {"qwen": "alibaba", "oc": "alibaba"}  # dispatch の名前 → brains.json の id(同じ名前のものは省略)
+BRAIN_RECORD_ID = {"qwen": "alibaba", "oc": "alibaba"}  # neon: no record on purpose (the "agy" row tracks the Claude pool; the Gemini pool is checked by agy_quota_wait)  # dispatch の名前 → brains.json の id(同じ名前のものは省略)
 _brains_cache = {}
 
 
@@ -756,9 +765,12 @@ def weakened_checks(cwd, base):
 
 def run_verify(cmd, cwd, timeout=None):
     """Run the pass/fail command. (rc, output). A brain's environment blocks are not applied: this is the commander's command."""
+    # No .pyc: a rewritten file of the same size in the same second reuses the stale bytecode, so a fixed answer was
+    # judged by the old one (2026-11-27: the repair round failed on "3 != 4" with the corrected test on disk).
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
     try:
         r = subprocess.run(cmd, cwd=cwd, shell=True, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                           timeout=timeout or VERIFY_TIMEOUT, stdin=subprocess.DEVNULL)
+                           timeout=timeout or VERIFY_TIMEOUT, stdin=subprocess.DEVNULL, env=env)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
     except subprocess.TimeoutExpired:
         return -1, "# VERIFY TIMEOUT"
@@ -963,7 +975,7 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--gemini-chat":
         sys.exit(gemini_chat(sys.argv[2], unspool(" ".join(sys.argv[3:]))))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "sakura", "glm", "local", "ollama"])
+    ap.add_argument("--brain", default="auto", choices=["auto", "codex", "neon", "agy", "grok", "gemini", "groq", "qwen", "oc", "cf", "muse", "nvidia", "mistral", "hydrogen", "sakura", "glm", "local", "ollama"])
     ap.add_argument("--model", default=None, help="preferred model for the chosen brain (qwen: an Alibaba model id)")
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--allowed", default="Read,Write,Edit,Glob,Grep,Bash", help="Claude Code allowedTools (qwen/local)")
@@ -1011,7 +1023,8 @@ def main():
             if gone:
                 say(f"[dispatch] {brain}: skipped ({gone})")
                 continue
-        ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], a.model)
+        real, fixed_model = BRAIN_ALIASES.get(brain, (brain, None))
+        ok, info, out, model = run_one(real, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[real], fixed_model or a.model)
         if brain == "agy" and ok is False and agy_pool_exhausted(out, model):
             say(f"[dispatch] agy {model}: quota exhausted ({info}); retrying on the Gemini pool with {AGY_FALLBACK_MODEL}")
             ok, info, out, model = run_one(brain, a.task, a.cwd, a.allowed, a.timeout or TIMEOUTS[brain], AGY_FALLBACK_MODEL)
