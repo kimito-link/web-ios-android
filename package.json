@@ -36,6 +36,7 @@
     "unrequested-removal:selftest": "node templates/diagnostics/check-unrequested-removal.mjs --selftest",
     "features-alive:selftest": "node templates/diagnostics/check-features-alive.mjs --selftest",
     "auto-debug:selftest": "node --test templates/auto-debug/lib.test.mjs",
+    "agents-md-map:selftest": "node templates/diagnostics/check-agents-md-map.mjs --selftest",
     "deletion-coverage:selftest": "node templates/diagnostics/check-deletion-coverage.mjs --selftest",
     "idea-pipeline:selftest": "node templates/idea-to-pr-local/worker.mjs --selftest",
     "security:score": "node templates/scripts/verify-security-score.mjs --url https://kimito-skill.link",
