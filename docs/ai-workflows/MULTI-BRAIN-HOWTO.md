@@ -407,6 +407,19 @@ python docs/ai-workflows/tools/dispatch.py --cwd <dir> --out scripts/lib/x.test.
 - Gemini アプリ（人が話す画面）は自動で呼べないので、振り分けには入れない。Neon の API は有料（$3/$15）なので使わない（11/25 の判断のまま）
 - 「無制限」と前提にしない。枠切れ（429）は agy の記録で自動で飛ばす
 
+### 1j. 渡した先の AI にもキットの仕組みを届ける（2026-11-27）
+
+りんく「ほかのAIもちゃんとキットの仕組みが理解できるようにしておいてほしい」。頭脳ごとに読む指示ファイルが違う:
+Codex・Antigravity（Neon）・OpenCode 系（hydrogen・さくら・oc・cf・nvidia ほか）・dot は `AGENTS.md`、Claude Code CLI（qwen・local）は `CLAUDE.md`、
+Grok Build は公式に書かれていない。`groq`・`gemini`・`--out`・`--text` はリポを見ない文章だけの頭脳。
+
+- **入口は1か所**: `dispatch.py` の `brief_task()` が、手を動かす頭脳すべての依頼文の前に短い前置き `[dispatch brief]`
+  （`AGENTS.md` を読む・commit で止めて push しない・`--verify` のコマンドが合否）を付ける。どの CLI が何を読むかに頼らない。
+- **地図は自動生成**: `AGENTS.md` 末尾の「キットの地図」は `templates/diagnostics/check-agents-md-map.mjs . --write` が
+  `docs/ai-rules/`・`docs/ai-workflows/`・`templates/*/README.md` の見出しから作る。決まり・HOWTO・金型を足したり見出しを変えたりして
+  書き直し忘れると `npm run verify`（CI）が赤になる。地図に載る題は各ファイルの先頭の `# 名前 — 説明` の説明部分なので、見出しに一行で中身を書く。
+- テスト: `docs/ai-workflows/tools/test_dispatch_brief.py`・`npm run agents-md-map:selftest`。
+
 ### 1d. Workflowツール（dynamic workflow）は使わないのが既定（2026-09-25確定）
 
 Claude Code公式のマルチエージェント編成機能。単語"workflow"で誤発火し得る上、
