@@ -52,7 +52,9 @@ export function normalizePath(url) {
 
 /** 文言から毎回変わる部分（数字・URL・引用の中身の長い英数字）を潰す。 */
 export function normalizeMessage(msg) {
+  // 1行目だけを使う（その下の呼び出し履歴は、同じ不具合でも通った道で変わり、Issue が割れる。2026-11-27 初回で6件に割れた）
   return String(msg ?? '')
+    .split('\n')[0]
     .replace(/https?:\/\/\S+/g, '<url>')
     .replace(/\b[0-9a-f]{8,}\b/gi, '<hex>')
     .replace(/\d+/g, 'N')
