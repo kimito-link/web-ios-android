@@ -1,0 +1,77 @@
+# ★毎晩、本番の Web サービスを自動で歩き回って不具合を見つけ、記録・再現・直ったかの確認・自動で閉じるまでを回す（2026-11-27）。
+#
+# ■ なぜ要るか
+#   りんく(2026-11-27)が龍が如くスタジオの「全自動バグ取りシステム」(CEDEC 2020)を共有し「活用されてないような」。
+#   このキットの検査は「コードを読む」「決めた手順を通す」だけで、本番を勝手に歩いて壊れた所を拾い、
+#   証拠と再現手順つきで起票し、直ったら同じ手順で確かめる輪が無かった。決まり: docs/ai-rules/17_AUTO_DEBUG.md
+#
+# ■ 何をするか
+#   1. explore.mjs --registry: templates/scripts/lib/app-links.json の全 web を、日付で決まる種で歩く（毎晩ちがう道・同じ日なら同じ道）
+#      見つけたら、その場で同じ手順をたどり直して再現するかを確かめる
+#   2. report.mjs: 指紋ごとに Issue（ラベル「エラー報告(自動)」）を起票／回数を足して優先度を上げる／閉じたのに再発なら開け直す／
+#      閉じた Issue は残した手順をたどり直し、出なければ「直ったのを自動確認」／14日出なければ自動で閉じる
+#
+# ■ 費用: このリポは公開なので Actions は無料。1晩 10 分ほど。有料 API は使わない。
+# ■ ★本番を壊さない: 同じサイトへの書き込み(POST 等)は届けずに空の成功を返す・文字は打たない・削除/購入/送信などの文言は押さない。
+# ■ ★この workflow が判定しないこと: ログインが要る画面の中・見た目の崩れ・文言の誤り。
+
+name: auto-debug-watch (毎晩の自動デバッグ巡回)
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 毎日 3:00 JST（人が使っていない時間に歩く）
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'templates/auto-debug/**'
+      - '.github/workflows/auto-debug-watch.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: auto-debug-watch
+  cancel-in-progress: false
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: ブラウザを用意する
+        run: |
+          npm install --no-save --no-package-lock playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: 判定部品の自己検査
+        run: node --test templates/auto-debug/lib.test.mjs
+
+      - name: 本番を歩き回る（見つけたらその場で再現を試す）
+        run: |
+          set +e
+          node templates/auto-debug/explore.mjs --registry --steps 20 --out auto-debug-out | tee patrol.txt
+          code=${PIPESTATUS[0]}
+          # 0=異常なし 1=異常あり(次の段で起票) 2=巡回そのものが壊れた(赤にする)
+          [ "$code" -le 1 ] || exit "$code"
+
+      - name: Issue に記録する・直ったかを確かめる・自動で閉じる
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node templates/auto-debug/report.mjs --in auto-debug-out
+
+      - name: 証拠（スクリーンショット・再現手順）を残す
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-debug-${{ github.run_id }}
+          path: auto-debug-out/
+          retention-days: 14
+          if-no-files-found: ignore

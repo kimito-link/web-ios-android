@@ -154,6 +154,7 @@ iPhone / Android のアプリがストアで公開中のサービスの Web（LP
 - [`docs/ai-rules/14_TRADEMARK_CHECK.md`](docs/ai-rules/14_TRADEMARK_CHECK.md) — 名前を決めたら、ストアに出す前に商標を調べる（全プロジェクト共通）
 - [`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](docs/ai-rules/15_APP_LINK_FROM_WEB.md) — アプリがある Web サービスには、必ずアプリへの導線を入れる（全プロジェクト共通）
 - [`docs/ai-rules/16_VERCEL_BUILD_COST.md`](docs/ai-rules/16_VERCEL_BUILD_COST.md) — Vercel は「サイトが変わるときだけ」ビルドする（全プロジェクト共通）
+- [`docs/ai-rules/17_AUTO_DEBUG.md`](docs/ai-rules/17_AUTO_DEBUG.md) — 17. 自動デバッグ：本番を自動で歩き回り、見つけて・記録して・再現して・直ったかまで機械が確かめる
 
 ### 進め方（`docs/ai-workflows/`）
 

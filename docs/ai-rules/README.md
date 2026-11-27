@@ -51,6 +51,8 @@ project-root/
    Safari 用バナーを金型 `templates/web/` で置く。新しいアプリは `templates/scripts/lib/app-links.json` に足す。点検は `check-app-link.mjs`（lint CHECK 37・週1の本番見張り）
 15. ★**Vercel にビルドさせるリポは** `16_VERCEL_BUILD_COST.md`。ビルド代は回数で決まるので、共通の `templates/vercel/vercel-ignore-build.mjs` を
    `vercel.json` の `ignoreCommand` で呼び、サイトに関係ない変更・docs・dependabot・古いブランチではビルドしない。点検は `check-vercel-build-skip.mjs`
+16. ★**本番の不具合は人が見る前に機械が見つける** `17_AUTO_DEBUG.md`。毎晩 `app-links.json` の全 web を自動で歩き、見つけたら再現手順つきで
+   「エラー報告(自動)」Issue にし、直ったかも同じ手順で確かめる。部品は `templates/auto-debug/`
 
 ## 固定のWebルール
 
