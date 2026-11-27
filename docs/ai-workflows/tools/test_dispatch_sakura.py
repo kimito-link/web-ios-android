@@ -49,8 +49,10 @@ class SakuraBuild(unittest.TestCase):
 
 
 class SakuraChain(unittest.TestCase):
-    def test_after_hydrogen_before_paid_or_overage_brains(self):
+    def test_free_expiring_quota_before_grok_credits(self):
+        # 2026-11-28: grok 58 runs vs sakura 9 in 30 days. The free monthly pool goes before Grok's finite credits.
         c = dispatch.AUTO_CHAIN
-        self.assertEqual(c.index("sakura"), c.index("hydrogen") + 1)
+        self.assertEqual(c.index("sakura"), c.index("neon") + 1)
+        self.assertLess(c.index("sakura"), c.index("grok"))
         self.assertLess(c.index("sakura"), c.index("cf"))
         self.assertLess(c.index("sakura"), c.index("glm"))

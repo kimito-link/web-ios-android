@@ -1,7 +1,7 @@
 """
 dispatch.py - run one task headlessly on a free/cheap brain, with automatic fallback.
 
-  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (codex -> neon -> grok -> ... -> local)
+  python dispatch.py "task text"                         # --brain auto: AUTO_CHAIN below (codex -> neon -> sakura -> grok -> ... -> local)
   python dispatch.py --brain codex --cwd <dir> "task"    # OpenAI Codex CLI (ChatGPT plan quota, separate from Claude's weekly limit)
   python dispatch.py --brain grok  --cwd <dir> "task"    # Grok Build headless (--always-approve so file edits do not block)
   python dispatch.py --brain qwen  --cwd <dir> "task"    # Claude Code + Alibaba (model chain, skips exhausted quotas; via local relay)
@@ -48,14 +48,20 @@ QWEN_CHAIN = ["kimi-k3", "glm-5.2", "deepseek-v4.1-flash", "qwen3.8-27b", "qwen3
 # hydrogen after grok (2026-11-18): free pro-class helper, PC run committed in 250s. Ahead of qwen/oc (Alibaba quotas
 # often spent) and cf (bills overage here), never ahead of codex/grok: slow (about a minute per call) and 503-prone.
 # sakura after hydrogen (2026-11-18): PC run committed in 22s, function calling OK on all 3 models. Free plan stops at
-# 3,000 requests/month with 429 (no billing), but that pool is shared with the council seats, so it comes after hydrogen.
+# 3,000 requests/month with 429 (no billing); that pool is shared with the council seats (see the 2026-11-28 note below).
 # neon after codex (2026-11-27): Antigravity's gemini-4-neon-medium on the Google AI Pro plan = flat fee already paid,
 # its own "Gemini" pool (separate from Antigravity's Claude pool and from Claude Code's weekly limit). PC-measured SUCCESS
 # in about 5s on agy 1.5.17 (2026-11-25). Google's Antigravity team said on X (2026-11-22..25) that caching/harness work
 # stretched Neon's subscription quota by close to 75%. It is NOT unlimited: the "unlimited from 11/26" posts had no
 # Google source (Gemini app limits stay compute-based, Pro = 4x Free). Ahead of grok (paid credits run out with 402).
 # A PC without agy or its allow list just fails fast and the chain moves on; --verify still decides the result.
-AUTO_CHAIN = ["codex", "neon", "grok", "hydrogen", "sakura", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
+# sakura moved ahead of grok (2026-11-28): in the 30 days to 11/26 grok ran 58 times and sakura 9. sakura sat behind
+# grok and hydrogen, so it only ran when both failed, while its free 3,000 requests/month expire unused every month and
+# Grok Build spends credits that end with 402. Since #207 every auto run needs --verify, so a weaker free brain going
+# first costs at most one failed try before the chain moves on; it cannot ship a wrong answer. Rule: among brains that
+# pass the same --verify, a free quota that expires goes before a paid or finite one. sakura still stops with 429 at
+# the cap (no billing), so the council's 2 reserve seats on the same pool only lose a seat, never cost money.
+AUTO_CHAIN = ["codex", "neon", "sakura", "grok", "hydrogen", "qwen", "oc", "cf", "nvidia", "mistral", "glm", "local"]
 # Text-only brains (one answer, no tools): used with --text. gemini = Gemini API free tier, groq = Groq free tier.
 TEXT_CHAIN = ["gemini", "groq", "qwen"]
 # One-file jobs with a pass/fail command (--out + --verify): unit tests, type annotations, small pure functions.
