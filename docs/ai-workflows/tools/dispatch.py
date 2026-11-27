@@ -219,14 +219,23 @@ def agy_pool_exhausted(out, model):
     return "RESOURCE_EXHAUSTED" in out and not (model or "").startswith("gemini-")  # headless statuses: SUCCESS ERROR CANCELED INTERRUPTED INVALID WAITING RUNNING
 
 
-AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")  # legacy single file (before 2026-11-18); no longer read
+AGY_THINKING_LEVELS = ("minimal", "low", "medium", "high", "xhigh")  # model slug suffixes, not part of the quota family
+AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")  # legacy single file (before 2026-11-18); no longer read (nor agy-quota-gemini.json, before 2026-11-27)
 
 
 def agy_pool(model):
     """Which Antigravity quota a model draws from. 2026-11-18 PC: Claude Sonnet answered 429 "Resets in 4h50m" while
     gemini-3.8-flash and gemini-4-argon answered SUCCESS in the same minute = the pools are separate (the 11-12 note
-    of one shared pool no longer holds). A single record made the Gemini fallback skip itself."""
-    return "gemini" if (model or "").startswith("gemini-") else "claude"
+    of one shared pool no longer holds). A single record made the Gemini fallback skip itself.
+    2026-11-27 PC: the same mistake one level down. A gemini-4-argon 429 from 11/23 ("Resets in 162h") was kept as the
+    one "gemini" record, so dispatch skipped gemini-4-neon for days while agy answered Neon with SUCCESS in 15s.
+    Gemini models are recorded per family (model minus its thinking level): a wrong split costs one fast 429 and a
+    record, a wrong merge stops a working brain for days."""
+    m = model or ""
+    if not m.startswith("gemini-"):
+        return "claude"
+    head, _, level = m.rpartition("-")
+    return head if head and level in AGY_THINKING_LEVELS else m
 
 
 def agy_quota_file(model):

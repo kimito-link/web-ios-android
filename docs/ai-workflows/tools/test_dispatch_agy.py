@@ -2,7 +2,7 @@
 agy は起動しない（コマンドの組み立てと結果の判定だけを見る）。
 なぜ要るか: --dangerously-skip-permissions は拒否リストを無視して push まで通した（2026-10-21 PC 実測）。
 誰かが「止まるから」と足した瞬間にここで落とす。"""
-import importlib.util, os, unittest
+import importlib.util, os, unittest, unittest.mock
 
 spec = importlib.util.spec_from_file_location("dispatch", os.path.join(os.path.dirname(__file__), "dispatch.py"))
 dispatch = importlib.util.module_from_spec(spec)
@@ -55,7 +55,8 @@ class AgyQuota(unittest.TestCase):
     def test_pools_are_recorded_separately(self):
         # 2026-11-18 PC: Claude pool 429 while Gemini answered; the Gemini fallback must not be skipped by the Claude record.
         self.assertEqual(dispatch.agy_pool("claude-sonnet-5-5-medium"), "claude")
-        self.assertEqual(dispatch.agy_pool("gemini-4-argon-medium"), "gemini")
+        self.assertEqual(dispatch.agy_pool("gemini-4-argon-medium"), "gemini-4-argon")
+        self.assertEqual(dispatch.agy_pool("gemini-4-argon-high"), "gemini-4-argon")  # 考える深さは同じ枠
         self.assertEqual(dispatch.agy_pool(None), "claude")
         self.assertNotEqual(dispatch.agy_quota_file("claude-opus-5-5-medium"), dispatch.agy_quota_file("gemini-4-argon-medium"))
 
@@ -119,8 +120,17 @@ class NeonInAutoChain(unittest.TestCase):
         real, model = dispatch.BRAIN_ALIASES["neon"]
         self.assertEqual(real, "agy")
         self.assertTrue(model.startswith("gemini-4-neon-"))
-        self.assertEqual(dispatch.agy_pool(model), "gemini")
+        self.assertTrue(dispatch.agy_pool(model).startswith("gemini-4-neon"))
         self.assertIn(real, dispatch.TIMEOUTS)
+
+    def test_argon_429_does_not_stop_neon(self):
+        # 2026-11-27 PC: an Argon 429 kept in the one "gemini" record skipped Neon for days while Neon was free
+        self.assertNotEqual(dispatch.agy_quota_file("gemini-4-argon-medium"), dispatch.agy_quota_file("gemini-4-neon-medium"))
+        import tempfile
+        with tempfile.TemporaryDirectory() as d, unittest.mock.patch.object(dispatch, "RUNS", d):
+            dispatch.agy_remember_reset("RESOURCE_EXHAUSTED ... Resets in 162h", model="gemini-4-argon-medium", now=1000)
+            self.assertGreater(dispatch.agy_quota_wait(model="gemini-4-argon-medium", now=1000 + 60), 0)
+            self.assertEqual(dispatch.agy_quota_wait(model="gemini-4-neon-medium", now=1000 + 60), 0)
 
     def test_not_skipped_by_the_claude_pool_record(self):
         # the dashboard's "agy" row follows the Claude pool; a spent Claude pool must not skip Neon
