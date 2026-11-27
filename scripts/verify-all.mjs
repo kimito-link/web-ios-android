@@ -137,6 +137,10 @@ export const TASKS = Object.freeze([
     cmd: ['node', 'scripts/check-instrument-ran.mjs', '--check']
   },
   {
+    kind: 'gate', label: 'AGENTS.md のキットの地図が最新か（Claude 以外の AI に決まりが届くか）',
+    cmd: ['node', 'templates/diagnostics/check-agents-md-map.mjs', '.']
+  },
+  {
     kind: 'gate', label: '公開ダッシュボードの鮮度',
     cmd: ['node', 'scripts/check-hub-page-freshness.mjs', '--root', '.', '--data', 'site/hub/hub-data.json']
   },

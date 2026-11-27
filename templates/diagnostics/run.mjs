@@ -210,6 +210,10 @@ const CHECKS = [
   // ★指示書(CLAUDE.md)の「必読の核」が肥大化していないか(2026-10-19追加)。核の宣言(<!-- core:end)が無いリポは対象外。
   //   1300行超の指示書を全文読ませる判定が高コストだった実損から、核を小さく保つ上限(既定450行)を機械で守る。
   { name: 'check-claude-md-budget', path: join(__dirname, 'check-claude-md-budget.mjs') },
+  // ★AGENTS.md の「キットの地図」が、決まり・進め方・金型の実ファイルと揃っているか(2026-11-27追加)。
+  //   Codex・Antigravity・OpenCode 系は CLAUDE.md を読まず AGENTS.md だけを読む。手書きの橋渡しでは新しい決まりが漏れた。
+  //   地図は各ファイルの見出しから機械で作る(--write)。AGENTS.md も docs/ai-rules/ も無いリポは対象外。
+  { name: 'check-agents-md-map', path: join(__dirname, 'check-agents-md-map.mjs') },
   // ★AIの修正で「頼まれていない機能」が消えていないか(2026-11-14追加・りんく「これがおこらないようにして」「サイト全体で」)。
   //   実損の形: AI にバグを直させたら、元々動いていたログイン・検索・設定が消えた。
   //   既定ブランチとの差分から、消えたボタン・リンク・関数・テスト・ファイル・大きな削除を拾い、

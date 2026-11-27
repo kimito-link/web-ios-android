@@ -12,11 +12,21 @@
 
 ## 作業を始める前に
 
-1. `CLAUDE.md` を**先頭から `core:end` の行まで**読む（約380行。ここが必ず守る核）。
+1. `CLAUDE.md` を**先頭から `core:end` の行まで**読む（ここが必ず守る核）。下の「キットの地図」で、仕事に関係する決まり・金型を探して開く。
 2. リポ直下に `handoff.md` があれば読む。書かれた事実・確定済みの判断は調べ直さない。
 3. 依頼された引き継ぎ書（ハンドオフmd）を読む。そこに「原因はたぶんここ」と書いてあっても、
    **見立ては誤っている可能性がある。先に問題そのものを実コード・再現で確かめてから進める**
    （[`docs/ai-workflows/FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md)「ハンドオフ契約」）。
+
+## このキットの仕組み（一言ずつ）
+
+- **何か**: AI 開発の総合ルール（`CLAUDE.md`＝正本）と、ストア申請・Web・拡張の自動化の金型（`templates/`）を束ねた横断基盤。
+- **仕事の受け方**: Claude が `docs/ai-workflows/tools/dispatch.py` であなたに渡す。前置き `[dispatch brief]` の
+  「Done means …」のコマンドが合否で、終わった後に dispatch が実際に走らせる（テストを消す・skip を足す・CI を書き換えると失敗扱い）。
+- **守らせ方**: Claude Code では `.claude/hooks/` が止めるが、**あなたには効かない**。代わりに CI（`npm run verify`・`no-regression`）と
+  `templates/scripts/` の lint CHECK・`templates/diagnostics/` の検査が赤にする。直したら関係する検査を自分で走らせる。
+- **消してはいけない機能**: リポ直下の `features.json`。**進み具合と確定事項**: `handoff.md`。
+- **判断の軸**: 事業の数字（`docs/ai-rules/07_GROWTH_METRICS.md`）→ 根本解決（`docs/ai-rules/01_CORE_RULES.md` §2-1）→ 人に聞かず決めて報告。
 
 ## 絶対にしないこと（Claude Code の hook はあなたには効かないので、ここで止める）
 
@@ -119,3 +129,63 @@ iPhone / Android のアプリがストアで公開中のサービスの Web（LP
 `handoff.md`（無ければ [`templates/handoff/handoff.md.example`](templates/handoff/handoff.md.example) から作る）の
 `STATUS`・`FILES_CHANGED`・`TESTS_RUN`・`TEST_RESULT`・`REMAINING_RISKS`・`NEXT_ACTION`・`WORKED_BY`
 （例: `antigravity / Claude Opus 5.5`）を埋める。「動くはず」ではなく、実行したコマンドとその結果を書く。
+
+<!-- agents-map:begin（自動生成。手で書き換えない。足したら: node templates/diagnostics/check-agents-md-map.mjs . --write） -->
+## キットの地図（どこに何があるか・自動生成）
+
+決まりの本文はリンク先にある。仕事に関係する行だけ開いて読む（全部は読まない）。
+
+### 決まり（`docs/ai-rules/`・番号順）
+
+- [`docs/ai-rules/00_START_HERE.md`](docs/ai-rules/00_START_HERE.md) — AI 実装ルールセットの使い方（最短3ステップ）
+- [`docs/ai-rules/01_CORE_RULES.md`](docs/ai-rules/01_CORE_RULES.md) — 人間と AI の両方が守る共通基準（重複実装をしない・根本解決 §2-1）
+- [`docs/ai-rules/02_WORKFLOW.md`](docs/ai-rules/02_WORKFLOW.md) — 要件定義からデプロイ後の検証までの標準の流れ
+- [`docs/ai-rules/03_REVIEW_CHECKLIST.md`](docs/ai-rules/03_REVIEW_CHECKLIST.md) — 出す前のレビュー点検表
+- [`docs/ai-rules/04_SELF_VERIFICATION.md`](docs/ai-rules/04_SELF_VERIFICATION.md) — 04 自己検証できる製品を作る(計器の思想)
+- [`docs/ai-rules/05_HANDING_SCREEN_TO_HUMAN.md`](docs/ai-rules/05_HANDING_SCREEN_TO_HUMAN.md) — 05 画面を人に渡すときの作法（迷子にさせない）
+- [`docs/ai-rules/06_ENGINEERING_CHECKLIST.md`](docs/ai-rules/06_ENGINEERING_CHECKLIST.md) — 開発・運用の198項目を「いつ気にするか」で並べた点検表
+- [`docs/ai-rules/07_GROWTH_METRICS.md`](docs/ai-rules/07_GROWTH_METRICS.md) — 事業の数字を最大化する物差し（CVR・LTV・CPA ほか）
+- [`docs/ai-rules/08_NO_HUMAN_HANDS.md`](docs/ai-rules/08_NO_HUMAN_HANDS.md) — 人の手を使わない設計（全プロジェクト共通）
+- [`docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md`](docs/ai-rules/09_AI_TOOL_BROWSER_SAFETY.md) — AI ツールの「内蔵ブラウザ」と知らないリポの扱い（全プロジェクト共通）
+- [`docs/ai-rules/10_STORE_FIELDS.md`](docs/ai-rules/10_STORE_FIELDS.md) — ストアの入力欄は、言われなくても全部埋める（全プロジェクト共通）
+- [`docs/ai-rules/11_NO_REGRESSION.md`](docs/ai-rules/11_NO_REGRESSION.md) — AI の修正で、元々動いていた機能を消さない（全プロジェクト共通）
+- [`docs/ai-rules/12_LINE_SIMULATION.md`](docs/ai-rules/12_LINE_SIMULATION.md) — LINE Bot の挙動を、スマホなしで本番のまま確かめる（全 LINE Bot 共通）
+- [`docs/ai-rules/13_INFLUENCER_FIRST.md`](docs/ai-rules/13_INFLUENCER_FIRST.md) — 「宣伝して」と頼まず、発信者をファンにしてから一緒に売る（集客の設計の決まり）
+- [`docs/ai-rules/14_TRADEMARK_CHECK.md`](docs/ai-rules/14_TRADEMARK_CHECK.md) — 名前を決めたら、ストアに出す前に商標を調べる（全プロジェクト共通）
+- [`docs/ai-rules/15_APP_LINK_FROM_WEB.md`](docs/ai-rules/15_APP_LINK_FROM_WEB.md) — アプリがある Web サービスには、必ずアプリへの導線を入れる（全プロジェクト共通）
+- [`docs/ai-rules/16_VERCEL_BUILD_COST.md`](docs/ai-rules/16_VERCEL_BUILD_COST.md) — Vercel は「サイトが変わるときだけ」ビルドする（全プロジェクト共通）
+
+### 進め方（`docs/ai-workflows/`）
+
+- [`docs/ai-workflows/AGENT-DESKTOP-HOWTO.md`](docs/ai-workflows/AGENT-DESKTOP-HOWTO.md) — AI が PC のアプリを「自分で見て・押して・確かめる」ための標準道具（全プロジェクト共通）
+- [`docs/ai-workflows/ANTIGRAVITY-HOWTO.md`](docs/ai-workflows/ANTIGRAVITY-HOWTO.md) — Antigravity 活用HOWTO
+- [`docs/ai-workflows/COLAB-HOWTO.md`](docs/ai-workflows/COLAB-HOWTO.md) — Google Colab 活用HOWTO（モデル試験場）— 正本
+- [`docs/ai-workflows/COMPUTER-USE-EVAL-PLAN.md`](docs/ai-workflows/COMPUTER-USE-EVAL-PLAN.md) — ローカル Computer Use 検証計画（着手条件付き・正本）
+- [`docs/ai-workflows/COUNCIL-HOWTO.md`](docs/ai-workflows/COUNCIL-HOWTO.md) — マルチLLM会議ハーネス
+- [`docs/ai-workflows/DESIGN-NAMING-PROMPT.md`](docs/ai-workflows/DESIGN-NAMING-PROMPT.md) — デザイン名前の翻訳プロンプト
+- [`docs/ai-workflows/EMULATOR-VERIFY-HOWTO.md`](docs/ai-workflows/EMULATOR-VERIFY-HOWTO.md) — エミュレータ/シミュレータでAIが動作確認する（実機なし・ズレゼロ）— 正本
+- [`docs/ai-workflows/FABLE-3STEP-HOWTO.md`](docs/ai-workflows/FABLE-3STEP-HOWTO.md) — Fable 3段構え運用
+- [`docs/ai-workflows/JEV-DUPLICATE-SCREENING-HOWTO.md`](docs/ai-workflows/JEV-DUPLICATE-SCREENING-HOWTO.md) — Jev（TypeSafe AI）による重複クラスタ一次スクリーニング
+- [`docs/ai-workflows/MULTI-BRAIN-HOWTO.md`](docs/ai-workflows/MULTI-BRAIN-HOWTO.md) — 頭脳を増やす運用（マルチ頭脳）— 正本
+- [`docs/ai-workflows/WAYFINDER-TO-SPEC-HOWTO.md`](docs/ai-workflows/WAYFINDER-TO-SPEC-HOWTO.md) — wayfinder→to-spec
+
+### 金型・検査（`templates/`・各 README）
+
+- [`templates/android-twa/README.md`](templates/android-twa/README.md) — Android TWA（Bubblewrap）の金型
+- [`templates/auto-mode/README.md`](templates/auto-mode/README.md) — auto mode に「本人の言葉」を先に入れておく（2026-11-16）
+- [`templates/cloud-env/README.md`](templates/cloud-env/README.md) — クラウドのセッションに全体の hook を配線する
+- [`templates/colab-lab/README.md`](templates/colab-lab/README.md) — Colab で新しいモデルを試すひな型
+- [`templates/diagnosis-shell/README.md`](templates/diagnosis-shell/README.md) — 診断アプリの結果シェル
+- [`templates/diagnostics/README.md`](templates/diagnostics/README.md) — 汎用コード診断キット
+- [`templates/expo-native/README.md`](templates/expo-native/README.md) — Expo prebuild でネイティブアプリを出す金型
+- [`templates/extension-self-update/README.md`](templates/extension-self-update/README.md) — 開発中の拡張が、新しい版に自分で入れ替わる
+- [`templates/extension-verify/README.md`](templates/extension-verify/README.md) — Chrome拡張を「AIが自分で読み込んで」全画面を確かめる共通検証
+- [`templates/hands-free-runner/README.md`](templates/hands-free-runner/README.md) — 人に渡す黒い画面のひな型
+- [`templates/hooks-relay/README.md`](templates/hooks-relay/README.md) — web-ios-android の hook を、ほかのプロジェクトのセッションにも効かせる（2026-11-16）
+- [`templates/idea-to-pr-local/README.md`](templates/idea-to-pr-local/README.md) — 音声で頼む → 常駐PCの Claude Code が実装 → PR → 事実を確かめて報告
+- [`templates/line-bot/README.md`](templates/line-bot/README.md) — LINE公式アカウントAI社員bot の金型
+- [`templates/stripe-checkout-email/README.md`](templates/stripe-checkout-email/README.md) — Stripe決済→購入完了メール送信の金型
+- [`templates/vercel/README.md`](templates/vercel/README.md) — Vercel のビルド代を「要るビルドだけ」にする金型
+- [`templates/web/README.md`](templates/web/README.md) — Web→アプリDL導線の金型
+
+<!-- agents-map:end -->
