@@ -55,9 +55,20 @@ class AgyQuota(unittest.TestCase):
     def test_pools_are_recorded_separately(self):
         # 2026-11-18 PC: Claude pool 429 while Gemini answered; the Gemini fallback must not be skipped by the Claude record.
         self.assertEqual(dispatch.agy_pool("claude-sonnet-5-5-medium"), "claude")
-        self.assertEqual(dispatch.agy_pool("gemini-4-argon-medium"), "gemini")
+        self.assertEqual(dispatch.agy_pool("gemini-4-argon-medium"), "gemini-4-argon")
         self.assertEqual(dispatch.agy_pool(None), "claude")
         self.assertNotEqual(dispatch.agy_quota_file("claude-opus-5-5-medium"), dispatch.agy_quota_file("gemini-4-argon-medium"))
+
+    def test_gemini_models_are_recorded_per_family(self):
+        # 2026-11-27 PC: an Argon 429 record (Resets in 162h) made dispatch skip Neon while Neon answered SUCCESS.
+        self.assertNotEqual(dispatch.agy_quota_file("gemini-4-argon-medium"), dispatch.agy_quota_file("gemini-4-neon-medium"))
+        self.assertEqual(dispatch.agy_quota_file("gemini-4-neon-medium"), dispatch.agy_quota_file("gemini-4-neon-high"))
+        import tempfile, time as _t
+        with tempfile.TemporaryDirectory() as d:
+            argon = os.path.join(d, "a.json")
+            dispatch.agy_remember_reset(self.OUT, now=_t.time(), path=argon)
+            self.assertGreater(dispatch.agy_quota_wait(path=argon), 0)
+            self.assertEqual(dispatch.agy_quota_wait(path=os.path.join(d, "n.json")), 0)
 
     def test_parse_reset(self):
         self.assertEqual(dispatch.agy_reset_seconds(self.OUT), 76 * 3600 + 3 * 60)
@@ -119,7 +130,7 @@ class NeonInAutoChain(unittest.TestCase):
         real, model = dispatch.BRAIN_ALIASES["neon"]
         self.assertEqual(real, "agy")
         self.assertTrue(model.startswith("gemini-4-neon-"))
-        self.assertEqual(dispatch.agy_pool(model), "gemini")
+        self.assertEqual(dispatch.agy_pool(model), "gemini-4-neon")
         self.assertIn(real, dispatch.TIMEOUTS)
 
     def test_not_skipped_by_the_claude_pool_record(self):

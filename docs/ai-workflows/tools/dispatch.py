@@ -28,7 +28,7 @@ Failure signatures treated as "try the next brain": non-zero exit, timeout, or o
 Full output: %LOCALAPPDATA%\\llm-proxy\\runs\\<timestamp>-<brain>.log. Canonical copy: web-ios-android/docs/ai-workflows/tools/.
 Secrets: none here. Keys come from user env vars DASHSCOPE_API_KEY / CF_WORKERS_AI_TOKEN / OPENCODE_API_KEY etc.
 """
-import argparse, json, os, subprocess, sys, time, urllib.request
+import argparse, json, os, re, subprocess, sys, time, urllib.request
 
 RUNS = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "llm-proxy", "runs")
 os.makedirs(RUNS, exist_ok=True)
@@ -208,7 +208,8 @@ AGY_OK_STATUS = "SUCCESS"
 # RESOURCE_EXHAUSTED(429, 残り81時間)になった。そのときは Gemini 側の一番賢いモデルで1回だけやり直す。
 # ★同日 gemini-3.8-flash も同じ残り時間で 429 だった＝枠が共通の可能性あり。やり直しは数秒で失敗するだけなので残す。
 # 2026-11-25: Argon → Neon。Neon は Carbon 由来の中位モデル（2026-11-18 公開）で、Google の移行案内が Argon の後継に
-# 指定している。会社PC の agy 1.5.17 で gemini-4-neon-{medium,high} が SUCCESS（Argon と同じ「Gemini」枠・約5秒）。
+# 指定している。会社PC の agy 1.5.17 で gemini-4-neon-{medium,high} が SUCCESS（約5秒）。
+# 2026-11-27: Argon が 429 の間も Neon は SUCCESS＝Gemini の枠はモデルごと（agy_pool を参照）。
 AGY_FALLBACK_MODEL = "gemini-4-neon-medium"
 # Chain names that run another brain with a fixed model: (real brain, model). Logs and quota records use the real brain.
 BRAIN_ALIASES = {"neon": ("agy", AGY_FALLBACK_MODEL)}
@@ -225,8 +226,14 @@ AGY_QUOTA_FILE = os.path.join(RUNS, "agy-quota.json")  # legacy single file (bef
 def agy_pool(model):
     """Which Antigravity quota a model draws from. 2026-11-18 PC: Claude Sonnet answered 429 "Resets in 4h50m" while
     gemini-3.8-flash and gemini-4-argon answered SUCCESS in the same minute = the pools are separate (the 11-12 note
-    of one shared pool no longer holds). A single record made the Gemini fallback skip itself."""
-    return "gemini" if (model or "").startswith("gemini-") else "claude"
+    of one shared pool no longer holds). A single record made the Gemini fallback skip itself.
+    2026-11-27 PC: the 11-23 gemini-4-argon 429 ("Individual quota reached for this model", Resets in 162h) was still
+    recorded as the whole "gemini" pool, so dispatch skipped Neon for days while agy answered Neon SUCCESS in 15s.
+    Gemini models are therefore recorded per family (effort suffix dropped): gemini-4-neon, gemini-4-argon, ..."""
+    m = model or ""
+    if not m.startswith("gemini-"):
+        return "claude"
+    return re.sub(r"-(low|medium|high|xhigh)$", "", m)
 
 
 def agy_quota_file(model):
