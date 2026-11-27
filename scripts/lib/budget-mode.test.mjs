@@ -60,6 +60,17 @@ describe("budgetNotice", () => {
     expect(t).toContain("プランモードに入らない");
     expect(t).toContain("11/29");
   });
+  it("節約以上では、スレッドを立てる側（司令塔）にも決まりを渡す", () => {
+    expect(budgetNotice(budgetMode(usage(55, 10, { resetsAt: "2026-11-26T12:00:00.000Z" }), NOW))).toContain("既にあるスレッドへ回せないか");
+    expect(budgetNotice(budgetMode(usage(75, 98), NOW))).toContain("ワークフロー・deep research を新しく立てない");
+    expect(budgetNotice(budgetMode(usage(96, 98), NOW))).toContain("司令塔は新しいスレッドを立てない");
+  });
+  it("クラウドでは dispatch の行き先を会社PC（Remote Control）と dot に言い換える", () => {
+    const m = budgetMode(usage(75, 98), NOW);
+    expect(budgetNotice(m)).not.toContain("start_remote_control");
+    expect(budgetNotice(m, { cloud: true })).toContain("start_remote_control");
+    expect(budgetNotice(budgetMode(usage(10, 10), NOW), { cloud: true })).toBe("");
+  });
   it("記録が止まっていれば、それを言い、節約として振る舞わせる", () => {
     const t = budgetNotice(budgetMode(usage(null, null), NOW));
     expect(t).toContain("record-claude-usage");

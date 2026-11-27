@@ -7,6 +7,8 @@
 //   振り分けの目安は MULTI-BRAIN-HOWTO §1e に書いてあったが、AI が自分で使用量を見に行かないと効かなかった。
 //   11/25 は週75%・Fable 98% なのに、どのセッションも知らずに Claude の枠で手を動かしていた。
 // トークン節約: 段階（とその元の数字の段）が変わったときだけ出す。同じ段階のあいだは何も足さない。
+// クラウド（CLAUDE_CODE_REMOTE=true）では dispatch の頭脳が無いので、行き先を会社PC・dot に言い換える（2026-11-27）。
+// クラウドへの配線は templates/cloud-env/setup.sh（環境の setup script がこれを取って走らせる）。
 // 判定の中身は site/hub/usage/budget-mode.mjs（純関数・テスト付き）。正本 MULTI-BRAIN-HOWTO §1g。
 //
 // 標準入力(JSON): session_id, prompt, cwd
@@ -56,7 +58,7 @@ export async function run(input, now = Date.now()) {
   const usage = await loadUsage(now);
   if (usage === undefined) return ''; // ネットワークも記録も無い: 何も言わない(fail-open)
   const mode = budgetMode(usage, now);
-  const text = budgetNotice(mode);
+  const text = budgetNotice(mode, { cloud: process.env.CLAUDE_CODE_REMOTE === 'true' });
   const sid = String(input?.session_id || 'unknown').replace(/[^\w.-]/g, '_');
   const stateFile = join(DIR, `session-${sid}.txt`);
   const sig = signatureOf(mode);
