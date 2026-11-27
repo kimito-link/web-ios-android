@@ -399,7 +399,7 @@ python docs/ai-workflows/tools/dispatch.py --cwd <dir> --out scripts/lib/x.test.
   AI Pro の定額＝払い済み、Antigravity の「Gemini」枠は Claude Code の週枠とも Antigravity の Claude 枠とも別（11/18 実測）、会社PC で約5秒で SUCCESS（11/25）
 - 合否は従来どおり `--verify` が決める（§1h）。Neon の「できました」は数えない
 - agy や許可リストの無いPCでは、すぐ失敗して次の頭脳へ進むだけ
-- ダッシュボードの `agy` 行は Claude 枠の記録なので、Neon をそれで飛ばさない（Gemini 枠は `agy_quota_wait` が別に見る）
+- ダッシュボードの `agy` 行は Claude 枠の記録なので、Neon をそれで飛ばさない（Gemini 側の枠切れは `agy_quota_wait` が**モデルの系統ごと**に見る。11/27 会社PC の実走で、11/23 の Argon の枠切れ記録（162時間）が「Gemini 全部」の記録として残り、空いている Neon を数日飛ばしていた→ `agy_pool` を gemini-4-neon / gemini-4-argon のように系統で分けた）
 - Gemini アプリ（人が話す画面）は自動で呼べないので、振り分けには入れない。Neon の API は有料（$3/$15）なので使わない（11/25 の判断のまま）
 - 「無制限」と前提にしない。枠切れ（429）は agy の記録で自動で飛ばす
 
