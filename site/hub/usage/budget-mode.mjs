@@ -79,6 +79,22 @@ const LEVEL_LINES = {
     "新しい作業は始めない。手を動かす仕事は dot の Issue か夜の一括（job-runner・`brain: local`）に積み、検品は枠が戻ってから。",
   ],
 };
+/**
+ * スレッド・サブエージェントを立てる側（司令塔）への決まり。2026-11-27 りんく「全体の容量かんがえてうごくようにして」
+ * （Opus の丸が赤なのに、司令塔は残りを見ずにスレッドを立て、スレッドも Claude の枠で手を動かしていた）。
+ */
+const SPAWN_LINES = {
+  save: "スレッド・サブエージェントを新しく立てる前に、既にあるスレッドへ回せないか見る。立てるなら、指示に「節約中: 手を動かす仕事は dispatch・dot へ」と書く。",
+  strict: "スレッド・サブエージェント・ワークフロー・deep research を新しく立てない（どれも Claude の枠を使う）。司令塔は既にあるスレッドへ回すか、dot・dispatch に積む。",
+  empty: "司令塔は新しいスレッドを立てない。依頼は dot の Issue か夜の一括に積み、りんくには「枠が戻る日時に再開する」と1行で伝える。動いているスレッドも、区切りでPRにして止める。",
+};
+/**
+ * クラウドのスレッド・司令塔には dispatch の頭脳（Codex・Antigravity・Ollama）が無い。
+ * そのままでは「dispatch へ」と言われても Claude が自分で手を動かしてしまうので、行き先を言い換える。
+ */
+const CLOUD_LINES = [
+  "ここはクラウド（dispatch の頭脳が無い）。手を動かす仕事は会社PCへ: `start_remote_control` の指示を「`dispatch.py --verify …` を1回走らせて結果のPRを報告するだけ」にする（PC 側で Codex・Neon・Groq・Ollama が書く）。PC が要らない調べ物・見張りは dot の Issue（ラベル `dot` だけ）。",
+];
 const FABLE_LINES = {
   limit: "Fable が上限の7割を超えた: プランモード（Fable）は「方針が割れていて、間違えると戻すのが大変な設計」だけ。それ以外は Opus のまま計画する。",
   off: "Fable がほぼ上限: プランモードに入らない（入ると Fable を使う）。計画も Opus で立てる。",
@@ -89,8 +105,9 @@ const LABEL = { normal: "ふつう", save: "節約", strict: "強い節約", emp
 /**
  * セッションに渡す文。何も変えなくてよいとき（normal・Fable ok・記録が新しい）は空文字。
  * @param {ReturnType<typeof budgetMode>} m
+ * @param {{cloud?: boolean}} [opts] cloud: クラウドのセッション（CLAUDE_CODE_REMOTE=true）なら行き先を PC・dot に言い換える
  */
-export function budgetNotice(m) {
+export function budgetNotice(m, { cloud = false } = {}) {
   const out = [];
   if (m.stale) {
     out.push(
@@ -108,6 +125,8 @@ export function budgetNotice(m) {
   }
   const steps = ["save", "strict", "empty"];
   for (const s of steps.slice(0, steps.indexOf(level) + 1)) out.push(...LEVEL_LINES[s].map((t) => `- ${t}`));
+  out.push(`- ${SPAWN_LINES[level]}`);
+  if (cloud) out.push(...CLOUD_LINES.map((t) => `- ${t}`));
   if (m.fable !== "ok") out.push(`- ${FABLE_LINES[m.fable]}`);
   out.push("- 正本: docs/ai-workflows/MULTI-BRAIN-HOWTO.md §1g");
   return out.join("\n");

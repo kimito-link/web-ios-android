@@ -142,7 +142,7 @@ Fable 5.2 の週枠は Claude 全体とは別の上限で限られている（11
 - 人の最後の発言から数えて、Fable の読む・走らせる作業が **8回目で注意、16回目で拒否**。`dispatch.py`・`codex` など別の頭脳へ投げるコマンドは数えない。
 - 止めたいとき: `FABLE_GUARD_OFF=1`。Opus が使えず Fable しか無い日は `FABLE_MANUAL_WORK_OK=1`。
 - 効かない所: `claude -p` は会話ログをターンの終わりにまとめて書くので素通しになる（2026-11-16 実測。ふつうのセッションでは tool_use が hook より先に載る）。
-- 配線: このリポは `.claude/settings.json`。全体設定は PC の `~/.claude/settings.json`（`web-ios-android-relay.mjs guard-fable-manual-work.mjs`）と、クラウドの「デフォルト」環境の setup script（main から取って `~/.claude/settings.json` へ足す）。
+- 配線: このリポは `.claude/settings.json`。全体設定は PC の `~/.claude/settings.json`（`web-ios-android-relay.mjs guard-fable-manual-work.mjs`）と、クラウドの「デフォルト」環境の setup script（main の `templates/cloud-env/setup.sh` を取って走らせ、`~/.claude/settings.json` へ足す）。
 
 ---
 
