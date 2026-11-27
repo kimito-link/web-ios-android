@@ -4,11 +4,11 @@
 // なぜ要るか: 無料枠は頭脳ごとに別々に切れる(2026-10-19 は Grok Build の残高切れ・Alibaba の無料枠切れ・OpenRouter の残高切れが重なっていた)。
 //   切れている頭脳へ投げて失敗→次へ、を繰り返さないよう、使える頭脳と残量を一目で見えるようにする。
 // 何を調べるか(いずれも1トークン以下の軽い確認。鍵の値は出力にも保存にも載せない):
-//   Alibaba のモデルごと / Gemini のモデルごと / Cloudflare / Groq(応答ヘッダの残量) / OpenRouter(残高$) / Muse(OpenCode Zen) / NVIDIA / Mistral / ローカル(Ollama・GPU)
+//   Alibaba のモデルごと / Gemini のモデルごと / Cloudflare / Groq(応答ヘッダの残量) / OpenRouter(残高$) / Muse(OpenCode Zen) / NVIDIA / Mistral / さくら / ローカル(Ollama・GPU)
 //   Grok Build は確認用の口が無いので、実行ログの最新結果から判定する。
 // 使い方: node scripts/record-brain-status.mjs            (保存)
 //         node scripts/record-brain-status.mjs --dry-run  (保存せず結果を表示)
-// 前提: 鍵はユーザー環境変数(DASHSCOPE_API_KEY / GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OPENCODE_API_KEY / NVIDIA_API_KEY / MISTRAL_API_KEY /
+// 前提: 鍵はユーザー環境変数(DASHSCOPE_API_KEY / GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OPENCODE_API_KEY / NVIDIA_API_KEY / MISTRAL_API_KEY / SAKURA_AI_ENGINE_TOKEN /
 //   CF_WORKERS_AI_TOKEN + CLOUDFLARE_ACCOUNT_ID)。無ければ「鍵が未設定」と出す。順序・モデル鎖・失敗の合図は dispatch.py を読む(複製しない)。
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -139,6 +139,12 @@ function build(runs, P) {
   if (hySt.status === 'degraded' && lastReason('hydrogen')) hySt.label = `直近の実行は失敗: ${lastReason('hydrogen')}`;
   brains.push({ id: 'hydrogen', label: 'Gemini 4 Hydrogen(OpenCode)', kind: 'free', role: 'agent', ...S(hySt), gauges: [], note: 'Gemini API の無料枠(GEMINI_API_KEY)。1回1分ほどかかり、混雑(503)のときは次の頭脳へ回します。残量は取得できません。', lastRun: lastRunOf('hydrogen') });
 
+  // さくらのAI Engine(OpenCode・無償プラン): 2026-11-28 まで行が無く、自動の順番に入っているのに画面に出ていなかった。
+  // /v1/models は鍵が要る一覧で、チャットの月3,000回には数えない(数えるのは chat/completions)。上限を超えると 429 で止まる(課金なし)
+  const skSt = !P.sakura.hasKey ? statusOfBrain({ hasKey: false }) : statusOfBrain({ hasKey: true, probe: P.sakura.state });
+  if (skSt.status === 'ok' && recentOf('sakura').last?.ok === false && lastReason('sakura')) skSt.label = `使えるが、直近の実行は失敗: ${lastReason('sakura')}`;
+  brains.push({ id: 'sakura', label: 'さくらのAI Engine(OpenCode)', kind: 'free', role: 'agent', ...S(skSt), gauges: [], note: '基盤モデル無償プラン。チャット月3,000回まで無料で、超えると課金ではなく 429 で止まります(会議の予備2席と同じ枠)。残量は取得できません。', lastRun: lastRunOf('sakura') });
+
   // Alibaba(qwen / oc)
   const a = P.alibaba;
   const aOk = (a.models || []).filter((m) => m.state === 'ok').length;
@@ -187,9 +193,15 @@ function build(runs, P) {
   const stOf = (id) => brains.find((b) => b.id === id)?.status;
   const nextOf = (chain) => { for (const c of chain) if (stOf(idOf(c)) === 'ok') return idOf(c); return null; };
   const labelOf = (id) => brains.find((b) => b.id === id)?.label || id;
+  // 自動の順番に入っているのに行が無い頭脳を名指しする(2026-11-28 さくらが10日間この状態だった)。
+  // codex / neon は残量を外から調べる口が無いので行を持たない(枠切れは dispatch がその場で判定する)
+  const NO_ROW_ON_PURPOSE = new Set(['codex', 'neon']);
+  const untracked = AUTO_CHAIN.concat(TEXT_CHAIN).map(idOf).filter((id, i, arr) => arr.indexOf(id) === i && !NO_ROW_ON_PURPOSE.has(id) && !brains.some((b) => b.id === id));
+  if (untracked.length) console.error(`record-brain-status: 順番に入っているのに行が無い頭脳: ${untracked.join(', ')}(build() に行を足す)`);
   return {
     updatedAt: new Date().toISOString(),
     brains,
+    untracked,
     chain: { agent: AUTO_CHAIN.map(idOf).filter((x, i, arr) => arr.indexOf(x) === i), text: TEXT_CHAIN.map(idOf) },
     next: { agent: nextOf(AUTO_CHAIN), text: nextOf(TEXT_CHAIN) },
     nextLabels: { agent: labelOf(nextOf(AUTO_CHAIN)), text: labelOf(nextOf(TEXT_CHAIN)) },
@@ -197,12 +209,12 @@ function build(runs, P) {
 }
 
 async function main() {
-  const [alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local] = await Promise.all([
+  const [alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local, sakura] = await Promise.all([
     probeAlibaba(), probeGemini(), probeGroq(), probeOpenRouter(), probeMuse(),
     probeList('https://integrate.api.nvidia.com/v1/models', E.NVIDIA_API_KEY), probeList('https://api.mistral.ai/v1/models', E.MISTRAL_API_KEY),
-    probeCloudflare(), probeLocal(),
+    probeCloudflare(), probeLocal(), probeList('https://api.ai.sakura.ad.jp/v1/models', E.SAKURA_AI_ENGINE_TOKEN),
   ]);
-  const result = build(recentRuns(), { alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local });
+  const result = build(recentRuns(), { alibaba, gemini, groq, openrouter, muse, nvidia, mistral, cloudflare, local, sakura });
   if (process.env.BRAINS_OUT) fs.writeFileSync(process.env.BRAINS_OUT, JSON.stringify(result)); // 画面確認用に全文を書き出す(保存はしない)
   if (process.argv.includes('--dry-run')) {
     console.log(JSON.stringify({ next: result.nextLabels, brains: result.brains.map((b) => ({ id: b.id, status: b.status, label: b.statusLabel, gauges: b.gauges.map((g) => `${g.label} ${g.remaining}/${g.total}${g.unit}`) })) }, null, 1));

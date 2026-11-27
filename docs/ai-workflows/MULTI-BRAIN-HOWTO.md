@@ -26,7 +26,7 @@ Grok Bot（常駐アプリ・SpaceXAI製）      … 進行役。ファイル読
         ▼
 実行係 job-runner.py（Task Scheduler 10分毎） … inbox のジョブを dispatch.py で実行し、本当に済んだものだけ done・それ以外は failed に結果を返す
         ▼
-dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は `AUTO_CHAIN`（codex→grok→hydrogen→sakura→qwen→oc→cf→nvidia→mistral→glm→local）を自動フォールバック
+dispatch.py（tools/）  … 無料の頭脳を選んで実行（下表）。auto は `AUTO_CHAIN`（codex→neon→sakura→grok→hydrogen→qwen→oc→cf→nvidia→mistral→glm→local）を自動フォールバック
         ▼
 codex(ChatGPT定額) / grok / qwen(Alibaba) / oc / cf(Cloudflare) / local(Ollama)  … 実際に手を動かす。文章は gemini/groq(--text)
 ```
@@ -194,7 +194,7 @@ Grok Build の headless はファイル編集で権限プロンプトが出て�
 | `glm` | OpenCode + OpenRouter GLM-5.3-Flash（320B MoE・約18B アクティブ・MIT） | 従量だが激安（2026-10-08 実測で $0.15/$0.50 per 1M in/out）。`OPENROUTER_API_KEY` | **Opus-4.8 級のコーディングを無料枠が尽きた後に使う**。auto では cf の次・local の前。2026-10-08 追加・実呼び出し確認済み |
 | `local` | Claude Code + Ollama（Qwen3.6-35B-A3B） | 無料・無制限 | 急がない量産・退路 |
 | `hydrogen` | OpenCode + Google AI Studio `gemini-4-hydrogen`（`GEMINI_API_KEY`。★OpenCode の google は `GOOGLE_GENERATIVE_AI_API_KEY` しか読まないので dispatch がその名前でも渡す＝11/18 PC 実測） | 無料枠で呼べる pro 級。同じキーの `gemini-4-argon` は 429（有料専用）なので使わない。無料枠の入力は Google が学習に使うことがある＝秘密・外に出せないコードは送らない | 2026-11-17 追加。**無料の手伝い役**（codex・grok の代わりにはしない）。考える段階を切れず（low が最低）1回57〜89秒・混雑の 503 が10回に2〜3回（11/15 会議の実測）なので、待ち時間は30分、503 は `FAIL_MARKS` で次の頭脳へ回す。**11/18 PC 実走でファイル作成→実行→commit が250秒で通った**ので、auto では grok の次（qwen・cf より前）に入れた |
-| `sakura` | OpenCode + さくらのAI Engine（OpenAI互換 `https://api.ai.sakura.ad.jp/v1`。鍵はユーザー環境変数 `SAKURA_AI_ENGINE_TOKEN`＝`<UUID>:<シークレット>`・会社PCと tsuioku の `.env` に保管済み。OpenCode の一覧に無いので dispatch が `OPENCODE_CONFIG_CONTENT` で接続先を足す） | 基盤モデル無償プラン＝チャット月3,000回まで無料、**超えると課金でなく 429 で止まる**（公式マニュアル 02-howto）。この3,000回は会議の席と共有。RAG は無償プランでも課金なので使わない。`preview/` のモデルは予告なく変わる | 2026-11-18 追加。既定 `preview/DeepSeek-V4.1-Flash-1017`、`--model sakura/preview/GLM-5.3-Flash`・`sakura/preview/Kimi-K2.7-Code` も可。**PC 実走で hello.py 作成→実行→commit が22秒**、素のAPIは max_tokens1600 で4〜10秒・本文が空にならない（推論は `message.reasoning` に分かれる）・関数呼び出しは3モデルとも通った。会議と枠を分けるため auto では hydrogen の次 |
+| `sakura` | OpenCode + さくらのAI Engine（OpenAI互換 `https://api.ai.sakura.ad.jp/v1`。鍵はユーザー環境変数 `SAKURA_AI_ENGINE_TOKEN`＝`<UUID>:<シークレット>`・会社PCと tsuioku の `.env` に保管済み。OpenCode の一覧に無いので dispatch が `OPENCODE_CONFIG_CONTENT` で接続先を足す） | 基盤モデル無償プラン＝チャット月3,000回まで無料、**超えると課金でなく 429 で止まる**（公式マニュアル 02-howto）。この3,000回は会議の席と共有。RAG は無償プランでも課金なので使わない。`preview/` のモデルは予告なく変わる | 2026-11-18 追加。既定 `preview/DeepSeek-V4.1-Flash-1017`、`--model sakura/preview/GLM-5.3-Flash`・`sakura/preview/Kimi-K2.7-Code` も可。**PC 実走で hello.py 作成→実行→commit が22秒**、素のAPIは max_tokens1600 で4〜10秒・本文が空にならない（推論は `message.reasoning` に分かれる）・関数呼び出しは3モデルとも通った。2026-11-28 auto で neon の次・grok の前へ（30日で grok 58回・さくら9回。毎月消える無料枠を、使い切りのある Grok の残高より先に使う。合否は `--verify` が決めるので、弱くても失敗1回で次へ回るだけ）。ダッシュボードの「頭脳の状況」にも行を足した |
 | `gemini` | Gemini API 直叩き（**文章専用**、`GEMINI_API_KEY`、モデル鎖 3.8-flash → 3.5-flash-lite → 3.1-flash-lite → 2.5-flash-lite を1回の探りで選ぶ） | 無料枠は**モデルごと**。★調査にあった「Google ログインで1000/日」は 2026-09-16 実機で **`IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals`**（Antigravity へ移行済み）。Gemini CLI のエージェントは `-m` を指定しても内部で gemini-3.5-flash（無料 **20回/日**）を呼んで `TerminalQuotaError` になるため採用しない | 2026-09-16 追加。auto では grok の次 |
 | `groq` | Groq 無料枠（OpenAI 互換、`GROQ_API_KEY`） | カード不要。ただし **1リクエストの入力トークン上限が小さく、OpenCode の指示文が入らない**（`Request too large for model qwen/qwen3.8-27b ... on input tokens per ...`） | 2026-09-16 追加。**文章専用**（ファイル操作なし・会話1往復）。会議ハーネスと同じ使い方 |
 
