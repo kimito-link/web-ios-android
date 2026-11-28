@@ -37,6 +37,10 @@ pwsh -NoProfile -File templates/pc-janitor/register-disk-janitor.ps1 # 毎日 4:
 
 結果は `%USERPROFILE%\claude-ops\disk-janitor.last.json`。片づけた後も C の空きが 40GB を切っていたら、画面に警告が出る。
 
+★大きさを測るのはこの掃除の仕事だけにする。15分ごとの見張り役（`claude-ops\claude-health-check.ps1`、PC固有）が
+C:\tmp を毎回ぜんぶ数えていたら、1回20分以上かかって次の回と重なり、PC全体が重くなった（2026-11-28）。
+見張り役は `disk-janitor.last.json` を読むだけにした（11秒で終わる）。
+
 ## 消さないもの（判断が要る）
 
 - WSL（Ubuntu 10.7GB・Kali 17.8GB の `ext4.vhdx`）: 中身はりんくのもの。11/18 に「Kali は残す」と決めている。
