@@ -185,6 +185,7 @@ iPhone / Android のアプリがストアで公開中のサービスの Web（LP
 - [`templates/hooks-relay/README.md`](templates/hooks-relay/README.md) — web-ios-android の hook を、ほかのプロジェクトのセッションにも効かせる（2026-11-16）
 - [`templates/idea-to-pr-local/README.md`](templates/idea-to-pr-local/README.md) — 音声で頼む → 常駐PCの Claude Code が実装 → PR → 事実を確かめて報告
 - [`templates/line-bot/README.md`](templates/line-bot/README.md) — LINE公式アカウントAI社員bot の金型
+- [`templates/pc-janitor/README.md`](templates/pc-janitor/README.md) — Cドライブを AI の作業の残りで一杯にしない
 - [`templates/stripe-checkout-email/README.md`](templates/stripe-checkout-email/README.md) — Stripe決済→購入完了メール送信の金型
 - [`templates/vercel/README.md`](templates/vercel/README.md) — Vercel のビルド代を「要るビルドだけ」にする金型
 - [`templates/web/README.md`](templates/web/README.md) — Web→アプリDL導線の金型
