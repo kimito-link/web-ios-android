@@ -145,13 +145,17 @@ if ($Apply) {
 }
 
 $freeAfter = Get-FreeGB
+# build plain arrays first: a pipeline inside the [pscustomobject]@{} literal throws
+# "Argument types do not match" and left the report as null (seen 2026-11-28)
+$keptArr = [object[]]($kept.ToArray() | Sort-Object gb -Descending)
+$removedArr = [object[]]$removed.ToArray()
 $report = [pscustomobject]@{
   at = $now.ToString('s'); apply = [bool]$Apply
   freeBeforeGB = $freeBefore; freeAfterGB = $freeAfter
   removedGB = [math]::Round((($removed | Measure-Object gb -Sum).Sum) + $tempGB, 1)
   removedCount = $removed.Count; tempGB = [math]::Round($tempGB, 1)
-  kept = @($kept | Sort-Object gb -Descending)
-  removed = @($removed)
+  kept = $keptArr
+  removed = $removedArr
 }
 New-Item -ItemType Directory -Force -Path (Split-Path $ReportPath) | Out-Null
 $report | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $ReportPath -Encoding utf8
