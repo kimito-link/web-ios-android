@@ -28,7 +28,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** 1つの vercel.json を見て、問題の文(無ければ null)を返す。 */
-export function inspectVercelJson(text, { fileExists = () => true, baseDir = '.' } = {}) {
+export function inspectVercelJson(text, { fileExists = () => true, baseDir = '.', vercelignore = '' } = {}) {
   let cfg;
   try { cfg = JSON.parse(text); } catch { return 'JSON として読めない'; }
   const git = cfg && cfg.git;
@@ -37,6 +37,11 @@ export function inspectVercelJson(text, { fileExists = () => true, baseDir = '.'
   if (!cmd) return 'ignoreCommand が無い(サイトに関係ない PR・docs・dependabot でも毎回ビルド代がかかる)';
   const m = cmd.match(/(?:^|\s)((?:\.\.?\/)?[\w./-]+\.(?:mjs|cjs|js|sh))\b/);
   if (m && !fileExists(join(baseDir, m[1]))) return `ignoreCommand が呼ぶ ${m[1]} がリポに無い`;
+  // Vercel は Ignored Build Step の前に .vercelignore のファイルを消す。.git を消すと判定が差分を取れず、毎回ビルドになる
+  // (2026-11-24〜27 の reply-suggest・linktree で取消 0 件・ログは全件 "[no base]")。
+  if (vercelignore.split(/\r?\n/).some((l) => /^\/?\.git\/?$/.test(l.trim()))) {
+    return '同じ場所の .vercelignore に .git がある(判定が git を使えず全部ビルドになる。配信元を専用フォルダにしてから .git を外す)';
+  }
   return null;
 }
 
@@ -53,7 +58,9 @@ function main(target) {
   let ng = 0;
   for (const f of files) {
     const abs = join(target, f);
-    const problem = inspectVercelJson(readFileSync(abs, 'utf8'), { fileExists: existsSync, baseDir: dirname(abs) });
+    const ignorePath = join(dirname(abs), '.vercelignore');
+    const vercelignore = existsSync(ignorePath) ? readFileSync(ignorePath, 'utf8') : '';
+    const problem = inspectVercelJson(readFileSync(abs, 'utf8'), { fileExists: existsSync, baseDir: dirname(abs), vercelignore });
     if (problem) { ng++; console.log(`✗ ${f}: ${problem}`); } else console.log(`✓ ${f}`);
   }
   if (ng) console.log('直し方: templates/vercel/README.md(共通の vercel-ignore-build.mjs を置いて ignoreCommand で呼ぶ)');
@@ -72,6 +79,10 @@ function selftest() {
     if (Boolean(inspectVercelJson(text)) !== wantProblem) { bad++; console.error('NG', text); }
   }
   if (!inspectVercelJson('{"ignoreCommand":"node scripts/x.mjs"}', { fileExists: () => false })) { bad++; console.error('NG missing script'); }
+  const ok = '{"ignoreCommand":"node scripts/x.mjs"}';
+  if (!inspectVercelJson(ok, { vercelignore: '# c\nnode_modules\n.git\n' })) { bad++; console.error('NG .git in .vercelignore'); }
+  if (!inspectVercelJson(ok, { vercelignore: '/.git/\r\n' })) { bad++; console.error('NG /.git/ in .vercelignore'); }
+  if (inspectVercelJson(ok, { vercelignore: '.github\n.gitignore\nnode_modules\n' })) { bad++; console.error('NG .github false positive'); }
   // 実ファイルで: 毒(ignoreCommand 無し)を入れると赤になるか
   const d = mkdtempSync(join(tmpdir(), 'vercel-skip-selftest-'));
   try {
